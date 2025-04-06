@@ -49,21 +49,34 @@ export interface DisposalInfo {
 }
 
 export interface Equipment {
-  id: string;
+  id: number;
   name: string;
   type: string;
-  category: EquipmentCategory;
+  is_closed: boolean;
+  open_category?: 'tko' | 'radio' | 'computer' | 'battery' | 'antenna' | 'power' | 'materials' | null;
+  closed_category?: number | null;  // ID of ClosedEquipmentCategory
   status: 'in-operation' | 'in-storage' | 'defective' | 'for-disposal' | 'disposed';
-  assigned_to?: string;
   serial_number: string;
-  purchase_date: string;
   inventory_number: string;
-  manufacturing_date: string;
-  division: string;
-  subdivision?: string;
-  facilityId?: string;
-  comments?: string;
-  disposalInfo?: DisposalInfo;
+  manufacturing_date: string;  // ISO date string
+  purchase_date: string;       // ISO date string
+  division: number;            // ID of Division
+  subdivision?: number | null; // ID of Subdivision
+  facility?: number | null;    // ID of Facility
+  assigned_to?: number | null; // ID of Employee
+  comments?: string | null;
+  disposal_act_number?: string | null;
+  disposal_act_date?: string | null;
+  disposal_cert_number?: string | null;
+  disposal_cert_date?: string | null;
+  disposal_comments?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClosedEquipmentCategory {
+  id: number;
+  name: string;
 }
 
 export interface Division {

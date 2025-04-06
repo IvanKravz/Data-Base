@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
@@ -6,6 +6,8 @@ import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { EquipmentForm } from '../forms/EquipmentForm';
 import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
+import { equipmentApi } from '../../../api';
+import './style.css';
 import {
   Header,
   BasicInfo,
@@ -15,72 +17,82 @@ import {
   DisposalInfo
 } from './sections';
 
+
 export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const token = localStorage.getItem('accessToken') || '';
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [equipment, setEquipment] = useState<Equipment | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const equipment = useSelector((state: RootState) => 
-    state.equipment.equipment.find(e => e.id === id)
-  );
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        if (!id || !token) return;
+        
+        const data = await equipmentApi.getEquipmentById(token, id);
+        setEquipment(data);
+      } catch (err) {
+        setError('Не удалось загрузить данные техники');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  console.log('equipment', equipment)
+    fetchEquipment();
+  }, [id, token]);
+
+  if (loading) {
+    return <div className="equipment-loading">Загрузка...</div>;
+  }
+
+  if (error) {
+    return <div className="equipment-error">{error}</div>;
+  }
 
   if (!equipment) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Техника не найдена</p>
+      <div className="equipment-not-found">
+        <p>Техника не найдена</p>
       </div>
     );
   }
 
   const handleBack = () => {
-    if (equipment.status === 'disposed') {
-      navigate('/equipment-disposed');
-    } else {
-      navigate(equipment.category === 'closed' ? '/equipment-closed' : '/equipment-open');
-    }
+    navigate(-1);
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleDelete = () => {
-    setShowDeleteModal(true);
-  };
-
-  const handleUpdate = (updatedEquipment: Omit<typeof equipment, 'id'>) => {
+  const handleUpdate = (updatedEquipment: Partial<Equipment>) => {
+    if (!equipment?.id) return;
+    
     dispatch(updateEquipment({ ...updatedEquipment, id: equipment.id }));
     setIsEditing(false);
   };
 
-  const handleConfirmDelete = () => {
-    dispatch(deleteEquipment(equipment.id));
-    handleBack();
-  };
-
   if (isEditing) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
+      <div className="equipment-details-container">
+        <div className="equipment-flex equipment-items-center equipment-gap-md">
           <button
             onClick={() => setIsEditing(false)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="equipment-btn equipment-btn--icon"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold">Редактирование техники</h1>
+          <h1 className="equipment-header__title">Редактирование техники</h1>
         </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-6">
+  
+        <div className="equipment-card equipment-card--editing">
           <EquipmentForm
             initialData={equipment}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
-            isClosedEquipment={equipment.category === 'closed'}
+            isClosedEquipment={equipment.is_closed}
           />
         </div>
       </div>
@@ -88,36 +100,43 @@ export function EquipmentDetailsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Header
+    <div className="equipment-details-container">
+      <Header 
         equipment={equipment}
         onBack={handleBack}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        onEdit={() => setIsEditing(true)}
+        onDelete={() => setShowDeleteModal(true)}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="equipment-grid equipment-grid--2cols">
         <BasicInfo equipment={equipment} />
         <IdentificationInfo equipment={equipment} />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <DatesInfo equipment={equipment} />
         <AssignmentInfo equipment={equipment} />
       </div>
 
-      {equipment.status === 'disposed' && equipment.disposalInfo && (
-        <DisposalInfo disposalInfo={equipment.disposalInfo} />
-      )}
-
-      {showDeleteModal && (
-        <DeleteConfirmationModal
-          title="Удаление техники"
-          message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
+      {equipment.status === 'disposed' && (
+        <DisposalInfo 
+          disposalInfo={{
+            actNumber: equipment.disposal_act_number,
+            actDate: equipment.disposal_act_date,
+            certNumber: equipment.disposal_cert_number,
+            certDate: equipment.disposal_cert_date,
+            comments: equipment.disposal_comments
+          }} 
         />
       )}
+
+      {showDeleteModal && <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onConfirm={() => {
+          dispatch(deleteEquipment(equipment.id));
+          handleBack();
+        }}
+        onCancel={() => setShowDeleteModal(false)}
+        title="Удаление техники"
+        message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
+      />}
     </div>
   );
 }

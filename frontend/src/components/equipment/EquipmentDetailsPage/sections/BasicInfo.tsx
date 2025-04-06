@@ -1,44 +1,71 @@
 import React from 'react';
-import { Package, Tag, MessageSquare } from 'lucide-react';
 import { Equipment } from '../../../../types';
-import { EQUIPMENT_CATEGORIES } from '../../constants';
-import { InfoCard } from './InfoCard';
-import { InfoItem } from './InfoItem';
+import { Package, Box, HardDrive, CircleEllipsis } from 'lucide-react';
+import '../style.css'
 
 interface BasicInfoProps {
   equipment: Equipment;
 }
 
 export function BasicInfo({ equipment }: BasicInfoProps) {
-  return (
-    <div className="space-y-6">
-      <InfoCard title="Основная информация">
-        <div className="space-y-4">
-          <InfoItem
-            icon={Package}
-            iconColor="text-blue-500"
-            label="Тип техники"
-            value={equipment.type}
-          />
-          <InfoItem
-            icon={Tag}
-            iconColor="text-purple-500"
-            label="Категория"
-            value={EQUIPMENT_CATEGORIES[equipment.category]}
-          />
-        </div>
-      </InfoCard>
+  const getCategoryLabel = (value: string) => {
+    const categories = [
+      { value: 'tko', label: 'ТКО' },
+      { value: 'radio', label: 'Радио' },
+      { value: 'computer', label: 'СВТ' },
+      { value: 'battery', label: 'АКБ' },
+      { value: 'antenna', label: 'Антенны, мачты' },
+      { value: 'power', label: 'Источники питания' },
+      { value: 'materials', label: 'Материалы' }
+    ];
+    return categories.find(c => c.value === value)?.label || value;
+  };
 
-      {equipment.comments && (
-        <InfoCard title="Комментарии">
-          <div className="flex items-start gap-3">
-            <MessageSquare className="h-5 w-5 text-indigo-500 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-gray-900 whitespace-pre-wrap">{equipment.comments}</p>
+  const getStatusLabel = (value: string) => {
+    const statuses = [
+      { value: 'in-operation', label: 'Эксплуатируется' },
+      { value: 'in-storage', label: 'На складе' },
+      { value: 'defective', label: 'Неисправно' },
+      { value: 'for-disposal', label: 'На списание' },
+      { value: 'disposed', label: 'Списано' }
+    ];
+    return statuses.find(s => s.value === value)?.label || value;
+  };
+
+  return (
+    <div className="equipment-card">
+      <h2 className="equipment-card__title">Основная информация</h2>
+      <div className="equipment-card-content">
+        <div className="equipment-info-grid">
+          <div className="equipment-info-item">
+            <Package className="equipment-info-item__icon text-blue-500" size={20} />
+            <div className="equipment-info-item__content">
+              <p className="equipment-info-item__label">Название</p>
+              <p className="equipment-info-item__value">{equipment.name}</p>
             </div>
           </div>
-        </InfoCard>
-      )}
+
+          {!equipment.is_closed && (
+            <div className="equipment-info-item">
+              <Box className="equipment-info-item__icon text-green-500" size={20} />
+              <div>
+                <p className="equipment-info-item__label">Категория</p>
+                <p className="equipment-info-item__value">
+                  {getCategoryLabel(equipment.open_category || '')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="equipment-info-item">
+            <HardDrive className="equipment-info-item__icon text-brown-500" size={20} />
+            <div>
+              <p className="equipment-info-item__label">Тип техники</p>
+              <p className="equipment-info-item__value">{equipment.type}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

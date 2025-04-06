@@ -28,6 +28,15 @@ export const equipmentApi = {
     return data;
   },
 
+  getEquipmentById: async (token: string, id: string) => {
+    const { data } = await api.get(`/equipment/${id}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data;
+  },
+
   // Create new equipment
   createEquipment: async (equipmentData: Omit<Equipment, 'id'>) => {
     const { data } = await api.post('/equipment/', equipmentData);

@@ -48,10 +48,11 @@
 
 /* Заголовок и верхняя панель */
 .equipment-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  
+  /* display: flex; */
+  /* align-items: center; */
+  /* justify-content: space-between; */
+  margin-bottom: 0.8rem;
 }
 
 .equipment-title {
@@ -74,7 +75,7 @@
 }
 
 .equipment-summary-text {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: #6b7280;
 }
 

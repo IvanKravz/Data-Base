@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Equipment, DisposalInfo } from '../../../types';
+import { Equipment } from '../../../types';
 import { BasicInformation } from './sections/BasicInformation';
 import { IdentificationInfo } from './sections/IdentificationInfo';
 import { DatesInfo } from './sections/DatesInfo';
@@ -10,8 +10,8 @@ import { RootState } from '../../../store/store';
 import { DisposalModal } from '../DisposalModal';
 
 interface EquipmentFormProps {
-  initialData: Omit<Equipment, 'id'>;
-  onSubmit: (data: Omit<Equipment, 'id'>) => void;
+  initialData: Equipment;
+  onSubmit: (data: Partial<Equipment>) => void;
   onCancel: () => void;
   isClosedEquipment?: boolean;
 }
@@ -22,36 +22,14 @@ export function EquipmentForm({
   onCancel,
   isClosedEquipment = false 
 }: EquipmentFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<Equipment>>({
     ...initialData,
     comments: initialData.comments || ''
   });
   const [showDisposalModal, setShowDisposalModal] = useState(false);
 
-  // Get personnel and facilities from Redux store for assignment
   const personnel = useSelector((state: RootState) => state.personnel.personnel);
   const facilities = useSelector((state: RootState) => state.facilities.facilities);
-
-  // Get available subdivisions based on selected division
-  const availableSubdivisions = formData.division === '1 отдел'
-    ? ['Отделение A', 'Отделение B', 'Отделение C']
-    : formData.division === '2 отдел'
-      ? ['Отделение D', 'Отделение E', 'Отделение F']
-      : [];
-
-  // Filter personnel and facilities based on division/subdivision
-  const availablePersonnel = personnel.filter(person => {
-    const matchesDivision = person.division === formData.division;
-    const matchesSubdivision = !formData.subdivision || person.subdivision === formData.subdivision;
-    return matchesDivision && matchesSubdivision;
-  });
-
-  const availableFacilities = facilities.filter(facility => {
-    const matchesDivision = facility.division === formData.division;
-    const matchesSubdivision = !formData.subdivision || facility.subdivision === formData.subdivision;
-    const matchesType = isClosedEquipment ? facility.type === 'shd' : facility.type === 'station';
-    return matchesDivision && matchesSubdivision && matchesType;
-  });
 
   const handleChange = (data: Partial<Equipment>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -62,53 +40,50 @@ export function EquipmentForm({
     onSubmit(formData);
   };
 
-  const handleDispose = (disposalInfo: DisposalInfo) => {
+  const handleDispose = (disposalInfo: {
+    actNumber?: string;
+    actDate?: string;
+    certNumber?: string;
+    certDate?: string;
+    comments?: string;
+  }) => {
     onSubmit({
       ...formData,
       status: 'disposed',
-      disposalInfo
+      disposal_act_number: disposalInfo.actNumber,
+      disposal_act_date: disposalInfo.actDate,
+      disposal_cert_number: disposalInfo.certNumber,
+      disposal_cert_date: disposalInfo.certDate,
+      disposal_comments: disposalInfo.comments
     });
   };
 
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div>
-          <h3 className="font-medium text-gray-900 mb-4">Основная информация</h3>
-          <BasicInformation 
-            formData={formData}
-            onChange={handleChange}
-            isClosedEquipment={isClosedEquipment}
-            isDisposed={formData.status === 'disposed'}
-          />
-        </div>
+        <BasicInformation 
+          formData={formData}
+          onChange={handleChange}
+          isClosedEquipment={isClosedEquipment}
+          isDisposed={formData.status === 'disposed'}
+        />
 
-        <div>
-          <h3 className="font-medium text-gray-900 mb-4">Идентификация</h3>
-          <IdentificationInfo 
-            formData={formData}
-            onChange={handleChange}
-          />
-        </div>
+        <IdentificationInfo 
+          formData={formData}
+          onChange={handleChange}
+        />
 
-        <div>
-          <h3 className="font-medium text-gray-900 mb-4">Даты</h3>
-          <DatesInfo 
-            formData={formData}
-            onChange={handleChange}
-          />
-        </div>
+        <DatesInfo 
+          formData={formData}
+          onChange={handleChange}
+        />
 
-        <div>
-          <h3 className="font-medium text-gray-900 mb-4">Принадлежность</h3>
-          <AssignmentInfo 
-            formData={formData}
-            onChange={handleChange}
-            availableSubdivisions={availableSubdivisions}
-            availablePersonnel={availablePersonnel}
-            availableFacilities={availableFacilities}
-          />
-        </div>
+        <AssignmentInfo 
+          formData={formData}
+          onChange={handleChange}
+          availablePersonnel={personnel}
+          availableFacilities={facilities}
+        />
 
         <div>
           <h3 className="font-medium text-gray-900 mb-4">Комментарии</h3>
@@ -121,30 +96,11 @@ export function EquipmentForm({
           />
         </div>
 
-        <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
-          {formData.status !== 'disposed' && (
-            <button
-              type="button"
-              onClick={() => setShowDisposalModal(true)}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-sm hover:shadow transition-all"
-            >
-              Списать
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-2.5 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-colors"
-          >
-            Отмена
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm hover:shadow transition-all"
-          >
-            Сохранить
-          </button>
-        </div>
+        <FormActions 
+          onCancel={onCancel}
+          showDisposeButton={formData.status !== 'disposed'}
+          onDispose={() => setShowDisposalModal(true)}
+        />
       </form>
 
       {showDisposalModal && (

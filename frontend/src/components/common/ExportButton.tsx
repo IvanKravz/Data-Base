@@ -13,7 +13,7 @@ export function ExportButton({ onClick, label }: ExportButtonProps) {
       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
     >
       <FileSpreadsheet className="h-4 w-4" />
-      <span>Экспорт в Excel</span>
+      {/* <span>Excel</span> */}
     </button>
   );
 }

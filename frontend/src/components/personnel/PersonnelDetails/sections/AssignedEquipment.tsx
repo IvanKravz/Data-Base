@@ -1,6 +1,6 @@
 // AssignedEquipment.tsx
 import React, { useState, useEffect } from 'react';
-import { Database } from 'lucide-react';
+import { HardDrive } from 'lucide-react';
 import { Employee, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { EquipmentModal } from '../../../equipment/EquipmentModal';
@@ -60,7 +60,7 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
       <div className="equipment-header">
         <h2 className="equipment-title">Закрепленная техника</h2>
         <div className="equipment-summary">
-          <Database className="equipment-summary-icon" />
+          <HardDrive className="equipment-summary-icon" />
           <span className="equipment-summary-text">Всего: {assignedEquipment.length}</span>
         </div>
       </div>
