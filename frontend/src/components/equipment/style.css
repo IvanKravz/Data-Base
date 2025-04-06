@@ -1,0 +1,177 @@
+/* Общие стили для контейнера кнопок */
+.status-buttons-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+/* Общие стили для кнопок */
+.status-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.status-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-button.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Анимация градиента при наведении */
+.status-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.status-button:hover::before {
+  left: 100%;
+}
+
+/* Стили для контента кнопок */
+.status-button-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-button-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-button-icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+}
+
+.status-button-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.status-button-count {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Стили для кнопки "Итого" */
+.status-button-all {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.status-button-all .status-button-icon {
+  color: #4b5563;
+}
+
+.status-button-all .status-button-text {
+  color: #374151;
+}
+
+.status-button-all .status-button-count {
+  color: #1f2937;
+}
+
+/* Стили для кнопки "В эксплуатации" */
+.status-button-in-operation {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.status-button-in-operation .status-button-icon {
+  color: #16a34a;
+}
+
+.status-button-in-operation .status-button-text {
+  color: #166534;
+}
+
+.status-button-in-operation .status-button-count {
+  color: #14532d;
+}
+
+/* Стили для кнопки "На складе" */
+.status-button-in-storage {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.status-button-in-storage .status-button-icon {
+  color: #2563eb;
+}
+
+.status-button-in-storage .status-button-text {
+  color: #1e40af;
+}
+
+.status-button-in-storage .status-button-count {
+  color: #1e3a8a;
+}
+
+/* Стили для кнопки "Неисправно" */
+.status-button-defective {
+  background-color: #fefce8;
+  border-color: #fde047;
+}
+
+.status-button-defective .status-button-icon {
+  color: #ca8a04;
+}
+
+.status-button-defective .status-button-text {
+  color: #854d0e;
+}
+
+.status-button-defective .status-button-count {
+  color: #713f12;
+}
+
+/* Стили для кнопки "На списание" */
+.status-button-for-disposal {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.status-button-for-disposal .status-button-icon {
+  color: #dc2626;
+}
+
+.status-button-for-disposal .status-button-text {
+  color: #991b1b;
+}
+
+.status-button-for-disposal .status-button-count {
+  color: #7f1d1d;
+}

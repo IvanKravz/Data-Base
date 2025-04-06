@@ -1,0 +1,1 @@
+export { DisposalModal } from './DisposalModal';

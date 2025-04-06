@@ -1,0 +1,1 @@
+export { CreateClosedEquipmentPage } from './CreateClosedEquipmentPage';

@@ -1,0 +1,1 @@
+export { ClosedFacilitiesPage } from './ClosedFacilitiesPage';

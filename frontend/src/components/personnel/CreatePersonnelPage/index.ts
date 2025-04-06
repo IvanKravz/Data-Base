@@ -1,0 +1,1 @@
+export { CreatePersonnelPage } from './CreatePersonnelPage';

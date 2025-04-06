@@ -1,0 +1,1 @@
+export { FacilityDetails } from './FacilityDetails';

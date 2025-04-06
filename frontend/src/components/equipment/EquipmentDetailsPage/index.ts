@@ -1,0 +1,1 @@
+export { EquipmentDetailsPage } from './EquipmentDetailsPage';

@@ -1,0 +1,1 @@
+export { FacilityTypeFilter } from './FacilityTypeFilter';

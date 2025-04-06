@@ -1,0 +1,453 @@
+/* Основной контейнер */
+/* Layout */
+.personnel-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+/* Адаптивная сетка */
+.personnel-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .personnel-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .personnel-details-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1400px) {
+  .personnel-details-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.equipment-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Заголовок и верхняя панель */
+.equipment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.equipment-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Блок с иконкой и количеством */
+.equipment-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.equipment-summary-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #6b7280;
+}
+
+.equipment-summary-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Cards */
+.info-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  border: 1px solid #f0f0f0;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Фикс для переполнения контента */
+}
+
+.info-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #2d3748;
+  position: relative;
+  padding-bottom: 0.75rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.info-card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: 15rem;
+  height: 2px;
+  background: linear-gradient(90deg, #4f46e5, #4669e5);
+}
+
+.info-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex-grow: 1;
+}
+
+/* Info Items */
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* .info-item:hover {
+    background-color: #f9fafb;
+  } */
+
+.info-item-icon {
+  flex-shrink: 0;
+  height: 1.5rem;
+  width: 1.5rem;
+  padding: 0.375rem;
+  border-radius: 30%;
+  background-color: #f0f0f0;
+  color: #4f46e5;
+  transition: all 0.2s;
+}
+
+.info-item-content {
+  flex: 1;
+  min-width: 0; /* Фикс для переполнения текста */
+}
+
+.info-item:hover .info-item-icon {
+  background-color: #e0e7ff;
+  transform: scale(1.05);
+}
+
+.info-item-icon-green {
+  color: #10B981;
+}
+
+.info-item-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-item-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.contract-item {
+  display: flex;
+  gap: 2rem;
+}
+
+/* Comments */
+.comment-item {
+  width: 100%;
+  font-size: 0.875rem;
+  padding: 0.3rem;
+  background-color: #f9f9f9;
+  border-radius: 0.5rem;
+  border-left: 0.9px solid #777877;
+  /* margin-bottom: 0.1rem; */
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .info-card {
+    padding: 1.25rem;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .info-item-icon {
+    align-self: flex-start;
+  }
+}
+
+.comment-item:last-child {
+  margin-bottom: 0;
+}
+
+.no-comments-text {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Header */
+.personnel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+@media (min-width: 768px) {
+  .personnel-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.personnel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.personnel-header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.personnel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Buttons */
+.icon-button {
+  border-radius: 0.5rem;
+  transition: background-color 0.3s;
+}
+
+.icon-button:hover {
+  background-color: #F3F4F6;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.action-button-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.button-back {
+  height: 1.3rem;
+  width: 1.3rem;
+  color: var(--text);
+}
+
+.button-back:hover {
+  background-color: #F3F4F6;
+}
+
+.action-button-green {
+  background-color: #059669;
+}
+
+.action-button-green:hover {
+  background-color: #047857;
+}
+
+.action-button-blue {
+  background-color: #2563EB;
+}
+
+.action-button-blue:hover {
+  background-color: #1D4ED8;
+}
+
+.action-button-red {
+  background-color: #DC2626;
+}
+
+.action-button-red:hover {
+  background-color: #B91C1C;
+}
+
+/* Responsive grid */
+.responsibility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Equipment items */
+.equipment-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  border-left: 2px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.equipment-item:hover {
+  background-color: #f1f5f9;
+  border-left-color: #cbd5e1;
+}
+
+.equipment-type {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.equipment-conclusion {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Стили для выпадающего списка оборудования */
+.equipment-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.equipment-toggle-button:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.equipment-toggle-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-icon {
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.equipment-list-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  margin-left: 2.75rem; /* Отступ для выравнивания с иконкой */
+}
+
+.equipment-list-container.expanded {
+  max-height: 500px; /* Достаточно большое значение для анимации */
+}
+
+.equipment-list {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.equipment-dropdown {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  transform-origin: top;
+  transform: scaleY(0.95);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.equipment-dropdown.visible {
+  transform: scaleY(1);
+  opacity: 1;
+}
+
+.equipment-dropdown.invisible {
+  transform: scaleY(0.95);
+  opacity: 0;
+}
+
+/* Полоса прокрутки для выпадающего списка */
+.equipment-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.equipment-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.equipment-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.equipment-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
