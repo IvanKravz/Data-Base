@@ -9,18 +9,18 @@ interface FormActionsProps {
 
 export function FormActions({ onCancel, loading }: FormActionsProps) {
   return (
-    <div className="flex justify-end gap-4">
+    <div className="personnel-form-actions">
       <button
         type="button"
         onClick={onCancel}
-        className="btn btn-secondary"
+        className="personnel-btn personnel-btn-secondary"
       >
         <X className="h-4 w-4" />
         <span>Отмена</span>
       </button>
       <button
         type="submit"
-        className="btn btn-primary"
+        className="personnel-btn personnel-btn-primary"
         disabled={loading}
       >
         <Save className="h-4 w-4" />

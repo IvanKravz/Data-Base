@@ -5,7 +5,7 @@
   --text: #1f2937;
   --text-light: #6b7280;
   --border: #e5e7eb;
-  --bg: #f9fafb;
+  --bg: #edf1f5;
   --card-bg: #ffffff;
   --error: #ef4444;
 }
@@ -100,6 +100,11 @@
 .qc-card:hover {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+  cursor: default;
+
+  .qc-card-header {
+    background: #e4ecf4;
+  }
 }
 
 .qc-card-header {
@@ -108,7 +113,6 @@
   padding: 1rem 1.25rem;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  /* cursor: pointer; */
 }
 
 .qc-card-icon {
@@ -146,6 +150,13 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
+  padding: 0.2rem;
+}
+
+.qc-field:hover {
+  background-color: #f6f9fd;
+  border-radius: 0.5rem;
+  transition: all 0.3s;
 }
 
 .qc-field:last-child {
@@ -169,6 +180,16 @@
 /* Inputs */
 .qc-input-group {
   margin-bottom: 1rem;
+}
+
+.qc-input[data-date="true"]::after {
+  content: "дд-мм-гггг";
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  pointer-events: none;
 }
 
 .qc-input-label {
@@ -256,10 +277,13 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.qc-not-found, .qc-error {
+.qc-not-found,
+.qc-error {
   text-align: center;
   padding: 2rem;
   color: var(--text-light);
@@ -270,4 +294,20 @@
   background: rgba(239, 68, 68, 0.1);
   border-radius: 0.5rem;
   margin-bottom: 1.5rem;
+}
+
+/* .qc-date-display {
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  min-height: 2.25rem;
+  display: flex;
+  align-items: center;
+} */
+
+.qc-date-display:empty::before {
+  content: 'дд-мм-гггг';
+  color: var(--text-light);
 }

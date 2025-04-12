@@ -51,7 +51,7 @@ class SubdivisionSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     division = DivisionSerializer() 
     subdivision = SubdivisionSerializer() 
-    sha_details = ShaWorkerDetailsSerializer(required=False)  # Добавляем поле sha_worker
+    sha_details = ShaWorkerDetailsSerializer(required=False)
     birth_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
     contract_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
     data_state_secrets = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])

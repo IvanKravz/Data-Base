@@ -21,7 +21,7 @@ class DivisionSerializer(serializers.ModelSerializer):
     facilities_count = serializers.SerializerMethodField()
     tasks_count = serializers.SerializerMethodField()
     subdivisions = SubdivisionSerializer(many=True, read_only=True)
-    staff_completion = serializers.SerializerMethodField()
+    # staff_completion = serializers.SerializerMethodField()
 
     class Meta:
         model = Division
@@ -29,7 +29,7 @@ class DivisionSerializer(serializers.ModelSerializer):
             'id', 'name', 
             'staff_planned_total', 'staff_planned_management',
             'staff_planned_officers', 'staff_planned_warrant_officers',
-            'staff_planned_civilian', 'staff_completion',
+            'staff_planned_civilian',
             'employees_count', 'management_count', 'officers_count', 
             'warrant_officers_count', 'civilian_count', 'equipment_count', 
             'tasks_count', 'facilities_count', 'subdivisions', 
@@ -60,10 +60,10 @@ class DivisionSerializer(serializers.ModelSerializer):
     def get_tasks_count(self, obj):
         return obj.get_tasks_count()
     
-    def get_staff_completion(self, obj):
-    # Расчет укомплектованности по общему штату
-        total_actual = obj.get_employees_count()
-        return round((total_actual / obj.staff_planned_total) * 100, 2) if obj.staff_planned_total > 0 else 0
+    # def get_staff_completion(self, obj):
+    # # Расчет укомплектованности по общему штату
+    #     total_actual = obj.get_employees_count()
+    #     return round((total_actual / obj.staff_planned_total) * 100, 2) if obj.staff_planned_total > 0 else 0
 
 class FacilitySerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()

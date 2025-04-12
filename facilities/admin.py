@@ -3,18 +3,18 @@ from .models import Division, Subdivision, Facility
 
 @admin.register(Subdivision)
 class SubdivisionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'division', 'staff_planned_total', 'staff_completion')
+    list_display = ('name', 'division', 'staff_planned_total')
     list_filter = ('division',)
     search_fields = ('name',)
     
-    def staff_completion(self, obj):
-        return f"{round((obj.staff_actual / obj.staff_planned) * 100, 2)}%" if obj.staff_planned > 0 else "0%"
-    staff_completion.short_description = 'Укомплектованность'
+    # def staff_completion(self, obj):
+    #     return f"{round((obj.staff_actual / obj.staff_planned_total) * 100, 2)}%" if obj.staff_planned_total > 0 else "0%"
+    # staff_completion.short_description = 'Укомплектованность'
 
 @admin.register(Division)
 class DivisionAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'staff_planned_total', 'staff_completion', 
+        'name', 'staff_planned_total', 
         'employees_count', 'management_count', 'officers_count',
         'warrant_officers_count', 'civilian_count',
         'equipment_count', 'tasks_count', 'facilities_count', 'created_at'
@@ -53,10 +53,10 @@ class DivisionAdmin(admin.ModelAdmin):
         return obj.get_tasks_count()
     tasks_count.short_description = 'Задачи'
     
-    def staff_completion(self, obj):
-        total_actual = obj.get_employees_count()
-        return f"{round((total_actual / obj.staff_planned_total) * 100, 2)}%" if obj.staff_planned_total > 0 else "0%"
-    staff_completion.short_description = 'Укомплектованность'
+    # def staff_completion(self, obj):
+    #     total_actual = obj.get_employees_count()
+    #     return f"{round((total_actual / obj.staff_planned_total) * 100, 2)}%" if obj.staff_planned_total > 0 else "0%"
+    # staff_completion.short_description = 'Укомплектованность'
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):

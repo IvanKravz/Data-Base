@@ -26,7 +26,7 @@ export function PersonnelDetails() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-
+  
   useEffect(() => {
     const fetchEmployees = async () => {
       try {

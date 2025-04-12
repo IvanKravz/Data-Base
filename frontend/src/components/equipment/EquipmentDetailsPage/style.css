@@ -141,7 +141,7 @@
 }
 
 .equipment-info-item:hover .equipment-info-item__icon {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .equipment-info-item__label {

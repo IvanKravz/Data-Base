@@ -110,6 +110,7 @@
 
 .info-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  cursor: default;
 }
 
 .info-card-title::after {
@@ -140,7 +141,7 @@
 
 /* .info-item:hover {
     background-color: #f9fafb;
-  } */
+  }  */
 
 .info-item-icon {
   flex-shrink: 0;
