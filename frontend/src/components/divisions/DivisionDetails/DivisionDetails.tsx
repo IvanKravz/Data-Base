@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Overview } from './sections/Overview';
-// import { useSelector } from 'react-redux'
-// import { RootState } from '../../../store/store';
 import { divisionsApi } from '../../../api';
-// import { PersonnelSection } from './sections/PersonnelSection';
-// import { EquipmentSection } from './sections/EquipmentSection';
-// import { FacilitiesSection } from './sections/FacilitiesSection';
-// import { TasksSection } from './sections/DivisionTasksSection';
 import { Header } from './sections/Header';
+import MapView from '../../map/MapView';
 
 type ActiveSection = 'overview' | 'personnel' | 'equipment' | 'facilities' | 'tasks';
 type ActiveSubdivision = string | null;
@@ -17,13 +12,10 @@ export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
   const navigate = useNavigate();
-  // const { divisions } = useSelector((state: RootState) => state.facilities);
-  // const division = divisions.results?.find(d => d.id == id);
-
   const [division, getDivisions] = useState('')
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  console.log('division', division.id)
   useEffect(() => {
     const fetchFacility = async () => {
       try {
@@ -58,6 +50,8 @@ export function DivisionDetails() {
           navigate(`/divisions/${id}/${section}`);
         }}
       />
+      <MapView divisionId={division.id}/>
     </div>
+    
   );
 }

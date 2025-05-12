@@ -12,8 +12,8 @@ from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
 #     )
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'id', 'rank', 'position', 'department', 'category', 'subcategory', 'priority')
-    list_filter = ('category', 'subcategory', 'department')
+    list_display = ('full_name', 'id', 'rank', 'position', 'category', 'subcategory', 'priority')
+    list_filter = ('category', 'subcategory')
     search_fields = ('full_name', 'position')
     ordering = ('priority', 'full_name')
 

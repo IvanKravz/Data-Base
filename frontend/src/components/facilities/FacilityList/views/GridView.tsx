@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, MapPin, Trash2, Tag, Star } from 'lucide-react';
+import { Building2, MapPin, Tag, Star, Trash2 } from 'lucide-react';
 import { Facility } from '../../../../types';
 
 interface GridViewProps {
@@ -38,7 +38,7 @@ export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProp
             </div>
             <div className="flex items-center gap-1 text-sm">
               <Star className="h-4 w-4" />
-              <span>{facility.class} класс</span>
+              <span>{facility.facility_class} класс</span>
             </div>
             <div className="flex items-center gap-1 text-sm">
               <MapPin className="h-4 w-4" />
@@ -47,8 +47,8 @@ export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProp
             <div className="flex items-center gap-1 text-sm">
               <Building2 className="h-4 w-4" />
               <span>
-                {facility.division}
-                {facility.subdivision && ` - ${facility.subdivision}`}
+                {facility.division.name}
+                {facility.subdivision && ` - ${facility.subdivision.name}`}
               </span>
             </div>
           </div>

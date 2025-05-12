@@ -16,9 +16,9 @@ export function CommentsInfo({ person }: ContactInfoProps) {
     <InfoCard title="Примечания">
       {comments.length > 0 ? (
         comments.map((comment, index) => (
-          <div key={index} className="comment-item">
+          <div key={index} >
             <InfoItem 
-              value={comment}
+              value={`${index+1}) ${comment}`}
             />
           </div>
         ))

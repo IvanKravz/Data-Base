@@ -41,7 +41,7 @@ export function PersonnelList({
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     if (!division) {
       return;
@@ -54,7 +54,12 @@ export function PersonnelList({
     const fetchPersonnel = async () => {
       try {
         const data = await employeesApi.getPersonnel(token, params);
-        const sortedData = data.sort((a, b) => a.priority - b.priority);
+        const filteredData = data.filter(person => {
+          // Проверяем, что division существует и имеет id
+          return person.division?.id?.toString() === division.id.toString();
+        });
+
+        const sortedData = [...filteredData].sort((a, b) => a.priority - b.priority);
         getAllPersonnel(sortedData);
         dispatch(setEmployee(sortedData));
       } catch (err) {
@@ -96,11 +101,12 @@ export function PersonnelList({
 
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm ||
-      person.full_name.toLowerCase().includes(searchLower) ||
-      person.position.toLowerCase().includes(searchLower) ||
-      person.work_phone.toLowerCase().includes(searchLower) ||
-      person.personal_phone.toLowerCase().includes(searchLower);
-      // person.subdivision && person.subdivision.toLowerCase().includes(searchLower);
+      person.full_name?.toLowerCase().includes(searchLower) ||
+      person.position?.toLowerCase().includes(searchLower) ||
+      person.work_phone?.toLowerCase().includes(searchLower) ||
+      person.personal_phone?.toLowerCase().includes(searchLower) ||
+      person.rank?.toLowerCase().includes(searchLower) ||
+      person.subdivision?.name.toLowerCase().includes(searchLower);
 
     return matchesCategory && matchesSearch;
   });

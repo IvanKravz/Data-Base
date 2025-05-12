@@ -70,12 +70,80 @@ class Employee(models.Model):
         ('section_head', 'Начальник отделения'),
     ]
 
+    @classmethod
+    def get_category_choices(cls):
+        return cls.CATEGORY_CHOICES
+
+    @classmethod
+    def get_subcategory_choices(cls):
+        return cls.SUB_CATEGORY_CHOICES
+
+    @classmethod
+    def get_officer_positions(cls):
+        return [
+            ('Старший офицер', 'Старший офицер'),
+            ('Флагманский связист', 'Флагманский связист'),
+            ('Офицер', 'Офицер'),
+            ('Старший инженер', 'Старший инженер'),
+            ('Старший референт', 'Старший референт'),
+            ('Инженер', 'Инженер'),
+            ('Референт', 'Референт')
+        ]
+
+    @classmethod
+    def get_warrant_officer_positions(cls):
+        return [
+            ('Старший инструктор', 'Старший инструктор'),
+            ('Старший радист', 'Старший радист'),
+            ('Радиотехник', 'Радиотехник'),
+            ('Ответственный исполнитель', 'Ответственный исполнитель')
+        ]
+
+    @classmethod
+    def get_civilian_positions(cls):
+        return [
+            ('Техник', 'Техник'),
+            ('Ответственный исполнитель', 'Ответственный исполнитель')
+        ]
+
+    @classmethod
+    def get_management_officer_ranks(cls):
+        return [
+            ('Полковник', 'Полковник' ),
+            ('Подполковник', 'Подполковник'),
+            ('Подполковник юстиции', 'Подполковник юстиции'),
+            ('Майор', 'Майор'),
+            ('Капитан 3 ранга', 'Капитан 3 ранга'),
+            ('Капитан', 'Капитан'),
+        ]
+    
+    @classmethod
+    def get_officer_ranks(cls):
+        return [
+            ('Подполковник', 'Подполковник'),
+            ('Подполковник юстиции', 'Подполковник юстиции'),
+            ('Майор', 'Майор'),
+            ('Капитан 3 ранга', 'Капитан 3 ранга'),
+            ('Капитан', 'Капитан'),
+            ('Капитан-лейтенант', 'Капитан-лейтенант'),
+            ('Старший лейтенант', 'Старший лейтенант'),
+            ('Лейтенант', 'Лейтенант')
+        ]
+
+    @classmethod
+    def get_warrant_officer_ranks(cls):
+        return [
+            ('Старший прапорщик', 'Старший прапорщик'),
+            ('Старший мичман', 'Старший мичман'),
+            ('Прапорщик', 'Прапорщик'),
+            ('Мичман', 'Мичман')
+        ]
+
     full_name = models.CharField(max_length=50, verbose_name='ФИО')
-    position = models.CharField(max_length=32, verbose_name='Должность')
+    position = models.CharField(max_length=256, verbose_name='Должность')
     rank = models.CharField(max_length=20, verbose_name='Звание', null=True)
-    order_rank = models.CharField(max_length=20, verbose_name='Приказ на присвоение звания', null=True)
+    order_rank = models.CharField(max_length=30, verbose_name='Приказ на присвоение звания', null=True, blank=True)
     personal_number = models.CharField(max_length=15, verbose_name='Личный номер', null=True)
-    department = models.CharField(max_length=14, verbose_name='Отдел', null=True)
     personal_phone = models.CharField(max_length=50, verbose_name='Телефон', null=True)
     work_phone = models.CharField(max_length=50, verbose_name='Телефон', null=True)
     birth_date = models.DateField(verbose_name='Дата рождения', null=True)
@@ -93,15 +161,17 @@ class Employee(models.Model):
         Division,
         on_delete=models.CASCADE,
         related_name='employees',
-        verbose_name='Подразделение'
+        verbose_name='Подразделение',
+        null=True,
+        blank=True
     )
     subdivision = models.ForeignKey(
         Subdivision,
         on_delete=models.SET_NULL,
+        related_name='employees',
+        verbose_name='Отделение',
         null=True,
         blank=True,
-        related_name='employees',
-        verbose_name='Отделение'
     )
     is_sha_worker = models.BooleanField(default=False, verbose_name='ШаРаботник')
     is_material_responsible = models.BooleanField(default=False, verbose_name='МОЛ')
@@ -166,7 +236,7 @@ class Employee(models.Model):
                 base_priority = 1200  # Для других должностей офицеров
             
             # Затем уточнение по званию (шаг 10)
-            if self.rank in ['Подполковник', 'Капитан 2 ранга', 'Подполковник юстиции']:
+            if self.rank in ['Подполковник', 'Подполковник юстиции']:
                 self.priority = base_priority + 10
             elif self.rank in ['Майор', 'Капитан 3 ранга']:
                 self.priority = base_priority + 20

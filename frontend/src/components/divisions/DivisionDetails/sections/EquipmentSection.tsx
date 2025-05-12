@@ -40,6 +40,8 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
   const [selectedStatus, setSelectedStatus] = useState<Equipment['status'] | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  console.log('division', division)
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,14 +98,19 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
   // Фильтрация для таблицы (учитывает статус, категорию и поиск)
   const filteredEquipment = useMemo(() => {
     return statusButtonsEquipment.filter(item => {
+      console.log('item', item)
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
       const matchesSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.assigned_to.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.subdivision?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.inventory_number.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesStatus && matchesSearch;
+      const matchesCategory = selectedCategory === null || item.category_display === selectedCategory;
+
+      return matchesStatus && matchesSearch && matchesCategory;
     });
-  }, [statusButtonsEquipment, selectedStatus, searchTerm]);
+  }, [statusButtonsEquipment, selectedStatus, searchTerm, selectedCategory]);
 
   // Получение уникальных категорий для закрытой техники
   const uniqueClosedCategories = [...new Set(closedEquipment.map(item => item.category_display))];

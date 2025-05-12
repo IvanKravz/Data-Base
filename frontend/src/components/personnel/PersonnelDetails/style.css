@@ -195,17 +195,6 @@
 }
 
 /* Comments */
-.comment-item {
-  width: 100%;
-  font-size: 0.875rem;
-  padding: 0.3rem;
-  background-color: #f9f9f9;
-  border-radius: 0.5rem;
-  border-left: 0.9px solid #777877;
-  /* margin-bottom: 0.1rem; */
-  word-break: break-word;
-}
-
 @media (max-width: 640px) {
   .info-card {
     padding: 1.25rem;

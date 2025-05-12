@@ -1,6 +1,5 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { useDispatch } from 'react-redux';
 import { Facility } from '../../../types';
 import { TableView } from './views/TableView';
 import { GridView } from './views/GridView';
@@ -11,43 +10,20 @@ import { deleteFacility } from '../../../store/slices/facilitiesSlice';
 
 interface FacilityListProps {
   viewType: 'grid' | 'table';
-  type: 'open' | 'closed';
+  facilities: Facility[];
   onSelectFacility?: (facility: Facility) => void;
-  selectedDivision: string;
-  searchTerm: string;
-  filterType: 'all' | 'station' | 'shd';
-  facilityClassFilter: 'all' | '1' | '2';
+  showDifferentFields?: boolean;
 }
 
-export function FacilityList({ 
-  viewType, 
-  type,
+export function FacilityList({
+  viewType = 'table',
+  facilities,
   onSelectFacility,
-  selectedDivision,
-  searchTerm = '',
-  filterType,
-  facilityClassFilter
+  showDifferentFields = false
 }: FacilityListProps) {
   const dispatch = useDispatch();
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [facilityToDelete, setFacilityToDelete] = React.useState<string | null>(null);
-
-  // Get facilities from Redux store and filter them
-  const facilities = useSelector((state: RootState) => {
-    const allFacilities = state.facilities.facilities.filter(f => 
-      type === 'open' ? f.type === 'station' : f.type === 'shd'
-    );
-
-    return allFacilities.filter(facility => {
-      const matchesDivision = selectedDivision === 'all' || facility.division === selectedDivision;
-      const matchesSearch = !searchTerm || 
-        facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        facility.address.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = filterType === 'all' || facility.type === filterType;
-      const matchesClass = facilityClassFilter === 'all' || facility.class === facilityClassFilter;
-      return matchesDivision && matchesSearch && matchesType && matchesClass;
-    });
-  });
 
   const handleDelete = (id: string) => {
     setFacilityToDelete(id);
@@ -62,13 +38,18 @@ export function FacilityList({
     }
   };
 
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setFacilityToDelete(null);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <div className="p-4 border-b border-gray-200">
         <div className="flex justify-end">
-          <ExportButton 
+          <ExportButton
             onClick={() => exportFacilitiesToExcel(facilities)}
-            label={`Экспорт ${type === 'open' ? 'открытых' : 'закрытых'} объектов`}
+            label="Экспорт объектов"
           />
         </div>
       </div>
@@ -79,20 +60,20 @@ export function FacilityList({
             facilities={facilities}
             onFacilityClick={onSelectFacility}
             onDelete={handleDelete}
+            showDifferentFields={showDifferentFields}
           />
         ) : (
           <GridView
             facilities={facilities}
             onFacilityClick={onSelectFacility}
             onDelete={handleDelete}
+            showDifferentFields={showDifferentFields}
           />
         )}
 
         {facilities.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            {searchTerm 
-              ? 'Нет объектов, соответствующих поиску' 
-              : `Нет ${type === 'open' ? 'открытых' : 'закрытых'} объектов`}
+            Нет объектов для отображения
           </div>
         )}
       </div>
@@ -102,10 +83,7 @@ export function FacilityList({
           title="Удаление объекта"
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}
-          onCancel={() => {
-            setShowDeleteModal(false);
-            setFacilityToDelete(null);
-          }}
+          onCancel={handleCancelDelete}
         />
       )}
     </div>

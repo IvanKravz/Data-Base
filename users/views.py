@@ -9,19 +9,19 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import User, ShaWorkerDetails
-from .serializers import UserSerializer, TokenObtainPairSerializer
+from .serializers import EmployeeDictionariesSerializer, UserSerializer, TokenObtainPairSerializer
 
 from rest_framework import viewsets, permissions
 from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
 from .serializers import UserSerializer, EmployeeSerializer, ShaWorkerDetailsSerializer, ShaEquipmentConclusionSerializer
 
-# class UserViewSet(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [AllowAny] #[permissions.IsAdminUser]
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
 
 class EmployeeViewSet(APIView):
-    permission_classes = [AllowAny]  # или [permissions.IsAdminUser] для ограничения доступа
+    permission_classes = [IsAuthenticated]  # или [permissions.IsAdminUser] для ограничения доступа
 
     def get(self, request, pk=None):
         if pk:
@@ -82,12 +82,12 @@ class EmployeeViewSet(APIView):
 class ShaWorkerViewSet(viewsets.ModelViewSet):
     queryset = ShaWorkerDetails.objects.all()
     serializer_class = ShaWorkerDetailsSerializer
-    permission_classes = [AllowAny] #[permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
 
 class ShaEquipmentConclusionViewSet(viewsets.ModelViewSet):
     queryset = ShaEquipmentConclusion.objects.all()
     serializer_class = ShaEquipmentConclusionSerializer
-    permission_classes = [AllowAny] #[permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
 
 class TokenObtainPairView(BaseTokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
@@ -118,3 +118,20 @@ class RegisterView(APIView):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+class EmployeeDictionariesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        data = {
+            'categories': [{'value': c[0], 'label': c[1]} for c in Employee.get_category_choices()],
+            'subcategories': [{'value': c[0], 'label': c[1]} for c in Employee.get_subcategory_choices()],
+            'officer_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_officer_positions()],
+            'warrant_officer_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_warrant_officer_positions()],
+            'civilian_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_civilian_positions()],
+            'management_officer_ranks': [{'value': p[0], 'label': p[1]} for p in Employee.get_management_officer_ranks()],
+            'officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_officer_ranks()],
+            'warrant_officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_warrant_officer_ranks()],
+        }
+        serializer = EmployeeDictionariesSerializer(data)
+        return Response(serializer.data)

@@ -1,21 +1,42 @@
 import { api } from './client';
 import { Employee } from '../types';
 
+export interface EmployeeDictionaries {
+  categories: { value: string; label: string }[];
+  officer_positions: { value: string; label: string }[];
+  warrant_officer_positions: { value: string; label: string }[];
+  civilian_positions: { value: string; label: string }[];
+  officer_ranks: { value: string; label: string }[];
+  warrant_officer_ranks: { value: string; label: string }[];
+}
+
 export const employeesApi = {
   // Get all personnel with optional filters
+
+  getDictionaries: async (token: string): Promise<EmployeeDictionaries> => {
+    const { data } = await api.get('users/employees/dictionaries/', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data;
+  },
+
   getPersonnel: async (token: string, params?: {
-    division?: string;
+    division?: string | null; 
     isMaterialResponsible?: boolean;
     isShaWorker?: boolean;
     accessLevel?: string;
     search?: string;
-  }) => {
-    const { data } = await api.get('users/employees/', { params, 
+  }): Promise<Employee[]> => {
+    const response = await api.get<Employee[]>('users/employees/', { 
+      params: params || {}, // Просто передаем params как есть
       headers: {
-        'Authorization': `Bearer ${token}`, // Передача токена в заголовке
+        'Authorization': `Bearer ${token}`,
       },
     });
-    return data;
+    
+    return response.data;
   },
 
   // Get person by ID
@@ -37,12 +58,36 @@ export const employeesApi = {
   // Update existing person
   updatePerson: async (token: string, id: string, personData: Partial<Employee>) => {
     console.log('personData', personData)
-    const { data } = await api.patch(`users/employees/${id}/`, personData, {
+    // Подготавливаем данные для отправки
+    const dataToSend = {
+      ...personData,
+      // Преобразуем даты в строки, если они есть
+      birth_date: personData.birth_date ? formatDate(personData.birth_date) : undefined,
+      contract_date: personData.contract_date ? formatDate(personData.contract_date) : undefined,
+      data_state_secrets: personData.data_state_secrets ? formatDate(personData.data_state_secrets) : undefined,
+      year_graduation: personData.year_graduation ? formatDate(personData.year_graduation) : undefined,
+      date_start_work: personData.date_start_work ? formatDate(personData.date_start_work) : undefined,
+      date_end_work: personData.date_end_work ? formatDate(personData.date_end_work) : undefined,
+      order_rank: personData.order_rank || null,
+      // Убираем лишние поля, которые бэкенд не ожидает
+      id: undefined,
+      created_at: undefined,
+      updated_at: undefined,
+      division: undefined,
+      subdivision: undefined,
+      // Обрабатываем подразделения
+      division_id: personData.division?.id || null,
+      subdivision_id: personData.subdivision?.id || null,
+      // Обрабатываем sha_details
+      sha_details: personData.is_sha_worker ? personData.sha_details : null
+    };
+
+    const { data } = await api.patch(`users/employees/${id}/`, dataToSend, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Передача токена в заголовке 
+        'Authorization': `Bearer ${token}`,
       },
-    });;
+    });
     return data;
   },
 
@@ -104,3 +149,8 @@ export const employeesApi = {
     return data;
   }
 };
+
+function formatDate(date: string | Date): string {
+  if (typeof date === 'string') return date;
+  return date.toISOString().split('T')[0]; // Формат YYYY-MM-DD
+}

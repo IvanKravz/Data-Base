@@ -1,1 +1,1 @@
-export { EquipmentForm } from './EquipmentForm';
+export { EditEquipmentForm } from './EditEquipmentForm';

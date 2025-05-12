@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Equipment } from '../../../../types';
 import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { getStatusIcon, getStatusLabel, getStatusColor } from '../../../../utils/statusUtils';
-import { EQUIPMENT_CATEGORIES } from '../../constants';
+import { equipmentApi } from '../../../../api';
 import './style.css';
 
 interface TableViewProps {
@@ -16,6 +16,26 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
   const navigate = useNavigate();
   const [sortField, setSortField] = useState<keyof Equipment>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [equipmentCategories, setEquipmentCategories] = useState<Record<string, string>>({});
+
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       const token = localStorage.getItem('accessToken');
+  //       const response = await equipmentApi.getEquipmentCategories(token);
+  //       const categoriesMap = response.reduce((acc: Record<string, string>, category) => {
+  //         acc[category.value] = category.label;
+  //         return acc;
+  //       }, {});
+  //       setEquipmentCategories(categoriesMap);
+  //     } catch (error) {
+  //       console.error('Failed to fetch equipment categories:', error);
+  //     }
+  //   };
+
+  //   fetchCategories();
+  // }, []);
+
 
   const handleSort = (field: keyof Equipment) => {
     if (sortField === field) {
@@ -35,8 +55,12 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
     let bValue = b[sortField];
 
     if (sortField === 'category') {
-      aValue = EQUIPMENT_CATEGORIES[a.category];
-      bValue = EQUIPMENT_CATEGORIES[b.category];
+      aValue = a.category_display ||
+        (equipmentCategories && a.open_category ? equipmentCategories[a.open_category] : '') ||
+        'Без категории';
+      bValue = b.category_display ||
+        (equipmentCategories && b.open_category ? equipmentCategories[b.open_category] : '') ||
+        'Без категории';
     } else if (sortField === 'status') {
       aValue = getStatusLabel(a.status);
       bValue = getStatusLabel(b.status);
@@ -140,9 +164,9 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                 </td>
                 <td className="table-cell">
                   <div className="cell-content">
-                    {item.division}
-                    {item.subdivision && ` - ${item.subdivision}`}
+                    {item.division.name}
                   </div>
+                  {item.subdivision.name && `  ${item.subdivision.name}`}
                 </td>
                 <td className="table-cell">
                   <div className="cell-content">{item.serial_number}</div>
@@ -156,46 +180,46 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                 <td className="table-cell">
                   <div className="cell-content">{item.purchase_date}</div>
                 </td>
-                  <td className="table-cell table-cell-assigned-to">
-                    <div className="cell-content">
-                      {item.assigned_to ? (
-                        <>
-                          <span>{formatEmployeeName(item.assigned_to)}</span>
-                          {item.assigned_to.position && (
-                            <span className="position-text">
-                              {item.assigned_to.position}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        '-'
-                      )}
-                    </div>
-                  </td>
-                  <td className="table-cell-actions">
-                    <div className="actions-container">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(e, item);
-                        }}
-                        className="edit-button"
-                        aria-label="Редактировать"
-                      >
-                        <Pencil className="action-icon" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(item.id);
-                        }}
-                        className="delete-button"
-                        aria-label="Удалить"
-                      >
-                        <Trash2 className="action-icon" />
-                      </button>
-                    </div>
-                  </td>
+                <td className="table-cell table-cell-assigned-to">
+                  <div className="cell-content">
+                    {item.assigned_to ? (
+                      <>
+                        <span>{formatEmployeeName(item.assigned_to)}</span>
+                        {item.assigned_to.position && (
+                          <span className="position-text">
+                            {item.assigned_to.position}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      '-'
+                    )}
+                  </div>
+                </td>
+                <td className="table-cell-actions">
+                  <div className="actions-container">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(e, item);
+                      }}
+                      className="edit-button"
+                      aria-label="Редактировать"
+                    >
+                      <Pencil className="action-icon" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item.id);
+                      }}
+                      className="delete-button"
+                      aria-label="Удалить"
+                    >
+                      <Trash2 className="action-icon" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             );
           })}

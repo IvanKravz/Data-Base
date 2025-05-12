@@ -23,7 +23,7 @@ export function DatesInfo({ equipment }: DatesInfoProps) {
         <InfoItem
           icon={Calendar}
           iconColor="text-green-500"
-          label="Дата покупки"
+          label="Дата ввода в эксплуатацию"
           value={format(new Date(equipment.purchase_date), 'dd.MM.yyyy')}
         />
       </div>

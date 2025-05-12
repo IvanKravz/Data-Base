@@ -12,10 +12,10 @@ interface AssignmentInfoProps {
 }
 
 export function AssignmentInfo({ equipment }: AssignmentInfoProps) {
-  const facilities = useSelector((state: RootState) => state.facilities.facilities);
-  const facility = equipment.facility 
-    ? facilities.find(f => f.id === equipment.facility)
-    : null;
+  // const facilities = useSelector((state: RootState) => state.facilities.facilities);
+  // const facility = equipment.facility 
+  //   ? facilities.find(f => f.id === equipment.facility)
+  //   : null;
 
   return (
     <InfoCard title="Принадлежность">
@@ -24,7 +24,7 @@ export function AssignmentInfo({ equipment }: AssignmentInfoProps) {
           icon={Building2}
           iconColor="text-blue-500"
           label="Подразделение"
-          value={`${equipment.division_name}${equipment.subdivision ? ` - ${equipment.subdivision}` : ''} отделение`}
+          value={`${equipment.division.name}${equipment.subdivision.name ? ` - ${equipment.subdivision.name }` : ''}`}
         />
         {equipment.assigned_to && (
           <InfoItem
@@ -34,12 +34,12 @@ export function AssignmentInfo({ equipment }: AssignmentInfoProps) {
             value={equipment.assigned_to.full_name}
           />
         )}
-        {facility && (
+        {equipment.facility?.id && (
           <InfoItem
             icon={MapPin}
             iconColor="text-purple-500"
             label="Объект"
-            value={`${facility.name} (${facility.type === 'station' ? 'Станция' : 'ШД'}, ${facility.class} класс)`}
+            value={equipment.facility.name}
           />
         )}
       </div>

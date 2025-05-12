@@ -35,7 +35,7 @@ export function Overview({
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const params = {
     division: division.id,
   };

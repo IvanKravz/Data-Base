@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ProgressCircle } from './ProgressCircle';
 import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import './style.css'
 
 interface FiltersProps {
   activeFilter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha' | 'shaOneClass' | 'shaTwoClass';
@@ -26,6 +26,7 @@ export const Filters = ({
   getStaffCount,
 }: FiltersProps) => {
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
   const officersData = getStaffCount('officers');
 
   const officersWithoutManagement = {
@@ -33,8 +34,63 @@ export const Filters = ({
     actualCount: officersData.actualCount - getStaffCount('management').actualCount
   };
 
+  const handleExpandClick = (filterType: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedFilter(expandedFilter === filterType ? null : filterType);
+  };
+
+  const handleFilterClick = (filterType: string) => {
+    onFilterClick(filterType as any);
+    setExpandedFilter(null); // Скрываем детали при переключении фильтра
+  };
+
   const toggleFiltersVisibility = () => {
     setIsFiltersVisible(!isFiltersVisible);
+  };
+
+  const renderMainFilter = (
+    filterType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha',
+    label: string,
+    hasDetails: boolean = false
+  ) => {
+    const staffData = getStaffCount(filterType);
+    return (
+      <div className="filter-button-wrapper-personnel">
+        <button
+          className={`filter-button-personnel ${activeFilter === filterType ? 'active' : ''}`}
+          onClick={() => handleFilterClick(filterType)}
+        >
+          <span className="filter-button-label-personnel">{label}</span>
+        </button>
+
+        {hasDetails && (
+          <>
+            <button
+              className="expand-button"
+              onClick={(e) => handleExpandClick(filterType, e)}
+            >
+              <ChevronDown 
+                size={16}
+                className={`transition-transform ${expandedFilter === filterType ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            <div className={`filter-details ${expandedFilter === filterType ? 'active' : ''}`}>
+              <div className="details-content">
+                <div className="details-row">
+                  <span className="details-label">По штату:</span>
+                  <span className="details-value">{staffData.staffCount}</span>
+                </div>
+                <div className="details-row">
+                  <span className="details-label">По списку:</span>
+                  <span className="details-value">{staffData.actualCount}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -44,110 +100,75 @@ export const Filters = ({
           className="filter-toggle-button"
           onClick={toggleFiltersVisibility}
         >
-          <Filter size={20} />
+          <Filter size={18} />
           <span>Фильтр</span>
-          {isFiltersVisible ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {isFiltersVisible ? (
+            <ChevronUp size={18} className="ml-auto" />
+          ) : (
+            <ChevronDown size={18} className="ml-auto" />
+          )}
         </button>
       </div>
 
       {isFiltersVisible && (
         <div className="filters-content">
           <div className="main-filters">
-            <button
-              className={`filter-button ${activeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => onFilterClick('all')}
-            >
-              Итого
-              <ProgressCircle {...getStaffCount('all')} />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'management' ? 'active' : ''}`}
-              onClick={() => onFilterClick('management')}
-            >
-              Руководство
-              <ProgressCircle {...getStaffCount('management')} />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'officers' ? 'active' : ''}`}
-              onClick={() => onFilterClick('officers')}
-            >
-              Офицеры
-              <ProgressCircle {...getStaffCount('officers')} />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'warrantOfficers' ? 'active' : ''}`}
-              onClick={() => onFilterClick('warrantOfficers')}
-            >
-              Прапорщики
-              <ProgressCircle {...getStaffCount('warrantOfficers')} />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'civilian' ? 'active' : ''}`}
-              onClick={() => onFilterClick('civilian')}
-            >
-              Гражданский персонал
-              <ProgressCircle {...getStaffCount('civilian')} />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'mol' ? 'active' : ''}`}
-              onClick={() => onFilterClick('mol')}
-            >
-              МОЛ 
-              <ProgressCircle {...getStaffCount('mol')} showOnlyActual noActiveColor />
-            </button>
-            <button
-              className={`filter-button ${activeFilter === 'sha' ? 'active' : ''}`}
-              onClick={() => onFilterClick('sha')}
-            >
-              Шаработники
-              <ProgressCircle {...getStaffCount('sha')} showOnlyActual noActiveColor />
-            </button>
+            {renderMainFilter('all', 'Итого')}
+            {renderMainFilter('management', 'Руководство', true)}
+            {renderMainFilter('officers', 'Офицеры', true)}
+            {renderMainFilter('warrantOfficers', 'Прапорщики', true)}
+            {renderMainFilter('civilian', 'Гражд. персонал', true)}
+            {renderMainFilter('mol', 'Матер. отв. лица')}
+            {renderMainFilter('sha', 'Шаработники')}
           </div>
 
-          {/* Дополнительные фильтры */}
           {(showShaFilters || showOfficerFilters) && (
             <div className="additional-filters-container">
               <div className="additional-filters">
                 {showOfficerFilters && (
                   <div className="officer-filters">
-                    <button
-                      className={`officer-filter-button ${selectedOfficerFilter === 'with_management' ? 'active' : ''}`}
-                      onClick={() => onOfficerFilterClick('with_management')}
-                    >
-                      С руководством
-                      <ProgressCircle {...getStaffCount('officers')} showOnlyActual />
-                    </button>
-                    <button
-                      className={`officer-filter-button ${selectedOfficerFilter === 'without_management' ? 'active' : ''}`}
-                      onClick={() => onOfficerFilterClick('without_management')}
-                    >
-                      Без руководства
-                      <ProgressCircle {...officersWithoutManagement} showOnlyActual />
-                    </button>
+                    {['with_management', 'without_management'].map((filter) => {
+                      const data = filter === 'with_management' 
+                        ? getStaffCount('officers') 
+                        : officersWithoutManagement;
+                      return (
+                        <div key={filter} className="filter-button-wrapper">
+                          <button
+                            className={`sha-filter-button ${selectedOfficerFilter === filter ? 'active' : ''}`}
+                            onClick={() => {
+                              onOfficerFilterClick(filter as any);
+                              setExpandedFilter(null);
+                            }}
+                          >
+                            {filter === 'with_management' ? 'С руководством' : 'Без руководства'}
+                            <span className="count-badge">{data.actualCount}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 {showShaFilters && (
                   <div className="sha-filters">
-                    <button
-                      className={`sha-filter-button ${selectedAccessClass === 'all' ? 'active' : ''}`}
-                      onClick={() => onShaFilterClick('all')}
-                    >
-                      Итого
-                    </button>
-                    <button
-                      className={`sha-filter-button ${selectedAccessClass === '1' ? 'active' : ''}`}
-                      onClick={() => onShaFilterClick('1')}
-                    >
-                      1 класс
-                      <ProgressCircle {...getStaffCount('shaOneClass')} showOnlyActual noActiveColor />
-                    </button>
-                    <button
-                      className={`sha-filter-button ${selectedAccessClass === '2' ? 'active' : ''}`}
-                      onClick={() => onShaFilterClick('2')}
-                    >
-                      2 класс
-                      <ProgressCircle {...getStaffCount('shaTwoClass')} showOnlyActual noActiveColor />
-                    </button>
+                    {['all', '1', '2'].map((accessClass) => {
+                      const data = accessClass === 'all' 
+                        ? getStaffCount('sha') 
+                        : getStaffCount(accessClass === '1' ? 'shaOneClass' : 'shaTwoClass');
+                      return (
+                        <div key={accessClass} className="filter-button-wrapper-personnel">
+                          <button
+                            className={`sha-filter-button ${selectedAccessClass === accessClass ? 'active' : ''}`}
+                            onClick={() => {
+                              onShaFilterClick(accessClass as any);
+                              setExpandedFilter(null);
+                            }}
+                          >
+                            {accessClass === 'all' ? 'Итого' : `${accessClass} класс`}
+                            <span className="count-badge">{data.actualCount}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

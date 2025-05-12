@@ -31,12 +31,13 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
     } : null
   });
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const token = localStorage.getItem('accessToken');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [divisions, getDivisions] = useState<{ results: Division[] }>({ results: [] });
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [divisions, getDivisions] = useState<Division[]>([]);
 
   useEffect(() => {
     const fetchDivisions = async () => {
@@ -116,16 +117,20 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
     e.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     try {
+      // Если сотрудник больше не является ШаРаботником, убедимся что sha_details не передается
       const dataToSend = {
         ...formData,
-        description: formData.description || ''
+        description: formData.description || '',
+        sha_details: formData.is_sha_worker ? formData.sha_details : null
       };
-
+  
       const updatedPerson = await employeesApi.updatePerson(token, formData.id, dataToSend);
+      console.log('formData', formData)
+      console.log('dataToSend', dataToSend)
       onSubmit(updatedPerson);
-      navigate(`/personnel/${formData.id}`);
+      // navigate(`/personnel/${formData.id}`);
       location.reload();
     } catch (err) {
       setError('Не удалось обновить данные сотрудника');
@@ -141,7 +146,8 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
         <BasicInformationCard
           formData={formData}
           onChange={handleChange}
-          divisions={divisions.results}
+          divisions={divisions}
+          token={token}
         />
         <ContactInformationCard
           formData={formData}

@@ -1,24 +1,45 @@
 import React from 'react';
+import '../style.css';
 
 interface FormActionsProps {
   onCancel: () => void;
+  showDisposeButton?: boolean;
+  onDispose?: () => void;
+  isLoading?: boolean;
 }
 
-export function FormActions({ onCancel }: FormActionsProps) {
+export function FormActions({ 
+  onCancel, 
+  showDisposeButton = false,
+  onDispose = () => {},
+  isLoading = false
+}: FormActionsProps) {
   return (
-    <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
+    <div className="form-actions">
+      {showDisposeButton && (
+        <button
+          type="button"
+          onClick={onDispose}
+          className="btn btn-danger"
+          disabled={isLoading}
+        >
+          Списать технику
+        </button>
+      )}
       <button
         type="button"
         onClick={onCancel}
-        className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+        className="btn btn-secondary"
+        disabled={isLoading}
       >
         Отмена
       </button>
       <button
         type="submit"
-        className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm hover:shadow transition-all"
+        className="btn btn-primary"
+        disabled={isLoading}
       >
-        Создать
+        {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
       </button>
     </div>
   );

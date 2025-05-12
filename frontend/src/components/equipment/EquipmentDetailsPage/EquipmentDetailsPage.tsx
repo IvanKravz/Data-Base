@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { EquipmentForm } from '../forms/EquipmentForm';
+import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
 import { equipmentApi } from '../../../api';
 import './style.css';
@@ -16,6 +16,10 @@ import {
   AssignmentInfo,
   DisposalInfo
 } from './sections';
+import { Equipment } from '../../../types';
+import { CommentsInfo } from './sections/CommentsInfo';
+import { DocumentsInfo } from './sections/DocumentsInfo';
+import { ProductStructureTable } from './sections/ProductStructureTable';
 
 
 export function EquipmentDetailsPage() {
@@ -29,11 +33,13 @@ export function EquipmentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  console.log('equipment', equipment)
+
   useEffect(() => {
     const fetchEquipment = async () => {
       try {
         if (!id || !token) return;
-        
+
         const data = await equipmentApi.getEquipmentById(token, id);
         setEquipment(data);
       } catch (err) {
@@ -67,11 +73,27 @@ export function EquipmentDetailsPage() {
     navigate(-1);
   };
 
-  const handleUpdate = (updatedEquipment: Partial<Equipment>) => {
-    if (!equipment?.id) return;
+  const handleUpdate = async (updatedEquipment: Partial<Equipment>) => {
+    if (!equipment?.id || !token) return;
     
-    dispatch(updateEquipment({ ...updatedEquipment, id: equipment.id }));
-    setIsEditing(false);
+    try {
+      setLoading(true);
+      console.log('Обновляемые данные:', updatedEquipment);
+      
+      // Нормализуем данные перед отправкой
+      const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
+      
+      // Обновляем локальное состояние с учетом полных объектов
+      const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
+      dispatch(updateEquipment(fullUpdatedData));
+      setEquipment(fullUpdatedData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Ошибка при обновлении техники:', error);
+      setError('Не удалось обновить данные техники');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isEditing) {
@@ -86,9 +108,9 @@ export function EquipmentDetailsPage() {
           </button>
           <h1 className="equipment-header__title">Редактирование техники</h1>
         </div>
-  
-        <div className="equipment-card equipment-card--editing">
-          <EquipmentForm
+
+        <div className="equipment-card--edit">
+          <EditEquipmentForm
             initialData={equipment}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
@@ -101,7 +123,7 @@ export function EquipmentDetailsPage() {
 
   return (
     <div className="equipment-details-container">
-      <Header 
+      <Header
         equipment={equipment}
         onBack={handleBack}
         onEdit={() => setIsEditing(true)}
@@ -110,20 +132,23 @@ export function EquipmentDetailsPage() {
 
       <div className="equipment-grid equipment-grid--2cols">
         <BasicInfo equipment={equipment} />
+        <DocumentsInfo equipment={equipment} />
         <IdentificationInfo equipment={equipment} />
         <DatesInfo equipment={equipment} />
         <AssignmentInfo equipment={equipment} />
+        <CommentsInfo equipment={equipment} />
+        <ProductStructureTable equipment={equipment} />
       </div>
 
       {equipment.status === 'disposed' && (
-        <DisposalInfo 
+        <DisposalInfo
           disposalInfo={{
             actNumber: equipment.disposal_act_number,
             actDate: equipment.disposal_act_date,
             certNumber: equipment.disposal_cert_number,
             certDate: equipment.disposal_cert_date,
             comments: equipment.disposal_comments
-          }} 
+          }}
         />
       )}
 

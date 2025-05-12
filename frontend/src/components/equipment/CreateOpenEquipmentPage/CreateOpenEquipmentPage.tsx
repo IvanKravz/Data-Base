@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Equipment } from '../../../types';
 import { useDispatch } from 'react-redux';
 import { addEquipment } from '../../../store/slices/equipmentSlice';
-import { EquipmentForm } from '../forms/EquipmentForm';
+import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 
 export function CreateOpenEquipmentPage() {
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ export function CreateOpenEquipmentPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <EquipmentForm
+        <EditEquipmentForm
           initialData={initialData}
           onSubmit={handleSubmit}
           onCancel={() => navigate('/equipment-open')}

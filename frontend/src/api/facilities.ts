@@ -4,18 +4,33 @@ import { Facility } from '../types';
 export const facilitiesApi = {
   // Get all facilities with optional filters
   getFacilities: async (params?: {
+    token?: string;
     division?: string;
     type?: 'station' | 'shd';
     class?: '1' | '2';
     search?: string;
   }) => {
-    const { data } = await api.get('/facilities/', { params });
-    return data;
+    const { data } = await api.get('/facilities/', {
+      params: {
+        division: params?.division,
+        type: params?.type,
+        class: params?.class,
+        search: params?.search
+      },
+      headers: params?.token ? {
+        Authorization: `Bearer ${params.token}`,
+      } : undefined
+    });
+    return data.results;
   },
 
   // Get facility by ID
-  getFacilityById: async (id: string) => {
-    const { data } = await api.get(`/facilities/${id}/`);
+  getFacilityById: async (id: string, token: string) => {
+    const { data } = await api.get(`/facilities/${id}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
     return data;
   },
 

@@ -1,5 +1,6 @@
+from django import forms
 from django.contrib import admin
-from .models import Division, Subdivision, Facility
+from .models import CommunicationPost, Division, Subdivision, Facility
 
 @admin.register(Subdivision)
 class SubdivisionAdmin(admin.ModelAdmin):
@@ -20,6 +21,11 @@ class DivisionAdmin(admin.ModelAdmin):
         'equipment_count', 'tasks_count', 'facilities_count', 'created_at'
     )
     search_fields = ('name',)
+    readonly_fields = ('facilities_list',)
+
+    def facilities_list(self, obj):
+        return ", ".join([f.name for f in obj.facilities.all()])
+    facilities_list.short_description = 'Объекты'
     
     def employees_count(self, obj):
         return obj.get_employees_count()
@@ -53,20 +59,73 @@ class DivisionAdmin(admin.ModelAdmin):
         return obj.get_tasks_count()
     tasks_count.short_description = 'Задачи'
     
-    # def staff_completion(self, obj):
-    #     total_actual = obj.get_employees_count()
-    #     return f"{round((total_actual / obj.staff_planned_total) * 100, 2)}%" if obj.staff_planned_total > 0 else "0%"
-    # staff_completion.short_description = 'Укомплектованность'
+class CommunicationPostInline(admin.TabularInline):
+    model = Facility.communication_posts.through
+    extra = 1
+    verbose_name = 'Пост связи'
+    verbose_name_plural = 'Посты связи'
+
+    def get_formset(self, request, obj=None, **kwargs):      
+        return super().get_formset(request, obj, **kwargs)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "communicationpost":
+            obj_id = request.resolver_match.kwargs.get('object_id')
+            if obj_id:
+                try:
+                    facility = Facility.objects.get(id=obj_id)
+                    if facility.division:
+                        kwargs["queryset"] = CommunicationPost.objects.filter(
+                            division=facility.division
+                        )
+                        if facility.subdivision:
+                            kwargs["queryset"] = kwargs["queryset"].filter(
+                                subdivision=facility.subdivision
+                            )
+                except Facility.DoesNotExist:
+                    pass
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+class FacilityAdminForm(forms.ModelForm):
+    class Meta:
+        model = Facility
+        fields = '__all__'
+        exclude = ('communication_posts',)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+@admin.register(CommunicationPost)
+class CommunicationPostAdmin(admin.ModelAdmin):
+    list_display = ('name', 'value', 'division', 'subdivision')
+    list_filter = ('division', 'subdivision')
+    search_fields = ('name', 'value')
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'facility_class', 'division', 'subdivision', 'equipment_count')
-    list_filter = ('type', 'facility_class', 'division', 'subdivision')
-    search_fields = ('name', 'address', 'comments')
+    form = FacilityAdminForm 
+    list_display = (
+        'name', 'type', 'facility_class', 'division', 
+        'subdivision', 'is_closed', 'communication_posts_list', 
+        'inn', 'equipment_count'
+    )
+    list_filter = (
+        'type', 'facility_class', 'division', 
+        'subdivision', 'is_closed'
+    )
+    search_fields = ('name', 'address', 'comments', 'inn')
+    filter_horizontal = ()
+    list_select_related = ('division', 'subdivision')
+    prefetch_related = ('communication_posts',)
+    inlines = [CommunicationPostInline]
     
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'type', 'facility_class', 'address', 'comments')
+            'fields': (
+                'name', 'type', 'facility_class', 
+                'address', 'comments', 'is_closed',
+                'inn'
+            )
         }),
         ('Принадлежность', {
             'fields': ('division', 'subdivision')
@@ -88,7 +147,15 @@ class FacilityAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
-    
+
     def equipment_count(self, obj):
         return obj.equipment.count()
     equipment_count.short_description = 'Оборудование'
+
+    def communication_posts_list(self, obj):
+        return ", ".join([f"{post.name} ({post.value})" for post in obj.communication_posts.all()])
+    communication_posts_list.short_description = 'Посты связи'
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        return fieldsets

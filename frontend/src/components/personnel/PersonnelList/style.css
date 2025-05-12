@@ -1,315 +1,47 @@
-/* Header section */
-.personnel-list-header {
-  /* padding: 1rem; */
-  /* border-bottom: 1px solid #e5e7eb; */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Основные стили контейнера фильтров */
+.filters-wrapper {
+  position: relative;
+  width: 100%;
   margin-bottom: 1.5rem;
 }
 
-.personnel-list-filters {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.personnel-list-export-button {
-  display: flex;
-  justify-content: end;
-  margin-bottom: 1rem;
-}
-
-.personnel-list-empty-message {
-  font: 1.1em sans-serif;
-  margin-top: 1.5rem;
-  text-align: center;
-}
-
-/* Стили для кнопок фильтрации */
-.filter-button {
-  padding: 0.75rem 1rem; /* Уменьшил горизонтальный padding */
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #f9fafb, #dee1e6);
-  box-shadow: 3px 3px 6px #d1d5db, -3px -3px 6px #ffffff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column; /* Добавил column для переноса текста */
-  align-items: center;
-  justify-content: center; /* Центрируем содержимое */
-  gap: 0.8rem;
-  font-size: 16px;
-  font-weight: 500;
-  color: #374151;
-  min-width: 10rem; /* Минимальная ширина для всех кнопок */
-  max-width: 10rem; /* Максимальная ширина */
-  height: 8rem; /* Фиксированная высота */
-  text-align: center; /* Центрируем текст */
-  white-space: normal; /* Разрешаем перенос слов */
-  word-break: break-word; /* Переносим длинные слова */
-  line-height: 1.2; /* Уменьшаем межстрочный интервал */
-}
-
-.filter-button.active {
-  background: linear-gradient(145deg, #357ff6, #0348db);
-  color: white;
-  box-shadow: 1px 1px 4px #1e40af, -1px -1px 4px #60a5fa;
-  transition: all 0.5s ease;
-}
-
-.filter-button:hover {
-  /* transform: translateY(-2px); */
-  box-shadow: 9px 9px 12px #d1d5db, -2px -2px 5px #ffffff;
-  /* background: #e6ecf4;
-  transition:  0.5s ; */
-}
-
-.filter-button.active:hover {
-  /* transform: translateY(0); */
-  box-shadow: 2px 2px 4px #d1d5db, -1px -1px 4px #ffffff;
-}
-
-
-/* Стили для прогресс-бара с двумя полосками */
-.progress-circle {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: conic-gradient(
-    #3b82f6 0%,
-    #3b82f6 var(--staff-percentage),
-    #e5e7eb var(--staff-percentage),
-    #e5e7eb 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  box-shadow: 3px 3px 6px #d1d5db, -3px -3px 6px #ffffff;
-  transition: all 0.3s ease;
-}
-
-.progress-circle::before {
-  content: attr(data-staff-count); /* Отображаем количество сотрудников */
-  position: absolute;
-  font-size: 16px;
-  font-weight: 600;
-  color: #206de9;
-  z-index: 1;
-  transition: opacity 0.3s ease;
-}
-
-.progress-circle::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: conic-gradient(
-    #bdeec2 0%,
-    #98e29f var(--actual-percentage),
-    transparent var(--actual-percentage),
-    transparent 100%
-  );
-  z-index: 0;
-  transition: opacity 0.3s ease;
-}
-
-/* Подсказка при наведении */
-.progress-circle:hover::before {
-  opacity: 1; /* Цифры остаются видимыми */
-}
-
-.progress-circle:hover::after {
-  opacity: 1; /* Вторая полоска остается видимой */
-}
-
-.progress-circle:hover .tooltip {
-  display: block; /* Показываем подсказку */
-}
-
-.progress-circle.show-only-actual {
-  background: none;
-  font-size: 16px;
-  /* box-shadow: none; */
-}
-
-.progress-circle.show-only-actual::after {
-  display: none;
-}
-
-* Active state for simplified circles */
-.filter-button.active .progress-circle.show-only-actual::before,
-.officer-filter-button.active .progress-circle.show-only-actual::before {
-  color: inherit; /* Сохраняем цвет текста как у кнопки */
-}
-
-/* Special case for MOL and SHA buttons */
-.filter-button.active .progress-circle.noActiveColor::before {
-  color: #374151; /* Всегда серый цвет цифр */
-}
-
-/* Officer filter buttons specific styles */
-.officer-filter-button .progress-circle {
-  margin-left: 0.5rem;
-}
-
-/* Подсказка */
-.tooltip {
-  text-align: left;
-  display: none;
-  position: absolute;
-  top: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 2;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.3s ease;
-}
-
-.additional-filters-container {
-  width: 100%;
-  margin-top: 0.75rem;
-}
-
-/* Стили для дополнительных фильтров (Шаработники и Офицеры) */
-.additional-filters {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  margin-bottom: 0.5rem;
-}
-
-.sha-filters,
-.officer-filters {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.sha-filters {
-  margin-top: 0.5rem;
-}
-
-.sha-filter-button,
-.officer-filter-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  padding: 0.7rem 1rem;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #f9fafb, #e5e7eb);
-  box-shadow: 3px 3px 6px #d1d5db, -3px -3px 6px #ffffff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 16px;
-  font-weight: 500;
-  color: #374151;
-  min-width: 10rem; /* Минимальная ширина для всех кнопок */
-  max-width: 10rem; /* Максимальная ширина */
-  height: 7rem; /* Фиксированная высота */
-  text-align: center;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.filter-button.active .progress-circle.show-only-actual,
-.officer-filter-button.active .progress-circle.show-only-actual {
-  background-color: #e5e7eb;
-}
-
-.sha-filter-button.active .progress-circle.show-only-actual {
-  background-color: #e5e7eb;
-}
-
-.sha-filter-button.active,
-.officer-filter-button.active {
-  background: linear-gradient(145deg, #357ff6, #0348db);
-  color: white;
-  box-shadow: 3px 3px 6px #1e40af, -1px -1px 5px #60a5fa;
-}
-
-.sha-filter-button:hover,
-.officer-filter-button:hover {
-  transform: translateY(-2px);
-  /* box-shadow: 5px 5px 10px #d1d5db, -5px -5px 10px #ffffff; */
-}
-
-.sha-filter-button:active,
-.officer-filter-button:active {
-  transform: translateY(0);
-  box-shadow: 2px 2px 4px #d1d5db, -2px -2px 4px #ffffff;
+/* Кнопка переключения видимости фильтров */
+.filter-toggle-container {
+  margin-bottom: 0.75rem;
 }
 
 .filter-toggle-button {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 8px;
-  background-color: #467ff9;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 3px 3px 6px #d1d5db, -3px -3px 6px #ffffff;
+  transition: all 0.2s ease;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .filter-toggle-button:hover {
-  background:  #2272f3;
-  /* transform: translateY(-2px); */
+  background: linear-gradient(145deg, #2563eb, #1d4ed8);
 }
 
-.filters-container {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  opacity: 0;
+.filter-toggle-button svg:last-child {
+  margin-left: auto;
+  transition: transform 0.3s ease;
 }
 
-.filters-container.visible {
-  max-height: 500px; /* Достаточно большое значение для всех фильтров */
-  opacity: 1;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  background-color: rgba(249, 250, 251, 0.8);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
-}
-
-.filters-wrapper {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.filter-toggle-container {
-  display: flex;
-  margin-bottom: 0.5rem;
-}
-
+/* Контейнер с основными фильтрами */
 .filters-content {
-  background-color: rgba(249, 250, 251, 0.8);
+  background-color: #f9fafb;
   border-radius: 8px;
   padding: 1rem;
   margin-top: 0.5rem;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -320,13 +52,280 @@
   margin-bottom: 0.75rem;
 }
 
-/* @keyframes fadeIn {
+/* Общие стили кнопок фильтров */
+.filter-button-wrapper-personnel {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-button-label-personnel {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.sha-filter-button {
+  position: relative;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #f9fafb, #e5e7eb);
+  box-shadow: 2px 2px 4px #d1d5db, 
+             -2px -2px 4px #ffffff;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  min-width: 150px;
+  max-width: 230px;
+  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-align: left;
+  gap: 0.3rem;
+}
+
+.filter-button-personnel,
+.officer-filter-button {
+  position: relative;
+  padding: 0.5rem 2.1rem 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #f9fafb, #e5e7eb);
+  box-shadow: 2px 2px 4px #d1d5db, 
+             -2px -2px 4px #ffffff;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  min-width: 120px;
+  max-width: 230px;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  transition: all 0.2s ease;
+  text-align: left;
+  gap: 0.3rem;
+}
+
+/* Активное состояние кнопок (подчеркивание) */
+.filter-button-personnel.active,
+.sha-filter-button.active,
+.officer-filter-button.active {
+  background: linear-gradient(145deg, #f9fafb, #e5e7eb);
+  color: #3b82f6;
+  position: relative;
+}
+
+.filter-button-personnel.active::after,
+.sha-filter-button.active::after,
+.officer-filter-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #3b82f6;
+  transform: scaleX(1);
+  transform-origin: bottom center;
+  transition: transform 0.3s ease;
+}
+
+.filter-button-personnel::after,
+.sha-filter-button::after,
+.officer-filter-button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #3b82f6;
+  transform: scaleX(0);
+  transform-origin: bottom center;
+  transition: transform 0.3s ease;
+}
+
+/* Стили для кнопок с количеством */
+.count-badge {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.filter-button-personnel.active .count-badge,
+.sha-filter-button.active .count-badge,
+.officer-filter-button.active .count-badge {
+  color: #3b82f6;
+}
+
+/* Стрелка для раскрытия деталей */
+.expand-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #6b7280;
+  transition: all 0.5s ease;
+  z-index: 2;
+}
+
+.expand-button {
+  transition: transform 0.5s ease;
+}
+
+.expand-button.active {
+  transform: rotate(180deg);
+}
+
+.expand-button:hover {
+  color: #3b82f6;
+}
+
+/* Выпадающий блок с деталями */
+.filter-details {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-8px);
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, visibility 0s linear 0.25s;
+}
+
+.filter-details.active {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, visibility 0s linear;
+}
+
+/* Стили для текста в деталях */
+.details-content {
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.details-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.details-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.details-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Дополнительные фильтры */
+.additional-filters-container {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.sha-filters,
+.officer-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* Ховер-эффекты */
+.filter-button-personnel:hover:not(.active),
+.sha-filter-button:hover:not(.active),
+.officer-filter-button:hover:not(.active) {
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 6px #d1d5db, 
+             -3px -3px 6px #ffffff;
+}
+
+.personnel-list-empty-message {
+  font-size: 18px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.personnel-list-export-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 7px;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 640px) {
+  .filter-button-personnel,
+  .sha-filter-button,
+  .officer-filter-button {
+    min-width: 110px;
+    height: 52px;
+    font-size: 12px;
+    padding: 0.5rem 1.8rem 0.5rem 0.6rem;
+  }
+  
+  .main-filters,
+  .sha-filters,
+  .officer-filters {
+    gap: 0.5rem;
+  }
+  
+  .filter-details {
+    padding: 10px;
+  }
+  
+  .details-content {
+    font-size: 11px;
+  }
+  
+  .expand-button {
+    padding: 0 0.3rem;
+  }
+  
+  .count-badge {
+    font-size: 12px;
+  }
+}
+
+/* Анимации */
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
-} */
+}

@@ -32,7 +32,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
                 <p className="info-item-value">{person.sha_details.access_level} класс</p>
               </div>
             </div>
-            
+
             <div className="info-item">
               <Calendar className="info-item-icon text-orange-500" />
               <div>
@@ -43,7 +43,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
 
             {person.sha_details.equipment_conclusions.length > 0 && (
               <div className="relative">
-                <button 
+                <button
                   className="info-item equipment-toggle-button w-full"
                   onClick={toggleEquipmentList}
                   aria-expanded={isEquipmentExpanded}
@@ -58,12 +58,11 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
                     )}
                   </div>
                 </button>
-                
-                <div 
+
+                <div
                   ref={dropdownRef}
-                  className={`equipment-dropdown absolute left-0 right-0 z-10 ${
-                    isEquipmentExpanded ? 'opacity-100 visible' : 'opacity-0 invisible'
-                  }`}
+                  className={`equipment-dropdown absolute left-0 right-0 z-10 ${isEquipmentExpanded ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
                 >
                   <div className="equipment-list">
                     {person.sha_details.equipment_conclusions.map((item, index) => (

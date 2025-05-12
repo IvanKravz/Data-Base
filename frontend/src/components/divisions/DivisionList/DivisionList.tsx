@@ -15,7 +15,7 @@ interface DivisionListProps {
 export function DivisionList({ onSelectDivision }: DivisionListProps) {
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
-  const [divisions, getDivisions] = useState<{ results: Division[] }>({ results: [] });
+  const [divisions, getDivisions] = useState<Division[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
@@ -52,7 +52,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
 
   return (
     <div className="grid-container">
-      {divisions.results.map((division) => (
+      {divisions.map((division) => (
         <div
           key={division.id}
           onClick={() => handleDivisionClick(division)}

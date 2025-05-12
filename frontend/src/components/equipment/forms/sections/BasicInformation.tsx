@@ -1,93 +1,127 @@
 import React from 'react';
 import { Equipment } from '../../../../types';
-import { Package, Tag } from 'lucide-react';
-import { EQUIPMENT_CATEGORIES } from '../../constants';
+import { Package, Code } from 'lucide-react';
+import '../style.css';
 
 interface BasicInformationProps {
-  formData: Omit<Equipment, 'id'>;
+  formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
   isClosedEquipment?: boolean;
   isDisposed?: boolean;
+  equipmentCategories: { value?: string; id?: string; name: string }[];
 }
 
-export function BasicInformation({ 
-  formData, 
-  onChange, 
+export function BasicInformation({
+  formData,
+  onChange,
   isClosedEquipment = false,
-  isDisposed = false 
+  isDisposed = false,
+  equipmentCategories
 }: BasicInformationProps) {
-  // Get categories for open equipment only
-  const openCategories = Object.entries(EQUIPMENT_CATEGORIES)
-    .filter(([key]) => key !== 'closed')
-    .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {} as Record<string, string>);
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = e.target.value;
+    const selectedCategory = equipmentCategories.find(
+      cat => cat.value === selectedValue
+    );
+
+    onChange({
+      [isClosedEquipment ? 'closed_category' : 'open_category']: selectedCategory ? {
+        value: selectedCategory.value,
+        name: selectedCategory.name
+      } : null,
+      [isClosedEquipment ? 'open_category' : 'closed_category']: null
+    });
+  };
+
+  const getCurrentCategoryValue = () => {
+    return formData[isClosedEquipment ? 'closed_category' : 'open_category']?.value || '';
+  };
 
   return (
-    <div className="grid grid-cols-2 gap-6">
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">
-          Название
-        </label>
-        <div className="relative">
-          <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <div className="equipment-card-edit">
+      <div className="equipment-card-header">
+        <Package size={20} />
+        <h3 className="equipment-card-title">Основная информация</h3>
+      </div>
+      <div className="equipment-card-content-edit">
+        <div className="form-group">
+          <label className="form-label">Название</label>
+          <div className="form-input-container">
+            <input
+              type="text"
+              required
+              value={formData.name || ''}
+              onChange={(e) => onChange({ name: e.target.value })}
+              className="form-input-edit"
+              placeholder="Введите название техники"
+              disabled={isDisposed}
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Категория</label>
+          <div className="form-input-container">
+            <select
+              value={getCurrentCategoryValue()}
+              onChange={handleCategoryChange}
+              className="form-input-edit"
+              disabled={isDisposed}
+            >
+              <option value="">Выберите категорию</option>
+              {equipmentCategories.map((category) => (
+                <option
+                  key={`cat_${category.value}`}
+                  value={category.value}
+                >
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Тип техники</label>
           <input
             type="text"
             required
-            value={formData.name}
-            onChange={(e) => onChange({ name: e.target.value })}
-            className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Введите название техники"
+            value={formData.type || ''}
+            onChange={(e) => onChange({ type: e.target.value })}
+            className="form-input-edit"
+            placeholder="Введите тип техники"
+            disabled={isDisposed}
           />
         </div>
-      </div>
 
-      {!isClosedEquipment && (
-        <div>
-          <label className="block text-sm font-medium mb-1.5 text-gray-700">
-            Категория
-          </label>
+        <div className="form-group">
+          <label className="form-label">Статус</label>
           <select
-            value={formData.category}
-            onChange={(e) => onChange({ category: e.target.value as Equipment['category'] })}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={formData.status || 'in-operation'}
+            onChange={(e) => onChange({ status: e.target.value as Equipment['status'] })}
+            className="form-input-edit"
             disabled={isDisposed}
           >
-            {Object.entries(openCategories).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            <option value="in-operation">Эксплуатируется</option>
+            <option value="in-storage">На складе</option>
+            <option value="defective">Неисправно</option>
+            <option value="for-disposal">На списание</option>
+            {isDisposed && <option value="disposed">Списано</option>}
           </select>
         </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">
-          Тип техники
-        </label>
-        <input
-          type="text"
-          required
-          value={formData.type}
-          onChange={(e) => onChange({ type: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Введите тип техники"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">
-          Статус
-        </label>
-        <select
-          value={formData.status}
-          onChange={(e) => onChange({ status: e.target.value as Equipment['status'] })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          disabled={isDisposed}
-        >
-          <option value="in-operation">Эксплуатируется</option>
-          <option value="in-storage">На складе</option>
-          <option value="defective">Неисправно</option>
-          <option value="for-disposal">На списание</option>
-          {isDisposed && <option value="disposed">Списано</option>}
-        </select>
+        
+        <div className="form-group">
+          <label className="form-label">Версия ПО</label>
+          <input
+            type="text"
+            value={formData.ver_software || ''}
+            onChange={(e) => onChange({ ver_software: e.target.value })}
+            className="form-input-edit"
+            placeholder="Введите версию ПО"
+            disabled={isDisposed}
+          />
+        </div>
       </div>
     </div>
   );

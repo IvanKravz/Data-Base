@@ -26,7 +26,6 @@ export function PersonnelDetails() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -101,8 +100,9 @@ export function PersonnelDetails() {
         <BasicInfo person={person} />
         <ContactInfo person={person} />
         <ResponsibilityInfo person={person} />
+        <CommentsInfo person={person} />
       </div>
-      <CommentsInfo person={person} />
+      
       <AssignedEquipment person={person} id={id}/>
 
       {showDeleteModal && (

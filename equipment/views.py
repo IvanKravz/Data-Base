@@ -4,18 +4,26 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from .models import Equipment
-from .serializers import EquipmentSerializer, EquipmentStatsSerializer
-from users.models import Employee, User
+from .models import Equipment, OpenEquipmentCategory, ClosedEquipmentCategory
+from .serializers import (
+    EquipmentSerializer, 
+    EquipmentStatsSerializer, 
+    OpenEquipmentCategorySerializer,
+    ClosedEquipmentCategorySerializer
+)
+from users.models import Employee
 from facilities.models import Facility
+from django.core.cache import cache
 
 class EquipmentViewSet(viewsets.ModelViewSet):
-    queryset = Equipment.objects.all()
+    queryset = Equipment.objects.select_related(
+        'division', 'subdivision', 'facility', 'assigned_to'
+    ).prefetch_related('open_category', 'closed_category')
     serializer_class = EquipmentSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Equipment.objects.all()
+        queryset = super().get_queryset()
         
         # Получаем параметры запроса
         division = self.request.query_params.get('division', None)
@@ -30,7 +38,10 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
         # Фильтрация по category
         if category:
-            queryset = queryset.filter(open_category=category) | queryset.filter(closed_category__name=category)
+            queryset = queryset.filter(
+                Q(open_category__value=category) | 
+                Q(closed_category__name=category)
+            )
 
         # Фильтрация по status
         if status:
@@ -112,6 +123,27 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         }
         serializer = EquipmentStatsSerializer(stats)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def equipment_categories(self, request):
+        print(">>> Categories endpoint called!")
+        # cache_key = 'all_equipment_categories'
+        # categories = cache.get(cache_key)
+        
+        # if not categories:
+        open_categories = OpenEquipmentCategory.objects.all()
+        closed_categories = ClosedEquipmentCategory.objects.all()
+        
+        open_serializer = OpenEquipmentCategorySerializer(open_categories, many=True)
+        closed_serializer = ClosedEquipmentCategorySerializer(closed_categories, many=True)
+        
+        categories = {
+            'open': open_serializer.data,
+            'closed': closed_serializer.data
+        }
+            # cache.set(cache_key, categories, 60*60*24)  # Кэшируем на 24 часа
+        
+        return Response(categories)
 
     @action(detail=True, methods=['patch'])
     def comments(self, request, pk=None):

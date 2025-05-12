@@ -1,44 +1,49 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Equipment, ClosedEquipmentCategory
+from django.db import models  # Добавляем импорт models
+from .models import Equipment, ClosedEquipmentCategory, OpenEquipmentCategory, ProductStructure
 
 @admin.register(ClosedEquipmentCategory)
 class ClosedEquipmentCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('value', 'name') 
+    search_fields = ('value', 'name')
+
+@admin.register(OpenEquipmentCategory)
+class OpenEquipmentCategoryAdmin(admin.ModelAdmin):
+    list_display = ('value', 'name')
+    search_fields = ('value', 'name')
+
+class ProductStructureInline(admin.StackedInline):
+    model = ProductStructure
+    extra = 1
+    fields = ('name', 'model', 'serial_number', 'note')
+    verbose_name = 'Компонент изделия'
+    verbose_name_plural = 'Состав изделия'
+    classes = ('collapse',)
+    show_change_link = True
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'get_category_display', 'status_colored', 'division', 'subdivision', 'assigned_to', 'facility')
-    list_filter = ('is_closed', 'status', 'division', 'facility')
-    search_fields = ('name', 'serial_number', 'inventory_number', 'comments', 'disposal_act_number', 'disposal_cert_number')
-    raw_id_fields = ('assigned_to', 'facility')
+    list_display = ('name', 'type', 'get_category_display', 'status_colored', 'division', 'subdivision', 'assigned_to', 'facility', 'components_count')
+    list_filter = ('is_closed', 'status', 'division', 'facility', 'open_category', 'closed_category')
+    search_fields = (
+        'name', 'serial_number', 'inventory_number', 
+        'first_invoice', 'material_invoice', 'ver_software',
+        'comments', 'disposal_act_number', 'disposal_cert_number'
+    )
+    raw_id_fields = ('assigned_to', 'facility', 'open_category', 'closed_category')
+    inlines = [ProductStructureInline]
     
-    def status_colored(self, obj):
-        colors = {
-            'in-operation': 'green',
-            'in-storage': 'blue',
-            'defective': 'orange',
-            'for-disposal': 'red',
-            'disposed': 'purple'
-        }
-        return format_html(
-            '<span style="color: {};">{}</span>',
-            colors.get(obj.status, 'black'),
-            obj.get_status_display()
-        )
-    status_colored.short_description = 'Status'
-
-    def get_category_display(self, obj):
-        return obj.get_category_display()
-    get_category_display.short_description = 'Категория'
-
     fieldsets = (
         ('Основная информация', {
             'fields': ('name', 'type', 'is_closed', 'open_category', 'closed_category', 'status', 'comments')
         }),
         ('Идентификация', {
-            'fields': ('serial_number', 'inventory_number')
+            'fields': (
+                'serial_number', 'inventory_number',
+                'first_invoice', 'material_invoice', 
+                'ver_software'
+            )
         }),
         ('Даты', {
             'fields': ('manufacturing_date', 'purchase_date')
@@ -60,3 +65,28 @@ class EquipmentAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            _components_count=models.Count('product_structures')
+        )
+
+    def components_count(self, obj):
+        return obj._components_count
+    components_count.short_description = 'Компоненты'
+    components_count.admin_order_field = '_components_count'
+
+    def status_colored(self, obj):
+        colors = {
+            'in-operation': 'green',
+            'in-storage': 'blue',
+            'defective': 'orange',
+            'for-disposal': 'red',
+            'disposed': 'purple'
+        }
+        return format_html(
+            '<span style="color: {};">{}</span>',
+            colors.get(obj.status, 'black'),
+            obj.get_status_display()
+        )
+    status_colored.short_description = 'Status'

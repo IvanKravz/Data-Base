@@ -44,14 +44,36 @@ export const equipmentApi = {
   },
 
   // Update existing equipment
-  updateEquipment: async (id: string, equipmentData: Partial<Equipment>) => {
-    const { data } = await api.put(`/equipment/${id}/`, equipmentData);
+  updateEquipment: async (token: string, id: string, equipmentData: Partial<Equipment>) => {
+    const { data } = await api.put(`/equipment/${id}/`, equipmentData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
     return data;
   },
 
   // Delete equipment
   deleteEquipment: async (id: string) => {
     await api.delete(`/equipment/${id}/`);
+  },
+
+  getEquipmentCategories: async (token: string): Promise<{
+    open: {value: string; name: string}[];
+    closed: {value: string; name: string}[];
+  }> => {
+    try {
+      const { data } = await api.get('/equipment/categories/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error('Error fetching equipment categories:', error);
+      return { open: [], closed: [] };
+    }
   },
 
   // Get equipment statistics

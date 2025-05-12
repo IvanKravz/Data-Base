@@ -11,6 +11,7 @@ interface TableViewProps {
 }
 
 export function TableView({ divisionName, personnel, onPersonClick, onDelete }: TableViewProps) {
+
   return (
     <div className="table-container">
       <table className="table">
@@ -79,10 +80,10 @@ export function TableView({ divisionName, personnel, onPersonClick, onDelete }: 
               </td>
               <td className="table-cell">
                 <div className="text-sm text-gray-900">
-                  {divisionName}
+                  {person.division?.name}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {person.subdivision.name}
+                  {person.subdivision?.name}
                 </div>
               </td>
               <td className="table-cell">

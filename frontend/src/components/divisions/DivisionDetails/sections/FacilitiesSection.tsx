@@ -1,67 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Division } from '../../../../types';
+import { ArrowLeft } from 'lucide-react';
+import { facilitiesApi } from '../../../../api';
 import { FacilityList } from '../../../facilities/FacilityList';
 import { SearchBar } from '../../../common/SearchBar';
 import { FacilityTypeFilter } from '../../../facilities/FacilityTypeFilter';
-import { ArrowLeft } from 'lucide-react';
-import { facilitiesApi } from '../../../../api';
-import { divisionsApi } from '../../../../api';
 import './style.css';
-
-interface FacilitiesSectionProps {
-  division: Division;
-  activeSubdivision: string | null;
-}
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
 
-  const [openSearchTerm, setOpenSearchTerm] = useState('');
-  const [closedSearchTerm, setClosedSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'station' | 'shd'>('all');
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
-  const [facility, setFacility] = useState(null);
+  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
-  const [division, getDivisions] = useState('')
 
   useEffect(() => {
-    const fetchFacility = async () => {
+    const fetchFacilities = async () => {
       try {
-        const facil = await facilitiesApi.getFacilityById(id);
-        const div = await divisionsApi.getDivisionById(id, token);
-        getDivisions(div);
-        setFacility(facil);
+        setLoading(true);
+        const allFacilities = await facilitiesApi.getFacilities({
+          token,
+          division: id,
+        });
+        setFacilities(allFacilities);
       } catch (err) {
-        setError('Не удалось загрузить данные об объекте');
+        setError('Не удалось загрузить данные об объектах');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFacility();
-  }, [id]);
+    fetchFacilities();
+  }, [id, token]);
+
+  // Сброс фильтров при переключении вкладок
+  const handleTabChange = (tab: 'open' | 'closed') => {
+    setActiveTab(tab);
+    setFilterType('all');
+    setFacilityClassFilter('all');
+  };
+
+  const filteredFacilities = facilities.filter(facility => {
+    const isOpenTab = activeTab === 'open';
+    const matchesStatus = isOpenTab ? !facility.is_closed : facility.is_closed;
+    
+    // Расширенный поиск по нескольким полям
+    const matchesSearch = !searchTerm || 
+      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (facility.type === 'station' ? 'станция' : 'шд').includes(searchTerm.toLowerCase()) ||
+      (facility.facility_class && `${facility.facility_class} класс`.includes(searchTerm.toLowerCase())) ||
+      (facility.communication_posts && facility.communication_posts.some(post => 
+        post.name.toLowerCase().includes(searchTerm.toLowerCase())));
+    
+    // Применяем фильтры только для закрытых объектов
+    const matchesType = isOpenTab ? true : filterType === 'all' || facility.type === filterType;
+    const matchesClass = isOpenTab ? true : facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
+    
+    return matchesStatus && matchesSearch && matchesType && matchesClass;
+  });
 
   const onBack = () => {
     navigate(`/divisions/${id}`);
-  }
-
+  };
 
   if (loading) {
-    return <div>Загрузка данных об объекте...</div>;
+    return <div>Загрузка данных об объектах...</div>;
   }
 
   if (error) {
     return <div className="error-message">{error}</div>;
-  }
-
-  if (!facility) {
-    return <div>Объект не найден</div>;
   }
 
   return (
@@ -75,68 +90,43 @@ export function FacilitiesSection() {
 
       <div className="tabs">
         <button
-          className={`tab-button ${activeTab === 'open' ? 'active' : ''}`}
-          onClick={() => setActiveTab('open')}
+          className={`tab-button-facilities ${activeTab === 'open' ? 'active' : ''}`}
+          onClick={() => handleTabChange('open')}
         >
           Открытые объекты
         </button>
         <button
-          className={`tab-button ${activeTab === 'closed' ? 'active' : ''}`}
-          onClick={() => setActiveTab('closed')}
+          className={`tab-button-facilities ${activeTab === 'closed' ? 'active' : ''}`}
+          onClick={() => handleTabChange('closed')}
         >
           Закрытые объекты
         </button>
       </div>
 
-      {activeTab === 'open' && (
-        <>
-          <div className="section-search-container">
-            <SearchBar
-              searchTerm={openSearchTerm}
-              setSearchTerm={setOpenSearchTerm}
-              placeholder="Поиск по названию или адресу..."
-            />
-          </div>
-          <FacilityList
-            viewType="table"
-            type="open"
-            selectedDivision={facility.name}
-            searchTerm={openSearchTerm}
-            filterType="station"
-            facilityClassFilter="all"
-            onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
-          />
-        </>
-      )}
+      <div className="section-search-container">
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          placeholder="Поиск по названию, адресу, типу, классу или посту связи..."
+        />
+      </div>
 
       {activeTab === 'closed' && (
-        <>
-          <div className="section-search-container">
-            <SearchBar
-              searchTerm={closedSearchTerm}
-              setSearchTerm={setClosedSearchTerm}
-              placeholder="Поиск по названию или адресу..."
-            />
-          </div>
-          <FacilityTypeFilter
-            facilities={[facility]}
-            selectedType={filterType}
-            onTypeChange={setFilterType}
-            selectedClass={facilityClassFilter}
-            onClassChange={setFacilityClassFilter}
-            hideTypeFilter={true}
-          />
-          <FacilityList
-            viewType="table"
-            type="closed"
-            selectedDivision={facility.division}
-            searchTerm={closedSearchTerm}
-            filterType={filterType}
-            facilityClassFilter={facilityClassFilter}
-            onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
-          />
-        </>
+        <FacilityTypeFilter
+          facilities={facilities.filter(f => f.is_closed)}
+          selectedType={filterType}
+          onTypeChange={setFilterType}
+          selectedClass={facilityClassFilter}
+          onClassChange={setFacilityClassFilter}
+        />
       )}
+
+      <FacilityList
+        viewType="table"
+        facilities={filteredFacilities}
+        onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
+        showDifferentFields={true}
+      />
     </div>
   );
 }

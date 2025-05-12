@@ -1,38 +1,44 @@
 import React from 'react';
 import { Equipment } from '../../../../types';
+import { CalendarDays, Calendar } from 'lucide-react';
+import '../style.css';
 
 interface DatesInfoProps {
-  formData: Omit<Equipment, 'id'>;
+  formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
 }
 
 export function DatesInfo({ formData, onChange }: DatesInfoProps) {
   return (
-    <div className="grid grid-cols-2 gap-6">
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">
-          Дата производства
-        </label>
-        <input
-          type="date"
-          required
-          value={formData.manufacturingDate}
-          onChange={(e) => onChange({ manufacturingDate: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-        />
+    <div className="equipment-card-edit">
+      <div className="equipment-card-header">
+        <CalendarDays size={20} />
+        <h3 className="equipment-card-title">Даты</h3>
       </div>
+      <div className="equipment-card-content-edit">
+        <div className="form-group">
+          <label className="form-label">Дата производства
+          </label>
+          <input
+            type="date"
+            required
+            value={formData.manufacturing_date || ''}
+            onChange={(e) => onChange({ manufacturing_date: e.target.value })}
+            className="form-input-edit"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1.5 text-gray-700">
-          Дата покупки
-        </label>
-        <input
-          type="date"
-          required
-          value={formData.purchaseDate}
-          onChange={(e) => onChange({ purchaseDate: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-        />
+        <div className="form-group">
+          <label className="form-label">Дата ввода в эксплуатацию
+          </label>
+          <input
+            type="date"
+            required
+            value={formData.purchase_date || ''}
+            onChange={(e) => onChange({ purchase_date: e.target.value })}
+            className="form-input-edit"
+          />
+        </div>
       </div>
     </div>
   );

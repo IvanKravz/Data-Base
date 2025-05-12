@@ -30,14 +30,18 @@ export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardPro
             type="checkbox"
             id="isShaWorker"
             checked={formData.is_sha_worker || false}
-            onChange={(e) => onChange({
-              is_sha_worker: e.target.checked,
-              sha_details: e.target.checked ? formData.sha_details || {
-                start_date: '',
-                access_level: '1',
-                equipment_conclusions: []
-              } : undefined
-            })}
+            onChange={(e) => {
+              const isShaWorker = e.target.checked;
+              onChange({
+                is_sha_worker: isShaWorker,
+                // Если снимаем галочку, явно устанавливаем sha_details в null
+                sha_details: isShaWorker ? formData.sha_details || {
+                  start_date: '',
+                  access_level: '1',
+                  equipment_conclusions: []
+                } : null
+              });
+            }}
             className="personnel-checkbox"
           />
           <label htmlFor="isShaWorker" className="personnel-checkbox-label">
