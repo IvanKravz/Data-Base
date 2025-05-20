@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database } from 'lucide-react';
 import { Facility, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { EquipmentModal } from '../../../equipment/EquipmentModal';
-import { sampleEquipment } from '../../../../data/sampleData';
+import { equipmentApi } from '../../../../api/equipment';
+import '../style.css';
 
 interface AssignedEquipmentProps {
   facility: Facility;
@@ -11,32 +12,103 @@ interface AssignedEquipmentProps {
 
 export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-  const facilityEquipment = sampleEquipment.filter(item => item.facilityId === facility.id);
+  const [facilityEquipment, setFacilityEquipment] = useState<Equipment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const token = localStorage.getItem('accessToken');
 
-  const handleUpdateEquipment = (updatedEquipment: Equipment) => {
-    console.log('Updated equipment:', updatedEquipment);
-    setSelectedEquipment(null);
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        if (!token || !facility.id) return;
+        
+        setIsLoading(true);
+        setError(null);
+        
+        const data = await equipmentApi.getEquipment(token, { 
+          facility: facility.id.toString() // Убедимся, что передаем строку
+        });
+        
+        if (data) {
+          setFacilityEquipment(data);
+        } else {
+          setFacilityEquipment([]);
+        }
+      } catch (err) {
+        console.error('Ошибка при загрузке техники:', err);
+        setError('Не удалось загрузить список техники');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchEquipment();
+  }, [facility.id, token]);
+
+  const handleUpdateEquipment = async (updatedEquipment: Equipment) => {
+    try {
+      if (!token) return;
+      
+      await equipmentApi.updateEquipment(
+        token, 
+        updatedEquipment.id, 
+        updatedEquipment
+      );
+      
+      setFacilityEquipment(prev => 
+        prev.map(item => 
+          item.id === updatedEquipment.id ? updatedEquipment : item
+        )
+      );
+      setSelectedEquipment(null);
+    } catch (err) {
+      console.error('Ошибка при обновлении техники:', err);
+      setError('Не удалось обновить данные техники');
+    }
   };
 
-  const handleDeleteEquipment = (id: string) => {
-    console.log('Delete equipment:', id);
+  const handleDeleteEquipment = async (id: string) => {
+    try {
+      if (!token) return;
+      
+      await equipmentApi.deleteEquipment(id);
+      setFacilityEquipment(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error('Ошибка при удалении техники:', err);
+      setError('Не удалось удалить технику');
+    }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Техника на объекте</h2>
-        <div className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-gray-400" />
-          <span className="text-gray-500">Всего: {facilityEquipment.length}</span>
+    <div className="facility-assigned-equipment">
+      <div className="facility-assigned-equipment-header">
+        <div className="facility-assigned-equipment-title-wrapper">
+          <Database className="facility-assigned-equipment-icon" size={20} />
+          <h2 className="facility-assigned-equipment-title">Техника на объекте</h2>
+        </div>
+        <div className="facility-assigned-equipment-count">
+          <span className="facility-assigned-equipment-count-value">
+            Всего: <strong>{facilityEquipment.length}</strong>
+          </span>
         </div>
       </div>
-      <EquipmentList
-        equipment={facilityEquipment}
-        onUpdateEquipment={handleUpdateEquipment}
-        onDeleteEquipment={handleDeleteEquipment}
-        viewType="table"
-      />
+
+      {isLoading ? (
+        <div className="facility-loading">
+          <p>Загрузка списка техники...</p>
+        </div>
+      ) : error ? (
+        <div className="facility-error">
+          <p>{error}</p>
+        </div>
+      ) : (
+        <EquipmentList
+          equipment={facilityEquipment}
+          onUpdateEquipment={handleUpdateEquipment}
+          onDeleteEquipment={handleDeleteEquipment}
+          viewType="table"
+        />
+      )}
 
       {selectedEquipment && (
         <EquipmentModal

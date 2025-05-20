@@ -1,4 +1,4 @@
-import { Users, Database, Building2, ListTodo } from 'lucide-react';
+import { Users, HardDrive, Building2, ListTodo } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Division } from '../../../types';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { divisionsApi } from '../../../api/divisions';
 import { useState, useEffect } from 'react';
 import './style.css';
 import { setDivisions } from '../../../store/slices/facilitiesSlice';
+import { MapCountry } from './MapCountry';
 
 interface DivisionListProps {
   onSelectDivision: (division: Division) => void;
@@ -19,7 +20,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
-  
+
   useEffect(() => {
     const fetchDivisions = async () => {
       try {
@@ -51,36 +52,42 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
   }
 
   return (
-    <div className="grid-container">
-      {divisions.map((division) => (
-        <div
-          key={division.id}
-          onClick={() => handleDivisionClick(division)}
-          className="division-card"
-        >
-          <div className="division-card-title">
-            <h3>{division.name}</h3>
+    <>
+      <div className="grid-container">
+        {divisions.map((division) => (
+          <div
+            key={division.id}
+            onClick={() => handleDivisionClick(division)}
+            className="division-card"
+          >
+            <div className="division-card-title">
+              <h3>{division.name}</h3>
+            </div>
+            <div className="division-metrics">
+              <div className="metric-item">
+                <Users className="metric-icon metric-icon--blue" />
+                <span>Персонал: {division.employees_count}</span>
+              </div>
+              <div className="metric-item">
+                <HardDrive className="metric-icon metric-icon--green" />
+                <span>Техника: {division.equipment_count}</span>
+              </div>
+              <div className="metric-item">
+                <Building2 className="metric-icon metric-icon--purple" />
+                <span>Объекты: {division.facilities_count}</span>
+              </div>
+              <div className="metric-item">
+                <ListTodo className="metric-icon metric-icon--orange" />
+                <span>Задачи: {division.tasks_count}</span>
+              </div>
+            </div>
           </div>
-          <div className="division-metrics">
-            <div className="metric-item">
-              <Users className="metric-icon metric-icon--blue" />
-              <span>Персонал: {division.employees_count}</span>
-            </div>
-            <div className="metric-item">
-              <Database className="metric-icon metric-icon--green" />
-              <span>Техника: {division.equipment_count}</span>
-            </div>
-            <div className="metric-item">
-              <Building2 className="metric-icon metric-icon--purple" />
-              <span>Объекты: {division.facilities_count}</span>
-            </div>
-            <div className="metric-item">
-              <ListTodo className="metric-icon metric-icon--orange" />
-              <span>Задачи: {division.tasks_count}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+
+      </div>
+      <div className='map-country'>
+        <MapCountry />
+      </div>
+    </>
   );
 }

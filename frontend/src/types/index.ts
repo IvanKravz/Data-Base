@@ -95,6 +95,8 @@ export interface Facility {
   class: '1' | '2';
   address: string;
   division: string;
+  division_name: string;
+  subdivision_name: string;
   subdivision?: string;
   comments?: string; // Added comment field
   acceptanceActNumber?: string;
@@ -104,4 +106,5 @@ export interface Facility {
   kzSize?: string;
   hasTransformerInKz?: boolean;
   hasGroundingInKz?: boolean;
+  is_closed?: boolean;
 }

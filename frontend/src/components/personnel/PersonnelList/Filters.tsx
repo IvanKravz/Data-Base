@@ -8,10 +8,10 @@ interface FiltersProps {
   showOfficerFilters: boolean;
   selectedAccessClass: 'all' | '1' | '2';
   selectedOfficerFilter: 'all' | 'with_management' | 'without_management';
-  onFilterClick: (filter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha'| 'shaOneClass' | 'shaTwoClass') => void;
+  onFilterClick: (filter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha' | 'shaOneClass' | 'shaTwoClass') => void;
   onShaFilterClick: (accessClass: 'all' | '1' | '2') => void;
   onOfficerFilterClick: (filter: 'all' | 'with_management' | 'without_management') => void;
-  getStaffCount: (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha'| 'shaOneClass' | 'shaTwoClass') => { staffCount: number, actualCount: number };
+  getStaffCount: (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha' | 'shaOneClass' | 'shaTwoClass') => { staffCount: number, actualCount: number };
 }
 
 export const Filters = ({
@@ -28,10 +28,11 @@ export const Filters = ({
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
   const officersData = getStaffCount('officers');
+  const managementData = getStaffCount('management');
 
   const officersWithoutManagement = {
-    staffCount: officersData.staffCount,
-    actualCount: officersData.actualCount - getStaffCount('management').actualCount
+    staffCount: officersData.staffCount - managementData.staffCount,
+    actualCount: officersData.actualCount - managementData.actualCount
   };
 
   const handleExpandClick = (filterType: string, e: React.MouseEvent) => {
@@ -69,7 +70,7 @@ export const Filters = ({
               className="expand-button"
               onClick={(e) => handleExpandClick(filterType, e)}
             >
-              <ChevronDown 
+              <ChevronDown
                 size={16}
                 className={`transition-transform ${expandedFilter === filterType ? 'rotate-180' : ''}`}
               />
@@ -128,8 +129,8 @@ export const Filters = ({
                 {showOfficerFilters && (
                   <div className="officer-filters">
                     {['with_management', 'without_management'].map((filter) => {
-                      const data = filter === 'with_management' 
-                        ? getStaffCount('officers') 
+                      const data = filter === 'with_management'
+                        ? getStaffCount('officers')
                         : officersWithoutManagement;
                       return (
                         <div key={filter} className="filter-button-wrapper">
@@ -151,8 +152,8 @@ export const Filters = ({
                 {showShaFilters && (
                   <div className="sha-filters">
                     {['all', '1', '2'].map((accessClass) => {
-                      const data = accessClass === 'all' 
-                        ? getStaffCount('sha') 
+                      const data = accessClass === 'all'
+                        ? getStaffCount('sha')
                         : getStaffCount(accessClass === '1' ? 'shaOneClass' : 'shaTwoClass');
                       return (
                         <div key={accessClass} className="filter-button-wrapper-personnel">

@@ -284,6 +284,13 @@
   margin-bottom: 7px;
 }
 
+.selected-subdivision-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1a365d;
+}
+
 /* Адаптация для мобильных устройств */
 @media (max-width: 640px) {
   .filter-button-personnel,

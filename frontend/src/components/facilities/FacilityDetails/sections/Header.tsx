@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, Pencil, FileSpreadsheet } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { utils, writeFile } from 'xlsx';
+import '../style.css'
 
 interface HeaderProps {
   title: string;
@@ -49,34 +50,34 @@ export function Header({ title, onBack, onEdit, facility }: HeaderProps) {
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="header-container-facility">
+      <div className="header-title-group">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="header-button"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="header-icon" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="header-title-facility">
           {title}
         </h1>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="header-actions-group">
         {facility && (
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+            className="header-action-button header-action-button-export"
           >
-            <FileSpreadsheet className="h-4 w-4" />
+            <FileSpreadsheet className="header-action-icon" />
             <span>Экспорт</span>
           </button>
         )}
         {onEdit && (
           <button
             onClick={onEdit}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="header-action-button header-action-button-edit"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="header-action-icon" />
             <span>Редактировать</span>
           </button>
         )}

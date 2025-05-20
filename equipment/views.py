@@ -14,6 +14,7 @@ from .serializers import (
 from users.models import Employee
 from facilities.models import Facility
 from django.core.cache import cache
+from django_filters.rest_framework import DjangoFilterBackend
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.select_related(
@@ -21,9 +22,20 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     ).prefetch_related('open_category', 'closed_category')
     serializer_class = EquipmentSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['facility']  # Добавляем фильтр по facility
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # Получаем подразделение пользователя (если не администратор)
+        user_division = None
+        if not self.request.user.is_staff:
+            user_division = getattr(self.request.user, 'employee', None) and self.request.user.employee.division
+        
+        # Фильтрация по подразделению пользователя
+        if user_division:
+            queryset = queryset.filter(division=user_division)
         
         # Получаем параметры запроса
         division = self.request.query_params.get('division', None)
@@ -31,8 +43,9 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         status = self.request.query_params.get('status', None)
         type = self.request.query_params.get('type', None)
         search = self.request.query_params.get('search', None)
+        facility = self.request.query_params.get('facility', None)
 
-        # Фильтрация по division
+        # Фильтрация по division (если передан в запросе)
         if division:
             queryset = queryset.filter(division=division)
 
@@ -53,6 +66,10 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         elif type == 'closed':
             queryset = queryset.filter(is_closed=True)
 
+        # Фильтрация по facility
+        if facility:
+            queryset = queryset.filter(facility=facility)
+
         # Поиск по name, serial_number, inventory_number, assigned_to
         if search:
             queryset = queryset.filter(
@@ -63,7 +80,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
-
+    
     @action(detail=True, methods=['post'])
     def dispose(self, request, pk=None):
         equipment = self.get_object()

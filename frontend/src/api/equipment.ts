@@ -9,13 +9,14 @@ export const equipmentApi = {
     status?: string;
     type?: 'open' | 'closed';
     search?: string;
+    facility?: string;
   }) => {
     const { data } = await api.get('/equipment/', { params , 
       headers: {
         'Authorization': `Bearer ${token}`, // Передача токена в заголовке
       },
     });
-    return data;
+    return data.results;
   },
 
   // Get equipment by ID

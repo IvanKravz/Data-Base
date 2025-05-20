@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { samplePersonnel } from '../../../../data/sampleData';
 import { InfoCard } from './InfoCard';
+import '../style.css'
 
 interface ResponsiblePersonsProps {
   facility: Facility;
@@ -17,18 +18,18 @@ export function ResponsiblePersons({ facility }: ResponsiblePersonsProps) {
 
   return (
     <InfoCard title="Материально ответственные лица">
-      <div className="space-y-3">
+      <div className="responsible-persons-list">
         {responsiblePersons.map(person => (
-          <div key={person.id} className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-blue-500" />
+          <div key={person.id} className="responsible-person">
+            <Users className="responsible-person-icon" />
             <div>
-              <p className="font-medium text-gray-900">{person.name}</p>
-              <p className="text-sm text-gray-500">{person.position}</p>
+              <p className="responsible-person-name">{person.name}</p>
+              <p className="responsible-person-position">{person.position}</p>
             </div>
           </div>
         ))}
         {responsiblePersons.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <p className="no-responsible-persons">
             Нет назначенных материально ответственных лиц
           </p>
         )}

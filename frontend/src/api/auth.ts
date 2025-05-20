@@ -26,17 +26,18 @@ interface RegisterData {
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
     const { data } = await api.post('/users/login/', { username, password });
-    // Store tokens
+    // Сохраняем токены и данные пользователя
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   },
 
   register: async (userData: RegisterData): Promise<LoginResponse> => {
     const { data } = await api.post('/users/register/', userData);
-    // Store tokens
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   },
 
@@ -51,7 +52,10 @@ export const authApi = {
   },
 
   logout: () => {
+    // Полная очистка данных аутентификации
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('appLoaded');
   }
 };

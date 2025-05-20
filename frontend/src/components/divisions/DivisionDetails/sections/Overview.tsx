@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Users, HardDrive, Building2, ListTodo } from 'lucide-react';
 import { Division, Employee } from '../../../../types';
@@ -20,8 +20,6 @@ interface OverviewProps {
 
 export function Overview({
   division,
-  activeSubdivision,
-  onSubdivisionClick
 }: OverviewProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,7 +29,7 @@ export function Overview({
   const personnel = useSelector((state: RootState) => state.personnel.personnel);
   const facilities = useSelector((state: RootState) => state.facilities.facilities);
   const tasks = useSelector((state: RootState) => state.tasks.tasks);
-
+  const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,38 +54,14 @@ export function Overview({
 
     fetchEmployees();
   }, [token, dispatch]);
-  
-  // Фильтрация данных для текущего подразделения и подразделения (если выбрано)
-  const filteredData = {
-    equipment: equipment.filter(item => {
-      const matchesDivision = item.division === division.id;
-      const matchesSubdivision = !activeSubdivision || item.subdivision === activeSubdivision;
-      return matchesDivision && matchesSubdivision;
-    }),
-    personnel: personnel.filter(person => {
-      const matchesDivision = person.division === division.id;
-      const matchesSubdivision = !activeSubdivision || person.subdivision === activeSubdivision;
-      return matchesDivision && matchesSubdivision;
-    }),
-    facilities: facilities.filter(facility => {
-      const matchesDivision = facility.division === division.id;
-      const matchesSubdivision = !activeSubdivision || facility.subdivision === activeSubdivision;
-      return matchesDivision && matchesSubdivision;
-    }),
-    tasks: tasks.filter(task => task.divisionId === division.id)
-  };
-
-  // Подсчет количества объектов
-  const facilityCounts = {
-    total: filteredData.facilities.length,
-    open: filteredData.facilities.filter(f => f.type === 'station').length,
-    closed: filteredData.facilities.filter(f => f.type === 'shd').length
-  };
 
   // Функция для перехода на страницу секции
-  const handleSectionClick = (section: string) => {
-    navigate(`/divisions/${division.id}/${section}`);
-  };
+  const handleSectionClick = (section: string, subdivisionId: string) => {{
+    const path = subdivisionId 
+      ? `/divisions/${id}/${section}?subdivision=${subdivisionId}`
+      : `/divisions/${id}/${section}`;
+    navigate(path);
+  }}
 
   return (
     <>
@@ -95,95 +69,61 @@ export function Overview({
         {/* Карточка "Персонал" */}
         <StatCard
           title="Персонал"
-          count={division.employees_count}
+          count={loading ? null : division.employees_count}
           icon={Users}
           iconColor="icon--blue"
           gradientClass="stat-card--blue"
-          details={[
-            {
-              label: "МОЛ",
-              value: filteredData.personnel.filter(p => p.is_material_responsible).length
-            },
-            {
-              label: "ШаРаботники",
-              value: filteredData.personnel.filter(p => p.is_sha_worker).length
-            }
-          ]}
           onClick={() => handleSectionClick('personnel')}
+          loading={loading}
+          style={{ "--order": 0 }}
         />
 
         {/* Карточка "Техника" */}
         <StatCard
           title="Техника"
-          count={division.equipment_count}
+          count={loading ? null : division.equipment_count}
           icon={HardDrive}
           iconColor="icon--purple"
           gradientClass="stat-card--purple"
-          details={[
-            {
-              label: "Открытая",
-              value: filteredData.equipment.filter(e => e.category !== 'closed').length
-            },
-            {
-              label: "Закрытая",
-              value: filteredData.equipment.filter(e => e.category === 'closed').length
-            }
-          ]}
           onClick={() => handleSectionClick('equipment')}
+          loading={loading}
+          style={{ "--order": 1 }}
         />
 
         {/* Карточка "Объекты" */}
         <StatCard
           title="Объекты"
-          count={division.facilities_count}
+          count={loading ? null : division.facilities_count}
           icon={Building2}
           iconColor="icon--green"
           gradientClass="stat-card--green"
-          details={[
-            {
-              label: "Открытые",
-              value: facilityCounts.open
-            },
-            {
-              label: "Закрытые",
-              value: facilityCounts.closed
-            }
-          ]}
           onClick={() => handleSectionClick('facilities')}
+          loading={loading}
+          style={{ "--order": 2 }}
         />
 
         {/* Карточка "Задачи" */}
         <StatCard
           title="Задачи"
-          count={division.tasks_count}
+          count={loading ? null : division.tasks_count}
           icon={ListTodo}
           iconColor="icon--orange"
           gradientClass="stat-card--orange"
-          details={[
-            {
-              label: "В работе",
-              value: filteredData.tasks.filter(t => !t.steps.every(s => s.isCompleted)).length
-            },
-            {
-              label: "Завершено",
-              value: filteredData.tasks.filter(t => t.steps.every(s => s.isCompleted)).length
-            }
-          ]}
           onClick={() => handleSectionClick('tasks')}
+          loading={loading}
+          style={{ "--order": 3 }}
         />
       </div>
 
       {/* Список подразделений (если не выбрано активное подразделение) */}
-      {!activeSubdivision && (
         <SubdivisionsList
           division={division}
-          onSubdivisionClick={onSubdivisionClick}
+          handleSectionClick={handleSectionClick}
           equipment={equipment}
           personnel={personnel}
           facilities={facilities}
           tasks={tasks}
         />
-      )}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { Facility } from '../../../types';
 import { TableView } from './views/TableView';
 import { GridView } from './views/GridView';
@@ -24,6 +25,12 @@ export function FacilityList({
   const dispatch = useDispatch();
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [facilityToDelete, setFacilityToDelete] = React.useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const subdivisionId = searchParams.get('subdivision');
+
+  const filteredFacilities = subdivisionId
+    ? facilities.filter(facility => facility.subdivision == subdivisionId)
+    : facilities;
 
   const handleDelete = (id: string) => {
     setFacilityToDelete(id);
@@ -57,14 +64,14 @@ export function FacilityList({
       <div className="p-4">
         {viewType === 'table' ? (
           <TableView
-            facilities={facilities}
+            facilities={filteredFacilities}
             onFacilityClick={onSelectFacility}
             onDelete={handleDelete}
             showDifferentFields={showDifferentFields}
           />
         ) : (
           <GridView
-            facilities={facilities}
+            facilities={filteredFacilities}
             onFacilityClick={onSelectFacility}
             onDelete={handleDelete}
             showDifferentFields={showDifferentFields}

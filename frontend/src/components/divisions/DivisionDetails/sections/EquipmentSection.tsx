@@ -40,15 +40,13 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
   const [selectedStatus, setSelectedStatus] = useState<Equipment['status'] | 'all'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  console.log('division', division)
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
         const div = await divisionsApi.getDivisionById(id, token);
         const equip = await equipmentApi.getEquipment(token, { division: div.id });
         setDivision(div);
-        setEquipment(equip.results);
+        setEquipment(equip);
       } catch (err) {
         setError('Не удалось загрузить данные об объекте');
         console.error(err);
@@ -98,7 +96,6 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
   // Фильтрация для таблицы (учитывает статус, категорию и поиск)
   const filteredEquipment = useMemo(() => {
     return statusButtonsEquipment.filter(item => {
-      console.log('item', item)
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
       const matchesSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

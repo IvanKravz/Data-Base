@@ -1,10 +1,12 @@
+// StatCard.tsx
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
-import './style.css'
+import './style.css';
+import { CircularProgress } from '@mui/material';
 
 interface StatCardProps {
   title: string;
-  count: number;
+  count: number | null;
   icon: typeof LucideIcon;
   iconColor: string;
   gradientClass: string;
@@ -13,6 +15,7 @@ interface StatCardProps {
     value: number;
   }>;
   onClick: () => void;
+  loading?: boolean;
 }
 
 export function StatCard({
@@ -22,29 +25,24 @@ export function StatCard({
   iconColor,
   gradientClass,
   details,
-  onClick
+  onClick,
+  loading = false
 }: StatCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`stat-card ${gradientClass}`}
+      className={`stat-card ${gradientClass} transition-all duration-300 hover:scale-[1.02]`}
     >
       <div className="stat-card-header">
-        <Icon className={`stat-card-icon ${iconColor}`} />
+        <Icon className={`stat-card-icon ${iconColor} transition-colors duration-300`} />
         <h2 className="stat-card-title">{title}</h2>
-        <p className="stat-card-count">
-          {count}
-        </p>
-      </div>
-      <div className="space-y-4">
-        {/* <div className="stat-card-details">
-          {details.map((detail, index) => (
-            <div key={index} className="stat-card-detail-item">
-              <span className="stat-card-detail-label">{detail.label}</span>
-              <span className="stat-card-detail-value">{detail.value}</span>
-            </div>
-          ))}
-        </div> */}
+        {loading ? (
+          <CircularProgress size="30px"/>
+        ) : (
+          <p className="stat-card-count animate-fadeIn">
+            {count !== null ? count : '—'}
+          </p>
+        )}
       </div>
     </div>
   );

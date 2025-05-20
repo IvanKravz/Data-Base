@@ -35,7 +35,12 @@ class DivisionViewSet(viewsets.ModelViewSet):
         })
 
 class SubdivisionViewSet(viewsets.ModelViewSet):
-    queryset = Subdivision.objects.all()
+    queryset = Subdivision.objects.all().prefetch_related(
+        'employees',
+        'equipment',
+        'facilities',
+        'tasks'
+    )
     serializer_class = SubdivisionSerializer
     permission_classes = [IsAuthenticated]
 

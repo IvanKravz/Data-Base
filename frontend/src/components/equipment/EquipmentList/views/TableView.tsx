@@ -18,25 +18,6 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [equipmentCategories, setEquipmentCategories] = useState<Record<string, string>>({});
 
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const token = localStorage.getItem('accessToken');
-  //       const response = await equipmentApi.getEquipmentCategories(token);
-  //       const categoriesMap = response.reduce((acc: Record<string, string>, category) => {
-  //         acc[category.value] = category.label;
-  //         return acc;
-  //       }, {});
-  //       setEquipmentCategories(categoriesMap);
-  //     } catch (error) {
-  //       console.error('Failed to fetch equipment categories:', error);
-  //     }
-  //   };
-
-  //   fetchCategories();
-  // }, []);
-
-
   const handleSort = (field: keyof Equipment) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');

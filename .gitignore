@@ -7,6 +7,7 @@ db.sqlite3
 migrations/
 media/
 /static/
+frontend/public/tiles/
 # C extensions
 *.so
 .env
@@ -63,3 +64,4 @@ docs/_build/
 
 # PyBuilder
 target/
+

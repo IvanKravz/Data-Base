@@ -2,26 +2,42 @@ from django import forms
 from django.contrib import admin
 from .models import CommunicationPost, Division, Subdivision, Facility
 
-@admin.register(Subdivision)
-class SubdivisionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'division', 'staff_planned_total')
-    list_filter = ('division',)
-    search_fields = ('name',)
-    
-    # def staff_completion(self, obj):
-    #     return f"{round((obj.staff_actual / obj.staff_planned_total) * 100, 2)}%" if obj.staff_planned_total > 0 else "0%"
-    # staff_completion.short_description = 'Укомплектованность'
+class SubdivisionInline(admin.TabularInline):
+    model = Subdivision
+    extra = 1
+    show_change_link = True
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'division', 'staff_planned_total')
+        }),
+        ('Детали штата', {
+            'fields': (
+                'staff_planned_management',
+                'staff_planned_officers',
+                'staff_planned_warrant_officers',
+                'staff_planned_civilian'
+            ),
+            'classes': ('collapse',)  # Эта секция будет скрыта по умолчанию
+        }),
+        ('Системная информация', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(Division)
 class DivisionAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'staff_planned_total', 
+        'id', 'name', 'staff_planned_total', 
         'employees_count', 'management_count', 'officers_count',
         'warrant_officers_count', 'civilian_count',
         'equipment_count', 'tasks_count', 'facilities_count', 'created_at'
     )
     search_fields = ('name',)
-    readonly_fields = ('facilities_list',)
+    readonly_fields = ('facilities_list', 'created_at', 'updated_at')
+    inlines = [SubdivisionInline]
+
 
     def facilities_list(self, obj):
         return ", ".join([f.name for f in obj.facilities.all()])
@@ -58,6 +74,20 @@ class DivisionAdmin(admin.ModelAdmin):
     def tasks_count(self, obj):
         return obj.get_tasks_count()
     tasks_count.short_description = 'Задачи'
+
+    fieldsets = (
+        ('Основная информация', {
+            'fields': (
+                'name', 'staff_planned_total', 'staff_planned_management',
+                'staff_planned_officers', 'staff_planned_warrant_officers',
+                'staff_planned_civilian'
+            )
+        }),
+        ('Системная информация', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
     
 class CommunicationPostInline(admin.TabularInline):
     model = Facility.communication_posts.through
@@ -105,7 +135,7 @@ class CommunicationPostAdmin(admin.ModelAdmin):
 class FacilityAdmin(admin.ModelAdmin):
     form = FacilityAdminForm 
     list_display = (
-        'name', 'type', 'facility_class', 'division', 
+        'id', 'name', 'type', 'facility_class', 'division', 
         'subdivision', 'is_closed', 'communication_posts_list', 
         'inn', 'equipment_count'
     )

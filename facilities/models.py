@@ -55,6 +55,31 @@ class Subdivision(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_employees_count(self):
+        return self.employees.count()
+    
+    def get_management_count(self):
+        return self.employees.filter(category='management').count()
+    
+    def get_officers_count(self):
+        return self.employees.filter(category='officer').count()
+    
+    def get_warrant_officers_count(self):
+        return self.employees.filter(category='warrant_officer').count()
+    
+    def get_civilian_count(self):
+        return self.employees.filter(category='civilian').count()
+    
+    def get_equipment_count(self):
+        return self.equipment.count()
+    
+    def get_facilities_count(self):
+        return self.facilities.count()
+
+    def get_tasks_count(self):
+        return self.tasks.count()
+
+    
     def __str__(self):
         return f"{self.division.name} - {self.name}"
 

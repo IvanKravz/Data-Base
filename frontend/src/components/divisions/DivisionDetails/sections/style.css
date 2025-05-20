@@ -20,6 +20,11 @@
   }
 }
 
+.header-divisions {
+  display: flex;
+  margin-bottom: 3rem;
+}
+
 /* Карточка статистики */
 .stat-card {
   background: white;
@@ -27,7 +32,6 @@
   padding: 1rem;
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -119,7 +123,7 @@
 }
 
 .icon--blue .stat-card-icon svg {
-  color: #2563eb;
+  color: #1245b3;
 }
 
 .icon--purple .stat-card-icon {
@@ -127,7 +131,7 @@
 }
 
 .icon--purple .stat-card-icon svg {
-  color: #3331a9;
+  color: #1411c9;
 }
 
 .icon--green .stat-card-icon {
@@ -189,11 +193,11 @@
 
 /* Стили для SubdivisionsList */
 .subdivisions-container {
-  background: white;
   border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 1.5rem;
+  padding: 1rem;
+  margin: 1.5rem auto 0;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .subdivisions-title {
@@ -201,32 +205,38 @@
   font-weight: 600;
   color: #111827;
   margin-bottom: 1rem;
+  text-align: center;
 }
 
 .subdivisions-grid {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
+  display: flex;
   gap: 1rem;
+  justify-items: center;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 1120px) {
   .subdivisions-grid {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: column;
   }
 }
 
 .subdivision-card {
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 2px solid #e5e7eb;
   border-radius: 0.75rem;
-  transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
-  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 330px;
+  box-sizing: border-box;
+  cursor: default;
 }
 
 .subdivision-card:hover {
-  background-color: #f9fafb;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transform: translateY(-0.25rem);
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.7s;
+
 }
 
 .subdivision-card-title {
@@ -237,23 +247,58 @@
 }
 
 .subdivision-card-detail {
+  justify-content: space-between;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   font-size: 0.875rem;
   color: #4b5563;
-  margin-bottom: 0.5rem;
 }
 
 .subdivision-card-detail-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: color 0.2s ease;
 }
 
 .subdivision-card-detail-value {
   font-weight: 500;
   color: #111827;
+}
+
+.subdivision-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.clickable-metric {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.clickable-metric:hover {
+  background-color: #f3f4f6;
+}
+
+.clickable-metric:active {
+  transform: translateY(0);
+}
+
+.clickable-metric:hover .subdivision-card-detail-label {
+  color: #1e40af;
+}
+
+.text-card-subdivision {
+  font-size: 1rem;
+  margin-right: 1rem;
+}
+
+.text-card-count {
+  font-size: 1rem;
 }
 
 /* Стили для EquipmentSection, FacilitiesSection, TasksSection */
@@ -526,4 +571,35 @@
 .active .category-filter-badge {
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2)
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card {
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: calc(var(--order) * 0.1s);
+}
+
+/* Добавить анимацию пульсации для скелетонов */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }

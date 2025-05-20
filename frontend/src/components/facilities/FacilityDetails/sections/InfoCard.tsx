@@ -1,4 +1,5 @@
 import React from 'react';
+import '../style.css';
 
 interface InfoCardProps {
   title: string;
@@ -7,9 +8,9 @@ interface InfoCardProps {
 
 export function InfoCard({ title, children }: InfoCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold mb-4 text-gray-900">{title}</h2>
-      <div className="space-y-4">
+    <div className="facility-info-card">
+      <h2 className="facility-info-card__title">{title}</h2>
+      <div className="facility-info-card__content">
         {children}
       </div>
     </div>

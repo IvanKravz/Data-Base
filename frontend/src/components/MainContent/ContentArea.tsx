@@ -18,11 +18,9 @@ export function ContentArea({
     return null;
   }
 
-  // const { divisions } = useSelector((state: RootState) => state.facilities);
 
   return (
-    <DivisionList 
-      // divisions={divisions}
+    <DivisionList
       onSelectDivision={onSelectDivision}
       viewType={viewTypes.divisions}
     />

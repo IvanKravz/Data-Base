@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Equipment } from '../../../types';
 import { TableView } from './views/TableView';
 import { GridView } from './views/GridView';
@@ -25,6 +26,13 @@ export function EquipmentList({
     handleCancelDelete
   } = useDeleteConfirmation();
 
+  const [searchParams] = useSearchParams();
+  const subdivisionId = searchParams.get('subdivision');
+
+  const filteredEquipment = subdivisionId
+    ? equipment.filter(item => item.subdivision?.id == subdivisionId)
+    : equipment;
+
   const handleEdit = (e: React.MouseEvent, item: Equipment) => {
     e.stopPropagation();
     onUpdateEquipment(item);
@@ -34,15 +42,15 @@ export function EquipmentList({
     <>
       <div className="mb-4 flex justify-end">
         <ExportButton 
-          onClick={() => exportEquipmentToExcel(equipment)}
+          onClick={() => exportEquipmentToExcel(filteredEquipment)}
           label="Экспорт техники"
         />
       </div>
-        <TableView
-          equipment={equipment}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+      <TableView
+        equipment={filteredEquipment}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
       {showDeleteModal && (
         <DeleteConfirmationModal
           title="Удаление техники"

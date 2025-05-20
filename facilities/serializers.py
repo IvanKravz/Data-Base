@@ -15,14 +15,51 @@ class FacilityShortSerializer(serializers.ModelSerializer):
         ]
 
 class SubdivisionSerializer(serializers.ModelSerializer):
+    employees_count = serializers.SerializerMethodField()
+    management_count = serializers.SerializerMethodField()
+    officers_count = serializers.SerializerMethodField()
+    warrant_officers_count = serializers.SerializerMethodField()
+    civilian_count = serializers.SerializerMethodField()
+    equipment_count = serializers.SerializerMethodField()
+    facilities_count = serializers.SerializerMethodField()
+    tasks_count = serializers.SerializerMethodField()
+    facilities = FacilityShortSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Subdivision
         fields = [
             'id', 'name', 'division', 
             'staff_planned_total', 'staff_planned_management',
             'staff_planned_officers', 'staff_planned_warrant_officers',
-            'staff_planned_civilian', 'created_at', 'updated_at'
+            'staff_planned_civilian', 'created_at', 'updated_at',
+            'employees_count', 'management_count', 'officers_count',
+            'warrant_officers_count', 'civilian_count', 'equipment_count',
+            'facilities_count', 'tasks_count', 'facilities'
         ]
+
+    def get_employees_count(self, obj):
+        return obj.get_employees_count()
+    
+    def get_management_count(self, obj):
+        return obj.get_management_count()
+    
+    def get_officers_count(self, obj):
+        return obj.get_officers_count()
+    
+    def get_warrant_officers_count(self, obj):
+        return obj.get_warrant_officers_count()
+    
+    def get_civilian_count(self, obj):
+        return obj.get_civilian_count()
+    
+    def get_equipment_count(self, obj):
+        return obj.get_equipment_count()
+
+    def get_facilities_count(self, obj):
+        return obj.get_facilities_count()
+    
+    def get_tasks_count(self, obj):
+        return obj.get_tasks_count()    
 
 class DivisionSerializer(serializers.ModelSerializer):
     employees_count = serializers.SerializerMethodField()

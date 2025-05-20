@@ -12,7 +12,7 @@ interface HeaderProps {
 
 export function Header({ division, activeSection, activeSubdivision, onBack }: HeaderProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="header-divisions">
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}

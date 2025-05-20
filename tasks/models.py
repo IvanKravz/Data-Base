@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from facilities.models import Division
+from facilities.models import Division, Subdivision
 from users.models import User
 
 class Task(models.Model):
@@ -13,6 +13,7 @@ class Task(models.Model):
     title = models.CharField(max_length=255, verbose_name='Название')
     category = models.CharField(max_length=20, choices=TASK_CATEGORIES, verbose_name='Категория')
     division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name='tasks', verbose_name='Подразделение')
+    subdivision = models.ForeignKey(Subdivision, on_delete=models.CASCADE, null=True, related_name='tasks', verbose_name='Отделение')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_tasks', verbose_name='Создал')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

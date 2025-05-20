@@ -33,7 +33,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({ onAddressFound }) => {
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Поиск по названию или адресу"
         className="address-input"
-        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+        onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
       />
       <button onClick={handleSearch} className="search-button">
         Поиск
