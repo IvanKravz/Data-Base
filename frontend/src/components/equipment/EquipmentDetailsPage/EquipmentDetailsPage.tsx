@@ -33,8 +33,6 @@ export function EquipmentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  console.log('equipment', equipment)
-
   useEffect(() => {
     const fetchEquipment = async () => {
       try {

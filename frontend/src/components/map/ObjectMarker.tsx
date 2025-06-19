@@ -1,16 +1,32 @@
-// ObjectMarker.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Marker, Popup } from 'react-leaflet';
 import { MapObject } from './data/objects';
 import L from 'leaflet';
 
-const createCustomIcon = (color = 'blue', isSelected = false) => {
+// Импортируем локальные изображения
+import blueIcon from '../../assets/markers/marker-icon-2x-blue.png';
+import redIcon from '../../assets/markers/marker-icon-2x-red.png';
+import grayIcon from '../../assets/markers/marker-icon-2x-grey.png';
+import shadowIcon from '../../assets/markers/marker-shadow.png';
 
-
+const createCustomIcon = (color = 'blue', isSelected = false, isClosed = false) => {
+  let icon;
+  
+  if (isSelected) {
+    icon = redIcon;
+  } else if (isClosed) {
+    icon = grayIcon;
+  } else {
+    switch(color) {
+      case 'gray': icon = grayIcon; break;
+      default: icon = blueIcon;
+    }
+  }
+  
   return new L.Icon({
-    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${isSelected ? 'red' : color}.png`,
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconUrl: icon,
+    shadowUrl: shadowIcon,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -26,6 +42,10 @@ interface ObjectMarkerProps {
 const ObjectMarker: React.FC<ObjectMarkerProps> = ({ object, isSelected = false }) => {
   const navigate = useNavigate();
 
+  if (!object.lat || !object.lng) {
+    return null;
+  }
+
   const handleNavigate = () => {
     navigate(`/facilities/${object.id}`);
   };
@@ -33,12 +53,16 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({ object, isSelected = false 
   return (
     <Marker
       position={[object.lat, object.lng]}
-      icon={createCustomIcon(object.color || 'blue', isSelected)}
+      icon={createCustomIcon(object.color || 'blue', isSelected, object.is_closed)}
     >
       <Popup>
         <div className="popup-content">
           <h3 className="font-bold">{object.name}</h3>
-          <p className="text-sm">{object.address}</p>
+          <div className="map-text-type-display">
+            {object.type_display}
+            <span className="closed-badge"> {object.type.name}</span>
+          </div>
+          <div className="map-text-address">{object.address}</div>
           {object.description && (
             <p className="mt-1 text-xs">{object.description}</p>
           )}

@@ -17,7 +17,7 @@
   padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  background: #3674d8;
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -27,7 +27,7 @@
 }
 
 .filter-toggle-button:hover {
-  background: linear-gradient(145deg, #2563eb, #1d4ed8);
+  background: #3168dd;
 }
 
 .filter-toggle-button svg:last-child {
@@ -70,8 +70,8 @@
   border: none;
   border-radius: 8px;
   background: linear-gradient(145deg, #f9fafb, #e5e7eb);
-  box-shadow: 2px 2px 4px #d1d5db, 
-             -2px -2px 4px #ffffff;
+  box-shadow: 2px 2px 4px #d1d5db,
+    -2px -2px 4px #ffffff;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
@@ -95,8 +95,8 @@
   border: none;
   border-radius: 8px;
   background: linear-gradient(145deg, #f9fafb, #e5e7eb);
-  box-shadow: 2px 2px 4px #d1d5db, 
-             -2px -2px 4px #ffffff;
+  box-shadow: 2px 2px 4px #d1d5db,
+    -2px -2px 4px #ffffff;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
@@ -233,11 +233,12 @@
 .details-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 2px;
+  margin-bottom: 0.25rem;
 }
 
 .details-label {
   font-size: 14px;
+  font-weight: 500;
   color: #6b7280;
 }
 
@@ -268,14 +269,18 @@
 .sha-filter-button:hover:not(.active),
 .officer-filter-button:hover:not(.active) {
   transform: translateY(-1px);
-  box-shadow: 3px 3px 6px #d1d5db, 
-             -3px -3px 6px #ffffff;
+  box-shadow: 3px 3px 6px #d1d5db,
+    -3px -3px 6px #ffffff;
 }
 
 .personnel-list-empty-message {
-  font-size: 18px;
-  margin-top: 15px;
   text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 16px;
+  margin: 20px 0;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 }
 
 .personnel-list-export-button {
@@ -285,14 +290,26 @@
 }
 
 .selected-subdivision-title {
-  font-size: 1.25rem;
-  font-weight: 600;
   margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.selected-subdivision-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
   color: #1a365d;
+}
+
+.subdivision-staff-info {
+  font-size: 0.875rem;
+  color: #4a5568;
 }
 
 /* Адаптация для мобильных устройств */
 @media (max-width: 640px) {
+
   .filter-button-personnel,
   .sha-filter-button,
   .officer-filter-button {
@@ -301,25 +318,25 @@
     font-size: 12px;
     padding: 0.5rem 1.8rem 0.5rem 0.6rem;
   }
-  
+
   .main-filters,
   .sha-filters,
   .officer-filters {
     gap: 0.5rem;
   }
-  
+
   .filter-details {
     padding: 10px;
   }
-  
+
   .details-content {
     font-size: 11px;
   }
-  
+
   .expand-button {
     padding: 0 0.3rem;
   }
-  
+
   .count-badge {
     font-size: 12px;
   }
@@ -331,6 +348,7 @@
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

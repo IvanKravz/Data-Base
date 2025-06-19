@@ -577,6 +577,33 @@
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+.block-add-facility-button {
+  display: flex;
+  justify-content: end;
+  gap: 0.5rem;
+}
+
+.add-facility-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-facility-button:hover {
+  background-color: #1d4ed8;
+}
+
+.add-facility-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

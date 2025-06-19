@@ -12,74 +12,27 @@ interface EducationCardProps {
 export function EducationCard({ formData, onChange, employee, viewMode }: EducationCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
-  // Преобразует дату из формата БД (YYYY-MM-DD) в DD-MM-YYYY
-  const formatDateDisplay = (dateString: string | null | undefined): string => {
-    if (!dateString) return '—';
-
-    // Проверяем формат YYYY-MM-DD
-    const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
-    const match = dateString.match(isoFormat);
-
-    if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`; // DD-MM-YYYY
-    }
-
-    // Если дата в другом формате, пытаемся распарсить
-    const dateObj = new Date(dateString);
-    if (!isNaN(dateObj.getTime())) {
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const year = dateObj.getFullYear();
-      return `${day}-${month}-${year}`;
-    }
-
-    return dateString; // Возвращаем как есть, если не смогли распарсить
-  };
-
-  // Преобразует дату из формата БД (YYYY-MM-DD) в DD-MM-YYYY для отображения
   const formatDisplayDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '—';
-
-    // Проверяем формат YYYY-MM-DD
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateString.match(isoFormat);
-
     if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`; // DD-MM-YYYY
+      return `${match[3]}-${match[2]}-${match[1]}`;
     }
-
-    // Если дата уже в формате DD-MM-YYYY, оставляем как есть
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     if (displayFormat.test(dateString)) return dateString;
-
-    return dateString; // Возвращаем как есть, если не распознали формат
+    return dateString;
   };
 
-  // Преобразует в формат для input[type="date"] (YYYY-MM-DD)
   const formatDateForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return '';
-
-    // Проверяем формат DD-MM-YYYY
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     const match = dateString.match(displayFormat);
-
     if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`; // YYYY-MM-DD
+      return `${match[3]}-${match[2]}-${match[1]}`;
     }
-
-    // Проверяем формат YYYY-MM-DD
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     if (isoFormat.test(dateString)) return dateString;
-
-    // Пытаемся распарсить другие форматы
-    const dateObj = new Date(dateString);
-    if (!isNaN(dateObj.getTime())) {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
     return '';
   };
 
@@ -88,8 +41,7 @@ export function EducationCard({ formData, onChange, employee, viewMode }: Educat
   };
 
   const handleDateChange = (field: keyof Employee, value: string) => {
-    // Сохраняем в формате DD-MM-YYYY
-    const formattedValue = formatDateDisplay(value);
+    const formattedValue = formatDisplayDate(value);
     onChange?.(field, formattedValue);
     setActiveDateField(null);
   };
@@ -100,6 +52,18 @@ export function EducationCard({ formData, onChange, employee, viewMode }: Educat
       <span className="qc-field-value">
         {value ? formatDisplayDate(value) : '—'}
       </span>
+    </div>
+  );
+
+  const renderInput = (label: string, value: string, field: keyof Employee) => (
+    <div className="qc-input-group">
+      <label className="qc-input-label">{label}</label>
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange?.(field, e.target.value)}
+        className="qc-input"
+      />
     </div>
   );
 
@@ -148,9 +112,9 @@ export function EducationCard({ formData, onChange, employee, viewMode }: Educat
           </>
         ) : (
           <>
-            {renderField("Уровень", formData?.education)}
-            {renderField("Учебное заведение", formData?.institution)}
-            {renderDateInput("Год окончания", formData?.year_graduation || '', 'year_graduation')}
+            {renderInput("Уровень", formData?.education || '', 'education')}
+            {renderInput("Учебное заведение", formData?.institution || '', 'institution')}
+            {renderDateInput("Год окончания", formData?.year_graduation, 'year_graduation')}
           </>
         )}
       </div>

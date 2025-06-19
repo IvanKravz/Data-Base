@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowLeft, Pencil, FileSpreadsheet } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { utils, writeFile } from 'xlsx';
-import '../style.css'
+import '../FacilityForm.css'
 
 interface HeaderProps {
   title: string;

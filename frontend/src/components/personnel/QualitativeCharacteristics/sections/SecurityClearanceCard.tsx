@@ -12,41 +12,27 @@ interface SecurityClearanceCardProps {
 export function SecurityClearanceCard({ formData, onChange, employee, viewMode }: SecurityClearanceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
-  // Преобразует дату из формата БД (YYYY-MM-DD) в DD-MM-YYYY для отображения
   const formatDisplayDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '—';
-    
-    // Проверяем формат YYYY-MM-DD
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateString.match(isoFormat);
-    
     if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`; // DD-MM-YYYY
+      return `${match[3]}-${match[2]}-${match[1]}`;
     }
-    
-    // Если дата уже в формате DD-MM-YYYY, оставляем как есть
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     if (displayFormat.test(dateString)) return dateString;
-    
-    return dateString; // Возвращаем как есть, если не распознали формат
+    return dateString;
   };
 
-  // Преобразует в формат для input[type="date"] (YYYY-MM-DD)
   const formatDateForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return '';
-    
-    // Если дата в формате DD-MM-YYYY
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
-    const displayMatch = dateString.match(displayFormat);
-    
-    if (displayMatch) {
-      return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`; // YYYY-MM-DD
+    const match = dateString.match(displayFormat);
+    if (match) {
+      return `${match[3]}-${match[2]}-${match[1]}`;
     }
-    
-    // Если дата уже в формате YYYY-MM-DD
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     if (isoFormat.test(dateString)) return dateString;
-    
     return '';
   };
 
@@ -55,7 +41,6 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
   };
 
   const handleDateChange = (field: keyof Employee, value: string) => {
-    // При изменении преобразуем обратно в DD-MM-YYYY
     const formattedValue = formatDisplayDate(value);
     onChange?.(field, formattedValue);
     setActiveDateField(null);
@@ -67,6 +52,18 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
       <span className="qc-field-value">
         {value ? formatDisplayDate(value) : '—'}
       </span>
+    </div>
+  );
+
+  const renderInput = (label: string, value: string, field: keyof Employee) => (
+    <div className="qc-input-group">
+      <label className="qc-input-label">{label}</label>
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange?.(field, e.target.value)}
+        className="qc-input"
+      />
     </div>
   );
 
@@ -115,8 +112,8 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
           </>
         ) : (
           <>
-            {renderField("Форма", formData?.form_state_secrets)}
-            {renderField("№ допуска", formData?.number_state_secrets)}
+            {renderInput("Форма", formData?.form_state_secrets || '', 'form_state_secrets')}
+            {renderInput("№ допуска", formData?.number_state_secrets || '', 'number_state_secrets')}
             {renderDateInput("Дата", formData?.data_state_secrets, 'data_state_secrets')}
           </>
         )}

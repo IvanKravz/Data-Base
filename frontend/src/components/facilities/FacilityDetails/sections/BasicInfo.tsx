@@ -3,14 +3,13 @@ import { Building2, MapPin } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { InfoCard } from './InfoCard';
 import { InfoItem } from './InfoItem';
-import '../style.css';
+import '../FacilityForm.css';
 
 interface BasicInfoProps {
   facility: Facility;
 }
 
 export function BasicInfo({ facility }: BasicInfoProps) {
-  console.log('facility', facility)
   return (
     <InfoCard title="Основная информация">
       <div className="space-y-4">

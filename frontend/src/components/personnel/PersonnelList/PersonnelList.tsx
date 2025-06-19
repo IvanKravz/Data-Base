@@ -75,7 +75,6 @@ export function PersonnelList({
     fetchPersonnel();
   }, [division, token]);
 
-
   const filteredPersonnel = allPersonnel.filter(person => {
     const matchesSubdivision = !subdivisionId ||
       (person.subdivision && person.subdivision.id == subdivisionId);
@@ -176,25 +175,30 @@ export function PersonnelList({
       ? allPersonnel.filter(person => person.subdivision?.id == subdivisionId)
       : allPersonnel;
 
+    // Для штатных значений используем данные из самого отделения, если оно выбрано
+    const selectedSubdivision = subdivisionId
+      ? division.subdivisions?.find(sub => sub.id == subdivisionId)
+      : null;
+
     const counts = {
       all: {
-        staffCount: division.staff_planned_total || 0,
+        staffCount: selectedSubdivision?.staff_planned_total || division.staff_planned_total || 0,
         actualCount: filteredPersonnel.length
       },
       management: {
-        staffCount: division.staff_planned_management || 0,
+        staffCount: selectedSubdivision?.staff_planned_management || division.staff_planned_management || 0,
         actualCount: filteredPersonnel.filter(person => person.category === 'management').length
       },
       officers: {
-        staffCount: division.staff_planned_officers || 0,
+        staffCount: selectedSubdivision?.staff_planned_officers || division.staff_planned_officers || 0,
         actualCount: filteredPersonnel.filter(person => person.category === 'officer' || person.category === 'management').length
       },
       warrantOfficers: {
-        staffCount: division.staff_planned_warrant_officers || 0,
+        staffCount: selectedSubdivision?.staff_planned_warrant_officers || division.staff_planned_warrant_officers || 0,
         actualCount: filteredPersonnel.filter(person => person.category === 'warrant_officer').length
       },
       civilian: {
-        staffCount: division.staff_planned_civilian || 0,
+        staffCount: selectedSubdivision?.staff_planned_civilian || division.staff_planned_civilian || 0,
         actualCount: filteredPersonnel.filter(person => person.category === 'civilian').length
       },
       mol: {
@@ -218,6 +222,8 @@ export function PersonnelList({
     return counts[staffType];
   };
 
+
+  console.log(division)
   return (
     <>
       <div className="personnel-list-header">
@@ -242,11 +248,25 @@ export function PersonnelList({
             label="Экспорт сотрудников"
           />
         </div>
-        {selectedSubdivision && (
-          <div className="selected-subdivision-title">
-            {selectedSubdivision.name}
-          </div>
-        )}
+        <div className="selected-subdivision-title">
+          {subdivisionId ? (
+            <>
+              <h3>{division?.name} / {selectedSubdivision?.name}</h3>
+              <div className="subdivision-staff-info">
+                Штат: {selectedSubdivision?.staff_planned_total || 0} /
+                По списку: {selectedSubdivision?.employees_count || 0}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3>{division?.name}</h3>
+              <div className="subdivision-staff-info">
+                Штат: {division?.staff_planned_total || 0} /
+                По списку: {division?.employees_count || 0}
+              </div>
+            </>
+          )}
+        </div>
         <TableView
           divisionName={selectedDivision}
           personnel={filteredPersonnel}
@@ -260,7 +280,7 @@ export function PersonnelList({
               ? 'Нет сотрудников, соответствующих поиску'
               : selectedCategory !== 'all'
                 ? `Нет ${selectedCategory === 'mol' ? 'материально ответственных лиц' : 'ШаРаботников'}`
-                : 'Нет сотрудников'}
+                : 'Нет сотрудников для отображения'}
           </div>
         )}
       </div>

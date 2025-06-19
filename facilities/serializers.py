@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CommunicationPost, Division, Subdivision, Facility
+from .models import CommunicationPost, Division, FacilityType, Subdivision, Facility
 
 class FacilityShortSerializer(serializers.ModelSerializer):
     """Укороченный сериализатор для объектов Facility"""
@@ -116,15 +116,29 @@ class DivisionSerializer(serializers.ModelSerializer):
     #     total_actual = obj.get_employees_count()
     #     return round((total_actual / obj.staff_planned_total) * 100, 2) if obj.staff_planned_total > 0 else 0
 
+
+class FacilityTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FacilityType
+        fields = ['id', 'name', 'description']
+
+
 class CommunicationPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommunicationPost
-        fields = ['id', 'name', 'value', 'division', 'subdivision']
+        fields = ['id', 'name', 'division', 'subdivision', 'description']        
 
 class FacilitySerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()
     division_name = serializers.CharField(source='division.name', read_only=True)
     subdivision_name = serializers.CharField(source='subdivision.name', read_only=True, allow_null=True)
+    type = FacilityTypeSerializer(read_only=True)
+    type_id = serializers.PrimaryKeyRelatedField(
+        queryset=FacilityType.objects.all(),
+        source='type',
+        write_only=True,
+        required=False
+    )
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     class_display = serializers.CharField(source='get_facility_class_display', read_only=True)
     is_closed = serializers.BooleanField()
@@ -137,17 +151,24 @@ class FacilitySerializer(serializers.ModelSerializer):
         required=False
     )
     inn = serializers.CharField(allow_null=True, required=False, max_length=12)
+    city = serializers.CharField(required=False, allow_null=True)
+    street = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    house_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = Facility
         fields = [
-            'id', 'name', 'type', 'type_display', 'facility_class', 'class_display',
+            'id', 'name', 'type', 'type_id', 'type_display', 'facility_class', 'class_display',
             'address', 'division', 'division_name', 'subdivision', 'subdivision_name', 
+            'city', 'street', 'house_number', 'address',
             'equipment_count', 'comments', 'acceptance_act_number', 'rim_act_number',
             'commissioning_act_number', 'opening_permission_number', 'is_closed', 'communication_posts', 
             'communication_post_ids', 'kz_size', 'has_transformer_in_kz', 'has_grounding_in_kz', 
             'communication_posts', 'inn', 'created_at', 'updated_at'
         ]
+        extra_kwargs = {
+            'address': {'read_only': True}
+        }
 
     def get_equipment_count(self, obj):
         return obj.equipment.count()
@@ -171,11 +192,15 @@ class FacilitySerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         posts_data = validated_data.pop('communication_posts', [])
+        validated_data.pop('divisionData', None)
+        validated_data.pop('addressParts', None)
         instance = super().create(validated_data)
         instance.communication_posts.set(posts_data)
         return instance
 
     def update(self, instance, validated_data):
+        validated_data.pop('divisionData', None)
+        validated_data.pop('addressParts', None)
         posts_data = validated_data.pop('communication_posts', None)
         instance = super().update(instance, validated_data)
         if posts_data is not None:
@@ -187,3 +212,10 @@ class FacilityStatsSerializer(serializers.Serializer):
     by_type = serializers.DictField(child=serializers.IntegerField())
     by_class = serializers.DictField(child=serializers.IntegerField())
     by_division = serializers.DictField(child=serializers.IntegerField())
+
+# with transaction.atomic():
+#     with connection.cursor() as cursor:
+#         cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+#         invalid_facilities = Facility.objects.exclude(type__isnull=True).filter(type=None)
+#         invalid_facilities.update(type=None)
+#         cursor.execute("SET FOREIGN_KEY_CHECKS=1;")

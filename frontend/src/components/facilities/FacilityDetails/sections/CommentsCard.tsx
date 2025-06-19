@@ -2,7 +2,7 @@ import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { InfoCard } from './InfoCard';
-import '../style.css';
+import '../FacilityForm.css';
 
 interface CommentsCardProps {
   facility: Facility;

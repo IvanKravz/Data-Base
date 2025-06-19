@@ -198,6 +198,10 @@
     position: relative;
 }
 
+.facility-info-card:hover {
+    cursor: default;
+}
+
 .facility-info-card__title {
     font-size: var(--text-lg);
     font-weight: 600;

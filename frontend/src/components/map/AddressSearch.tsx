@@ -5,17 +5,23 @@ import './style.css';
 
 interface AddressSearchProps {
   onAddressFound: (coords: [number, number]) => void;
+  onNameFound?: (name: string) => void; // Добавляем новый пропс
 }
 
-const AddressSearch: React.FC<AddressSearchProps> = ({ onAddressFound }) => {
+const AddressSearch: React.FC<AddressSearchProps> = ({ onAddressFound, onNameFound }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
     try {
+      // Сначала пробуем найти по адресу
       const result = geocodeAddress(searchQuery);
+      console.log('result.name', result.name)
       if (result) {
         onAddressFound([result.lat, result.lng]);
+        if (onNameFound && result.name) {
+          onNameFound(result.name);
+        }
         setError('');
       } else {
         setError('Объект не найден');
@@ -31,7 +37,7 @@ const AddressSearch: React.FC<AddressSearchProps> = ({ onAddressFound }) => {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Поиск по названию или адресу"
+        placeholder="Поиск, например Хабаровск, улица Ленина, 2"
         className="address-input"
         onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
       />

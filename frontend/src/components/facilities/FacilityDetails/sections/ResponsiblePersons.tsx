@@ -3,7 +3,7 @@ import { Users } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { samplePersonnel } from '../../../../data/sampleData';
 import { InfoCard } from './InfoCard';
-import '../style.css'
+import '../FacilityForm.css'
 
 interface ResponsiblePersonsProps {
   facility: Facility;

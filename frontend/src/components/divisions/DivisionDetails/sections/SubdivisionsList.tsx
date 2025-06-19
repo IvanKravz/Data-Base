@@ -1,6 +1,6 @@
 import React from 'react';
-import { Users, Database, Building2, ListTodo } from 'lucide-react';
-import { Division, Equipment, Person, Facility, Task, Subdivision } from '../../../../types';
+import { Users, Plug, Building2, ListTodo } from 'lucide-react';
+import { Division, Equipment, Person, Facility, Task } from '../../../../types';
 import './style.css';
 
 interface SubdivisionsListProps {
@@ -100,7 +100,7 @@ export function SubdivisionsList({
                   }}
                 >
                   <div className="subdivision-card-detail-label">
-                    <Database className="h-4 w-4 metric-icon--green" />
+                    <Plug className="h-4 w-4 metric-icon--green" />
                     <span className="text-card-subdivision">Техника</span>
                   </div>
                   <div className="text-sm">

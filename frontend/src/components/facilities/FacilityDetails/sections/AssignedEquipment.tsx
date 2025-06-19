@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Database } from 'lucide-react';
+import { Database, Plug } from 'lucide-react';
 import { Facility, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { EquipmentModal } from '../../../equipment/EquipmentModal';
 import { equipmentApi } from '../../../../api/equipment';
-import '../style.css';
+import '../FacilityForm.css';
 
 interface AssignedEquipmentProps {
   facility: Facility;
@@ -83,7 +83,7 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
     <div className="facility-assigned-equipment">
       <div className="facility-assigned-equipment-header">
         <div className="facility-assigned-equipment-title-wrapper">
-          <Database className="facility-assigned-equipment-icon" size={20} />
+          <Plug className="facility-assigned-equipment-icon" size={22} />
           <h2 className="facility-assigned-equipment-title">Техника на объекте</h2>
         </div>
         <div className="facility-assigned-equipment-count">

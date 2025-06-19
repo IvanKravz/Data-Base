@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Division } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { divisionsApi, equipmentApi } from '../../../../api';
@@ -10,7 +10,6 @@ import { Equipment, EquipmentCategory } from '../../../../types';
 import './style.css';
 import { StatusButtons } from '../../../equipment';
 
-// Определим основные категории для вкладок
 const MAIN_CATEGORIES = [
   'ТКО',
   'Радио',
@@ -21,34 +20,39 @@ const MAIN_CATEGORIES = [
   'Материалы'
 ];
 
-interface EquipmentSectionProps {
-  division: Division;
-  activeSubdivision: string | null;
-}
-
-export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
+export function EquipmentSection() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const subdivisionId = searchParams.get('subdivision');
   const token = localStorage.getItem('accessToken');
 
-  const [division, setDivision] = useState<Division | null>(null);
+  const [division, setDivision] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<Equipment['status'] | 'all'>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [equipment, setEquipment] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [subdivisionName, setSubdivisionName] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const div = await divisionsApi.getDivisionById(id, token);
         const equip = await equipmentApi.getEquipment(token, { division: div.id });
+        
+        // Находим имя отделения по ID
+        if (subdivisionId) {
+          const subdivision = div.subdivisions?.find(s => s.id.toString() === subdivisionId.toString());
+          setSubdivisionName(subdivision?.name || '');
+        }
+
         setDivision(div);
         setEquipment(equip);
       } catch (err) {
-        setError('Не удалось загрузить данные об объекте');
+        setError('Не удалось загрузить данные');
         console.error(err);
       } finally {
         setLoading(false);
@@ -56,21 +60,25 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
     };
 
     fetchData();
-  }, [id, token]);
+  }, [id, token, subdivisionId]);
 
-  const onBack = () => {
-    navigate(`/divisions/${id}`);
+  // Функция для фильтрации оборудования по subdivision
+  const filterBySubdivision = (items) => {
+    if (!subdivisionId) return items;
+    return items.filter(item => 
+      item.subdivision?.id?.toString() === subdivisionId.toString()
+    );
   };
 
-  // Разделяем технику на открытую и закрытую
+  // Разделяем технику на открытую и закрытую с учетом subdivision
   const openEquipment = useMemo(() =>
-    equipment.filter(item => !item.is_closed),
-    [equipment]
+    filterBySubdivision(equipment.filter(item => !item.is_closed)),
+    [equipment, subdivisionId]
   );
 
   const closedEquipment = useMemo(() =>
-    equipment.filter(item => item.is_closed),
-    [equipment]
+    filterBySubdivision(equipment.filter(item => item.is_closed)),
+    [equipment, subdivisionId]
   );
 
   // Получаем категории для вкладок (только те, для которых есть техника)
@@ -81,17 +89,16 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
     );
   }, [openEquipment]);
 
-  // Техника для StatusButtons (всегда полный список для текущей вкладки)
+  // Техника для StatusButtons с учетом активной вкладки и subdivision
   const statusButtonsEquipment = useMemo(() => {
     if (activeTab === 'closed') {
       return closedEquipment;
     } else if (activeTab === 'all') {
-      return [...openEquipment, ...closedEquipment]; // Объединяем открытую и закрытую технику
+      return [...openEquipment, ...closedEquipment];
     } else {
       return openEquipment.filter(item => item.category_display === activeTab);
     }
   }, [activeTab, openEquipment, closedEquipment]);
-
 
   // Фильтрация для таблицы (учитывает статус, категорию и поиск)
   const filteredEquipment = useMemo(() => {
@@ -100,9 +107,9 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
       const matchesSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.assigned_to.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.subdivision?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.inventory_number.toLowerCase().includes(searchTerm.toLowerCase());
+        item.assigned_to?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.subdivision?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.inventory_number?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === null || item.category_display === selectedCategory;
 
       return matchesStatus && matchesSearch && matchesCategory;
@@ -120,7 +127,6 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
     return [...new Set(filteredByStatus.map(item => item.category_display))];
   }, [statusButtonsEquipment, selectedStatus]);
 
-  // Обработчик нажатия на кнопку категории в закрытой технике
   const handleCategoryClick = (category: string) => {
     if (selectedCategory === category) {
       setSelectedCategory(null);
@@ -129,34 +135,42 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
     }
   };
 
+  if (loading) {
+    return <div>Загрузка данных о технике...</div>;
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
+  // console.log(filterBySubdivision)
+
   return (
     <div className="section-container">
       <h2 className="section-title">
-        <button onClick={onBack} className="back-button">
+        <button onClick={() => navigate(`/divisions/${id}`)} className="back-button">
           <ArrowLeft className="back-button-icon" />
         </button>
-        Техника подразделения
+        Техника связи и информатизации: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
       </h2>
 
       <div className="tabs">
-        {/* Вкладка "Вся техника" */}
         <button
           className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => {
-            setActiveTab(activeTab === 'all' ? 'all' : 'all');
+            setActiveTab('all');
             setSelectedCategory(null);
           }}
         >
           Вся техника
         </button>
 
-        {/* Вкладки для основных категорий */}
         {availableCategories.map(category => (
           <button
             key={category}
             className={`tab-button ${activeTab === category ? 'active' : ''}`}
             onClick={() => {
-              setActiveTab(activeTab === category ? 'all' : category);
+              setActiveTab(category);
               setSelectedCategory(null);
             }}
           >
@@ -164,19 +178,17 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
           </button>
         ))}
 
-        {/* Вкладка для закрытой техники */}
-        {closedEquipment.length != 0 && <button
-          className={`tab-button ${activeTab === 'closed' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('closed');
-            setSelectedCategory(null);
-          }}
-        >
-          Шатехника
-          {/* <span className="tab-badge">
-            {closedEquipment.length}
-          </span> */}
-        </button>}
+        {closedEquipment.length > 0 && (
+          <button
+            className={`tab-button ${activeTab === 'closed' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('closed');
+              setSelectedCategory(null);
+            }}
+          >
+            Шатехника
+          </button>
+        )}
       </div>
 
       <div className="section-search-container">
@@ -187,8 +199,7 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
         />
       </div>
 
-      {/* Кнопки фильтрации по статусу */}
-      {equipment.length > 0 && (
+      {statusButtonsEquipment.length > 0 && (
         <StatusButtons
           equipment={statusButtonsEquipment}
           selectedStatus={selectedStatus}
@@ -196,8 +207,7 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
         />
       )}
 
-      {/* Фильтры по категориям (только для закрытой техники) */}
-      {activeTab === 'closed' && (
+      {activeTab === 'closed' && closedEquipment.length > 0 && (
         <div className="filters">
           <div className="category-filters">
             {uniqueClosedCategories.map(category => (
@@ -225,8 +235,11 @@ export function EquipmentSection({ activeSubdivision }: EquipmentSectionProps) {
         </div>
       )}
 
-      {/* Отображаем отфильтрованные данные */}
-      <EquipmentList equipment={filteredEquipment} />
+      <EquipmentList 
+        equipment={filteredEquipment} 
+        onUpdateEquipment={() => {}} 
+        onDeleteEquipment={() => {}} 
+      />
     </div>
   );
 }

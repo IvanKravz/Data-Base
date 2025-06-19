@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Users, HardDrive, Building2, ListTodo } from 'lucide-react';
+import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { Division, Employee } from '../../../../types';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
@@ -82,7 +82,7 @@ export function Overview({
         <StatCard
           title="Техника"
           count={loading ? null : division.equipment_count}
-          icon={HardDrive}
+          icon={Plug}
           iconColor="icon--purple"
           gradientClass="stat-card--purple"
           onClick={() => handleSectionClick('equipment')}

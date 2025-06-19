@@ -41,9 +41,25 @@ export const facilitiesApi = {
   },
 
   // Update existing facility
-  updateFacility: async (id: string, facilityData: Partial<Facility>) => {
-    const { data } = await api.put(`/facilities/${id}/`, facilityData);
-    return data;
+  updateFacility: async (id: string, facilityData: Partial<Facility>, token: string) => {
+    try {
+      // Формируем правильный запрос
+      const { data } = await api.patch(`/facilities/${id}/`, {
+        ...facilityData,
+        type: facilityData.type_id, // Используем type_id
+        communication_posts: facilityData.communication_post_ids, // Используем массив ID
+        facility_class: facilityData.facility_class
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return data;
+    } catch (error) {
+      console.error('Ошибка при обновлении объекта:', error);
+      throw error;
+    }
   },
 
   // Delete facility
@@ -78,5 +94,46 @@ export const facilitiesApi = {
       comments
     });
     return data;
+  }
+};
+
+export const communicationPostsApi = {
+  getCommunicationPosts: async (params?: {
+    token?: string;
+    division?: string;
+    subdivision?: string;
+  }) => {
+    const { data } = await api.get('facilities/communication-posts/', {
+      params: {
+        division: params?.division,
+        subdivision: params?.subdivision
+      },
+      headers: params?.token ? {
+        Authorization: `Bearer ${params.token}`,
+      } : undefined
+    });
+    return data.results;
+  },
+
+  createCommunicationPost: async (postData: {
+    name: string;
+    division: string;
+    subdivision?: string;
+    description?: string;
+  }, token: string) => {
+    const { data } = await api.post('facilities/communication-posts/', postData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
+    return data;
+  },
+
+  deleteCommunicationPost: async (id: string, token: string) => {
+    await api.delete(`facilities/communication-posts/${id}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
   }
 };

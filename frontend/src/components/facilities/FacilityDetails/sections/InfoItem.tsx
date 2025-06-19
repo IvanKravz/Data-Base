@@ -1,6 +1,6 @@
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
-import '../style.css'
+import '../FacilityForm.css'
 
 interface InfoItemProps {
   icon: LucideIcon;

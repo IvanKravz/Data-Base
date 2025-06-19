@@ -89,9 +89,23 @@ class Subdivision(models.Model):
         verbose_name_plural = 'Отделения'
 
 
+class FacilityType(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Наименование типа объекта')
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        verbose_name = 'Тип объекта'
+        verbose_name_plural = 'Типы объектов'
+        ordering = ['name']
+
+
 class CommunicationPost(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование поста связи')
-    value = models.CharField(max_length=100, verbose_name='Значение')
     division = models.ForeignKey(
         Division, 
         on_delete=models.CASCADE, 
@@ -106,11 +120,12 @@ class CommunicationPost(models.Model):
         blank=True,
         verbose_name='Отделение'
     )
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} ({self.value})"
+        return f"{self.name}"
 
     class Meta:
         verbose_name = 'Пост связи'
@@ -119,26 +134,26 @@ class CommunicationPost(models.Model):
 
 
 class Facility(models.Model):
-    FACILITY_TYPES = [
-        ('station', 'Станция'),
-        ('shd', 'ШД'),
-        ('kps', 'Комплексный'),
-        ('prm', 'Приемный центр'),
-        ('prm', 'Передающий центр'),
-        ('laz', 'ЛАЗ'),
-        ('dzl', 'Дизельная'),
-        ('dzl', 'Спутник'),
-    ]
-    
+   
     FACILITY_CLASSES = [
         ('1', '1 класс'),
         ('2', '2 класс')
     ]
 
     name = models.CharField(max_length=255, verbose_name='Название')
-    type = models.CharField(max_length=10, choices=FACILITY_TYPES, verbose_name='Тип объекта', null=True, blank=True)
+    type = models.ForeignKey(
+        FacilityType,
+        on_delete=models.PROTECT,
+        verbose_name='Тип объекта',
+        null=True,
+        blank=True,
+        related_name='facilities'
+    )
     facility_class = models.CharField(max_length=1, choices=FACILITY_CLASSES, verbose_name='Класс', null=True, blank=True)
-    address = models.TextField(verbose_name='Адрес', null=True, blank=True)
+    address = models.TextField(verbose_name='Полный адрес', null=True, blank=True, editable=False)
+    city = models.CharField(max_length=100, verbose_name='Город', blank=True, null=True)
+    street = models.CharField(max_length=100, verbose_name='Улица', blank=True, null=True)
+    house_number = models.CharField(max_length=20, verbose_name='Номер дома', blank=True, null=True)
     division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name='facilities', verbose_name='Подразделение')
     subdivision = models.ForeignKey(
         Subdivision, on_delete=models.SET_NULL, 
@@ -169,17 +184,17 @@ class Facility(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # def clean(self):
-    #     if not self.is_closed:
-    #         self.facility_class = None
-    #         self.inn = None
-    #         if not self.communication_posts.exists():
-    #             raise ValidationError('Для открытого объекта необходимо указать хотя бы один пост связи')
-    #     else:
-    #         if not self.facility_class:
-    #             raise ValidationError({'facility_class': 'Для закрытого объекта необходимо указать класс'})
-    #         if not self.inn:
-    #             raise ValidationError({'inn': 'Для закрытого объекта необходимо указать ИНН'})
+    def save(self, *args, **kwargs):
+        # Автоматически формируем полный адрес при сохранении
+        address_parts = []
+        if self.city:
+            address_parts.append(self.city)
+        if self.street:
+            address_parts.append(self.street)
+        if self.house_number:
+            address_parts.append(self.house_number)
+        self.address = ', '.join(address_parts) if address_parts else None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Building2, MapPin, Tag, Star, Trash2 } from 'lucide-react';
+import { Building2, MapPin, Shield, Star, Trash2 } from 'lucide-react';
 import { Facility } from '../../../../types';
+import '../style.css';
 
 interface GridViewProps {
   facilities: Facility[];
@@ -9,48 +10,56 @@ interface GridViewProps {
 }
 
 export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProps) {
+  console.log('facilities',facilities)
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="facility-grid-container">
       {facilities.map((facility) => (
-        <div
-          key={facility.id}
-          className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => onFacilityClick(facility)}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-gray-900">
+        <div key={facility.id} className="facility-card" onClick={() => onFacilityClick(facility)}>
+          <div className="facility-card-header">
+            <h3 className="facility-card-title">
               {facility.name}
+              <div className="facility-card-badge">
+                {facility.type.name}
+              </div>
             </h3>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(facility.id);
               }}
-              className="text-red-500 hover:text-red-700 p-1"
+              className="facility-card-delete-btn"
+              aria-label="Удалить объект"
             >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
-          <div className="space-y-2 text-gray-600">
-            <div className="flex items-center gap-1 text-sm">
-              <Tag className="h-4 w-4" />
-              <span>{facility.type === 'station' ? 'Станция' : 'ШД'}</span>
+
+          <div className="facility-card-content">
+            {facility.is_closed && (
+              <div className="facility-card-item">
+                <Star className="facility-card-icon" />
+                <span>{facility.facility_class} класс</span>
+              </div>
+            )}
+
+            <div className="facility-card-item">
+              <MapPin className="facility-card-icon" />
+              <span className="facility-card-text">{facility.address}</span>
             </div>
-            <div className="flex items-center gap-1 text-sm">
-              <Star className="h-4 w-4" />
-              <span>{facility.facility_class} класс</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <MapPin className="h-4 w-4" />
-              <span>{facility.address}</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <Building2 className="h-4 w-4" />
-              <span>
-                {facility.division.name}
-                {facility.subdivision && ` - ${facility.subdivision.name}`}
+
+            <div className="facility-card-item">
+              <Building2 className="facility-card-icon" />
+              <span className="facility-card-text">
+                {facility.division && !facility.subdivision && `${facility.division_name}`}
+                {facility.subdivision && `${facility.division_name} / ${facility.subdivision_name}`}
               </span>
             </div>
+            {facility.communication_posts.length >= 1 && (
+              <div className="facility-card-item">
+                <Shield className="facility-card-icon" />
+                <span className="facility-card-text">{facility.communication_posts?.map(post => post.name).join(', ')}</span>
+              </div>
+            )}
           </div>
         </div>
       ))}

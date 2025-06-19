@@ -5,8 +5,8 @@ import './style.css';
 
 interface FacilityTypeFilterProps {
   facilities: Facility[];
-  selectedType: 'all' | 'station' | 'shd';
-  onTypeChange: (type: 'all' | 'station' | 'shd') => void;
+  selectedType: 'all' | number;
+  onTypeChange: (type: 'all' | number) => void;
   selectedClass: 'all' | '1' | '2';
   onClassChange: (facilityClass: 'all' | '1' | '2') => void;
 }
@@ -20,47 +20,50 @@ export function FacilityTypeFilter({
 }: FacilityTypeFilterProps) {
   const [showClassFilters, setShowClassFilters] = useState(false);
 
-  // Получаем только объекты типа ШД
-  const shdFacilities = facilities.filter(f => f.type === 'shd');
+  const uniqueTypeIds = Array.from(new Set(facilities.map(f => f.type.id)));
+  const facilityTypes = uniqueTypeIds.map(id => {
+    const type = facilities.find(f => f.type.id === id)?.type;
+    return type!;
+  }).filter(Boolean) as {id: number, name: string, description: string}[];
 
-  const getTypeCount = (type: 'all' | 'station' | 'shd') => {
-    if (type === 'all') return facilities.length;
-    return facilities.filter(f => f.type === type).length;
+  const isShdSelected = selectedType !== 'all' && 
+    facilities.find(f => f.type.id === selectedType)?.type.name.toLowerCase().includes('шд');
+
+  const getTypeCount = (typeId: 'all' | number) => {
+    if (typeId === 'all') return facilities.length;
+    return facilities.filter(f => f.type.id === typeId).length;
   };
 
-  // Количество всех ШД объектов (для кнопки "Итого")
-  const getTotalShdCount = () => {
-    return shdFacilities.length;
+  const getClassCount = (cls: '1' | '2') => {
+    return facilities
+      .filter(f => selectedType === 'all' || f.type.id === selectedType)
+      .filter(f => f.facility_class === cls).length;
   };
 
-  // Количество ШД объектов 1 класса
-  const getShdClass1Count = () => {
-    return shdFacilities.filter(f => f.facility_class === '1').length;
-  };
-
-  // Количество ШД объектов 2 класса
-  const getShdClass2Count = () => {
-    return shdFacilities.filter(f => f.facility_class === '2').length;
-  };
-
-  const handleTypeChange = (type: 'all' | 'station' | 'shd') => {
-    onTypeChange(type);
-    // Не сбрасываем класс при переключении типа, если выбираем ШД
-    if (type !== 'shd') {
-      onClassChange('all');
-    }
-    // Переключаем видимость только при выборе ШД
-    if (type === 'shd') {
-      setShowClassFilters(!showClassFilters);
+  const handleTypeChange = (typeId: 'all' | number) => {
+    if (typeId === selectedType && isShdSelected) {
+      // Убрали переключение showClassFilters здесь
     } else {
-      setShowClassFilters(false);
+      onTypeChange(typeId);
+      const newTypeIsShd = typeId !== 'all' && 
+        facilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
+      if (!newTypeIsShd) {
+        onClassChange('all');
+      }
+      setShowClassFilters(false); // Сбрасываем состояние при смене типа
     }
   };
 
   const handleClassChange = (facilityClass: 'all' | '1' | '2') => {
     onClassChange(facilityClass);
-    setShowClassFilters(false); // Закрываем меню после выбора класса
+    setShowClassFilters(false);
   };
+
+  const toggleClassFilters = () => {
+    setShowClassFilters(!showClassFilters);
+  };
+
+  const shdType = facilityTypes.find(t => t.name.toLowerCase().includes('шд'));
 
   return (
     <div className="facility-filter-container">
@@ -78,93 +81,89 @@ export function FacilityTypeFilter({
           </span>
         </button>
 
-        <button
-          onClick={() => handleTypeChange('station')}
-          className={`facility-filter-btn ${selectedType === 'station' ? 'facility-filter-station-active' : 'facility-filter-station'}`}
-        >
-          <div className="facility-filter-content">
-            <Building2 className="facility-filter-icon" />
-            <span className="facility-filter-label">Станция</span>
-          </div>
-          <span className="facility-filter-count">
-            {getTypeCount('station')}
-          </span>
-        </button>
-
-        <div className="shd-filter-wrapper">
+        {facilityTypes.filter(t => !t.name.toLowerCase().includes('шд')).map(type => (
           <button
-            onClick={() => handleTypeChange('shd')}
-            className={`facility-filter-btn ${selectedType === 'shd' ? 'facility-filter-shd-active' : 'facility-filter-shd'}`}
+            key={type.id}
+            onClick={() => handleTypeChange(type.id)}
+            className={`facility-filter-btn ${selectedType === type.id ? 'facility-filter-station-active' : 'facility-filter-station'}`}
           >
             <div className="facility-filter-content">
-              <Factory className="facility-filter-icon" />
-              <span className="facility-filter-label">
-                {selectedType === 'shd' && selectedClass !== 'all'
-                  ? `ШД (${selectedClass} класс)`
-                  : 'ШД'}
-              </span>
+              <Building2 className="facility-filter-icon" />
+              <span className="facility-filter-label">{type.name}</span>
             </div>
-            <div className="shd-filter-actions">
-              <span className="facility-filter-count">
-                {selectedType === 'shd' && selectedClass !== 'all'
-                  ? selectedClass === '1'
-                    ? getShdClass1Count()
-                    : getShdClass2Count()
-                  : getTypeCount('shd')}
-              </span>
-              {selectedType === 'shd' && (
-                showClassFilters ? (
-                  <ChevronUp className="chevron-icon" />
-                ) : (
-                  <ChevronDown className="chevron-icon" />
-                )
-              )}
-            </div>
+            <span className="facility-filter-count">
+              {getTypeCount(type.id)}
+            </span>
           </button>
+        ))}
 
-          {selectedType === 'shd' && showClassFilters && (
-            <div className="facility-class-grid">
-              <button
-                onClick={() => handleClassChange('all')}
-                className={`facility-filter-btn ${selectedClass === 'all' ? 'facility-class-all-active' : 'facility-class-all'}`}
-              >
-                <div className="facility-filter-content">
-                  <Star className="facility-filter-icon" />
-                  <span className="facility-filter-label">Итого</span>
-                </div>
-                <span className="facility-filter-count">
-                  {getTotalShdCount()}
+        {shdType && (
+          <div className="shd-filter-wrapper">
+            <button
+              onClick={() => handleTypeChange(shdType.id)}
+              className={`facility-filter-btn ${selectedType === shdType.id ? 'facility-filter-shd-active' : 'facility-filter-shd'}`}
+            >
+              <div className="facility-filter-content">
+                <Factory className="facility-filter-icon" />
+                <span className="facility-filter-label">
+                  {selectedType === shdType.id && selectedClass !== 'all'
+                    ? `ШД (${selectedClass} класс)`
+                    : 'ШД'}
                 </span>
-              </button>
+              </div>
+              <div className="shd-filter-actions">
+                <span className="facility-filter-count">
+                  {selectedType === shdType.id && selectedClass !== 'all'
+                    ? selectedClass === '1'
+                      ? getClassCount('1')
+                      : getClassCount('2')
+                    : getTypeCount(shdType.id)}
+                </span>
+                {selectedType === shdType.id && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleClassFilters();
+                    }}
+                    className="chevron-button"
+                  >
+                    {showClassFilters ? (
+                      <ChevronUp className="chevron-icon" />
+                    ) : (
+                      <ChevronDown className="chevron-icon" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </button>
 
-              <button
-                onClick={() => handleClassChange('1')}
-                className={`facility-filter-btn ${selectedClass === '1' ? 'facility-class-1-active' : 'facility-class-1'}`}
-              >
-                <div className="facility-filter-content">
-                  <Star className="facility-filter-icon" />
-                  <span className="facility-filter-label">1 класс</span>
-                </div>
-                <span className="facility-filter-count">
-                  {getShdClass1Count()}
-                </span>
-              </button>
-
-              <button
-                onClick={() => handleClassChange('2')}
-                className={`facility-filter-btn ${selectedClass === '2' ? 'facility-class-2-active' : 'facility-class-2'}`}
-              >
-                <div className="facility-filter-content">
-                  <Star className="facility-filter-icon" />
-                  <span className="facility-filter-label">2 класс</span>
-                </div>
-                <span className="facility-filter-count">
-                  {getShdClass2Count()}
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
+            {selectedType === shdType.id && showClassFilters && (
+              <div className="facility-class-dropdown">
+                <button
+                  onClick={() => handleClassChange('all')}
+                  className={`facility-class-option ${selectedClass === 'all' ? 'active' : ''}`}
+                >
+                  <span>Итого</span>
+                  <span>{getTypeCount(shdType.id)}</span>
+                </button>
+                <button
+                  onClick={() => handleClassChange('1')}
+                  className={`facility-class-option ${selectedClass === '1' ? 'active' : ''}`}
+                >
+                  <span>1 класс</span>
+                  <span>{getClassCount('1')}</span>
+                </button>
+                <button
+                  onClick={() => handleClassChange('2')}
+                  className={`facility-class-option ${selectedClass === '2' ? 'active' : ''}`}
+                >
+                  <span>2 класс</span>
+                  <span>{getClassCount('2')}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

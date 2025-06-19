@@ -3,9 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Division } from '../../../../types';
 import { PersonnelList } from '../../../personnel/PersonnelList/PersonnelList';
 import { SearchBar } from '../../../common/SearchBar';
-import { useSelector } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom';
-import { RootState } from '../../../../store/store';
 import { divisionsApi } from '../../../../api';
 import './style.css'
 
@@ -52,7 +50,7 @@ export function PersonnelSection() {
         >
           <ArrowLeft className="back-button-icon" />
         </button>
-        Персонал подразделения
+        Сотрудники подразделения
       </h2>
       <div className="search-container">
         <SearchBar

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import CommunicationPost, Division, Subdivision, Facility
+from .models import CommunicationPost, Division, FacilityType, Subdivision, Facility
 
 class SubdivisionInline(admin.TabularInline):
     model = Subdivision
@@ -88,12 +88,30 @@ class DivisionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+@admin.register(FacilityType)
+class FacilityTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'created_at')
+    search_fields = ('name', )
+    list_filter = ('created_at',)
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description')
+        }),
+        ('Системная информация', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
     
 class CommunicationPostInline(admin.TabularInline):
     model = Facility.communication_posts.through
     extra = 1
     verbose_name = 'Пост связи'
     verbose_name_plural = 'Посты связи'
+    autocomplete_fields = ['communicationpost']
 
     def get_formset(self, request, obj=None, **kwargs):      
         return super().get_formset(request, obj, **kwargs)
@@ -127,9 +145,20 @@ class FacilityAdminForm(forms.ModelForm):
 
 @admin.register(CommunicationPost)
 class CommunicationPostAdmin(admin.ModelAdmin):
-    list_display = ('name', 'value', 'division', 'subdivision')
-    list_filter = ('division', 'subdivision')
-    search_fields = ('name', 'value')
+    list_display = ('name', 'division', 'subdivision', 'description', 'created_at')
+    list_filter = ('division', 'subdivision', 'created_at')
+    search_fields = ('name',)
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'division', 'subdivision', 'description')
+        }),
+        ('Системная информация', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):
@@ -153,8 +182,8 @@ class FacilityAdmin(admin.ModelAdmin):
         ('Основная информация', {
             'fields': (
                 'name', 'type', 'facility_class', 
-                'address', 'comments', 'is_closed',
-                'inn'
+                ('city', 'street', 'house_number'), 'address',
+                'comments', 'is_closed', 'inn'
             )
         }),
         ('Принадлежность', {
@@ -176,14 +205,19 @@ class FacilityAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('address', 'created_at', 'updated_at')
+
+    def facility_class_display(self, obj):
+        return dict(Facility.FACILITY_CLASSES).get(obj.facility_class, '')
+    facility_class_display.short_description = 'Класс'
+
 
     def equipment_count(self, obj):
         return obj.equipment.count()
     equipment_count.short_description = 'Оборудование'
 
     def communication_posts_list(self, obj):
-        return ", ".join([f"{post.name} ({post.value})" for post in obj.communication_posts.all()])
+        return ", ".join([f"{post.name}" for post in obj.communication_posts.all()])
     communication_posts_list.short_description = 'Посты связи'
 
     def get_fieldsets(self, request, obj=None):

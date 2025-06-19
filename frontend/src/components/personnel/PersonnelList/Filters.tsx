@@ -31,8 +31,8 @@ export const Filters = ({
   const managementData = getStaffCount('management');
 
   const officersWithoutManagement = {
-    staffCount: officersData.staffCount - managementData.staffCount,
-    actualCount: officersData.actualCount - managementData.actualCount
+    staffCount: Math.max(0, officersData.staffCount - managementData.staffCount),
+    actualCount: Math.max(0, officersData.actualCount - managementData.actualCount)
   };
 
   const handleExpandClick = (filterType: string, e: React.MouseEvent) => {
@@ -80,11 +80,11 @@ export const Filters = ({
               <div className="details-content">
                 <div className="details-row">
                   <span className="details-label">По штату:</span>
-                  <span className="details-value">{staffData.staffCount}</span>
+                  <span className="details-value">{Math.max(0, staffData.staffCount)}</span>
                 </div>
                 <div className="details-row">
                   <span className="details-label">По списку:</span>
-                  <span className="details-value">{staffData.actualCount}</span>
+                  <span className="details-value">{Math.max(0, staffData.actualCount)}</span>
                 </div>
               </div>
             </div>

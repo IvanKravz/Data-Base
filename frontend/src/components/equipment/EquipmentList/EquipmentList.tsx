@@ -14,10 +14,10 @@ interface EquipmentListProps {
   onDeleteEquipment: (id: string) => void;
 }
 
-export function EquipmentList({ 
-  equipment, 
-  onUpdateEquipment, 
-  onDeleteEquipment, 
+export function EquipmentList({
+  equipment,
+  onUpdateEquipment,
+  onDeleteEquipment,
 }: EquipmentListProps) {
   const {
     showDeleteModal,
@@ -41,7 +41,7 @@ export function EquipmentList({
   return (
     <>
       <div className="mb-4 flex justify-end">
-        <ExportButton 
+        <ExportButton
           onClick={() => exportEquipmentToExcel(filteredEquipment)}
           label="Экспорт техники"
         />
@@ -51,6 +51,17 @@ export function EquipmentList({
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      {filteredEquipment.length === 0 && (
+        <div className="equipment-list-empty-message">
+          {searchParams.get('search')
+            ? 'Нет техники, соответствующей поиску'
+            : subdivisionId
+              ? 'Нет техники в выбранном подразделении'
+              : 'Нет техники для отображения'}
+        </div>
+      )}
+
       {showDeleteModal && (
         <DeleteConfirmationModal
           title="Удаление техники"

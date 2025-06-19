@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
-from .models import CommunicationPost, Division, Subdivision, Facility
-from .serializers import CommunicationPostSerializer, DivisionSerializer, SubdivisionSerializer, FacilitySerializer, FacilityStatsSerializer
+from .models import CommunicationPost, Division, FacilityType, Subdivision, Facility
+from .serializers import CommunicationPostSerializer, DivisionSerializer, FacilityTypeSerializer, SubdivisionSerializer, FacilitySerializer, FacilityStatsSerializer
 
 class DivisionViewSet(viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
@@ -76,6 +76,9 @@ class FacilityViewSet(viewsets.ModelViewSet):
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
+                Q(city__icontains=search) |
+                Q(street__icontains=search) |
+                Q(house_number__icontains=search) |
                 Q(address__icontains=search)
             )
 
@@ -85,34 +88,12 @@ class FacilityViewSet(viewsets.ModelViewSet):
         return queryset
     
     def perform_create(self, serializer):
-        instance = serializer.save()
-        # Обновляем посты связи после сохранения
-        if 'communication_posts' in self.request.data:
-            post_ids = self.request.data.getlist('communication_posts') if hasattr(self.request.data, 'getlist') else self.request.data.get('communication_posts', [])
-            instance.communication_posts.set(post_ids)
-        
-        # Валидация полей
-        self.validate_facility_fields(instance)
+    # Валидация будет выполняться в сериализаторе
+        serializer.save()
 
-    # def perform_update(self, serializer):
-    #     instance = serializer.save()
-    #     # Обновляем посты связи после сохранения
-    #     if 'communication_posts' in self.request.data:
-    #         post_ids = self.request.data.getlist('communication_posts') if hasattr(self.request.data, 'getlist') else self.request.data.get('communication_posts', [])
-    #         instance.communication_posts.set(post_ids)
-        
-    #     # Валидация полей
-    #     self.validate_facility_fields(instance)
-
-    # def validate_facility_fields(self, facility):
-    #     if not facility.is_closed and not facility.communication_posts.exists():
-    #         raise ValidationError(
-    #             {'communication_posts': 'Для открытого объекта необходимо указать посты связи'}
-    #         )
-    #     if facility.is_closed and not facility.inn:
-    #         raise ValidationError(
-    #             {'inn': 'Для закрытого объекта необходимо указать ИНН'}
-    #         )
+    def perform_update(self, serializer):
+    # Валидация будет выполняться в сериализаторе
+        serializer.save()
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
@@ -141,7 +122,14 @@ class CommunicationPostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        division = self.request.query_params.get('division')
+        subdivision = self.request.query_params.get('subdivision')
         facility_id = self.request.query_params.get('facility')
+
+        if division:
+            queryset = queryset.filter(division=division)
+        if subdivision:
+            queryset = queryset.filter(subdivision=subdivision)
         
         if facility_id:
             try:
@@ -152,3 +140,8 @@ class CommunicationPostViewSet(viewsets.ModelViewSet):
             except Facility.DoesNotExist:
                 pass
         return queryset
+    
+class FacilityTypeViewSet(viewsets.ModelViewSet):
+    queryset = FacilityType.objects.all()
+    serializer_class = FacilityTypeSerializer
+    permission_classes = [IsAuthenticated]

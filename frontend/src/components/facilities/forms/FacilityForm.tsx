@@ -1,7 +1,6 @@
 import React from 'react';
 import { Facility } from '../../../types';
-import { OpenFacilityForm } from './OpenFacilityForm';
-import { ClosedFacilityForm } from './ClosedFacilityForm';
+
 
 interface FacilityFormProps {
   initialData: Omit<Facility, 'id'>;
@@ -20,21 +19,13 @@ export function FacilityForm({
 }: FacilityFormProps) {
   if (isClosedFacility) {
     return (
-      <ClosedFacilityForm
-        initialData={initialData}
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-        isEditing={isEditing}
+      <div
       />
     );
   }
 
   return (
-    <OpenFacilityForm
-      initialData={initialData}
-      onSubmit={onSubmit}
-      onCancel={onCancel}
-      isEditing={isEditing}
+    <div
     />
   );
 }

@@ -10,7 +10,7 @@ interface TableViewProps {
   divisionName: string;
 }
 
-export function TableView({ divisionName, personnel, onPersonClick, onDelete }: TableViewProps) {
+export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps) {
 
   return (
     <div className="table-container">

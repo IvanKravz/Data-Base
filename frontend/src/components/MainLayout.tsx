@@ -26,6 +26,8 @@ import { PersonnelSection } from './divisions/DivisionDetails/sections/Personnel
 import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection';
 import { FacilitiesSection } from './divisions/DivisionDetails/sections/FacilitiesSection';
 import { DivisionTasksSection } from './divisions/DivisionDetails/sections/DivisionTasksSection';
+import { AddFacilityPage } from './facilities/AddFacilityPage';
+import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -62,6 +64,8 @@ export function MainLayout() {
         <Route path="/divisions/:id/personnel" element={<PersonnelSection />} />
         <Route path="/divisions/:id/equipment" element={<EquipmentSection />} />
         <Route path="/divisions/:id/facilities" element={<FacilitiesSection />} />
+        <Route path="/divisions/:id/facilities/new" element={<AddFacilityPage />} />
+        <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm  />} />
         <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
 
         {/* Equipment Routes */}

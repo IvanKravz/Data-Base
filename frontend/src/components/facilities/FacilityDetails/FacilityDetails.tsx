@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { useDispatch } from 'react-redux';
 import { Facility } from '../../../types';
-import { Header } from './sections/Header';
 import { BasicInfo } from './sections/BasicInfo';
 import { ResponsiblePersons } from './sections/ResponsiblePersons';
 import { AssignedEquipment } from './sections/AssignedEquipment';
 import { CommentsCard } from './sections/CommentsCard';
 import { DocumentationCard } from './sections/DocumentationCard';
 import { KzInfoCard } from './sections/KzInfoCard';
-import { FacilityForm } from '../forms/FacilityForm';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updateFacility, deleteFacility } from '../../../store/slices/facilitiesSlice';
 import { facilitiesApi } from '../../../api/facilities';
-import './style.css';
+import './FacilityForm.css';
+import { EditFacilityForm } from '../forms/EditFacilityForm';
+import { ClassificationtFacility } from './sections/ClassificationtFacility';
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -53,21 +52,40 @@ export function FacilityDetails() {
     navigate(-1);
   };
 
-  const handleUpdate = async (updatedFacility: Omit<Facility, 'id'>) => {
+  const handleUpdate = async (updatedData: Partial<Facility>) => {
     try {
       if (!facility?.id || !token) return;
 
       setIsLoading(true);
-      await facilitiesApi.updateFacility(facility.id, updatedFacility);
-      dispatch(updateFacility({ ...updatedFacility, id: facility.id }));
 
-      // Refresh data after update
-      const data = await facilitiesApi.getFacilityById(facility.id, token);
-      setFacility(data);
+      // Формируем правильные данные для отправки
+      const dataToSend = {
+        ...updatedData,
+        type: updatedData.type?.id || null, // Отправляем только ID типа
+        communication_post_ids: updatedData.communication_posts?.map(p => p.id) || [], // Отправляем массив ID постов
+        facility_class: updatedData.facility_class || null
+      };
+
+      // Обновляем локальное состояние
+      setFacility(prev => ({
+        ...prev!,
+        ...updatedData,
+        type: updatedData.type || prev?.type,
+        communication_posts: updatedData.communication_posts || prev?.communication_posts
+      }));
+
+      const response = await facilitiesApi.updateFacility(
+        facility.id,
+        dataToSend,
+        token
+      );
+
       setIsEditing(false);
     } catch (err) {
       console.error('Error updating facility:', err);
       setError('Не удалось обновить данные объекта');
+      // Восстанавливаем предыдущие данные
+      setFacility(await facilitiesApi.getFacilityById(facility.id, token));
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +135,7 @@ export function FacilityDetails() {
   if (isEditing) {
     return (
       <div className="facility-details-container">
-        <div className="facility-flex facility-items-center facility-gap-md">
+        <div className="facility-edit-header">
           <button
             onClick={() => setIsEditing(false)}
             className="facility-btn facility-btn--icon"
@@ -127,12 +145,11 @@ export function FacilityDetails() {
           <h1 className="facility-header__title">Редактирование объекта</h1>
         </div>
 
-        <div className="facility-card facility-card--editing">
-          <FacilityForm
+        <div className="facility-card-edit facility-card--editing">
+          <EditFacilityForm
             initialData={facility}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
-            isClosedFacility={facility.type === 'shd'}
             isEditing={true}
           />
         </div>
@@ -173,8 +190,7 @@ export function FacilityDetails() {
 
       <div className="facility-grid facility-grid--2cols">
         <BasicInfo facility={facility} />
-
-        {facility.comments && <CommentsCard facility={facility} />}
+        <ClassificationtFacility facility={facility} />
 
         {facility.is_closed && (
           <>
@@ -182,7 +198,8 @@ export function FacilityDetails() {
             <KzInfoCard facility={facility} />
           </>
         )}
-        <ResponsiblePersons facility={facility} />
+
+        {facility.comments && <CommentsCard facility={facility} />}
       </div>
 
       <AssignedEquipment facility={facility} />

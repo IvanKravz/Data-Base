@@ -1,4 +1,4 @@
-import { Users, HardDrive, Building2, ListTodo } from 'lucide-react';
+import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Division } from '../../../types';
 import { useNavigate } from 'react-router-dom';
@@ -69,7 +69,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
                 <span>Персонал: {division.employees_count}</span>
               </div>
               <div className="metric-item">
-                <HardDrive className="metric-icon metric-icon--green" />
+                <Plug className="metric-icon metric-icon--green" />
                 <span>Техника: {division.equipment_count}</span>
               </div>
               <div className="metric-item">

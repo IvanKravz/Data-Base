@@ -57,7 +57,7 @@
 
 /* Стили для попапов */
 .leaflet-popup-content {
-    min-width: 200px;
+    min-width: 240px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -90,7 +90,7 @@
 
 .address-search-container {
     position: absolute;
-    top: 11px;
+    top: 3rem;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
@@ -215,3 +215,19 @@
     border-top-color: #3498db;
     animation: spin 1s ease-in-out infinite;
 }
+
+.map-text-type-display {
+    color: rgb(171, 126, 23);
+    margin-top: 0.2rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.map-text-address {
+    font-weight: 400;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+

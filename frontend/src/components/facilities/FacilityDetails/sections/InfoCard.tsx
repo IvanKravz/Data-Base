@@ -1,5 +1,5 @@
 import React from 'react';
-import '../style.css';
+import '../FacilityForm.css';
 
 interface InfoCardProps {
   title: string;

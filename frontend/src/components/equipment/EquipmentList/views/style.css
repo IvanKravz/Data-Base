@@ -1,11 +1,15 @@
 /* Основные стили таблицы */
 table-container {
   overflow-x: auto;
-  border-radius: 8px; /* Уменьшил радиус */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Более легкая тень */
+  border-radius: 8px;
+  /* Уменьшил радиус */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Более легкая тень */
   background: white;
-  margin: 0.5rem 0; /* Уменьшил отступ */
-  font-size: 0.8125rem; /* Немного уменьшил базовый размер шрифта */
+  margin: 0.5rem 0;
+  /* Уменьшил отступ */
+  font-size: 0.8125rem;
+  /* Немного уменьшил базовый размер шрифта */
 }
 
 .equipment-table {
@@ -24,13 +28,16 @@ table-container {
 }
 
 .table-header-cell {
-  padding: 0.625rem 1rem; /* Уменьшил padding */
+  padding: 0.625rem 1rem;
+  /* Уменьшил padding */
   text-align: left;
-  font-size: 0.6875rem; /* Уменьшил размер шрифта */
+  font-size: 0.6875rem;
+  /* Уменьшил размер шрифта */
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.03em; /* Уменьшил межбуквенный интервал */
+  letter-spacing: 0.03em;
+  /* Уменьшил межбуквенный интервал */
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -111,11 +118,14 @@ table-container {
 
 /* Обновляем стили ячеек */
 .table-cell {
-  padding: 0.625rem 1rem; /* Уменьшил padding */
-  font-size: 0.85rem; /* Уменьшил размер шрифта */
+  padding: 0.625rem 1rem;
+  /* Уменьшил padding */
+  font-size: 0.85rem;
+  /* Уменьшил размер шрифта */
   color: #334155;
   vertical-align: middle;
-  line-height: 1.25; /* Уменьшил межстрочный интервал */
+  line-height: 1.25;
+  /* Уменьшил межстрочный интервал */
 }
 
 .cell-content {
@@ -142,8 +152,10 @@ table-container {
   gap: 0.75rem;
 }
 
-.edit-button, .delete-button {
-  padding: 0.375rem; /* Уменьшил padding */
+.edit-button,
+.delete-button {
+  padding: 0.375rem;
+  /* Уменьшил padding */
   border-radius: 6px;
 }
 
@@ -164,8 +176,11 @@ table-container {
 
 /* Адаптивные стили */
 @media (max-width: 1200px) {
-  .table-cell, .table-header-cell {
-    padding: 0.5rem 0.75rem; /* Еще более компактно на мобильных */
+
+  .table-cell,
+  .table-header-cell {
+    padding: 0.5rem 0.75rem;
+    /* Еще более компактно на мобильных */
   }
 }
 
@@ -178,7 +193,8 @@ table-container {
 .table-cell-assigned-to .cell-content {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem; /* Уменьшил расстояние между строками */
+  gap: 0.125rem;
+  /* Уменьшил расстояние между строками */
 }
 
 /* Для адаптивности */
@@ -193,4 +209,14 @@ table-container {
   font-size: 0.6875rem;
   color: #64748b;
   line-height: 1.2;
+}
+
+.equipment-list-empty-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 16px;
+  margin: 20px 0;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 }

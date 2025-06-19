@@ -1,0 +1,349 @@
+/* CommunicationPosts.css */
+.communication-posts-container {
+    background-color: white;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.communication-posts-content {
+    padding: 1rem;
+}
+
+.communication-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .communication-posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .communication-posts-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+.communication-post-card {
+
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.communication-post-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    cursor: default;
+}
+
+.communication-post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.communication-post-description {
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.communication-post-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.75rem;
+}
+
+.communication-post-delete-btn {
+    color: #ef4444;
+}
+
+.communication-post-delete-btn:hover {
+    color: #dc2626;
+}
+
+.communication-post-details {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.25rem;
+    color: #4b5563;
+}
+
+.communication-posts-empty-message {
+    color: #6b7280;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Add Communication Post Form Styles */
+.add-post-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.add-post-modal-container {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 28rem;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.add-post-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.add-post-modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.75rem;
+}
+
+.add-post-modal-close-btn {
+    color: #6b7280;
+}
+
+.add-post-modal-close-btn:hover {
+    color: #374151;
+}
+
+.add-post-form {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.add-post-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.add-post-form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.add-post-form-input {
+    width: 100;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.add-post-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-post-form-textarea {
+    min-height: 6rem;
+}
+
+.add-post-form-error {
+    color: #ef4444;
+    font-size: 0.875rem;
+}
+
+.add-post-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 1rem;
+}
+
+.add-post-form-cancel-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: white;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.add-post-form-submit-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    background-color: #3b82f6;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.add-post-form-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.add-post-form-submit-btn:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+.add-post-select-container {
+    position: relative;
+}
+
+.add-post-select-display {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.add-post-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 15rem;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    margin-top: 0.25rem;
+    z-index: 10;
+}
+
+.add-post-select-option {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.add-post-select-option:hover {
+    background-color: #f3f4f6;
+}
+
+.add-post-select-disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
+/* Delete Confirmation Modal Styles */
+.delete-confirmation-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.delete-confirmation-modal-container {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 28rem;
+    width: 100%;
+}
+
+.delete-confirmation-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.delete-confirmation-modal-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-confirmation-modal-icon {
+    height: 1.25rem;
+    width: 1.25rem;
+    color: #f59e0b;
+}
+
+.delete-confirmation-modal-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+}
+
+.delete-confirmation-modal-close-btn {
+    color: #6b7280;
+}
+
+.delete-confirmation-modal-close-btn:hover {
+    color: #374151;
+}
+
+.delete-confirmation-modal-body {
+    padding: 1rem;
+}
+
+.delete-confirmation-modal-message {
+    color: #374151;
+}
+
+.delete-confirmation-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.delete-confirmation-modal-cancel-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    background-color: white;
+}
+
+.delete-confirmation-modal-cancel-btn:hover {
+    background-color: #f9fafb;
+}
+
+.delete-confirmation-modal-confirm-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    background-color: #dc2626;
+}
+
+.delete-confirmation-modal-confirm-btn:hover {
+    background-color: #b91c1c;
+}

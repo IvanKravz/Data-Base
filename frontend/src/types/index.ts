@@ -91,20 +91,45 @@ export interface Division {
 export interface Facility {
   id: string;
   name: string;
-  type: 'station' | 'shd';
+  type: {
+    name: string;
+    description: string;
+  };
   class: '1' | '2';
   address: string;
   division: string;
   division_name: string;
   subdivision_name: string;
   subdivision?: string;
+  facility_class?: string | null;
   comments?: string; // Added comment field
-  acceptanceActNumber?: string;
-  rimActNumber?: string;
-  commissioningActNumber?: string;
-  openingPermissionNumber?: string;
-  kzSize?: string;
-  hasTransformerInKz?: boolean;
-  hasGroundingInKz?: boolean;
+  acceptance_act_number?: string | null;
+  rim_act_number?: string | null;;
+  commissioning_act_number?: string | null;
+  opening_permission_number?: string | null;
+  communication_posts: Array<{
+    name: string;
+    division: number;
+    subdivision: number;
+  }>;
+  communication_post_ids?: number;
+  type_id?: number;
+
+  kz_size?: string | null;;
+  has_transformer_in_kz?: boolean;
+  has_grounding_in_kz?: boolean;
+  inn?:string;
   is_closed?: boolean;
+}
+
+export interface CommunicationPost {
+  id: string;
+  name: string;
+  division: string;
+  division_name: string;
+  subdivision?: string;
+  subdivision_name?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
 }

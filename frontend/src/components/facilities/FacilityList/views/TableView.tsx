@@ -31,8 +31,8 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
     let bValue = b[sortField];
 
     if (sortField === 'type') {
-      aValue = a.type === 'station' ? 'Станция' : 'ШД';
-      bValue = b.type === 'station' ? 'Станция' : 'ШД';
+      aValue = a.type.name;
+      bValue = b.type.name;
     }
 
     if (aValue === bValue) return 0;
@@ -42,6 +42,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
     const result = String(aValue).localeCompare(String(bValue));
     return sortDirection === 'asc' ? result : -result;
   });
+
 
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
@@ -79,7 +80,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
           {renderHeaderCell('type', 'Тип')}
           {renderHeaderCell('facility_class', 'Класс')}
           {renderHeaderCell('address', 'Адрес')}
-          {renderHeaderCell('division', 'Подразделение')}
+          {renderHeaderCell('division_name', 'Подразделение')}
         </>
       );
     }
@@ -88,58 +89,38 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
       <>
         {renderHeaderCell('name', 'Наименование')}
         {renderHeaderCell('type', 'Тип')}
-        {facilities.some(f => !f.is_closed) && renderHeaderCell('communication_posts', 'Посты связи')}
         {facilities.some(f => f.is_closed) && renderHeaderCell('facility_class', 'Класс')}
+        {renderHeaderCell('communication_posts', 'Посты связи')}
         {renderHeaderCell('address', 'Адрес')}
+        {renderHeaderCell('division_name', 'Подразделение')}
         {facilities.some(f => f.is_closed) && renderHeaderCell('inn', 'ИНН')}
       </>
     );
   };
 
   const renderRow = (facility: Facility) => {
-    if (!showDifferentFields) {
-      return (
-        <>
-          <td className="facility-table-cell facility-table-cell-primary">
-            {facility.name}
-          </td>
-          <td className="facility-table-cell">
-            {facility.type === 'station' ? 'Станция' : 'ШД'}
-          </td>
-          <td className="facility-table-cell">
-            {facility.facility_class} класс
-          </td>
-          <td className="facility-table-cell">
-            {facility.address}
-          </td>
-          <td className="facility-table-cell">
-            {facility.division.name}
-            {facility.subdivision && ` - ${facility.subdivision.name}`}
-          </td>
-        </>
-      );
-    }
-  
     return (
       <>
         <td className="facility-table-cell facility-table-cell-primary">
           {facility.name}
         </td>
         <td className="facility-table-cell">
-          {facility.type_display}
+          {facility.type.name}
         </td>
-        {!facility.is_closed && (
-          <td className="facility-table-cell">
-            {facility.communication_posts?.map(post => post.name).join(', ') || '-'}
-          </td>
-        )}
         {facility.is_closed && (
           <td className="facility-table-cell">
             {facility.facility_class} класс
           </td>
         )}
         <td className="facility-table-cell">
+          {facility.communication_posts?.map(post => post.name).join(', ') || '-'}
+        </td>
+
+        <td className="facility-table-cell">
           {facility.address}
+        </td>
+        <td className="facility-table-cell">
+          {facility.division_name} / {facility.subdivision_name}
         </td>
         {facility.is_closed && (
           <td className="facility-table-cell">

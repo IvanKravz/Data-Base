@@ -85,7 +85,7 @@
 /* Cards */
 .qc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 
@@ -219,7 +219,7 @@
 /* Form Actions */
 .qc-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
 }
