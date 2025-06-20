@@ -6,6 +6,7 @@ import { divisionsApi } from '../../../api';
 import { Header } from './sections/Header';
 import MapView from '../../map/MapView';
 import { Skeleton } from '@mui/material';
+import { SubdivisionsList } from './sections/SubdivisionsList';
 
 export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
@@ -41,18 +42,18 @@ export function DivisionDetails() {
         <Skeleton variant="rectangular" width="100%" height={72} />
         <div className="stats-grid">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton 
+            <Skeleton
               key={i}
-              variant="rectangular" 
-              height={200} 
-              sx={{ 
+              variant="rectangular"
+              height={200}
+              sx={{
                 borderRadius: '0.75rem',
                 animation: 'pulse 1.5s ease-in-out infinite',
                 '@keyframes pulse': {
                   '0%, 100%': { opacity: 0.6 },
                   '50%': { opacity: 0.3 }
                 }
-              }} 
+              }}
             />
           ))}
         </div>
@@ -77,7 +78,20 @@ export function DivisionDetails() {
       <Overview
         division={division}
       />
-      {division.facilities_count > 0 && <MapView divisionId={division.id}/>}
+      {/* Обертка для фонового изображения и контента */}
+      <div className="division-background-wrapper">
+
+        {/* Фоновое изображение */}
+        <img
+          src="/division-image.png"
+          alt="Division background"
+          className="division-background-image"
+        />
+
+        {division.facilities_count > 0 && <div className="division-content-overlay">
+          <MapView divisionId={division.id} />
+        </div>}
+      </div>
     </div>
   );
 }

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Employee, Division, Subdivision } from '../../../../../types';
+import { Employee, Division } from '../../../../../types';
 import '.././style.css';
 import { employeesApi } from '../../../../../api';
 
 interface BasicInformationCardProps {
   formData: Employee;
-  divisions: Division[];
   onChange: (data: Partial<Employee>) => void;
   token: string;
 }
@@ -20,14 +19,15 @@ interface EmployeeDictionaries {
   warrant_officer_ranks: { value: string; label: string }[];
 }
 
-export function BasicInformationCard({ formData, divisions, onChange, token }: BasicInformationCardProps) {
+export function BasicInformationCard({ formData, onChange, token }: BasicInformationCardProps) {
   const [dictionaries, setDictionaries] = useState<EmployeeDictionaries>({
     categories: [],
     officer_positions: [],
     warrant_officer_positions: [],
     civilian_positions: [],
     officer_ranks: [],
-    warrant_officer_ranks: []
+    warrant_officer_ranks: [],
+    management_officer_ranks: []
   });
 
   const [loading, setLoading] = useState(true);
@@ -47,29 +47,10 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
     loadDictionaries();
   }, [token]);
 
-  const currentDivision = formData.division
-    ? divisions.find(d => d.id === formData.division.id)
-    : null;
-
-  const currentSubdivisions = currentDivision?.subdivisions || [];
-  const hasSubdivisions = currentSubdivisions.length > 0;
-
   const isManagement = formData.category === 'management';
   const isOfficer = formData.category === 'officer';
   const isWarrantOfficer = formData.category === 'warrant_officer';
   const isCivilian = formData.category === 'civilian';
-
-  // Определяем, является ли сотрудник топ-руководством
-  const isTopManagement = isManagement &&
-    (formData.position === 'Главный руководитель' ||
-      formData.position === 'Заместитель главного руководителя');
-
-  // Показываем поле подразделения, если:
-  // - это не руководство ИЛИ
-  // - это руководство, но не топ-руководство (не главный руководитель и не заместитель)
-  const showDivisionField = !isManagement ||
-    (isManagement && !isTopManagement);
-
   const showRankField = !isCivilian;
 
   const getPositionsForCategory = () => {
@@ -106,25 +87,6 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
     }
   };
 
-  const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const divisionId = Number(e.target.value);
-    const selectedDivision = divisions.find(d => d.id === divisionId);
-
-    onChange({
-      division: selectedDivision ? { id: selectedDivision.id, name: selectedDivision.name } : null,
-      subdivision: null
-    });
-  };
-
-  const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const subdivisionId = Number(e.target.value);
-    const selectedSubdivision = currentSubdivisions.find(s => s.id === subdivisionId);
-
-    onChange({
-      subdivision: selectedSubdivision ? { id: selectedSubdivision.id, name: selectedSubdivision.name } : null
-    });
-  };
-
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const category = e.target.value;
     let updateData: Partial<Employee> = {
@@ -133,14 +95,6 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
       rank: ''
     };
 
-    // Если выбрана категория "Руководство", сбрасываем подразделение только для топ-руководства
-    if (category === 'management') {
-      updateData = {
-        ...updateData,
-        // Не сбрасываем подразделение здесь, это будет сделано при выборе позиции
-      };
-    }
-
     onChange(updateData);
   };
 
@@ -148,7 +102,6 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
     const position = e.target.value;
     let updateData: Partial<Employee> = {
       position,
-      // Сбрасываем подразделение только для главного руководителя и его заместителя
       ...(position === 'Главный руководитель' || position === 'Заместитель главного руководителя') && {
         division: null,
         subdivision: null
@@ -161,7 +114,7 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
   const handleRankChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange({
       rank: e.target.value,
-      order_rank: '' // Сохраняем существующее значение или пустую строку
+      order_rank: ''
     });
   };
 
@@ -231,44 +184,6 @@ export function BasicInformationCard({ formData, divisions, onChange, token }: B
               {getRanksForCategory().map((rank) => (
                 <option key={rank.value} value={rank.value}>
                   {rank.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {showDivisionField && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Подразделение</label>
-            <select
-              value={formData.division?.id || ''}
-              onChange={handleDivisionChange}
-              className="personnel-form-input"
-              disabled={isTopManagement}
-            >
-              <option value="">Выберите подразделение</option>
-              {divisions.map((division) => (
-                <option key={division.id} value={division.id}>
-                  {division.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {showDivisionField && hasSubdivisions && formData.division && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Отделение</label>
-            <select
-              value={formData.subdivision?.id || ''}
-              onChange={handleSubdivisionChange}
-              className="personnel-form-input"
-              disabled={isTopManagement}
-            >
-              <option value="">Выберите отделение</option>
-              {currentSubdivisions.map((subdivision) => (
-                <option key={subdivision.id} value={subdivision.id}>
-                  {subdivision.name}
                 </option>
               ))}
             </select>

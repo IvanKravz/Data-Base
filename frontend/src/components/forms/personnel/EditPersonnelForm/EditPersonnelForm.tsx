@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { employeesApi } from '../../../../api';
 import { divisionsApi } from '../../../../api/divisions';
 import { Division } from '../../../../types';
+import { AffiliationCard } from './sections/AffiliationCard';
 
 interface EditPersonnelFormProps {
   person: Employee;
@@ -44,7 +45,6 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
       try {
         const data = await divisionsApi.getDivisions(token);
         getDivisions(data);
-        // dispatch(setDivisions(data));
       } catch (err) {
         setError('Не удалось загрузить подразделения');
         console.error(err);
@@ -59,6 +59,13 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
   const handleChange = (data: Partial<Employee>) => {
     setFormData(prev => ({ ...prev, ...data }));
   };
+
+  // Determine if this is top management
+  const isManagement = formData.category === 'management';
+  const isTopManagement = isManagement &&
+    (formData.position === 'Главный руководитель' ||
+      formData.position === 'Заместитель главного руководителя');
+  const showDivisionField = !isManagement || (isManagement && !isTopManagement);
 
   const handleShaWorkerChange = (shaWorker: Employee['sha_details']) => {
     setFormData(prev => ({
@@ -119,19 +126,13 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
     setError(null);
   
     try {
-      // Если сотрудник больше не является ШаРаботником, убедимся что sha_details не передается
       const dataToSend = {
         ...formData,
         description: formData.description || '',
         sha_details: formData.is_sha_worker ? formData.sha_details : null
       };
   
-      const updatedPerson = await employeesApi.updatePerson(token, formData.id, dataToSend);
-      console.log('formData', formData)
-      console.log('dataToSend', dataToSend)
-      onSubmit(updatedPerson);
-      // navigate(`/personnel/${formData.id}`);
-      location.reload();
+      onSubmit(dataToSend as Employee); // Явно указываем тип Employee
     } catch (err) {
       setError('Не удалось обновить данные сотрудника');
       console.error(err);
@@ -146,8 +147,14 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
         <BasicInformationCard
           formData={formData}
           onChange={handleChange}
-          divisions={divisions}
           token={token}
+        />
+        <AffiliationCard
+          formData={formData}
+          divisions={divisions}
+          onChange={handleChange}
+          isTopManagement={isTopManagement}
+          showDivisionField={showDivisionField}
         />
         <ContactInformationCard
           formData={formData}
@@ -161,7 +168,6 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
           formData={formData}
           onChange={handleChange}
         />
-
       </div>
       <div className='personnel-cards-sha-comment'>
         {formData.is_sha_worker && (

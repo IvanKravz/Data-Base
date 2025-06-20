@@ -6,28 +6,26 @@ import './CommunicationPosts.css';
 
 export function AddCommunicationPostForm() {
   const { id: divisionId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
 
   const [name, setName] = useState('');
+
   const [division, setDivision] = useState('');
   const [subdivisionId, setSubdivisionId] = useState('');
   const [description, setDescription] = useState('');
   const [divisions, setDivisions] = useState<any[]>([]);
   const [subdivisions, setSubdivisions] = useState<any[]>([]);
+  const [isDivisionsOpen, setIsDivisionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isDivisionsOpen, setIsDivisionsOpen] = useState(false);
   const [isSubdivisionsOpen, setIsSubdivisionsOpen] = useState(false);
 
   const fetchDivisions = async () => {
     try {
       const data = await divisionsApi.getDivisions(token);
       setDivisions(data);
-      if (divisionId) {
-        setDivision(divisionId);
-        fetchSubdivisions(divisionId);
-      }
     } catch (err) {
       console.error('Ошибка при загрузке подразделений:', err);
     }
@@ -43,16 +41,19 @@ export function AddCommunicationPostForm() {
   };
 
   useEffect(() => {
-    if (divisionId) {
-      setDivision(divisionId);
-      fetchSubdivisions(divisionId).then(() => {
-        // Если есть subdivisionId в URL, устанавливаем его
-        if (searchParams.get('subdivision')) {
-          setSubdivisionId(searchParams.get('subdivision') || '');
+    const loadData = async () => {
+      await fetchDivisions();
+      if (divisionId) {
+        setDivision(divisionId);
+        await fetchSubdivisions(divisionId);
+        const urlSubdivisionId = searchParams.get('subdivision');
+        if (urlSubdivisionId) {
+          setSubdivisionId(urlSubdivisionId);
         }
-      });
-    }
-  }, [divisionId]);
+      }
+    };
+    loadData();
+  }, [divisionId, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,12 +80,8 @@ export function AddCommunicationPostForm() {
     navigate(-1);
   };
 
-  const handleDivisionChange = (divId: string) => {
-    setDivision(divId);
-    setSubdivisionId('');
-    fetchSubdivisions(divId);
-    setIsDivisionsOpen(false);
-  };
+  console.log('divisions', divisions)
+  console.log('subdivisions', subdivisions)
 
   return (
     <div className="add-post-modal-overlay">
@@ -114,23 +111,59 @@ export function AddCommunicationPostForm() {
             />
           </div>
 
-          {divisions.some(d => d.subdivisions && d.subdivisions.length > 0) && (
+          <div className="add-post-form-group">
+            <label className="add-post-form-label">
+              Подразделение *
+            </label>
+            <div className="add-post-select-container">
+              <div
+                className="add-post-select-display"
+                onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
+              >
+                <span>{divisions.find(d => d.id == division)?.name || 'Выберите подразделение'}</span>
+                <ChevronDown
+                  className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
+                />
+              </div>
+
+              {isDivisionsOpen && (
+                <div className="add-post-select-options">
+                  {divisions.map((divisionItem) => (
+                    <div
+                      key={divisionItem.id}
+                      className="add-post-select-option"
+                      onClick={() => {
+                        setDivision(divisionItem.id);
+                        fetchSubdivisions(divisionItem.id); // Загружаем отделения для выбранного подразделения
+                        setSubdivisionId(''); // Сбрасываем выбранное отделение
+                        setIsDivisionsOpen(false);
+                      }}
+                    >
+                      {divisionItem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {subdivisions.length > 0 && (
             <div className="add-post-form-group">
-              <label htmlFor="subdivision" className="add-post-form-label">
+              <label className="add-post-form-label">
                 Отделение
               </label>
               <div className="add-post-select-container">
                 <div
-                  className={`add-post-select-display ${!division ? 'add-post-select-disabled' : ''}`}
-                  onClick={() => division && setIsSubdivisionsOpen(!isSubdivisionsOpen)}
+                  className="add-post-select-display"
+                  onClick={() => setIsSubdivisionsOpen(!isSubdivisionsOpen)}
                 >
-                  <span>{subdivisions.find(s => s.id === subdivisionId)?.name || 'Не выбрано'}</span>
+                  <span>{subdivisions.find(s => s.id == subdivisionId)?.name || 'Не выбрано'}</span>
                   <ChevronDown
                     className={`h-5 w-5 text-gray-400 transition-transform ${isSubdivisionsOpen ? 'transform rotate-180' : ''}`}
                   />
                 </div>
 
-                {isSubdivisionsOpen && division && (
+                {isSubdivisionsOpen && (
                   <div className="add-post-select-options">
                     <div
                       className="add-post-select-option"

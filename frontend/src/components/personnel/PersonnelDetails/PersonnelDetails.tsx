@@ -9,7 +9,7 @@ import { ResponsibilityInfo } from './sections/ResponsibilityInfo';
 import { AssignedEquipment } from './sections/AssignedEquipment';
 import { EditPersonnelForm } from '../../forms/personnel/EditPersonnelForm';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { updatePerson } from '../../../store/slices/personnelSlice';
+import { updatePersonAsync, fetchPersonById } from '../../../store/slices/personnelSlice';
 import { employeesApi } from '../../../api';
 import { CommentsInfo } from './sections/CommentsInfo';
 import './style.css'
@@ -20,43 +20,64 @@ export function PersonnelDetails() {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [person, setPerson] = useState(false);
+  
+  // Получаем данные из Redux store
+  const { personnel, loading, error } = useSelector((state: RootState) => state.personnel);
+  // Находим сотрудника в хранилище
+  const person = personnel.find(p => p.id == id);
 
   const token = localStorage.getItem('accessToken');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  console.log('personnel', personnel)
+  console.log('person', person)
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const data = await employeesApi.getPersonById(token, id);
-        setPerson(data);
-      } catch (err) {
-        setError('Не удалось загрузить подразделения');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Загружаем сотрудника если его нет в хранилище
+    if (id && token && !person) {
+      dispatch(fetchPersonById({ token, id }));
+    }
+  }, [id, token, person, dispatch]);
 
-    fetchEmployees();
-  }, [token, dispatch]);
+  if (loading) {
+    return <div className="text-center py-12">Загрузка данных сотрудника...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500">{error}</p>
+        <button 
+          onClick={() => navigate(-1)} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Вернуться назад
+        </button>
+      </div>
+    );
+  }
 
   if (!person) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Сотрудник не найден</p>
+        <button 
+          onClick={() => navigate(-1)} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Вернуться назад
+        </button>
       </div>
     );
   }
 
   const handleBack = () => {
-    navigate(`/divisions/${person.division.id}/personnel`);
+    navigate(`/divisions/${person.division?.id}/personnel`);
   };
 
-  const handleUpdate = (updatedPerson: typeof person) => {
-    dispatch(updatePerson(updatedPerson));
-    setIsEditing(false);
+  const handleUpdate = async (updatedPerson: Employee) => {
+    if (token && id) {
+      await dispatch(updatePersonAsync({ token, id, personData: updatedPerson }));
+      setIsEditing(false);
+    }
   };
 
   const handleDelete = () => {
@@ -64,8 +85,10 @@ export function PersonnelDetails() {
   };
 
   const handleConfirmDelete = async () => {
-    await employeesApi.deletePerson(token, person.id);
-    navigate(`/divisions/${person.division.id}/personnel`);
+    if (token && id) {
+      await employeesApi.deletePerson(token, id);
+      navigate(`/divisions/${person.division?.id}/personnel`);
+    }
   };
 
   if (isEditing) {

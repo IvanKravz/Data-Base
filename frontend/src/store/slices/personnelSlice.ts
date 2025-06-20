@@ -71,6 +71,8 @@ const personnelSlice = createSlice({
       const index = state.personnel.findIndex(p => p.id === action.payload.id);
       if (index !== -1) {
         state.personnel[index] = action.payload;
+      } else {
+        state.personnel.push(action.payload);
       }
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -102,6 +104,8 @@ const personnelSlice = createSlice({
         const index = state.personnel.findIndex(p => p.id === action.payload.id);
         if (index !== -1) {
           state.personnel[index] = action.payload;
+        } else {
+          state.personnel.push(action.payload);
         }
         state.loading = false;
       })

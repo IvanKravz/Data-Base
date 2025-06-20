@@ -13,6 +13,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
     gap: 1rem;
+    width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -28,11 +29,12 @@
 }
 
 .communication-post-card {
-
+    min-width: 310px;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     padding: 1rem;
     transition: box-shadow 0.2s ease;
+    word-break: break-word;
 }
 
 .communication-post-card:hover {

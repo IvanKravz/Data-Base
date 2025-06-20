@@ -23,7 +23,6 @@ interface PersonnelListProps {
 export function PersonnelList({
   selectedDivision = 'all',
   selectedCategory = 'all',
-  // selectedAccessClass = 'all',
   searchTerm = '',
   division
 }: PersonnelListProps) {
@@ -34,8 +33,8 @@ export function PersonnelList({
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha'>('all');
   const [showShaFilters, setShowShaFilters] = useState(false);
-  const [showOfficerFilters, setShowOfficerFilters] = useState(false); // Состояние для отображения кнопок офицеров
-  const [selectedOfficerFilter, setSelectedOfficerFilter] = useState<'all' | 'with_management' | 'without_management'>('all'); // Состояние для фильтрации офицеров
+  const [showOfficerFilters, setShowOfficerFilters] = useState(false);
+  const [selectedOfficerFilter, setSelectedOfficerFilter] = useState<'all' | 'with_management' | 'without_management'>('all');
   const [selectedAccessClass, setSelectedAccessClass] = useState<'all' | '1' | '2'>('all');
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
@@ -57,7 +56,6 @@ export function PersonnelList({
       try {
         const data = await employeesApi.getPersonnel(token, params);
         const filteredData = data.filter(person => {
-          // Проверяем, что division существует и имеет id
           return person.division?.id?.toString() === division.id.toString();
         });
 
@@ -118,64 +116,13 @@ export function PersonnelList({
     ? division.subdivisions?.find(sub => sub.id == subdivisionId)
     : null;
 
-  const handleDelete = (id: string) => {
-    setPersonToDelete(id);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (personToDelete && token) {
-      dispatch(deletePersonAsync({ token, id: personToDelete }))
-        .unwrap()
-        .then(() => {
-          getAllPersonnel(prevPersonnel => prevPersonnel.filter(person => person.id !== personToDelete));
-          setShowDeleteModal(false);
-          setPersonToDelete(null);
-        })
-        .catch((err) => {
-          setError('Не удалось удалить сотрудника');
-          console.error(err);
-        });
-    }
-  };
-
-  const handlePersonClick = (person: Employee) => {
-    navigate(`/personnel/${person.id}`);
-  };
-
-  const handleFilterClick = (filter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
-    setActiveFilter(filter);
-    if (filter === 'sha') {
-      setShowShaFilters(true);
-      setShowOfficerFilters(false); // Скрываем кнопки офицеров при выборе Шаработников
-    } else if (filter === 'officers') {
-      setShowOfficerFilters(true); // Показываем кнопки офицеров
-      setShowShaFilters(false); // Скрываем кнопки Шаработников
-    } else {
-      setShowShaFilters(false);
-      setShowOfficerFilters(false);
-    }
-  };
-
-  const handleShaFilterClick = (accessClass: 'all' | '1' | '2') => {
-    setSelectedAccessClass(accessClass);
-    setActiveFilter('sha');
-  };
-
-  const handleOfficerFilterClick = (filter: 'all' | 'with_management' | 'without_management') => {
-    setSelectedOfficerFilter(filter);
-    setActiveFilter('officers');
-  };
-
   const getStaffCount = (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
     if (!division) return { staffCount: 0, actualCount: 0 };
 
-    // Фильтруем персонал по подразделению, если оно выбрано
     const filteredPersonnel = subdivisionId
       ? allPersonnel.filter(person => person.subdivision?.id == subdivisionId)
       : allPersonnel;
 
-    // Для штатных значений используем данные из самого отделения, если оно выбрано
     const selectedSubdivision = subdivisionId
       ? division.subdivisions?.find(sub => sub.id == subdivisionId)
       : null;
@@ -208,22 +155,63 @@ export function PersonnelList({
       sha: {
         staffCount: 0,
         actualCount: filteredPersonnel.filter(person => person.is_sha_worker).length
-      },
-      shaOneClass: {
-        staffCount: 0,
-        actualCount: filteredPersonnel.filter(person => person.sha_details?.access_level === '1').length
-      },
-      shaTwoClass: {
-        staffCount: 0,
-        actualCount: filteredPersonnel.filter(person => person.sha_details?.access_level === '2').length
       }
     };
 
     return counts[staffType];
   };
 
+  const handleDelete = (id: string) => {
+    setPersonToDelete(id);
+    setShowDeleteModal(true);
+  };
 
-  console.log(division)
+  const handleConfirmDelete = () => {
+    if (personToDelete && token) {
+      dispatch(deletePersonAsync({ token, id: personToDelete }))
+        .unwrap()
+        .then(() => {
+          getAllPersonnel(prevPersonnel => prevPersonnel.filter(person => person.id !== personToDelete));
+          setShowDeleteModal(false);
+          setPersonToDelete(null);
+        })
+        .catch((err) => {
+          setError('Не удалось удалить сотрудника');
+          console.error(err);
+        });
+    }
+  };
+
+  const handlePersonClick = (person: Employee) => {
+    navigate(`/personnel/${person.id}`);
+  };
+
+  const handleFilterClick = (filter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
+    setActiveFilter(filter);
+    if (filter === 'sha') {
+      setShowShaFilters(true);
+      setShowOfficerFilters(false);
+    } else if (filter === 'officers') {
+      setShowOfficerFilters(true);
+      setShowShaFilters(false);
+    } else {
+      setShowShaFilters(false);
+      setShowOfficerFilters(false);
+    }
+  };
+
+  const handleShaFilterClick = (accessClass: 'all' | '1' | '2') => {
+    setSelectedAccessClass(accessClass);
+    setActiveFilter('sha');
+  };
+
+  const handleOfficerFilterClick = (filter: 'all' | 'with_management' | 'without_management') => {
+    setSelectedOfficerFilter(filter);
+    setActiveFilter('officers');
+  };
+
+  const staffData = getStaffCount(activeFilter);
+
   return (
     <>
       <div className="personnel-list-header">
@@ -238,7 +226,6 @@ export function PersonnelList({
           onOfficerFilterClick={handleOfficerFilterClick}
           getStaffCount={getStaffCount}
         />
-
       </div>
 
       <div className="personnel-list-content">
@@ -249,24 +236,17 @@ export function PersonnelList({
           />
         </div>
         <div className="selected-subdivision-title">
-          {subdivisionId ? (
-            <>
-              <h3>{division?.name} / {selectedSubdivision?.name}</h3>
-              <div className="subdivision-staff-info">
-                Штат: {selectedSubdivision?.staff_planned_total || 0} /
-                По списку: {selectedSubdivision?.employees_count || 0}
-              </div>
-            </>
-          ) : (
-            <>
-              <h3>{division?.name}</h3>
-              <div className="subdivision-staff-info">
-                Штат: {division?.staff_planned_total || 0} /
-                По списку: {division?.employees_count || 0}
-              </div>
-            </>
-          )}
+          <div className="title-row">
+            <h3>
+              {subdivisionId ? `${division?.name} / ${selectedSubdivision?.name}` : division?.name}
+            </h3>
+            <div className="staff-info">
+              <span>По штату: {staffData.staffCount}</span>
+              <span>По списку: {staffData.actualCount}</span>
+            </div>
+          </div>
         </div>
+
         <TableView
           divisionName={selectedDivision}
           personnel={filteredPersonnel}

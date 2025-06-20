@@ -5,9 +5,9 @@
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
-  max-width: 1800px;
+  max-width: 2000px;
   margin: 0 auto;
-  padding: 0 1rem;
+  /* padding: 0 1rem; */
   box-sizing: border-box;
 }
 
@@ -224,6 +224,7 @@
 
 /* Header */
 .personnel-header {
+  margin-left: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;

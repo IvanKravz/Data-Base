@@ -10,7 +10,7 @@ interface HeaderProps {
   onBack: () => void;
 }
 
-export function Header({ division, activeSection, activeSubdivision, onBack }: HeaderProps) {
+export function Header({ division, activeSubdivision, onBack }: HeaderProps) {
   return (
     <div className="header-divisions">
       <div className="flex items-center gap-3">
@@ -21,7 +21,7 @@ export function Header({ division, activeSection, activeSubdivision, onBack }: H
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900">
             {division.name}
             {activeSubdivision && ` - ${activeSubdivision}`}
           </h1>
