@@ -116,6 +116,7 @@
 }
 
 .selected-subdivision-title {
+  font-weight: 500;
   background: white;
   border-radius: 6px;
   padding: 1rem;
@@ -133,6 +134,7 @@
 .selected-subdivision-title h3 {
   margin: 0;
   font-size: 1.25rem;
+  
   color: #2d3748;
 }
 

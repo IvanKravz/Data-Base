@@ -1,85 +1,153 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RootState } from '../../../../store/store';
-import { Division } from '../../../../types';
-import { TaskCard } from '../../../tasks/TaskCard';
-import { SearchBar } from '../../../common/SearchBar';
+import { Task } from '../../../../types/tasks';
 import { ArrowLeft } from 'lucide-react';
+import { SearchBar } from '../../../common/SearchBar';
+import { TaskCard } from '../../../tasks/TaskCard';
+import { CreateTaskModal } from '../../../tasks/CreateTaskModal';
+import { fetchTasks } from '../../../../store/thunks/tasksThunks';
+import { deleteTask } from '../../../../store/slices/tasksSlice';
 import './style.css';
+import { Header } from '../../../tasks/TaskCard/sections/Header';
+import { DivisionFilter } from '../../../tasks/TasksSection/sections/DivisionFilter';
+import { TaskCategoryFilter } from '../../../tasks/TasksSection/sections/TaskCategoryFilter';
+import { TasksList } from '../../../tasks/TasksSection/sections/TasksList';
+import { TaskCalendar } from '../../../tasks/TasksSection/sections/TaskCalendar';
 
-interface TasksSectionProps {
-  division: Division;
-  activeSubdivision: string | null;
-}
+export function DivisionTasksSection() {
+  const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+  const [selectedDivision, setSelectedDivision] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<TaskCategory | 'all' | 'completed'>('all');
 
-export function DivisionTasksSection({ activeSubdivision }: TasksSectionProps) {
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { divisions } = useSelector((state: RootState) => state.facilities);
-  const division = divisions.results?.find(d => d.id == id);
-
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const tasks = useSelector((state: RootState) => state.tasks.tasks);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
+  const { tasks, loading } = useSelector((state: RootState) => state.tasks);
+  const division = useSelector((state: RootState) => 
+    state.facilities.divisions.results?.find(d => d.id == id)
+  );
 
-  const onBack = () => {
-    navigate(`/divisions/${division.id}`);
-  };
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchTasks(id));
+    }
+  }, [dispatch, id]);
 
-  // Filter tasks by division and search term
   const filteredTasks = tasks.filter(task => {
-    const matchesDivision = task.divisionId === division.id;
     const matchesSearch = searchTerm === '' || 
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.steps.some(step => 
         step.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         step.comments.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    return matchesDivision && matchesSearch;
+    return matchesSearch;
   });
 
-  const handleDeleteTask = (taskId: string) => {
-    // Implement task deletion logic here
-    console.log('Deleting task:', taskId);
+  const handleDeleteTask = async (taskId: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить задачу?')) {
+      await dispatch(deleteTask(taskId));
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setShowCreateModal(true);
+  };
+
+  const handleCreateTask = () => {
+    setShowCreateModal(true);
+  };
+
+  const onBack = () => {
+    navigate(`/divisions/${id}`);
   };
 
   return (
     <div className="section-container">
-      <h2 className="section-title">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="section-title">
+          <button onClick={onBack} className="back-button">
+            <ArrowLeft className="back-button-icon" />
+          </button>
+          Задачи подразделения: {division?.name || 'Загрузка...'}
+        </h2>
+        
         <button
-          onClick={onBack}
-          className="back-button"
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <ArrowLeft className="back-button-icon" />
+          Создать задачу
         </button>
-        Задачи подразделения
-      </h2>
-      <div className="section-search-container">
-        <SearchBar
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+        {/* <Header
+          activeView={activeView}
+          onViewChange={setActiveView}
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          placeholder="Поиск по названию задачи или этапа..."
+          onSearchChange={setSearchTerm}
+          onCreateTask={handleCreateTask}
+        /> */}
+
+        <DivisionFilter
+          selectedDivision={selectedDivision}
+          onDivisionChange={setSelectedDivision}
+        />
+
+        <TaskCategoryFilter
+          tasks={filteredTasks}
+          selectedDivision={selectedDivision}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
         />
       </div>
-      <div className="section-list">
-        {filteredTasks.length > 0 ? (
-          filteredTasks.map(task => (
-            <div key={task.id} className="section-list-item">
-              <TaskCard
-                task={task}
-                onDelete={handleDeleteTask}
-              />
+
+      {loading ? (
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-full border-4 border-gray-200 animate-spin">
+                <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+              </div>
             </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500 py-8">
-            {searchTerm 
-              ? 'Нет задач, соответствующих поиску' 
-              : 'Нет активных задач для этого подразделения'
-            }
-          </p>
-        )}
-      </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          {activeView === 'list' ? (
+            <TasksList
+              selectedDivision={selectedDivision}
+              selectedCategory={selectedCategory}
+              searchTerm={searchTerm}
+            />
+          ) : (
+            <TaskCalendar
+              selectedDivision={selectedDivision}
+              searchTerm={searchTerm}
+            />
+          )}
+        </div>
+      )}
+
+
+      {showCreateModal && (
+        <CreateTaskModal
+          initialTask={selectedTask}
+          divisionId={id}
+          onClose={() => {
+            setShowCreateModal(false);
+            setSelectedTask(null);
+          }}
+        />
+      )}
     </div>
   );
 }

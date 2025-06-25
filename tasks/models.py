@@ -4,18 +4,44 @@ from facilities.models import Division, Subdivision
 from users.models import User
 
 class Task(models.Model):
+    URGENT = 'urgent'
+    PLANNED = 'planned'
+    ATTENTION = 'attention'
+    
     TASK_CATEGORIES = [
-        ('urgent', 'Срочно'),
-        ('planned', 'Плановая'),
-        ('attention', 'Обратить внимание')
+        (URGENT, 'Срочно'),
+        (PLANNED, 'Плановая'),
+        (ATTENTION, 'Обратить внимание')
     ]
 
     title = models.CharField(max_length=255, verbose_name='Название')
-    category = models.CharField(max_length=20, choices=TASK_CATEGORIES, verbose_name='Категория')
-    division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name='tasks', verbose_name='Подразделение')
-    subdivision = models.ForeignKey(Subdivision, on_delete=models.CASCADE, null=True, related_name='tasks', verbose_name='Отделение')
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_tasks', verbose_name='Создал')
-    created_at = models.DateTimeField(default=timezone.now)
+    category = models.CharField(
+        max_length=20, 
+        choices=TASK_CATEGORIES, 
+        verbose_name='Категория'
+    )
+    division = models.ForeignKey(
+        Division, 
+        on_delete=models.CASCADE, 
+        related_name='tasks',
+        verbose_name='Подразделение'
+    )
+    subdivision = models.ForeignKey(
+        Subdivision, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='tasks',
+        verbose_name='Отделение'
+    )
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name='created_tasks',
+        verbose_name='Создатель'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -26,16 +52,40 @@ class Task(models.Model):
         verbose_name_plural = 'Задачи'
         ordering = ['-created_at']
 
+    @property
+    def progress(self):
+        total_steps = self.steps.count()
+        if total_steps == 0:
+            return 0
+        completed_steps = self.steps.filter(is_completed=True).count()
+        return int((completed_steps / total_steps) * 100)
+
 class TaskStep(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='steps', verbose_name='Задача')
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='steps',
+        verbose_name='Задача'
+    )
     name = models.CharField(max_length=255, verbose_name='Название')
     comments = models.TextField(blank=True, verbose_name='Комментарии')
     start_date = models.DateTimeField(verbose_name='Дата начала')
     end_date = models.DateTimeField(verbose_name='Дата окончания')
     is_completed = models.BooleanField(default=False, verbose_name='Выполнено')
-    completed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='completed_steps', verbose_name='Выполнил')
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата выполнения')
-    created_at = models.DateTimeField(default=timezone.now)
+    completed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='completed_steps',
+        verbose_name='Выполнил'
+    )
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Дата выполнения'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -45,38 +95,3 @@ class TaskStep(models.Model):
         verbose_name = 'Этап задачи'
         verbose_name_plural = 'Этапы задач'
         ordering = ['start_date']
-
-from rest_framework import serializers
-from .models import Task, TaskStep
-from users.serializers import UserSerializer
-
-class TaskStepSerializer(serializers.ModelSerializer):
-    completed_by = UserSerializer(read_only=True)
-    
-    class Meta:
-        model = TaskStep
-        fields = [
-            'id', 'name', 'comments', 'start_date', 'end_date',
-            'is_completed', 'completed_by', 'completed_at',
-            'created_at', 'updated_at'
-        ]
-
-class TaskSerializer(serializers.ModelSerializer):
-    steps = TaskStepSerializer(many=True, read_only=True)
-    created_by = UserSerializer(read_only=True)
-    division_name = serializers.CharField(source='division.name', read_only=True)
-    progress = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Task
-        fields = [
-            'id', 'title', 'category', 'division', 'division_name', 'created_by',
-            'steps', 'progress', 'created_at', 'updated_at'
-        ]
-
-    def get_progress(self, obj):
-        total_steps = obj.steps.count()
-        if not total_steps:
-            return 0
-        completed_steps = obj.steps.filter(is_completed=True).count()
-        return (completed_steps / total_steps) * 100

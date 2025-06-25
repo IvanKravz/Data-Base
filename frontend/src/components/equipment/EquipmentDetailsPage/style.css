@@ -41,6 +41,7 @@
 /* ===== Base Styles ===== */
 .equipment-details-container {
   margin: 0 auto;
+  padding: 2rem;
 }
 
 /* ===== Card Components ===== */

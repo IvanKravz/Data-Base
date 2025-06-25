@@ -143,8 +143,6 @@ export function EquipmentSection() {
     return <div className="error-message">{error}</div>;
   }
 
-  // console.log(filterBySubdivision)
-
   return (
     <div className="section-container">
       <h2 className="section-title">

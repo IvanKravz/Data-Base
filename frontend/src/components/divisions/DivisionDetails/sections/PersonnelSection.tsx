@@ -7,11 +7,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { divisionsApi } from '../../../../api';
 import './style.css'
 
-interface PersonnelSectionProps {
-  division: Division;
-  activeSubdivision: string | null;
-}
-
 export function PersonnelSection() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +36,8 @@ export function PersonnelSection() {
     navigate(`/divisions/${division.id}`);
   };
 
+  console.log('division', division)
+
   return (
     <div className="personnel-container">
       <h2 className="personnel-header-division">
@@ -50,7 +47,7 @@ export function PersonnelSection() {
         >
           <ArrowLeft className="back-button-icon" />
         </button>
-        Сотрудники подразделения
+        Личный состав
       </h2>
       <div className="search-container">
         <SearchBar

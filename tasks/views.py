@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.db.models import Q
 from .models import Task, TaskStep
 from .serializers import TaskSerializer, TaskStepSerializer
+from users.models import User
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
@@ -13,50 +14,31 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Task.objects.all()
-        division = self.request.query_params.get('division', None)
-        category = self.request.query_params.get('category', None)
-        completed = self.request.query_params.get('completed', None)
-        search = self.request.query_params.get('search', None)
-
-        if division:
-            queryset = queryset.filter(division=division)
+        queryset = super().get_queryset()
+        division_id = self.request.query_params.get('division')
+        category = self.request.query_params.get('category')
+        search = self.request.query_params.get('search')
+        
+        if division_id:
+            queryset = queryset.filter(division_id=division_id)
         if category:
             queryset = queryset.filter(category=category)
-        if completed is not None:
-            if completed.lower() == 'true':
-                queryset = queryset.filter(steps__is_completed=True).distinct()
-            else:
-                queryset = queryset.exclude(steps__is_completed=True).distinct()
         if search:
             queryset = queryset.filter(
                 Q(title__icontains=search) |
                 Q(steps__name__icontains=search) |
                 Q(steps__comments__icontains=search)
             ).distinct()
-
-        return queryset
+            
+        return queryset.prefetch_related('steps')
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-    @action(detail=False, methods=['get'])
-    def calendar(self, request):
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
-        division = request.query_params.get('division')
-
-        queryset = self.get_queryset()
-        if division:
-            queryset = queryset.filter(division=division)
-        if start_date and end_date:
-            queryset = queryset.filter(
-                Q(steps__start_date__range=[start_date, end_date]) |
-                Q(steps__end_date__range=[start_date, end_date])
-            ).distinct()
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    @action(detail=True, methods=['get'])
+    def progress(self, request, pk=None):
+        task = self.get_object()
+        return Response({'progress': task.progress})
 
 class TaskStepViewSet(viewsets.ModelViewSet):
     queryset = TaskStep.objects.all()
@@ -70,8 +52,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
         step.completed_by = request.user
         step.completed_at = timezone.now()
         step.save()
-        serializer = self.get_serializer(step)
-        return Response(serializer.data)
+        return Response(self.get_serializer(step).data)
 
     @action(detail=True, methods=['post'])
     def uncomplete(self, request, pk=None):
@@ -80,5 +61,4 @@ class TaskStepViewSet(viewsets.ModelViewSet):
         step.completed_by = None
         step.completed_at = None
         step.save()
-        serializer = self.get_serializer(step)
-        return Response(serializer.data)
+        return Response(self.get_serializer(step).data)

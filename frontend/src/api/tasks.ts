@@ -1,5 +1,5 @@
 import { api } from './client';
-import { Task } from '../types/tasks';
+import { Task, TaskStep } from '../types/tasks';
 
 interface TaskParams {
   startDate?: string;
@@ -7,61 +7,54 @@ interface TaskParams {
   divisionId?: string;
 }
 
-export const  tasksApi = {
+export const tasksApi = {
   getTasks: async (divisionId?: string) => {
-    try {
-      const params = divisionId ? { division: divisionId } : {};
-      const { data } = await api.get('/tasks/', { params });
-      return data;
-    } catch (error) {
-      return [];
-    }
+    const params = divisionId ? { division: divisionId } : {};
+    const { data } = await api.get('/tasks/', { params });
+    return data;
   },
 
   getTaskById: async (id: string) => {
-    try {
-      const { data } = await api.get(`/tasks/${id}`);
-      return data;
-    } catch (error) {
-      throw error;
-    }
+    const { data } = await api.get(`/tasks/${id}/`);
+    return data;
   },
 
-  createTask: async (taskData: Omit<Task, 'id'>) => {
-    try {
-      const { data } = await api.post('/tasks/', taskData);
-      return data;
-    } catch (error) {
-      const newTask: Task = {
-        id: `task-${Date.now()}`,
-        ...taskData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      return newTask;
-    }
+  createTask: async (taskData: {
+    title: string;
+    category: string;
+    division: string;
+    subdivision?: string;
+    steps: Array<{
+      name: string;
+      comments?: string;
+      start_date: string;
+      end_date: string;
+    }>;
+  }) => {
+    const { data } = await api.post('/tasks/', taskData);
+    return data;
   },
 
-  updateTask: async (id: string, taskData: Partial<Task>) => {
-    try {
-      const { data } = await api.put(`/tasks/${id}`, taskData);
-      return data;
-    } catch (error) {
-      return {
-        id,
-        ...taskData,
-        updatedAt: new Date().toISOString()
-      };
-    }
+  updateTask: async (id: string, taskData: Partial<typeof tasksApi.createTask extends (arg: infer P) => any ? P : never>) => {
+    const { data } = await api.patch(`/tasks/${id}/`, taskData);
+    return data;
   },
 
   deleteTask: async (id: string) => {
-    try {
-      await api.delete(`/tasks/${id}`);
-    } catch (error) {
-      throw error;
-    }
+    await api.delete(`/tasks/${id}/`);
   },
+
+  completeStep: async (stepId: string) => {
+    const { data } = await api.post(`/tasks/steps/${stepId}/complete/`);
+    return data;
+  },
+
+  uncompleteStep: async (stepId: string) => {
+    const { data } = await api.post(`/tasks/steps/${stepId}/uncomplete/`);
+    return data;
+  },
+
+  
 
   updateTaskStep: async (taskId: string, stepId: string, completed: boolean) => {
     try {

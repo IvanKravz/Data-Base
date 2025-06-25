@@ -6,7 +6,7 @@ import { divisionsApi } from '../../../api';
 import { Header } from './sections/Header';
 import MapView from '../../map/MapView';
 import { Skeleton } from '@mui/material';
-import { SubdivisionsList } from './sections/SubdivisionsList';
+import './sections/style.css';
 
 export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +22,7 @@ export function DivisionDetails() {
         const div = await divisionsApi.getDivisionById(id, token);
         setDivision(div);
       } catch (err) {
-        setError('Не удалось загрузить данные об объекте');
+        setError('Failed to load division data');
         console.error(err);
       } finally {
         setLoading(false);
@@ -38,22 +38,15 @@ export function DivisionDetails() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="division-details-loading">
         <Skeleton variant="rectangular" width="100%" height={72} />
         <div className="stats-grid">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton
               key={i}
               variant="rectangular"
-              height={200}
-              sx={{
-                borderRadius: '0.75rem',
-                animation: 'pulse 1.5s ease-in-out infinite',
-                '@keyframes pulse': {
-                  '0%, 100%': { opacity: 0.6 },
-                  '50%': { opacity: 0.3 }
-                }
-              }}
+              height={120}
+              sx={{ borderRadius: '12px' }}
             />
           ))}
         </div>
@@ -62,35 +55,31 @@ export function DivisionDetails() {
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+    return <div className="division-error">{error}</div>;
   }
 
   if (!division) {
-    return <div className="text-gray-500 p-4">Подразделение не найдено</div>;
+    return <div className="division-not-found">Division not found</div>;
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <Header
-        division={division}
-        onBack={handleBack}
-      />
-      <Overview
-        division={division}
-      />
-      {/* Обертка для фонового изображения и контента */}
+    <div className="division-details-container">
+      <Header division={division} onBack={handleBack} />
+      
+      <Overview division={division} />
+      
       <div className="division-background-wrapper">
-
-        {/* Фоновое изображение */}
         <img
           src="/division-image.png"
           alt="Division background"
           className="division-background-image"
         />
-
-        {division.facilities_count > 0 && <div className="division-content-overlay">
-          <MapView divisionId={division.id} />
-        </div>}
+        
+        {division.facilities_count > 0 && (
+          <div className="division-map-overlay">
+            <MapView divisionId={division.id} />
+          </div>
+        )}
       </div>
     </div>
   );
