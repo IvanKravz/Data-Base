@@ -10,7 +10,6 @@ interface BasicInfoProps {
 }
 
 export function ClassificationtFacility({ facility }: BasicInfoProps) {
-  console.log(facility)
   return (
     <InfoCard title="Классификация">
       <div className="space-y-4">

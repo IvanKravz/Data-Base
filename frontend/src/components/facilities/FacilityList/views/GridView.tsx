@@ -10,7 +10,6 @@ interface GridViewProps {
 }
 
 export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProps) {
-  console.log('facilities',facilities)
   return (
     <div className="facility-grid-container">
       {facilities.map((facility) => (

@@ -48,7 +48,7 @@
 
 /* Заголовок и верхняя панель */
 .equipment-header {
-  
+
   /* display: flex; */
   /* align-items: center; */
   /* justify-content: space-between; */
@@ -156,7 +156,8 @@
 
 .info-item-content {
   flex: 1;
-  min-width: 0; /* Фикс для переполнения текста */
+  min-width: 0;
+  /* Фикс для переполнения текста */
 }
 
 .info-item:hover .info-item-icon {
@@ -199,12 +200,12 @@
   .info-card {
     padding: 1.25rem;
   }
-  
+
   .info-item {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .info-item-icon {
     align-self: flex-start;
   }
@@ -262,12 +263,18 @@
 
 /* Buttons */
 .icon-button {
-  border-radius: 0.5rem;
-  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: #f1f5f9;
+  transition: all 0.2s;
 }
 
 .icon-button:hover {
-  background-color: #F3F4F6;
+  background-color: #e2e8f0;
 }
 
 .action-button {
@@ -289,7 +296,7 @@
   width: 1rem;
 }
 
-.button-back {
+/* .button-back {
   height: 1.3rem;
   width: 1.3rem;
   color: var(--text);
@@ -297,7 +304,7 @@
 
 .button-back:hover {
   background-color: #F3F4F6;
-}
+} */
 
 .action-button-green {
   background-color: #059669;
@@ -388,11 +395,13 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out;
-  margin-left: 2.75rem; /* Отступ для выравнивания с иконкой */
+  margin-left: 2.75rem;
+  /* Отступ для выравнивания с иконкой */
 }
 
 .equipment-list-container.expanded {
-  max-height: 500px; /* Достаточно большое значение для анимации */
+  max-height: 500px;
+  /* Достаточно большое значение для анимации */
 }
 
 .equipment-list {

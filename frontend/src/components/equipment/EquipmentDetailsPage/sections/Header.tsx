@@ -19,7 +19,7 @@ export function Header({ equipment, onBack, onEdit, onDelete }: HeaderProps) {
       <div className="equipment-flex equipment-items-center equipment-gap-md">
         <button
           onClick={onBack}
-          className="equipment-btn equipment-btn--icon"
+          className="equipment-btn--icon"
         >
           <ArrowLeft size={20} />
         </button>

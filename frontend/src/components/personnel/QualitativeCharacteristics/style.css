@@ -13,7 +13,7 @@
 /* Layout */
 .qc-layout {
   margin: 0 auto;
-  padding: 1.5rem;
+  /* padding: 1.5rem; */
   min-height: 100vh;
 }
 
@@ -50,17 +50,16 @@
 .qc-back-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.5rem;
-  background: none;
-  border-radius: 0.5rem;
-  color: var(--text);
-  cursor: pointer;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: #f1f5f9;
   transition: all 0.2s;
 }
 
 .qc-back-btn:hover {
-  background-color: #F3F4F6;
+  background-color: #e2e8f0;
 }
 
 .qc-edit-btn {

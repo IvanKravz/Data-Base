@@ -25,10 +25,7 @@ export function PersonnelDetails() {
   const { personnel, loading, error } = useSelector((state: RootState) => state.personnel);
   // Находим сотрудника в хранилище
   const person = personnel.find(p => p.id == id);
-
   const token = localStorage.getItem('accessToken');
-  console.log('personnel', personnel)
-  console.log('person', person)
 
   useEffect(() => {
     // Загружаем сотрудника если его нет в хранилище

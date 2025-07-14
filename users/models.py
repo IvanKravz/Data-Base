@@ -19,37 +19,42 @@ class UserManager(BaseUserManager):
         return self.create_user(username, password, **extra_fields)
 
 class User(AbstractUser):
+    employee = models.OneToOneField(
+        'Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_account',
+        verbose_name='Сотрудник'
+    )
     email = models.EmailField(blank=True)
-    username = models.CharField(max_length=150, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Указываем уникальные related_name для groups и user_permissions
+    # Явно указываем related_name для groups и user_permissions
     groups = models.ManyToManyField(
         'auth.Group',
         verbose_name='groups',
         blank=True,
         help_text='The groups this user belongs to.',
-        related_name='custom_user_set',  # Уникальное имя для обратной связи
-        related_query_name='user'
+        related_name='custom_user_set',  # Уникальное имя
+        related_query_name='custom_user'
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
         verbose_name='user permissions',
         blank=True,
         help_text='Specific permissions for this user.',
-        related_name='custom_user_set',  # Уникальное имя для обратной связи
-        related_query_name='user'
+        related_name='custom_user_set',  # Уникальное имя
+        related_query_name='custom_user'
     )
-
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     class Meta:
         verbose_name = 'Учетная запись'
         verbose_name_plural = 'Учетные записи'
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
@@ -272,7 +277,7 @@ class Employee(models.Model):
             self.priority = 1700
         
         super().save(*args, **kwargs)
-        
+
 class ShaWorkerDetails(models.Model):
     ACCESS_LEVELS = [
         ('1', '1 класс'),

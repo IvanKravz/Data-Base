@@ -7,11 +7,28 @@ interface TaskParams {
   divisionId?: string;
 }
 
+interface DivisionRef {
+  id: string;
+  name: string;
+}
+
+interface SubdivisionRef {
+  id: string;
+  name: string;
+}
+
 export const tasksApi = {
-  getTasks: async (divisionId?: string) => {
-    const params = divisionId ? { division: divisionId } : {};
-    const { data } = await api.get('/tasks/', { params });
-    return data;
+  getTasks: async (params: {
+    division?: string;
+    subdivision?: string;
+  }) => {
+    const { data } = await api.get('/tasks/', {
+      params: {
+        division: params.division,
+        subdivision: params.subdivision
+      }
+    });
+    return data.results;
   },
 
   getTaskById: async (id: string) => {
@@ -19,11 +36,23 @@ export const tasksApi = {
     return data;
   },
 
+  getIncompleteTasksCount: async (options: { subdivisionId?: string; divisionId?: string } = {}) => {
+    const params: Record<string, string> = {};
+    if (options.subdivisionId) {
+      params.subdivision = options.subdivisionId;
+    }
+    if (options.divisionId) {
+      params.division = options.divisionId;
+    }
+    const { data } = await api.get('/tasks/incomplete-count/', { params });
+    return data.count;
+  },
+
   createTask: async (taskData: {
     title: string;
     category: string;
-    division: string;
-    subdivision?: string;
+    division: string;  // Теперь просто строка (ID)
+    subdivision?: string | null;
     steps: Array<{
       name: string;
       comments?: string;
@@ -34,9 +63,36 @@ export const tasksApi = {
     const { data } = await api.post('/tasks/', taskData);
     return data;
   },
+  
+  updateTask: async (token: string, id: string, taskData: {
+    title?: string;
+    category?: string;
+    division_id?: string;
+    subdivision_id?: string | null; // Явно указываем что может быть null
+    steps?: Array<{
+      name: string;
+      comments?: string;
+      start_date: string;
+      end_date: string;
+    }>;
+  }) => {
+    if (!id || !/^\d+$/.test(id)) {
+      throw new Error(`Invalid task ID format. Expected numeric string, got: ${id}`);
+    }
 
-  updateTask: async (id: string, taskData: Partial<typeof tasksApi.createTask extends (arg: infer P) => any ? P : never>) => {
-    const { data } = await api.patch(`/tasks/${id}/`, taskData);
+    // console.log('taskData', taskData)
+  
+    const { data } = await api.patch(`/tasks/${id}/`, {
+      ...taskData,
+      // Убедитесь что бэкенд ожидает именно такие названия полей
+      division: taskData.division_id,
+      subdivision: taskData.subdivision_id === null ? null : taskData.subdivision_id
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    console.log('data', data)
     return data;
   },
 
@@ -54,16 +110,11 @@ export const tasksApi = {
     return data;
   },
 
-  
-
-  updateTaskStep: async (taskId: string, stepId: string, completed: boolean) => {
-    try {
-      const { data } = await api.post(`/tasks/steps/${stepId}/toggle/`, {
-        completed
-      });
-      return data;
-    } catch (error) {
-      return { success: true };
+  updateTaskStep: async (stepId: string, completed: boolean) => {
+    if (completed) {
+      return await tasksApi.completeStep(stepId);
+    } else {
+      return await tasksApi.uncompleteStep(stepId);
     }
   },
 

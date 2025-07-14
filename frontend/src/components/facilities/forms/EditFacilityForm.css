@@ -8,6 +8,7 @@
 .facility-edit-header {
     margin-bottom: 2rem;
     display: flex;
+    gap: 1rem;
 }
 
 /* Стили карточек */

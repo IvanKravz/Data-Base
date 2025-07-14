@@ -7,5 +7,6 @@ router.register(r'steps', TaskStepViewSet)
 router.register(r'', TaskViewSet)
 
 urlpatterns = [
+    path('incomplete-count/', TaskViewSet.as_view({'get': 'incomplete_count'}), name='tasks-incomplete-count'),
     path('', include(router.urls)),
 ]

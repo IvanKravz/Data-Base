@@ -1,42 +1,58 @@
-
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../store/store';
-import { format } from 'date-fns';
+import React from 'react';
+import { format, isValid } from 'date-fns';
 import Calendar from 'react-calendar';
-import { TaskDetailsModal } from '../../TaskDetailsModal';
 import { Task } from '../../../../types/tasks';
-import { TaskCategory, isTaskCompleted } from '../../../../types/taskCategories';
+import { TaskCategory } from '../../../../types/taskCategories';
 import 'react-calendar/dist/Calendar.css';
+import '../style.css';
 
 interface TaskCalendarProps {
-  selectedDivision: string;
-  searchTerm: string;
-  onDeleteTask?: (taskId: string) => void;
+  tasks: Task[];
+  onTaskClick: (task: Task) => void;
+  calendarState: {
+    date: Date;
+    view: 'month' | 'year';
+  };
+  onCalendarStateChange: (state: {
+    date?: Date;
+    view?: 'month' | 'year';
+  }) => void;
 }
 
-export function TaskCalendar({ selectedDivision, searchTerm, onDeleteTask }: TaskCalendarProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'year'>('month');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const tasks = useSelector((state: RootState) => state.tasks.tasks);
-  const loading = useSelector((state: RootState) => state.tasks.loading);
+export function TaskCalendar({
+  tasks,
+  onTaskClick,
+  calendarState,
+  onCalendarStateChange
+}: TaskCalendarProps) {
+  const { date: selectedDate, view } = calendarState;
 
-  // Filter tasks based on division, search term and completion status
-  const filteredTasks = tasks.filter(task => 
-    (selectedDivision === 'all' || task.divisionId === selectedDivision) &&
-    task.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    !isTaskCompleted(task) // Only show incomplete tasks
-  );
+  const handleDateChange = (date: Date) => {
+    onCalendarStateChange({ date });
+  };
+
+  const handleViewChange = (newView: 'month' | 'year') => {
+    onCalendarStateChange({ view: newView });
+  };
+
+  const getValidDate = (date: string | Date | null | undefined): Date | null => {
+    if (!date) return null;
+    const d = new Date(date);
+    return isValid(d) ? d : null;
+  };
 
   // Get tasks for a specific date with their categories
   const getTasksForDate = (date: Date) => {
     const formattedDate = format(date, 'yyyy-MM-dd');
-    return filteredTasks.filter(task =>
+    return tasks.filter(task =>
       task.steps.some(step => {
-        const stepStartDate = format(new Date(step.startDate), 'yyyy-MM-dd');
-        const stepEndDate = format(new Date(step.endDate), 'yyyy-MM-dd');
-        return formattedDate >= stepStartDate && formattedDate <= stepEndDate;
+        const stepStartDate = getValidDate(step.start_date);
+        const stepEndDate = getValidDate(step.end_date);
+        if (!stepStartDate || !stepEndDate) return false;
+
+        const stepStartDateStr = format(stepStartDate, 'yyyy-MM-dd');
+        const stepEndDateStr = format(stepEndDate, 'yyyy-MM-dd');
+        return formattedDate >= stepStartDateStr && formattedDate <= stepEndDateStr;
       })
     );
   };
@@ -51,43 +67,40 @@ export function TaskCalendar({ selectedDivision, searchTerm, onDeleteTask }: Tas
   };
 
   // Get tasks with steps on the selected date
-  const tasksWithStepsOnDate = filteredTasks.filter(task =>
+  const tasksWithStepsOnDate = tasks.filter(task =>
     task.steps.some(step => {
       const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-      const stepStartDate = format(new Date(step.startDate), 'yyyy-MM-dd');
-      const stepEndDate = format(new Date(step.endDate), 'yyyy-MM-dd');
-      return selectedDateStr >= stepStartDate && selectedDateStr <= stepEndDate;
+      const stepStartDate = getValidDate(step.start_date);
+      const stepEndDate = getValidDate(step.end_date);
+      if (!stepStartDate || !stepEndDate) return false;
+
+      const stepStartDateStr = format(stepStartDate, 'yyyy-MM-dd');
+      const stepEndDateStr = format(stepEndDate, 'yyyy-MM-dd');
+      return selectedDateStr >= stepStartDateStr && selectedDateStr <= stepEndDateStr;
     })
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="space-y-4">
-        <div className="flex justify-end">
+    <div className="tasks-calendar-container">
+      <div className="tasks-calendar-main">
+        <div className="tasks-calendar-controls">
           <button
-            onClick={() => setView(view === 'month' ? 'year' : 'month')}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            onClick={() => handleViewChange(view === 'month' ? 'year' : 'month')}
+            className="tasks-calendar-view-button"
           >
             {view === 'month' ? 'Показать год' : 'Показать месяц'}
           </button>
         </div>
         <Calendar
-          onChange={setSelectedDate}
+          key={`${calendarState.view}-${calendarState.date.toISOString()}`}
+          onChange={handleDateChange}
           value={selectedDate}
           view={view}
-          onViewChange={({ view }) => setView(view as 'month' | 'year')}
-          className="w-full rounded-lg shadow-sm border border-gray-200"
+          onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
+          className="tasks-calendar"
           tileClassName={({ date }) => {
             const hasTasksOnDate = getTasksForDate(date).length > 0;
-            return hasTasksOnDate ? 'has-tasks' : '';
+            return hasTasksOnDate ? 'tasks-calendar-has-events' : '';
           }}
           tileContent={({ date }) => {
             const tasksByCategory = getTasksByCategory(date);
@@ -96,15 +109,15 @@ export function TaskCalendar({ selectedDivision, searchTerm, onDeleteTask }: Tas
             if (!hasTasksOnDate) return null;
 
             return (
-              <div className="absolute bottom-1 left-0 right-0 flex justify-center items-center gap-1">
+              <div className="tasks-calendar-indicator">
                 {tasksByCategory.urgent > 0 && (
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <div className="tasks-calendar-dot tasks-calendar-dot-urgent" />
                 )}
                 {tasksByCategory.planned > 0 && (
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <div className="tasks-calendar-dot tasks-calendar-dot-planned" />
                 )}
                 {tasksByCategory.attention > 0 && (
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                  <div className="tasks-calendar-dot tasks-calendar-dot-attention" />
                 )}
               </div>
             );
@@ -112,68 +125,59 @@ export function TaskCalendar({ selectedDivision, searchTerm, onDeleteTask }: Tas
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-medium text-gray-900">
-            {searchTerm ? 'Результаты поиска' : `Задачи на ${format(selectedDate, 'dd.MM.yyyy')}`}
+      <div className="tasks-calendar-events">
+        <div className="tasks-calendar-events-header">
+          <h3 className="tasks-calendar-events-title">
+            Задачи на {format(selectedDate, 'dd.MM.yyyy')}
           </h3>
-          <span className="text-sm text-gray-600">
-            {searchTerm ? `Найдено: ${filteredTasks.length}` : `Задач: ${tasksWithStepsOnDate.length}`}
+          <span className="tasks-calendar-events-count">
+            Задач: {tasksWithStepsOnDate.length}
           </span>
         </div>
 
-        <div className="space-y-4">
-          {(searchTerm ? filteredTasks : tasksWithStepsOnDate).map(task => (
-            <div 
-              key={task.id} 
-              className="border border-gray-200 rounded-lg p-4 cursor-pointer transition-colors hover:bg-gray-50"
-              onClick={() => setSelectedTask(task)}
-            >
-              <div className="flex items-center gap-2">
-                <div 
-                  className={`h-2 w-2 rounded-full ${
-                    task.category === 'urgent' ? 'bg-red-500' :
-                    task.category === 'planned' ? 'bg-blue-500' :
-                    'bg-yellow-500'
-                  }`}
-                />
-                <h4 className="font-medium text-gray-900">
-                  {task.title}
-                </h4>
-              </div>
-              <div className="mt-2 space-y-2">
-                {task.steps.map(step => (
-                  <div key={step.id} className="text-sm">
-                    <p className="text-gray-600">
-                      {step.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {format(new Date(step.startDate), 'dd.MM.yyyy HH:mm')} - {format(new Date(step.endDate), 'dd.MM.yyyy HH:mm')}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="tasks-calendar-events-list">
+          {tasksWithStepsOnDate.length > 0 ? (
+            tasksWithStepsOnDate.map(task => {
+              // Определяем класс категории
+              const categoryClass = `tasks-calendar-event-${task.category}`;
 
-          {(searchTerm ? filteredTasks : tasksWithStepsOnDate).length === 0 && (
-            <p className="text-center text-gray-500 py-4">
-              {searchTerm 
-                ? 'Нет задач, соответствующих поиску'
-                : 'Нет задач на выбранную дату'
-              }
+              return (
+                <div
+                  key={task.id}
+                  className={`tasks-calendar-event ${categoryClass}`}
+                  onClick={() => onTaskClick(task)}
+                >
+                  <div className="tasks-calendar-event-header">
+                    <div className={`tasks-calendar-event-indicator ${task.category === 'urgent' ? 'tasks-calendar-event-indicator-urgent' :
+                      task.category === 'planned' ? 'tasks-calendar-event-indicator-planned' :
+                        'tasks-calendar-event-indicator-attention'
+                      }`} />
+                    <h4 className="tasks-calendar-event-title">
+                      {task.title}
+                    </h4>
+                  </div>
+                  <div className="tasks-calendar-event-steps">
+                    {task.steps.map((step, index) => (
+                      <div key={step.id} className="tasks-calendar-event-step">
+                        <p className="tasks-calendar-event-step-name">
+                          Этап {index + 1}: {step.name}
+                        </p>
+                        <p className="tasks-calendar-event-step-time">
+                          {format(new Date(step.start_date), 'dd.MM.yyyy')} - {format(new Date(step.end_date), 'dd.MM.yyyy')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="tasks-calendar-no-events">
+              Нет задач на выбранную дату
             </p>
           )}
         </div>
       </div>
-
-      {selectedTask && (
-        <TaskDetailsModal
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onDelete={onDeleteTask}
-        />
-      )}
     </div>
   );
 }

@@ -138,7 +138,7 @@ export function FacilityDetails() {
         <div className="facility-edit-header">
           <button
             onClick={() => setIsEditing(false)}
-            className="facility-btn facility-btn--icon"
+            className="facility-btn--icon"
           >
             <ArrowLeft size={20} />
           </button>
@@ -163,7 +163,7 @@ export function FacilityDetails() {
         <div className="facility-flex facility-items-center facility-gap-md">
           <button
             onClick={handleBack}
-            className="facility-btn facility-btn--icon"
+            className="facility-btn--icon"
           >
             <ArrowLeft size={20} />
           </button>

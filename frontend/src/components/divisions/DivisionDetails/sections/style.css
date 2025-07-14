@@ -79,60 +79,6 @@
   width: 100%;
 }
 
-/* Градиентные фоны для карточек */
-/* .stat-card--blue {
-  background: #e2eaf1;
-}
-
-.stat-card--purple {
-  background: #e3e6fa;
-}
-
-.stat-card--green {
-  background: #cdf3c2b7;
-}
-
-.stat-card--yellow {
-  background: #f3f5d7;
-}
-
-.stat-card--orange {
-  background: #c1e4f3;
-} */
-
-/* Цвета иконок */
-/* .icon--blue .stat-card-icon {
-  background-color: rgba(37, 100, 235, 0.313);
-}
-
-.icon--blue .stat-card-icon svg {
-  color: #1245b3;
-}
-
-.icon--purple .stat-card-icon {
-  background-color: rgba(51, 49, 169, 0.1);
-}
-
-.icon--purple .stat-card-icon svg {
-  color: #1411c9;
-}
-
-.icon--green .stat-card-icon {
-  background-color: rgba(26, 112, 57, 0.1);
-}
-
-.icon--green .stat-card-icon svg {
-  color: #1a7039;
-}
-
-.icon--orange .stat-card-icon {
-  background-color: rgba(234, 88, 12, 0.1);
-}
-
-.icon--orange .stat-card-icon svg {
-  color: #ea580c;
-} */
-
 /* Основной контейнер */
 .personnel-container {
   background-color: white;
@@ -154,13 +100,18 @@
 
 /* Кнопка "Назад" */
 .back-button {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
+  display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background-color: #f1f5f9;
+    transition: all 0.2s;
 }
 
 .back-button:hover {
-  background-color: #f3f4f6;
+  background-color: #e2e8f0;
 }
 
 /* Иконка кнопки "Назад" */
@@ -489,7 +440,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 90%;
   /* object-fit: cover; */
   border-radius: 0.75rem;
   z-index: 0;
@@ -532,7 +483,7 @@
   flex-direction: column;
   gap: 24px;
   padding: 24px;
-  max-width: 1600px;
+  max-width: 1700px;
   margin: 0 auto;
 }
 
@@ -580,7 +531,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 16px;
 }
 
@@ -613,7 +564,7 @@
 }
 
 .subdivisions-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 20px;
@@ -633,7 +584,7 @@
   padding: 16px;
   transition: all 0.3s ease;
   box-sizing: border-box;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   cursor: default;
 }
 
@@ -648,7 +599,7 @@
 }
 
 .subdivision-card-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 16px;
@@ -663,7 +614,7 @@
 .metric-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   padding: 5px;
   border-radius: 6px;
   background: var(--background-light);
@@ -699,7 +650,7 @@
 }
 
 .metric-label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
   margin-bottom: 4px;
 }
@@ -715,8 +666,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(1px);
+  /* background-color: rgba(255, 255, 255, 0.05); */
+  /* backdrop-filter: blur(1px); */
   z-index: 2;
   display: flex;
   align-items: center;

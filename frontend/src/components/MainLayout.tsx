@@ -25,7 +25,7 @@ import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEqu
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection';
 import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection';
 import { FacilitiesSection } from './divisions/DivisionDetails/sections/FacilitiesSection';
-import { DivisionTasksSection } from './divisions/DivisionDetails/sections/DivisionTasksSection';
+import { DivisionTasksSection } from './divisions/DivisionDetails/sections/TasksSection/DivisionTasksSection';
 import { AddFacilityPage } from './facilities/AddFacilityPage';
 import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
 

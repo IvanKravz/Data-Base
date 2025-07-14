@@ -80,9 +80,6 @@ export function AddCommunicationPostForm() {
     navigate(-1);
   };
 
-  console.log('divisions', divisions)
-  console.log('subdivisions', subdivisions)
-
   return (
     <div className="add-post-modal-overlay">
       <div className="add-post-modal-container">

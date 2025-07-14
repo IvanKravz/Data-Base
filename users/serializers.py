@@ -75,6 +75,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    create_user = serializers.BooleanField(
+        write_only=True,
+        required=False,
+        default=False,
+        help_text="Создать учетную запись для сотрудника"
+    )
+
     class Meta:
         model = Employee
         fields = '__all__'
@@ -123,6 +130,18 @@ class EmployeeSerializer(serializers.ModelSerializer):
             subdivision=subdivision,
             **validated_data
         )
+
+        # СОЗДАЕМ пользователя ТОЛЬКО если явно указано в запросе
+        create_user = validated_data.pop('create_user', False)
+        if create_user:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            username = f"{employee.full_name.split()[0].lower()}{employee.id}"
+            user = User.objects.create_user(
+                username=username,
+                password='defaultpassword',
+                employee=employee
+            )
 
         if is_sha_worker and sha_details_data:
             sha_details = ShaWorkerDetails.objects.create(employee=employee, **sha_details_data)

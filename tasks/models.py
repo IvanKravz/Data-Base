@@ -1,7 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from facilities.models import Division, Subdivision
-from users.models import User
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
+
+User = get_user_model()
 
 class Task(models.Model):
     URGENT = 'urgent'
@@ -59,6 +62,29 @@ class Task(models.Model):
             return 0
         completed_steps = self.steps.filter(is_completed=True).count()
         return int((completed_steps / total_steps) * 100)
+    
+    @property
+    def is_completed(self):
+        return self.progress == 100
+
+    @classmethod
+    def get_incomplete_count(cls, division_id=None, subdivision_id=None):
+        """
+        Возвращает количество задач с незавершёнными шагами
+        с возможностью фильтрации по division и subdivision
+        """
+        # Фильтр для задач, где есть хотя бы один незавершённый шаг
+        queryset = cls.objects.filter(
+            steps__is_completed=False
+        ).distinct()
+        
+        # Применяем фильтры
+        if division_id:
+            queryset = queryset.filter(division_id=division_id)
+        if subdivision_id:
+            queryset = queryset.filter(subdivision_id=subdivision_id)
+            
+        return queryset.count()
 
 class TaskStep(models.Model):
     task = models.ForeignKey(

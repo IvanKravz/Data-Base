@@ -1,3 +1,5 @@
+import { Task } from "./tasks";
+
 export type TaskCategory = 'urgent' | 'planned' | 'attention';
 
 export const taskCategories: Record<TaskCategory, { label: string; color: string }> = {
@@ -10,11 +12,11 @@ export const taskCategories: Record<TaskCategory, { label: string; color: string
     color: 'blue'
   },
   attention: {
-    label: 'Обратить внимание',
+    label: 'Внимание',
     color: 'yellow'
   }
 };
 
-export const isTaskCompleted = (task: { steps: { isCompleted: boolean }[] }): boolean => {
-  return task.steps.length > 0 && task.steps.every(step => step.isCompleted);
+export const isTaskCompleted = (task: Task) => {
+  return task.is_completed; // Теперь используем поле задачи
 };

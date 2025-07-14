@@ -40,8 +40,6 @@ export function CommunicationPostsList({ posts, onPostDeleted }: CommunicationPo
     setPostToDelete(null);
   };
 
-  console.log('posts', posts)
-
   return (
     <div className="communication-posts-container">
       <div className="communication-posts-content">

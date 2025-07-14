@@ -100,7 +100,7 @@ export function EquipmentDetailsPage() {
         <div className="equipment-flex equipment-items-center equipment-gap-md">
           <button
             onClick={() => setIsEditing(false)}
-            className="equipment-btn equipment-btn--icon"
+            className="equipment-btn--icon"
           >
             <ArrowLeft size={20} />
           </button>

@@ -283,16 +283,18 @@
 }
 
 .facility-btn--icon {
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-md);
-    background: transparent;
-    border: none;
-    color: var(--color-text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background-color: #f1f5f9;
+    transition: all 0.2s;
 }
 
 .facility-btn--icon:hover {
-    background-color: #f3f4f6;
-    color: var(--color-text);
+    background-color: #e2e8f0;
 }
 
 /* ===== Utility Classes ===== */

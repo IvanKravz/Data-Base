@@ -36,8 +36,6 @@ export function PersonnelSection() {
     navigate(`/divisions/${division.id}`);
   };
 
-  console.log('division', division)
-
   return (
     <div className="personnel-container">
       <h2 className="personnel-header-division">

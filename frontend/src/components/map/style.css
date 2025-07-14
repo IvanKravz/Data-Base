@@ -2,9 +2,10 @@
 .map-page-container {
     display: flex;
     flex-direction: column;
-    height: 74vh;
-    width: 80%;
+    height: 65vh;
+    width: 75%;
     margin: 0 auto;
+    margin-top: -5rem;
     overflow: hidden;
     position: relative;
     z-index: 0;

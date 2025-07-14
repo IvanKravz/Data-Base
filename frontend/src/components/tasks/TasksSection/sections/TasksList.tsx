@@ -4,6 +4,7 @@ import { RootState } from '../../../../store/store';
 import { DivisionTasks } from '../../DivisionTasks';
 import { divisions } from '../../../../data/divisionsData';
 import { TaskCategory, isTaskCompleted } from '../../../../types/taskCategories';
+import '../style.css';
 
 interface TasksListProps {
   selectedDivision: string;
@@ -34,27 +35,21 @@ export function TasksList({
     return matchesSearch && matchesCategory;
   });
 
-  const handleDeleteTask = (taskId: string) => {
-    // Implement task deletion logic here
-    console.log('Deleting task:', taskId);
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="tasks-loading">
+        <div className="tasks-spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="tasks-list-container">
       {filteredDivisions.map((division) => (
         <DivisionTasks
           key={division.id}
           division={division}
           tasks={filteredTasks.filter(task => task.divisionId === division.id)}
-          onDeleteTask={handleDeleteTask}
         />
       ))}
     </div>
