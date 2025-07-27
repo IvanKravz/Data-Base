@@ -9,6 +9,7 @@ import { FacilityTypeFilter } from '../../../facilities/FacilityTypeFilter';
 import { divisionsApi } from '../../../../api';
 import { Facility, CommunicationPost } from '../../../../types';
 import './style.css';
+import MapView from '../../../map/MapView';
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
@@ -176,6 +177,7 @@ export function FacilitiesSection() {
   };
 
   return (
+    <>
     <div className="section-container">
       <h2 className="section-title">
         <button type="button" onClick={onBack} className="back-button">
@@ -276,6 +278,13 @@ export function FacilitiesSection() {
           onFacilityDeleted={handleFacilityDeleted}
         />
       )}
+     
     </div>
+    {division.facilities_count > 0 && (
+          <div className="division-map-overlay">
+            <MapView divisionId={division.id} />
+          </div>
+        )}
+    </>
   );
 }

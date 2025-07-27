@@ -1,233 +1,97 @@
 import React, { useState } from 'react';
-import { Person } from '../../../../types';
-import { divisions } from '../../../../data/divisionsData';
-import { User, Mail, Phone, Building2, Calendar, Shield, Plus, Trash2 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { EditPersonnelForm } from '../EditPersonnelForm';
+import { Employee } from '../../../../types';
+import { employeesApi } from '../../../../api';
+import { ArrowLeft } from 'lucide-react';
 
-interface CreatePersonnelFormProps {
-  onSubmit: (person: Omit<Person, 'id'>) => void;
-  onCancel: () => void;
-}
+export function CreatePersonnelForm() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const token = localStorage.getItem('accessToken');
+  const [error, setError] = useState<string | null>(null); // Добавлено состояние ошибки
 
-export function CreatePersonnelForm({ onSubmit, onCancel }: CreatePersonnelFormProps) {
-  const [formData, setFormData] = useState<Omit<Person, 'id'>>({
-    name: '',
+  // Начальные данные для нового сотрудника
+  const initialEmployee: Employee = {
+    id: 0,
+    full_name: '',
+    personal_phone: '',
+    work_phone: '',
+    birth_date: '',
+    contract_date: '',
+    category: '',
     position: '',
-    department: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    contractDate: '',
-    division: '1 отдел',
-    comments: '', // Added comments field
-    isMaterialResponsible: false,
-    isShaWorker: false,
-    shaDetails: {
-      conclusionNumber: '',
-      startDate: '',
-      accessLevel: '1',
-      equipment: []
-    }
-  });
+    rank: '',
+    is_material_responsible: false,
+    is_sha_worker: false,
+    description: null,
+    division: id ? { id: parseInt(id), name: '' } : null,
+    subdivision: null,
+    sha_details: null,
+    // Добавлены поля, которые сервер требует для всех сотрудников
+    data_state_secrets: null,
+    date_end_work: null,
+    date_start_work: null,
+    year_graduation: null
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
+  const handleCreate = async (employee: Employee) => {
+    if (!token) {
+      setError('Отсутствует токен авторизации');
+      return;
+    }
+  
+    setError(null);
+  
+    try {
+      const createdEmployee = await employeesApi.createPerson(token, employee);
+      
+      // Проверяем что сотрудник создан и id подразделения доступен
+      if (createdEmployee && createdEmployee.id) {
+        // Используем id из созданного сотрудника (createdEmployee.division.id)
+        // или из URL параметров, если division не вернулся
+        const divisionId = createdEmployee.division?.id || id;
+        
+        if (divisionId) {
+          navigate(`/divisions/${divisionId}/personnel`);
+        } else {
+          // Если divisionId не определен, переходим на общую страницу
+          navigate('/divisions');
+        }
+      } else {
+        setError('Не удалось создать сотрудника. Неверный ответ сервера.');
+      }
+    } catch (error) {
+      console.error('Ошибка создания сотрудника:', error);
+      setError('Не удалось создать сотрудника. Проверьте введенные данные.');
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic Information */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-500" />
-          Основная информация
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              ФИО
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Введите ФИО"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Должность
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.position}
-              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Введите должность"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
-          <Mail className="h-5 w-5 text-green-500" />
-          Контактная информация
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="email@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Телефон
-            </label>
-            <input
-              type="tel"
-              required
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="+7 (___) ___-__-__"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Assignment */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-purple-500" />
-          Принадлежность
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Подразделение
-            </label>
-            <select
-              value={formData.division}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                division: e.target.value,
-                subdivision: undefined
-              })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {divisions.map((division) => (
-                <option key={division.id} value={division.name}>
-                  {division.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {(formData.division === '1 отдел' || formData.division === '2 отдел') && (
-            <div>
-              <label className="block text-sm font-medium mb-1.5 text-gray-700">
-                Отделение
-              </label>
-              <select
-                value={formData.subdivision || ''}
-                onChange={(e) => setFormData({ ...formData, subdivision: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Выберите отделение</option>
-                {formData.division === '1 отдел' ? (
-                  <>
-                    <option value="Отделение A">Отделение A</option>
-                    <option value="Отделение B">Отделение B</option>
-                    <option value="Отделение C">Отделение C</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Отделение D">Отделение D</option>
-                    <option value="Отделение E">Отделение E</option>
-                    <option value="Отделение F">Отделение F</option>
-                  </>
-                )}
-              </select>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Dates */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-orange-500" />
-          Даты
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Дата рождения
-            </label>
-            <input
-              type="date"
-              required
-              value={formData.birthDate}
-              onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-gray-700">
-              Дата контракта
-            </label>
-            <input
-              type="date"
-              required
-              value={formData.contractDate}
-              onChange={(e) => setFormData({ ...formData, contractDate: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Comments */}
-      <div>
-        <h3 className="text-base font-medium text-gray-900 mb-4">Комментарии</h3>
-        <textarea
-          value={formData.comments || ''}
-          onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          rows={4}
-          placeholder="Добавьте комментарии к сотруднику..."
-        />
-      </div>
-
-      {/* Form Actions */}
-      <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
+    <div className="personnel-edit-page">
+      <div className="page-title">
         <button
-          type="button"
-          onClick={onCancel}
-          className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+          onClick={() => navigate(-1)}
+          className="back-button"
         >
-          Отмена
+          <ArrowLeft className="back-button-icon" />
         </button>
-        <button
-          type="submit"
-          className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm hover:shadow transition-all"
-        >
-          Создать сотрудника
-        </button>
+        Создание нового сотрудника
       </div>
-    </form>
+
+      {/* Отображение ошибки */}
+      {error && (
+        <div className="form-error-message">
+          {error}
+        </div>
+      )}
+
+      <EditPersonnelForm
+        person={initialEmployee}
+        onSubmit={handleCreate}
+        onCancel={() => navigate(`/divisions/${id}/personnel`)}
+        isCreateMode={true}
+      />
+    </div>
   );
 }

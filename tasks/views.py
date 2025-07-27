@@ -18,14 +18,24 @@ class TaskViewSet(viewsets.ModelViewSet):
         division_id = self.request.query_params.get('division')
         subdivision_id = self.request.query_params.get('subdivision')
         show_completed = self.request.query_params.get('show_completed')
-
-        # Базовые фильтры
+        
+        show_only_mine = self.request.query_params.get('show_only_mine', '').lower() == 'true'
+        user = self.request.user
+        
+        if show_only_mine:
+            print("Filtering private tasks for current user")  # Лог фильтрации
+            queryset = queryset.filter(is_private=True, created_by=user)
+        else:
+            print("Filtering public tasks")  # Лог фильтрации
+            queryset = queryset.filter(is_private=False)
+        
+        # Общие фильтры
         if division_id:
             queryset = queryset.filter(division_id=division_id)
         if subdivision_id:
             queryset = queryset.filter(subdivision_id=subdivision_id)
-
-        # Фильтрация по завершенности только если явно указан параметр
+        
+        # Фильтрация по завершенности
         if show_completed is not None:
             show_completed = show_completed.lower() == 'true'
             queryset = queryset.annotate(
@@ -36,6 +46,35 @@ class TaskViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(incomplete_steps__gt=0)
 
         return queryset.prefetch_related('steps')
+    
+    @action(detail=False, methods=['get'])
+    def incomplete_count(self, request):
+        subdivision_id = request.query_params.get('subdivision')
+        division_id = request.query_params.get('division')
+        
+        # Фильтруем только публичные незавершенные задачи
+        queryset = Task.objects.filter(is_private=False)
+        
+        if division_id:
+            queryset = queryset.filter(division_id=division_id)
+        if subdivision_id:
+            queryset = queryset.filter(subdivision_id=subdivision_id)
+        
+        # Аннотируем количество незавершенных шагов
+        queryset = queryset.annotate(
+            incomplete_steps=Count('steps', filter=Q(steps__is_completed=False))
+        ).filter(incomplete_steps__gt=0)
+        
+        count = queryset.count()
+        return Response({'count': count})
+        
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)  # Разрешаем частичное обновление
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     def perform_update(self, serializer):
         # Проверяем, что пользователь может изменять подразделение
@@ -45,21 +84,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         # Здесь можно добавить дополнительную проверку прав
         serializer.save()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     @action(detail=True, methods=['get'])
     def progress(self, request, pk=None):
         task = self.get_object()
         return Response({'progress': task.progress})
     
-    @action(detail=False, methods=['get'])
-    def incomplete_count(self, request):
-        subdivision_id = request.query_params.get('subdivision')
-        division_id = request.query_params.get('division')
-        
-        count = Task.get_incomplete_count(
-            division_id=division_id,
-            subdivision_id=subdivision_id
-        )
-        return Response({'count': count})
 
 class TaskStepViewSet(viewsets.ModelViewSet):
     queryset = TaskStep.objects.all()

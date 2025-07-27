@@ -41,13 +41,11 @@ export function BasicInfoCard({ formData, onChange, employee, viewMode }: BasicI
         {viewMode ? (
           <>
             {renderField("Личный номер", employee?.personal_number)}
-            {renderField("Звание", employee?.rank)}
             {renderField("№ приказа по званию", employee?.order_rank)}
           </>
         ) : (
           <>
             {renderInput("Личный номер", formData?.personal_number || '', 'personal_number')}
-            {renderInput("Звание", formData?.rank || '', 'rank')}
             {renderInput("№ приказа по званию", formData?.order_rank || '', 'order_rank')}
           </>
         )}

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { Employee } from '../../../../types';
 import { BasicInformationCard } from './sections/BasicInformationCard';
 import { ContactInformationCard } from './sections/ContactInformationCard';
@@ -8,8 +7,6 @@ import { ResponsibilityCard } from './sections/ResponsibilityCard';
 import { ShaWorkerCard } from './sections/ShaWorkerCard';
 import { CommentsCard } from './sections/CommentsCard';
 import { FormActions } from './sections/FormActions';
-import { useNavigate } from 'react-router-dom';
-import { employeesApi } from '../../../../api';
 import { divisionsApi } from '../../../../api/divisions';
 import { Division } from '../../../../types';
 import { AffiliationCard } from './sections/AffiliationCard';
@@ -18,9 +15,15 @@ interface EditPersonnelFormProps {
   person: Employee;
   onSubmit: (person: Employee) => void;
   onCancel: () => void;
+  isCreateMode?: boolean; // Добавлен новый пропс
 }
 
-export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelFormProps) {
+export function EditPersonnelForm({ 
+  person, 
+  onSubmit, 
+  onCancel,
+  isCreateMode = false // Значение по умолчанию
+}: EditPersonnelFormProps) {
   const [formData, setFormData] = useState<Employee>({
     ...person,
     description: person.description || '',
@@ -32,8 +35,6 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
     } : null
   });
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const token = localStorage.getItem('accessToken');
   const [loading, setLoading] = useState(false);
@@ -128,13 +129,20 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
     try {
       const dataToSend = {
         ...formData,
-        description: formData.description || '',
-        sha_details: formData.is_sha_worker ? formData.sha_details : null
+        // Для не-SHA сотрудников устанавливаем null
+        description: formData.description || null,
+        sha_details: formData.is_sha_worker ? formData.sha_details : null,
+        data_state_secrets: formData.is_sha_worker ? formData.data_state_secrets : null,
+        date_end_work: formData.is_sha_worker ? formData.date_end_work : null,
+        date_start_work: formData.is_sha_worker ? formData.date_start_work : null,
+        year_graduation: formData.is_sha_worker ? formData.year_graduation : null
       };
   
-      onSubmit(dataToSend as Employee); // Явно указываем тип Employee
+      onSubmit(dataToSend as Employee);
     } catch (err) {
-      setError('Не удалось обновить данные сотрудника');
+      setError(isCreateMode 
+        ? 'Не удалось создать сотрудника' 
+        : 'Не удалось обновить данные сотрудника');
       console.error(err);
     } finally {
       setLoading(false);
@@ -143,6 +151,7 @@ export function EditPersonnelForm({ person, onSubmit, onCancel }: EditPersonnelF
 
   return (
     <form onSubmit={handleSubmit} className="personnel-edit-form">
+      {error && <div className="form-error">{error}</div>} {/* Отображение ошибки */}
       <div className="personnel-edit-grid">
         <BasicInformationCard
           formData={formData}

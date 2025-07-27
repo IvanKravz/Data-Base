@@ -41,7 +41,7 @@ class EmployeeViewSet(APIView):
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(created_by=request.user)
+            serializer.save()  # Removed created_by=request.user
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
    

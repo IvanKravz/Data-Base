@@ -24,12 +24,13 @@ class TaskSerializer(serializers.ModelSerializer):
     subdivision = SubdivisionSerializer(read_only=True)
     progress = serializers.SerializerMethodField()
     is_completed = serializers.SerializerMethodField()
+    is_private = serializers.BooleanField()
 
     division_id = serializers.PrimaryKeyRelatedField(
         queryset=Division.objects.all(),
         source='division',
         write_only=True,
-        required=True
+        required=False
     )
     subdivision_id = serializers.PrimaryKeyRelatedField(
         queryset=Subdivision.objects.all(),
@@ -44,7 +45,8 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'category', 'division', 'subdivision',
             'division_id', 'subdivision_id', 'created_by', 'steps', 
-            'progress', 'is_completed', 'created_at', 'updated_at'
+            'progress', 'is_completed', 'created_at', 'updated_at',
+            'is_private' 
         ]
         read_only_fields = ['created_by', 'created_at', 'updated_at', 'is_completed']
 
@@ -56,6 +58,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         steps_data = validated_data.pop('steps', [])
+
+        # Устанавливаем текущего пользователя как создателя задачи
+        validated_data['created_by'] = self.context['request'].user
+
         task = Task.objects.create(**validated_data)
         
         for step_data in steps_data:
@@ -71,6 +77,9 @@ class TaskSerializer(serializers.ModelSerializer):
             subdivision = validated_data.pop('subdivision')
         # Устанавливаем null только если получено значение None
             instance.subdivision = subdivision
+        # Обновляем is_private, если оно передано
+        if 'is_private' in validated_data:
+            instance.is_private = validated_data.pop('is_private')
         
         # Остальная логика обновления
         steps_data = validated_data.pop('steps', None)
@@ -87,3 +96,25 @@ class TaskSerializer(serializers.ModelSerializer):
                 
         return instance
     
+    def validate(self, data):
+        """
+        Проверка прав на изменение приватных задач
+        """
+        instance = self.instance
+        user = self.context['request'].user
+        
+        # Проверка при обновлении
+        if instance and instance.is_private:
+            if instance.created_by != user:
+                raise serializers.ValidationError(
+                    "Вы не можете изменять приватные задачи других пользователей"
+                )
+        
+        # Проверка при создании
+        if 'is_private' in data and data['is_private']:
+            if not user.is_authenticated:
+                raise serializers.ValidationError(
+                    "Только авторизованные пользователи могут создавать приватные задачи"
+                )
+        
+        return data

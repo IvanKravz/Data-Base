@@ -28,6 +28,7 @@ import { FacilitiesSection } from './divisions/DivisionDetails/sections/Faciliti
 import { DivisionTasksSection } from './divisions/DivisionDetails/sections/TasksSection/DivisionTasksSection';
 import { AddFacilityPage } from './facilities/AddFacilityPage';
 import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
+import { CreatePersonnelForm } from './forms';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -78,7 +79,7 @@ export function MainLayout() {
 
         {/* Personnel Routes */}
         <Route path="/personnel" element={<PersonnelPage />} />
-        <Route path="/personnel/create" element={<CreatePersonnelPage />} />
+        <Route path="/personnel/create" element={<CreatePersonnelForm />} />
         <Route path="/personnel/:id" element={<PersonnelDetails />} />
         <Route path="/personnel/:id/qualitative" element={<QualitativeCharacteristics />} />
 

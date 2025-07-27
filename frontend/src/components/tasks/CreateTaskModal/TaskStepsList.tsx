@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import { TaskStep } from '../../../types/tasks';
 import './style.css';
@@ -9,11 +9,21 @@ interface TaskStepsListProps {
 }
 
 export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
+  const [newStepIndex, setNewStepIndex] = useState<number | null>(null);
+  
+  useEffect(() => {
+    if (newStepIndex !== null) {
+      const timer = setTimeout(() => setNewStepIndex(null), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [newStepIndex]);
+
   const handleAddStep = () => {
     onStepsChange([
       ...steps,
       { name: '', comments: '', startDate: '', endDate: '' }
     ]);
+    setNewStepIndex(steps.length);
   };
 
   const handleRemoveStep = (index: number) => {
@@ -33,12 +43,12 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
 
   const formatDateForInput = (dateString: string): string => {
     if (!dateString) return '';
-    return dateString.split('T')[0]; // Преобразуем из формата datetime-local в date
+    return dateString.split('T')[0];
   };
 
   const formatDateForServer = (dateString: string): string => {
     if (!dateString) return '';
-    return `${dateString}T00:00`; // Добавляем время для совместимости с datetime-local
+    return `${dateString}T00:00`;
   };
 
   return (
@@ -47,19 +57,14 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
         <h3 className="task-steps-title">
           Этапы выполнения задачи
         </h3>
-        <button
-          type="button"
-          onClick={handleAddStep}
-          className="task-steps-add-btn"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Добавить этап</span>
-        </button>
       </div>
 
-      {steps.map((step, index) => (
-        <div key={index} className="task-step-card">
-          <div className="task-step-delete-btn-container">
+      <div className="task-steps-list">
+        {steps.map((step, index) => (
+          <div 
+            key={index} 
+            className={`task-step-card ${newStepIndex === index ? 'task-step-card-new' : ''}`}
+          >
             <button
               type="button"
               onClick={() => handleRemoveStep(index)}
@@ -67,84 +72,107 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
             >
               <Trash2 className="h-4 w-4" />
             </button>
-          </div>
 
-          <div className="task-step-title">
-            Этап {index + 1}
-          </div>
+            <div className="task-step-header">
+              <div className="task-step-number">
+                {index + 1}
+              </div>
+              <h3 className="task-step-title">Этап {index + 1}</h3>
+            </div>
 
-          <div>
-            <label className="task-form-label">
-              Название этапа
-            </label>
-            <input
-              type="text"
-              required
-              value={step.name}
-              onChange={(e) => handleStepChange(index, 'name', e.target.value)}
-              className="task-form-input"
-              placeholder="Введите название этапа"
-            />
-          </div>
-
-          <div>
-            <label className="task-form-label">
-              Комментарий
-            </label>
-            <textarea
-              value={step.comments}
-              onChange={(e) => handleStepChange(index, 'comments', e.target.value)}
-              className="task-form-input"
-              rows={2}
-              placeholder="Добавьте комментарий к этапу"
-            />
-          </div>
-
-          <div className="task-step-dates-grid">
-            <div>
-              <label className="task-form-label-date">
-                Дата начала
-              </label>
-              <div className="task-step-date-input-container">
+            <div className="task-step-content">
+              <div className="task-step-field">
+                <label className="task-form-label">
+                  Название этапа
+                </label>
                 <input
-                  type="date"
+                  type="text"
                   required
-                  value={formatDateForInput(step.startDate)}
-                  onChange={(e) => handleStepChange(
-                    index,
-                    'startDate',
-                    formatDateForServer(e.target.value)
-                  )}
-                  className="task-step-date-input"
+                  value={step.name}
+                  onChange={(e) => handleStepChange(index, 'name', e.target.value)}
+                  className="task-form-input"
+                  placeholder="Введите название этапа"
                 />
               </div>
-            </div>
-            <div>
-              <label className="task-form-label-date">
-                Дата окончания
-              </label>
-              <div className="task-step-date-input-container">
-                <input
-                  type="date"
-                  required
-                  value={formatDateForInput(step.endDate)}
-                  onChange={(e) => handleStepChange(
-                    index,
-                    'endDate',
-                    formatDateForServer(e.target.value)
-                  )}
-                  className="task-step-date-input"
+
+              <div className="task-step-field">
+                <label className="task-form-label">
+                  Комментарий
+                </label>
+                <textarea
+                  value={step.comments}
+                  onChange={(e) => handleStepChange(index, 'comments', e.target.value)}
+                  className="task-form-input"
+                  placeholder="Добавьте комментарий к этапу"
                 />
+              </div>
+
+              <div className="task-step-dates-grid">
+                <div className="task-step-date-field">
+                  <label className="task-form-label-date">
+                    Дата начала
+                  </label>
+                  <div className="task-step-date-input-container">
+                    <Calendar className="task-step-date-icon" />
+                    <input
+                      type="date"
+                      required
+                      value={formatDateForInput(step.startDate)}
+                      onChange={(e) => handleStepChange(
+                        index,
+                        'startDate',
+                        formatDateForServer(e.target.value)
+                      )}
+                      className="task-step-date-input"
+                    />
+                  </div>
+                </div>
+                
+                <div className="task-step-date-field">
+                  <label className="task-form-label-date">
+                    Дата окончания
+                  </label>
+                  <div className="task-step-date-input-container">
+                    <Calendar className="task-step-date-icon" />
+                    <input
+                      type="date"
+                      required
+                      value={formatDateForInput(step.endDate)}
+                      onChange={(e) => handleStepChange(
+                        index,
+                        'endDate',
+                        formatDateForServer(e.target.value)
+                      )}
+                      className="task-step-date-input"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {steps.length === 0 && (
+      {steps.length === 0 ? (
         <div className="task-steps-empty-state">
-          Добавьте этапы выполнения задачи
+          <button
+            type="button"
+            onClick={handleAddStep}
+            className="task-step-add-first-btn"
+          >
+            <Plus className="task-step-add-first-icon" />
+            Создать первый этап
+          </button>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleAddStep}
+          className="task-step-add-last-btn"
+        >
+          <Plus className="task-step-add-last-icon" />
+          Добавить новый этап
+        </button>
       )}
     </div>
   );

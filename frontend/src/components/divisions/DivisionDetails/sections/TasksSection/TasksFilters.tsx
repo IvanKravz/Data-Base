@@ -5,6 +5,8 @@ import { TaskCategoryFilter } from '../../../../tasks/TasksSection/sections/Task
 import { Task } from '../../../../../types/tasks';
 import './DivisionTasksSection.css';
 
+type TaskCategory = 'all' | 'completed' | 'urgent' | 'planned' | 'attention';
+
 interface TasksFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -18,6 +20,8 @@ interface TasksFiltersProps {
   endDate: string | null;
   onStartDateChange: (date: string | null) => void;
   onEndDateChange: (date: string | null) => void;
+  showOnlyMine: boolean;
+  onToggleMine: () => void;
 }
 
 export function TasksFilters({
@@ -33,6 +37,8 @@ export function TasksFilters({
   endDate,
   onStartDateChange,
   onEndDateChange,
+  showOnlyMine,
+  onToggleMine,
 }: TasksFiltersProps) {
 
   return (
@@ -71,11 +77,13 @@ export function TasksFilters({
         </div>
 
         <div className="tasks-category-filter">
-          <label className="tasks-filter-label">Категория</label>
+        <label className="tasks-filter-label">Категория</label>
           <TaskCategoryFilter
             tasks={tasks}
             selectedCategory={selectedCategory}
             onCategoryChange={onCategoryChange}
+            showOnlyMine={showOnlyMine}
+            onToggleMine={onToggleMine}
           />
         </div>
 

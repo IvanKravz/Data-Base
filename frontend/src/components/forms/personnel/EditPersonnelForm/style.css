@@ -5,7 +5,7 @@
   --blue-500: #3b82f6;
   --blue-600: #2563eb;
   --blue-700: #1d4ed8;
-  
+
   /* Neutral Colors */
   --gray-50: #dde6ee;
   --gray-100: #f3f4f6;
@@ -15,7 +15,7 @@
   --gray-500: #6b7280;
   --gray-700: #374151;
   --gray-900: #111827;
-  
+
   /* Semantic Colors */
   --green-500: #10b981;
   --purple-500: #8b5cf6;
@@ -58,6 +58,11 @@
 .personnel-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   transition: all 0.3s;
+
+  .personnel-card-title {
+    background: #e4ecf4;
+    cursor: default;
+  }
 }
 
 .personnel-card-title {
@@ -66,7 +71,7 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--gray-900);
-  background-color: var(--gray-50);
+  background-color: var(--bg);
   border-bottom: 1px solid var(--gray-200);
 }
 
@@ -284,9 +289,44 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+
   .personnel-dates-grid,
   .sha-worker-grid,
   .sha-equipment-fields {
     grid-template-columns: 1fr;
   }
+}
+
+/* .personnel-edit-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+} */
+
+.page-title {
+  display: flex;
+  gap: 1rem;
+  /* text-align: center; */
+  font-size: 1.8rem;
+  /* margin: 0 auto; */
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 2rem;
+}
+
+.form-error {
+  background-color: #fee2e2;
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-error-message {
+  background-color: #fee2e2;
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #fecaca;
 }

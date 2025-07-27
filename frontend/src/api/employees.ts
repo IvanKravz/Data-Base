@@ -23,19 +23,19 @@ export const employeesApi = {
   },
 
   getPersonnel: async (token: string, params?: {
-    division?: string | null; 
+    division?: string | null;
     isMaterialResponsible?: boolean;
     isShaWorker?: boolean;
     accessLevel?: string;
     search?: string;
   }): Promise<Employee[]> => {
-    const response = await api.get<Employee[]>('users/employees/', { 
+    const response = await api.get<Employee[]>('users/employees/', {
       params: params || {}, // Просто передаем params как есть
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
-    
+
     return response.data;
   },
 
@@ -50,14 +50,18 @@ export const employeesApi = {
   },
 
   // Create new person
-  createPerson: async (personData: Omit<Employee, 'id'>) => {
-    const { data } = await api.post('users/employees/', personData);
+  createPerson: async (token: string, personData: Omit<Employee, 'id'>) => {
+    const { data } = await api.post('users/employees/', personData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     return data;
   },
 
   // Update existing person
   updatePerson: async (token: string, id: string, personData: Partial<Employee>) => {
-    console.log('personData', personData)
     // Подготавливаем данные для отправки
     const dataToSend = {
       ...personData,

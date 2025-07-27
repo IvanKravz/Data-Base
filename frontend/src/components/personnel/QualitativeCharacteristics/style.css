@@ -295,18 +295,8 @@
   margin-bottom: 1.5rem;
 }
 
-/* .qc-date-display {
-  cursor: pointer;
-  user-select: none;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  min-height: 2.25rem;
-  display: flex;
-  align-items: center;
-} */
-
 .qc-date-display:empty::before {
   content: 'дд-мм-гггг';
   color: var(--text-light);
 }
+

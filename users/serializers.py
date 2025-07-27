@@ -52,12 +52,42 @@ class EmployeeSerializer(serializers.ModelSerializer):
     division = DivisionSerializer(read_only=True)
     subdivision = SubdivisionSerializer(read_only=True)
     sha_details = ShaWorkerDetailsSerializer(required=False, allow_null=True)
-    birth_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
-    contract_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
-    data_state_secrets = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
-    year_graduation = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
-    date_start_work = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
-    date_end_work = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
+    birth_date = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
+    contract_date = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
+    data_state_secrets = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
+    year_graduation = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
+    date_start_work = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
+    date_end_work = serializers.DateField(
+        format="%d-%m-%Y", 
+        input_formats=["%d-%m-%Y", "iso-8601"],
+        allow_null=True,
+        required=False
+    )
     
     # Для записи используем PrimaryKeyRelatedField
     division_id = serializers.PrimaryKeyRelatedField(
@@ -92,38 +122,31 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
 
     def to_internal_value(self, data):
-    # Обрабатываем division
+        # Handle division
         if 'division' in data:
             if isinstance(data['division'], dict) and 'id' in data['division']:
-                data['division_id'] = data['division']['id']  # Нормализуем в division_id
+                data['division_id'] = data['division']['id']
             elif data['division'] is None:
                 data['division_id'] = None
-            data.pop('division', None)  # Удаляем исходное поле
+            data.pop('division', None)
 
-    # Обрабатываем subdivision
+        # Handle subdivision
         if 'subdivision' in data:
             if isinstance(data['subdivision'], dict) and 'id' in data['subdivision']:
-                data['subdivision_id'] = data['subdivision']['id']  # Нормализуем в subdivision_id
+                data['subdivision_id'] = data['subdivision']['id']
             elif data['subdivision'] is None:
                 data['subdivision_id'] = None
-            data.pop('subdivision', None)  # Удаляем исходное поле
+            data.pop('subdivision', None)
 
         return super().to_internal_value(data)
 
     def create(self, validated_data):
-        division_data = validated_data.pop('division', None)
-        subdivision_data = validated_data.pop('subdivision', None)
+        # Get division and subdivision from validated_data (they are already instances)
+        division = validated_data.pop('division', None)
+        subdivision = validated_data.pop('subdivision', None)
         sha_details_data = validated_data.pop('sha_details', None)
         is_sha_worker = validated_data.get('is_sha_worker', False)
-
-        division = None
-        if division_data and 'id' in division_data:
-            division = Division.objects.get(id=division_data['id'])
-    
-        # Обрабатываем subdivision (может быть null)
-        subdivision = None
-        if subdivision_data and 'id' in subdivision_data:
-            subdivision = Subdivision.objects.get(id=subdivision_data['id'])
+        create_user = validated_data.pop('create_user', False)
 
         employee = Employee.objects.create(
             division=division,
@@ -131,10 +154,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-        # СОЗДАЕМ пользователя ТОЛЬКО если явно указано в запросе
-        create_user = validated_data.pop('create_user', False)
+        # Create user account if requested
         if create_user:
-            from django.contrib.auth import get_user_model
             User = get_user_model()
             username = f"{employee.full_name.split()[0].lower()}{employee.id}"
             user = User.objects.create_user(
@@ -143,6 +164,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 employee=employee
             )
 
+        # Handle ShaWorker details if needed
         if is_sha_worker and sha_details_data:
             sha_details = ShaWorkerDetails.objects.create(employee=employee, **sha_details_data)
             equipment_conclusions_data = sha_details_data.get('equipment_conclusions', [])

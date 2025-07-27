@@ -28,7 +28,10 @@ export function DivisionTasksSection() {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
+  const userData = JSON.parse(localStorage.getItem('user')) || {};
+  const currentUserId = userData.id || userData.user?.id || null;
 
   const [calendarState, setCalendarState] = useState<CalendarState>({
     date: new Date(),
@@ -50,47 +53,40 @@ export function DivisionTasksSection() {
         const params = {
           division: id,
           subdivision: subdivisionId || undefined,
-          show_completed: "true" // Показываем завершенные задачи
+          show_completed: "true",
+          show_only_mine: showOnlyMine // Убираем .toString(), передаем как boolean
         };
-
+    
         const [tasksData, divisionData] = await Promise.all([
-          tasksApi.getTasks(params),
+          tasksApi.getTasks(params, token),
           divisionsApi.getDivisionById(id!, token!)
         ]);
-
+  
         const tasksWithCompletion = tasksData.map(task => ({
           ...task,
           is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
         }));
-
-        setDivision(divisionData);
+  
         setTasks(tasksWithCompletion);
-
-        // Обновляем имя отделения
-        if (subdivisionId) {
-          const subdivision = divisionData.subdivisions?.find(s =>
-            s.id.toString() === subdivisionId.toString()
-          );
-          setSubdivisionName(subdivision?.name || '');
-        } else {
-          setSubdivisionName('');
-        }
+        setDivision(divisionData);
       } catch (error) {
         console.error('Failed to load tasks:', error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     loadTasks();
-  }, [id, subdivisionId, token, showCreateModal]);
+  }, [id, subdivisionId, token, showCreateModal, showOnlyMine]);
 
   // Фильтрация задач
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
+      // 1. Фильтрация по подразделению
       const subdivisionMatch = !subdivisionId ||
         (task.subdivision && task.subdivision.id.toString() === subdivisionId.toString());
 
+      // 2. Фильтрация по поиску
       const searchMatch = searchTerm === '' ||
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.steps.some(step =>
@@ -98,43 +94,33 @@ export function DivisionTasksSection() {
           (step.comments && step.comments.toLowerCase().includes(searchTerm.toLowerCase()))
         );
 
-      // Основное изменение: в категории "Все" скрываем завершенные задачи
+      // 3. Фильтрация по категории и завершенности
       const categoryMatch =
-        selectedCategory === 'all' ? !task.is_completed : // ← Здесь
+        selectedCategory === 'all' ? !task.is_completed : // ТОЛЬКО НЕЗАВЕРШЕННЫЕ для "Все"
           selectedCategory === 'completed' ? task.is_completed :
             !task.is_completed && task.category === selectedCategory;
 
-      // Фильтрация по датам (если заданы)
+      // 4. Фильтрация по датам
       let dateMatch = true;
-
       if (startDate || endDate) {
         dateMatch = task.steps.some(step => {
           const stepStart = step.start_date;
           const stepEnd = step.end_date;
 
-          // Если задана только начальная дата
-          if (startDate && !endDate) {
-            return stepStart >= startDate;
-          }
-
-          // Если задана только конечная дата
-          if (!startDate && endDate) {
-            return stepEnd <= endDate;
-          }
-
-          // Если заданы обе даты
-          if (startDate && endDate) {
-            return stepStart <= endDate && stepEnd >= startDate;
-          }
-
+          if (startDate && !endDate) return stepStart >= startDate;
+          if (!startDate && endDate) return stepEnd <= endDate;
+          if (startDate && endDate) return stepStart <= endDate && stepEnd >= startDate;
           return true;
         });
       }
 
-      return subdivisionMatch && searchMatch && categoryMatch && dateMatch;
-    });
-  }, [tasks, selectedCategory, searchTerm, subdivisionId, startDate, endDate]);
+      // 5. Фильтрация по "Свои задачи"
+      const mineMatch = !showOnlyMine ||
+        (task.is_private && task.created_by?.id === currentUserId);
 
+      return subdivisionMatch && searchMatch && categoryMatch && dateMatch && mineMatch;
+    });
+  }, [tasks, selectedCategory, searchTerm, subdivisionId, startDate, endDate, showOnlyMine, currentUserId]);
   // Обработчики действий
   const handleDeleteTask = async (taskId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить задачу?')) {
@@ -157,8 +143,9 @@ export function DivisionTasksSection() {
       const createdTask = await tasksApi.createTask({
         title: newTask.title,
         category: newTask.category,
-        division: id!,
-        subdivision: subdivisionId || undefined,
+        division_id: newTask.division.id,
+        subdivision_id: newTask.subdivision?.id ?? null,
+        is_private: newTask.is_private,
         steps: newTask.steps.map(step => ({
           name: step.name,
           comments: step.comments,
@@ -186,6 +173,7 @@ export function DivisionTasksSection() {
           category: updatedTask.category,
           division_id: updatedTask.division.id,
           subdivision_id: updatedTask.subdivision?.id ?? null,
+          is_private: updatedTask.is_private,
           steps: updatedTask.steps.map(step => ({
             name: step.name,
             comments: step.comments || '',
@@ -285,6 +273,8 @@ export function DivisionTasksSection() {
               endDate={endDate}
               onStartDateChange={setStartDate}
               onEndDateChange={setEndDate}
+              showOnlyMine={showOnlyMine}
+              onToggleMine={() => setShowOnlyMine(!showOnlyMine)}
             />
           </div>
 

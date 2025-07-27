@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { Division } from '../../../../types';
+import { ArrowLeft, Plus } from 'lucide-react'; // Добавлен импорт Plus
 import { PersonnelList } from '../../../personnel/PersonnelList/PersonnelList';
 import { SearchBar } from '../../../common/SearchBar';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -10,43 +9,58 @@ import './style.css'
 export function PersonnelSection() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [division, getDivisions] = useState('');
+  const [division, setDivision] = useState<any>(null); // Переименовано getDivisions -> setDivision
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const fetchDivisions = async () => {
+    const fetchDivision = async () => {
       try {
+        if (!id || !token) return;
         const data = await divisionsApi.getDivisionById(id, token);
-        getDivisions(data);
+        setDivision(data);
       } catch (err) {
-        setError('Не удалось загрузить подразделения');
+        setError('Не удалось загрузить подразделение');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDivisions();
-  }, [token]);
+    fetchDivision();
+  }, [id, token]);
 
   const onBack = () => {
     navigate(`/divisions/${division.id}`);
   };
 
+  // Навигация на страницу создания сотрудника
+  const onCreateEmployee = () => {
+    navigate(`/personnel/create`);
+  };
+
   return (
     <div className="personnel-container">
-      <h2 className="personnel-header-division">
-        <button
-          onClick={onBack}
-          className="back-button"
+      <div className="personnel-header-wrapper"> {/* Добавлен враппер для заголовка */}
+        <h2 className="personnel-header-division">
+          <button
+            onClick={onBack}
+            className="back-button"
+          >
+            <ArrowLeft className="back-button-icon" />
+          </button>
+          Личный состав
+        </h2>
+        <button 
+          onClick={onCreateEmployee}
+          className="create-employee-button"
         >
-          <ArrowLeft className="back-button-icon" />
+          <Plus size={16} />
+          <span>Создать сотрудника</span>
         </button>
-        Личный состав
-      </h2>
+      </div>
       <div className="search-container">
         <SearchBar
           searchTerm={searchTerm}

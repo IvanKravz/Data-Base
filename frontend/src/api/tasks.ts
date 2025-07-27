@@ -6,27 +6,22 @@ interface TaskParams {
   endDate?: string;
   divisionId?: string;
 }
-
-interface DivisionRef {
-  id: string;
-  name: string;
-}
-
-interface SubdivisionRef {
-  id: string;
-  name: string;
-}
-
 export const tasksApi = {
   getTasks: async (params: {
     division?: string;
     subdivision?: string;
-  }) => {
+    show_completed: string;
+    show_only_mine: boolean;
+  }, token?: string) => {
     const { data } = await api.get('/tasks/', {
       params: {
         division: params.division,
-        subdivision: params.subdivision
-      }
+        subdivision: params.subdivision,
+        show_only_mine: params.show_only_mine ? 'true' : 'false'
+      },
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
     return data.results;
   },
@@ -51,24 +46,28 @@ export const tasksApi = {
   createTask: async (taskData: {
     title: string;
     category: string;
-    division: string;  // Теперь просто строка (ID)
-    subdivision?: string | null;
+    division_id: string;
+    subdivision_id?: string | null;
+    is_private: boolean;
     steps: Array<{
       name: string;
       comments?: string;
       start_date: string;
       end_date: string;
     }>;
-  }) => {
-    const { data } = await api.post('/tasks/', taskData);
+  }, token: string) => {
+    const { data } = await api.post('/tasks/', taskData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });;
     return data;
   },
-  
+
   updateTask: async (token: string, id: string, taskData: {
     title?: string;
     category?: string;
     division_id?: string;
-    subdivision_id?: string | null; // Явно указываем что может быть null
+    subdivision_id?: string | null;
+    is_private: boolean;
     steps?: Array<{
       name: string;
       comments?: string;
@@ -81,7 +80,7 @@ export const tasksApi = {
     }
 
     // console.log('taskData', taskData)
-  
+
     const { data } = await api.patch(`/tasks/${id}/`, {
       ...taskData,
       // Убедитесь что бэкенд ожидает именно такие названия полей
@@ -96,25 +95,31 @@ export const tasksApi = {
     return data;
   },
 
-  deleteTask: async (id: string) => {
-    await api.delete(`/tasks/${id}/`);
+  deleteTask: async (id: string, token: string) => {
+    await api.delete(`/tasks/${id}/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
   },
 
-  completeStep: async (stepId: string) => {
-    const { data } = await api.post(`/tasks/steps/${stepId}/complete/`);
+  completeStep: async (stepId: string, token: string) => {
+    const { data } = await api.post(`/tasks/steps/${stepId}/complete/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });;
     return data;
   },
 
-  uncompleteStep: async (stepId: string) => {
-    const { data } = await api.post(`/tasks/steps/${stepId}/uncomplete/`);
+  uncompleteStep: async (stepId: string, token: string) => {
+    const { data } = await api.post(`/tasks/steps/${stepId}/uncomplete/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });;
     return data;
   },
 
-  updateTaskStep: async (stepId: string, completed: boolean) => {
+  updateTaskStep: async (stepId: string, completed: boolean, token: string) => {
     if (completed) {
-      return await tasksApi.completeStep(stepId);
+      return await tasksApi.completeStep(stepId, token);
     } else {
-      return await tasksApi.uncompleteStep(stepId);
+      return await tasksApi.uncompleteStep(stepId, token);
     }
   },
 

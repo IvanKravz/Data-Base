@@ -14,7 +14,7 @@ export const taskCategories: Record<TaskCategory, { label: string; color: string
   attention: {
     label: 'Внимание',
     color: 'yellow'
-  }
+  },
 };
 
 export const isTaskCompleted = (task: Task) => {

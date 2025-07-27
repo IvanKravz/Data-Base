@@ -24,6 +24,7 @@ export function TaskForm({
   onCreate,
   onUpdate
 }: TaskFormProps) {
+  const [isPrivate, setIsPrivate] = useState(initialTask?.is_private || false);
   const [title, setTitle] = useState(initialTask?.title || '');
   const [category, setCategory] = useState<TaskCategory>(initialTask?.category || 'planned');
   const [steps, setSteps] = useState<Omit<TaskStep, 'id' | 'isCompleted'>[]>(
@@ -94,6 +95,7 @@ export function TaskForm({
         category,
         division_id: selectedDivisionId,
         subdivision_id: selectedSubdivisionId || null,
+        is_private: isPrivate,
         steps: steps.map(step => ({
           name: step.name,
           comments: step.comments || '',
@@ -107,8 +109,9 @@ export function TaskForm({
           ...initialTask,
           title,
           category,
-          division: { id: selectedDivisionId }, // Убедитесь, что передается объект
+          division: { id: selectedDivisionId },
           subdivision: selectedSubdivisionId ? { id: selectedSubdivisionId } : null,
+          is_private: isPrivate,
           steps: steps.map(step => ({
             ...step,
             start_date: step.startDate,
@@ -119,12 +122,9 @@ export function TaskForm({
         const token = localStorage.getItem('accessToken');
         if (!token) throw new Error('Authentication token missing');
 
-        const newTask = await tasksApi.createTask({
-          ...taskData,
-          division: taskData.division_id,
-          subdivision: taskData.subdivision_id
-        });
-        onCreate(newTask);
+        const newTask = await tasksApi.createTask(taskData);
+        console.log('newTask', newTask)
+        // onCreate(newTask);
       }
 
       onSuccess();
@@ -152,6 +152,7 @@ export function TaskForm({
             />
           </div>
 
+
           <DivisionSelector
             divisions={divisions}
             selectedDivisionId={selectedDivisionId}
@@ -173,6 +174,17 @@ export function TaskForm({
           category={category}
           onChange={setCategory}
         />
+      </div>
+      <div className="task-form-section">
+        <label className="task-form-label">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={(e) => setIsPrivate(e.target.checked)}
+            className="mr-2"
+          />
+          Приватная задача (видна только вам)
+        </label>
       </div>
 
       <TaskStepsList steps={steps} onStepsChange={setSteps} />

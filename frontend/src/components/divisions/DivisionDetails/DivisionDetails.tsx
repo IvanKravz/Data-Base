@@ -75,11 +75,11 @@ export function DivisionDetails() {
           className="division-background-image"
         />
         
-        {division.facilities_count > 0 && (
+        {/* {division.facilities_count > 0 && (
           <div className="division-map-overlay">
             <MapView divisionId={division.id} />
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ class Task(models.Model):
         (ATTENTION, 'Обратить внимание')
     ]
 
+    is_private = models.BooleanField(default=False, verbose_name='Приватная задача')
     title = models.CharField(max_length=255, verbose_name='Название')
     category = models.CharField(
         max_length=20, 
@@ -68,17 +69,17 @@ class Task(models.Model):
         return self.progress == 100
 
     @classmethod
-    def get_incomplete_count(cls, division_id=None, subdivision_id=None):
-        """
-        Возвращает количество задач с незавершёнными шагами
-        с возможностью фильтрации по division и subdivision
-        """
-        # Фильтр для задач, где есть хотя бы один незавершённый шаг
+    def get_incomplete_count(cls, division_id=None, subdivision_id=None, user=None):
         queryset = cls.objects.filter(
             steps__is_completed=False
         ).distinct()
         
-        # Применяем фильтры
+        visibility_condition = Q(is_private=False)
+        if user and user.is_authenticated:
+            visibility_condition |= Q(is_private=True, created_by=user)
+        
+        queryset = queryset.filter(visibility_condition)
+        
         if division_id:
             queryset = queryset.filter(division_id=division_id)
         if subdivision_id:

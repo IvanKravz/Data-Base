@@ -73,6 +73,10 @@ export function PersonnelList({
     fetchPersonnel();
   }, [division, token]);
 
+  if (!division) {
+    return <div className="error-message">Подразделение не найдено</div>;
+  }
+
   const filteredPersonnel = allPersonnel.filter(person => {
     const matchesSubdivision = !subdivisionId ||
       (person.subdivision && person.subdivision.id == subdivisionId);
@@ -123,8 +127,9 @@ export function PersonnelList({
       ? allPersonnel.filter(person => person.subdivision?.id == subdivisionId)
       : allPersonnel;
 
-    const selectedSubdivision = subdivisionId
-      ? division.subdivisions?.find(sub => sub.id == subdivisionId)
+    // Добавьте проверку на существование subdivisions
+    const selectedSubdivision = subdivisionId && division.subdivisions
+      ? division.subdivisions.find(sub => sub.id == subdivisionId)
       : null;
 
     const counts = {

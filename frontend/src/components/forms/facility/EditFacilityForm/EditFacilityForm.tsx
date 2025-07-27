@@ -1,6 +1,6 @@
 import React from 'react';
 import { Facility } from '../../../../types';
-import { OpenFacilityForm, ClosedFacilityForm } from '../../../facilities/forms';
+// import { OpenFacilityForm, ClosedFacilityForm } from '../../../facilities/forms';
 
 interface EditFacilityFormProps {
   facility: Facility;
