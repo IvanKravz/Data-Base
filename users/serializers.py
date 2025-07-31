@@ -49,6 +49,7 @@ class SubdivisionSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']    
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    photo_url = serializers.SerializerMethodField(read_only=True)
     division = DivisionSerializer(read_only=True)
     subdivision = SubdivisionSerializer(read_only=True)
     sha_details = ShaWorkerDetailsSerializer(required=False, allow_null=True)
@@ -116,10 +117,35 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = '__all__'
         extra_kwargs = {
+            'photo': {'write_only': True},# Чтобы само изображение не возвращалось в ответе
             'order_rank': {'required': False, 'allow_blank': True},
             'division': {'required': False},
             'subdivision': {'required': False},
         }
+
+    def get_photo_url(self, obj):
+        if not obj.photo:
+            return None
+            
+        try:
+            if obj.photo and hasattr(obj.photo, 'url'):
+                request = self.context.get('request')
+                if request is not None:
+                    return request.build_absolute_uri(obj.photo.url)
+                return obj.photo.url
+        except Exception:
+            return None
+        return None
+    
+    def validate_photo(self, value):
+        if value:
+            # Проверка размера файла (например, не более 2MB)
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("Фото слишком большое. Максимальный размер - 2MB.")
+            # Проверка типа файла
+            if not value.name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
+                raise serializers.ValidationError("Неподдерживаемый формат изображения. Используйте JPG или PNG.")
+        return value
 
     def to_internal_value(self, data):
         # Handle division
@@ -141,7 +167,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
     def create(self, validated_data):
-        # Get division and subdivision from validated_data (they are already instances)
         division = validated_data.pop('division', None)
         subdivision = validated_data.pop('subdivision', None)
         sha_details_data = validated_data.pop('sha_details', None)
@@ -154,7 +179,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-        # Create user account if requested
+        # Создаем пользователя если требуется
         if create_user:
             User = get_user_model()
             username = f"{employee.full_name.split()[0].lower()}{employee.id}"
@@ -164,18 +189,21 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 employee=employee
             )
 
-        # Handle ShaWorker details if needed
+        # Обрабатываем данные ШаРаботника
         if is_sha_worker and sha_details_data:
+            equipment_conclusions_data = sha_details_data.pop('equipment_conclusions', [])
             sha_details = ShaWorkerDetails.objects.create(employee=employee, **sha_details_data)
-            equipment_conclusions_data = sha_details_data.get('equipment_conclusions', [])
-            for ec_data in equipment_conclusions_data:
-                ShaEquipmentConclusion.objects.create(sha_worker=sha_details, **ec_data)
-
+            
+            # Создаем оборудование через метод set()
+            equipment_conclusions = [
+                ShaEquipmentConclusion(sha_worker=sha_details, **ec_data)
+                for ec_data in equipment_conclusions_data
+            ]
+            ShaEquipmentConclusion.objects.bulk_create(equipment_conclusions)
+    
         return employee
 
     def update(self, instance, validated_data):
-        logger.info(f"Validated data: {validated_data}")
-        print('validated_data', validated_data)
         division_id = validated_data.pop('division_id', None)
         subdivision_id = validated_data.pop('subdivision_id', None)
         
@@ -194,7 +222,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if is_sha_worker:
-            # Обновление или создание ShaWorkerDetails
             if sha_details_data:
                 equipment_conclusions_data = sha_details_data.pop('equipment_conclusions', [])
                 sha_details, created = ShaWorkerDetails.objects.update_or_create(
@@ -202,14 +229,17 @@ class EmployeeSerializer(serializers.ModelSerializer):
                     defaults=sha_details_data
                 )
                 
-                if equipment_conclusions_data:
-                    sha_details.equipment_conclusions.all().delete()
-                    for ec_data in equipment_conclusions_data:
-                        ShaEquipmentConclusion.objects.create(sha_worker=sha_details, **ec_data)
+                # Удаляем старые и создаем новые записи оборудования
+                sha_details.equipment_conclusions.all().delete()
+                equipment_conclusions = [
+                    ShaEquipmentConclusion(sha_worker=sha_details, **ec_data)
+                    for ec_data in equipment_conclusions_data
+                ]
+                ShaEquipmentConclusion.objects.bulk_create(equipment_conclusions)
         else:
-            # Удаление ShaWorkerDetails, если is_sha_worker = False
+            # Удаляем данные ШаРаботника если флаг снят
             ShaWorkerDetails.objects.filter(employee=instance).delete()
-        
+    
         return instance
 
     def to_representation(self, instance):
@@ -263,3 +293,30 @@ class EmployeeDictionariesSerializer(serializers.Serializer):
             child=serializers.CharField()
         )
     )
+
+class EmployeePhotoSerializer(serializers.ModelSerializer):
+    photo_url = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Employee
+        fields = ['id', 'photo', 'photo_url']
+        read_only_fields = ['id']
+    
+    def get_photo_url(self, obj):
+        """
+        Явно возвращаем URL или None
+        Обновляем состояние при каждом запросе
+        """
+        if hasattr(obj, 'photo') and obj.photo:
+            try:
+                # Принудительно обновляем объект
+                obj.refresh_from_db()
+                
+                if obj.photo:
+                    request = self.context.get('request')
+                    if request:
+                        return request.build_absolute_uri(obj.photo.url)
+                    return obj.photo.url
+            except Exception:
+                pass
+        return None

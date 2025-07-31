@@ -12,18 +12,18 @@ import shadowIcon from '../../assets/markers/marker-shadow.png';
 
 const createCustomIcon = (color = 'blue', isSelected = false, isClosed = false) => {
   let icon;
-  
+
   if (isSelected) {
     icon = redIcon;
   } else if (isClosed) {
     icon = grayIcon;
   } else {
-    switch(color) {
+    switch (color) {
       case 'gray': icon = grayIcon; break;
       default: icon = blueIcon;
     }
   }
-  
+
   return new L.Icon({
     iconUrl: icon,
     shadowUrl: shadowIcon,
@@ -37,14 +37,38 @@ const createCustomIcon = (color = 'blue', isSelected = false, isClosed = false) 
 interface ObjectMarkerProps {
   object: MapObject;
   isSelected?: boolean;
+  searchTerm?: string;
+  setPopupRef?: (id: string, popup: L.Popup | null) => void;
 }
 
-const ObjectMarker: React.FC<ObjectMarkerProps> = ({ object, isSelected = false }) => {
+
+const ObjectMarker: React.FC<ObjectMarkerProps> = ({
+  object,
+  isSelected = false,
+  searchTerm = '',
+  setPopupRef
+}) => {
   const navigate = useNavigate();
 
   if (!object.lat || !object.lng) {
     return null;
   }
+
+  const highlightText = (text: string = '', term: string = '') => {
+    if (!term || !text) return text;
+    try {
+      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedTerm})`, 'gi');
+      return text.split(regex).map((part, i) =>
+        regex.test(part)
+          ? <span key={i} className="search-highlight">{part}</span>
+          : part
+      );
+    } catch (e) {
+      console.error('Error in highlightText:', e);
+      return text;
+    }
+  };
 
   const handleNavigate = () => {
     navigate(`/facilities/${object.id}`);
@@ -54,17 +78,17 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({ object, isSelected = false 
     <Marker
       position={[object.lat, object.lng]}
       icon={createCustomIcon(object.color || 'blue', isSelected, object.is_closed)}
+      className={isSelected ? 'selected-marker' : ''}
     >
-      <Popup>
+      <Popup
+        ref={(popup) => setPopupRef && setPopupRef(object.id, popup)}
+        className={isSelected ? 'leaflet-popup-auto' : ''}
+      >
         <div className="popup-content">
-          <h3 className="font-bold">{object.name}</h3>
-          <div className="map-text-type-display">
-            {object.type_display}
-            <span className="closed-badge"> {object.type.name}</span>
-          </div>
-          <div className="map-text-address">{object.address}</div>
+          <h3 className="font-bold">{highlightText(object.name, searchTerm)}</h3>
+          <div className="map-text-address">{highlightText(object.address, searchTerm)}</div>
           {object.description && (
-            <p className="mt-1 text-xs">{object.description}</p>
+            <p className="mt-1 text-xs">{highlightText(object.description, searchTerm)}</p>
           )}
           <button
             onClick={handleNavigate}

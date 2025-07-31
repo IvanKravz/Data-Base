@@ -41,14 +41,6 @@ export function SubdivisionsList({
     navigate(`/divisions/${division.id}/tasks?subdivision=${subdivisionId}`);
   };
 
-  // Функция для подсчета незавершенных задач
-  const getIncompleteTasksCount = (subdivision: any) => {
-    if (!subdivision.tasks) return 0;
-    return subdivision.tasks.filter((task: any) => 
-      !task.steps.every((step: any) => step.is_completed)
-    ).length;
-  };
-
   return (
     <div className="subdivisions-container">
       <h2 className="subdivisions-title">Отделения</h2>

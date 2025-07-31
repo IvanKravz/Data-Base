@@ -1,33 +1,59 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// Загружаем переменные окружения
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
+  // Безопасное использование env переменных
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
   },
-  // Решение для локальных тайлов
   server: {
     fs: {
-      // Разрешаем обслуживать файлы из папки tiles
       allow: [
-        // Путь к вашей папке с тайлами (абсолютный или относительный)
         path.join(process.cwd(), 'public/tiles'),
-        // Дополнительные пути при необходимости
         process.cwd()
       ]
-    }
-  },
-  build: {
-    // Настройки для корректного включения тайлов в сборку
-    assetsInlineLimit: 0, // Отключаем инлайнинг изображений
-    rollupOptions: {
-      output: {
-        assetFileNames: 'assets/[name].[ext]' // Сохраняем оригинальные имена файлов
+    },
+    // Настройки прокси для API (опционально)
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/media': {
+        target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false
       }
     }
   },
-  // Для корректных путей в production
-  base: './'
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+  build: {
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name].[ext]'
+      }
+    },
+    // Минификация и очистка console.log в production
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
+  base: './',
+  // Добавляем поддержку env переменных для клиента
+  envPrefix: 'VITE_',
 });

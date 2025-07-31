@@ -54,23 +54,33 @@ export function DivisionTasksSection() {
           division: id,
           subdivision: subdivisionId || undefined,
           show_completed: "true",
-          show_only_mine: showOnlyMine // Убираем .toString(), передаем как boolean
+          show_only_mine: showOnlyMine
         };
     
+
         const [tasksData, divisionData] = await Promise.all([
-          tasksApi.getTasks(params, token),
+          tasksApi.getTasks(params, token!),
           divisionsApi.getDivisionById(id!, token!)
         ]);
-  
+
         const tasksWithCompletion = tasksData.map(task => ({
           ...task,
           is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
         }));
+
+        setDivision(divisionData);
+
+        
+        if (subdivisionId) {
+          const subdivision = divisionData.subdivisions?.find(s => s.id.toString() === subdivisionId.toString());
+          setSubdivisionName(subdivision?.name || '');
+        }
   
         setTasks(tasksWithCompletion);
-        setDivision(divisionData);
+        
+  
       } catch (error) {
-        console.error('Failed to load tasks:', error);
+        console.error('Не удалось загрузить данные:', error);
       } finally {
         setLoading(false);
       }

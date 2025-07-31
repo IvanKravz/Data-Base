@@ -11,8 +11,41 @@ export interface EmployeeDictionaries {
 }
 
 export const employeesApi = {
-  // Get all personnel with optional filters
 
+  uploadPhoto: async (token: string, id: string, photoFile: File): Promise<Employee> => {
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    const { data } = await api.patch(`users/employees/${id}/photo/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data;
+  },
+
+  deletePhoto: async (token: string, id: string): Promise<Employee> => {
+    try {
+      const { data } = await api.delete<Employee>(`users/employees/${id}/photo/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        timeout: 15000
+      });
+
+      // Проверяем, что фото действительно удалено
+      if (data.photo_url) {
+        throw new Error('Фото не было удалено на сервере');
+      }
+
+      return data;
+    } catch (error) {
+      throw new Error('Ошибка удаления фото: ' + error.message);
+    }
+  },
+
+  // Get all personnel with optional filters
   getDictionaries: async (token: string): Promise<EmployeeDictionaries> => {
     const { data } = await api.get('users/employees/dictionaries/', {
       headers: {
@@ -40,10 +73,10 @@ export const employeesApi = {
   },
 
   // Get person by ID
-  getPersonById: async (token: string, id: string) => {
+  getPersonById: async (token: string, id: string): Promise<Employee> => {
     const { data } = await api.get(`users/employees/${id}/`, {
       headers: {
-        'Authorization': `Bearer ${token}`, // Передача токена в заголовке
+        'Authorization': `Bearer ${token}`,
       },
     });
     return data;
@@ -151,7 +184,9 @@ export const employeesApi = {
       comments
     });
     return data;
-  }
+  },
+
+
 };
 
 function formatDate(date: string | Date): string {

@@ -47,8 +47,8 @@ export function TasksFilters({
         <div className="tasks-search-filter">
           <label className="tasks-filter-label">Поиск задач</label>
           <SearchBar
-            value={searchTerm}
-            onChange={onSearchChange}
+            searchTerm={searchTerm}
+            setSearchTerm={onSearchChange}
             placeholder="Поиск задач"
           />
         </div>

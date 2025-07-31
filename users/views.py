@@ -1,5 +1,9 @@
+import os
+from venv import logger
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from django.db.models import Q
+from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +13,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import User, ShaWorkerDetails
-from .serializers import EmployeeDictionariesSerializer, UserSerializer, TokenObtainPairSerializer
+from .serializers import EmployeeDictionariesSerializer, EmployeePhotoSerializer, UserSerializer, TokenObtainPairSerializer
 
 from rest_framework import viewsets, permissions
 from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
@@ -39,9 +43,9 @@ class EmployeeViewSet(APIView):
             return Response(serializer.data)
 
     def post(self, request):
-        serializer = EmployeeSerializer(data=request.data)
+        serializer = EmployeeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()  # Removed created_by=request.user
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
    
@@ -51,8 +55,12 @@ class EmployeeViewSet(APIView):
         except Employee.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        # Используем partial=True для частичного обновления
-        serializer = EmployeeSerializer(employee, data=request.data, partial=True)
+        serializer = EmployeeSerializer(
+            employee, 
+            data=request.data, 
+            partial=True,
+            context={'request': request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -135,3 +143,70 @@ class EmployeeDictionariesView(APIView):
         }
         serializer = EmployeeDictionariesSerializer(data)
         return Response(serializer.data)
+    
+class EmployeePhotoView(APIView):
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request, pk):
+        employee = get_object_or_404(Employee, pk=pk)
+        old_photo = employee.photo.path if employee.photo else None
+        
+        try:
+            serializer = EmployeePhotoSerializer(
+                employee, 
+                data=request.data, 
+                partial=True,
+                context={'request': request}
+            )
+            
+            if serializer.is_valid():
+                # Удаляем старое фото после успешной валидации
+                if old_photo and os.path.exists(old_photo):
+                    try:
+                        os.remove(old_photo)
+                    except OSError as e:
+                        logger.error(f"Error deleting old photo: {str(e)}")
+                
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            logger.error(f"Error updating photo: {str(e)}")
+            return Response(
+                {'error': 'Failed to update photo'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def delete(self, request, pk):
+        employee = get_object_or_404(Employee, pk=pk)
+        
+        try:
+            # Сохраняем состояние до удаления для отката
+            original_photo = employee.photo
+            
+            if employee.delete_photo():
+                # Убедимся, что изменения применились
+                employee.refresh_from_db()
+                
+                # Возвращаем обновленные данные
+                serializer = EmployeeSerializer(employee, context={'request': request})
+                return Response(serializer.data)
+            
+            return Response(
+                {'error': 'No photo to delete'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        except Exception as e:
+            # Откатываем изменения в случае ошибки
+            if original_photo:
+                employee.photo = original_photo
+                employee.save()
+                
+            logger.error(f"Ошибка удаления фото: {str(e)}")
+            return Response(
+                {'error': 'Failed to delete photo'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

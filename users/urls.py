@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.contrib import admin
 from rest_framework.routers import DefaultRouter
-from .views import EmployeeDictionariesView, EmployeeViewSet, ShaWorkerViewSet, ShaEquipmentConclusionViewSet, TokenObtainPairView, TokenRefreshView, RegisterView, UserViewSet
+from .views import EmployeeDictionariesView, EmployeePhotoView, EmployeeViewSet, ShaWorkerViewSet, ShaEquipmentConclusionViewSet, TokenObtainPairView, TokenRefreshView, RegisterView, UserViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -16,9 +16,11 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='auth_register'),
     
     # Маршруты для EmployeeViewSet
+    path('employees/<int:pk>/photo/', EmployeePhotoView.as_view(), name='employee-photo'),
     path('employees/', EmployeeViewSet.as_view(), name='employees'),
     path('employees/<int:pk>/', EmployeeViewSet.as_view(), name='employee-detail'),
     path('employees/dictionaries/', EmployeeDictionariesView.as_view()),
+    
     
     
     # User management endpoints

@@ -74,7 +74,7 @@ export function FacilityList({
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-3 border-b border-gray-200">
         <div className="flex justify-end">
           <div className="flex items-center gap-4">
             <div className="flex rounded-md shadow-sm">
@@ -107,7 +107,7 @@ export function FacilityList({
         </div>
       </div>
 
-      <div className="p-4">
+      <div>
         <AnimatePresence mode="wait">
           <motion.div
             key={viewType}
@@ -115,7 +115,7 @@ export function FacilityList({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="mt-4"
+            className="mt-1"
           >
             {viewType === 'table' ? (
               <TableView

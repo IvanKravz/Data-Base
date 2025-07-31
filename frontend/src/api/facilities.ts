@@ -6,24 +6,31 @@ export const facilitiesApi = {
   getFacilities: async (params?: {
     token?: string;
     division?: string;
+    subdivision?: string;
     type?: 'station' | 'shd';
     class?: '1' | '2';
     search?: string;
-  }) => {
-    const { data } = await api.get('/facilities/', {
-      params: {
-        division: params?.division,
-        type: params?.type,
-        class: params?.class,
-        search: params?.search
-      },
+    is_closed?: boolean;
+  }): Promise<Facility[]> => {
+    // Формируем параметры запроса, исключая undefined значения
+    const queryParams = {
+      ...(params?.division && { division: params.division }),
+      ...(params?.subdivision && { subdivision: params.subdivision }),
+      ...(params?.type && { type: params.type }),
+      ...(params?.class && { class: params.class }),
+      ...(params?.search && { search: params.search }),
+      ...(typeof params?.is_closed !== 'undefined' && { is_closed: params.is_closed }),
+    };
+
+    const { data } = await api.get<{ results: Facility[] }>('/facilities/', {
+      params: queryParams,
       headers: params?.token ? {
         Authorization: `Bearer ${params.token}`,
       } : undefined
     });
+
     return data.results;
   },
-
   // Get facility by ID
   getFacilityById: async (id: string, token: string) => {
     const { data } = await api.get(`/facilities/${id}/`, {

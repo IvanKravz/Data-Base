@@ -10,6 +10,8 @@ import { divisionsApi } from '../../../../api';
 import { Facility, CommunicationPost } from '../../../../types';
 import './style.css';
 import MapView from '../../../map/MapView';
+import { normalizeSearchString } from '../../../../utils/normalizeSearchString';
+import { useDebounce } from '../../../../utils/useDebounce';
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
@@ -32,6 +34,39 @@ export function FacilitiesSection() {
     const viewFromUrl = searchParams.get('view');
     return viewFromUrl === 'table' ? 'table' : 'grid';
   });
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [searchResults, setSearchResults] = useState<Facility[]>([]);
+
+  useEffect(() => {
+    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const normalizedSearch = debouncedSearchTerm.toLowerCase()
+      .replace(/,/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const results = facilities.filter(facility => {
+      if (!matchesSubdivision(facility)) return false;
+
+      const isOpenTab = activeTab === 'open';
+      const matchesStatus = isOpenTab ? !facility.is_closed : facility.is_closed;
+
+      const fullAddress = `${facility.address || ''}`.toLowerCase()
+        .replace(/,/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return matchesStatus &&
+        (fullAddress.includes(normalizedSearch) ||
+          facility.name.toLowerCase().includes(normalizedSearch));
+    });
+
+    setSearchResults(results);
+  }, [debouncedSearchTerm, facilities, activeTab, subdivisionId]);
+
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -134,27 +169,42 @@ export function FacilitiesSection() {
     setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
   };
 
+  // Фильтрация по типу, классу и статусу
   const filteredFacilities = facilities.filter(facility => {
     if (!matchesSubdivision(facility)) return false;
 
     const isOpenTab = activeTab === 'open';
     const matchesStatus = isOpenTab ? !facility.is_closed : facility.is_closed;
+    const matchesType = filterType === 'all' || facility.type.id === filterType;
+    const matchesClass = facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
 
-    const matchesSearch = !searchTerm ||
-      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      facility.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (facility.type === 'station' ? 'станция' : 'шд').includes(searchTerm.toLowerCase()) ||
-      (facility.facility_class && `${facility.facility_class} класс`.includes(searchTerm.toLowerCase())) ||
-      (facility.communication_posts && facility.communication_posts.some(post =>
-        post.name.toLowerCase().includes(searchTerm.toLowerCase())));
-
-    const matchesType = isOpenTab ? true :
-      filterType === 'all' || facility.type.id === filterType;
-    const matchesClass = isOpenTab ? true :
-      facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
-
-    return matchesStatus && matchesSearch && matchesType && matchesClass;
+    return matchesStatus && matchesType && matchesClass;
   });
+
+  // Дополнительная фильтрация по поисковому запросу
+  const matchesSearchTerm = (facility: Facility, part: string) => {
+    const normalizedAddress = normalizeSearchString(facility.address);
+    const normalizedName = normalizeSearchString(facility.name);
+    const facilityType = facility.type.name.toLowerCase().includes('станция') ? 'станция' : 'шд';
+
+    return (
+      normalizedAddress.includes(part) ||
+      normalizedName.includes(part) ||
+      facilityType.includes(part) ||
+      (facility.facility_class && `${facility.facility_class} класс`.includes(part)) ||
+      (facility.communication_posts?.some(post =>
+        normalizeSearchString(post.name).includes(part)
+      ))
+    );
+  };
+
+  const displayFacilities = debouncedSearchTerm
+    ? filteredFacilities.filter(facility => {
+      const normalizedSearchTerm = normalizeSearchString(searchTerm);
+      const searchParts = normalizedSearchTerm.split(' ').filter(part => part.length > 0);
+      return searchParts.length === 0 || searchParts.some(part => matchesSearchTerm(facility, part));
+    })
+    : filteredFacilities;
 
   const onBack = () => {
     navigate(`/divisions/${id}`);
@@ -176,115 +226,124 @@ export function FacilitiesSection() {
     navigate(`/divisions/${id}/communication-posts/new${subdivisionId ? `?subdivision=${subdivisionId}` : ''}`);
   };
 
+  console.log('facilities', facilities)
+
   return (
     <>
-    <div className="section-container">
-      <h2 className="section-title">
-        <button type="button" onClick={onBack} className="back-button">
-          <ArrowLeft className="back-button-icon" />
-        </button>
-        Объекты: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
-      </h2>
+      <div className="section-container">
+        <h2 className="section-title">
+          <button type="button" onClick={onBack} className="back-button">
+            <ArrowLeft className="back-button-icon" />
+          </button>
+          Объекты: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
+        </h2>
 
-      <div className='block-add-facility-button'>
+        <div className='block-add-facility-button'>
+          {activeTab === 'posts' ? (
+            <button
+              onClick={handleAddPost}
+              className="add-facility-button"
+            >
+              <Plus size={18} />
+              <span>Добавить пост связи</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleAddFacility}
+              className="add-facility-button"
+            >
+              <Plus size={18} />
+              <span>Добавить объект</span>
+            </button>
+          )}
+          {addCommunicationPosts &&
+            <button
+              onClick={handleAddPost}
+              className="add-facility-button"
+            >
+              <Plus size={18} />
+              <span>Добавить пост связи</span>
+            </button>}
+        </div>
+
+        <div className="tabs">
+          {hasOpenFacilities && (
+            <button
+              className={`tab-button-facilities ${activeTab === 'open' ? 'active' : ''}`}
+              onClick={() => handleTabChange('open')}
+            >
+              Открытые объекты
+            </button>
+          )}
+          {hasClosedFacilities && (
+            <button
+              className={`tab-button-facilities ${activeTab === 'closed' ? 'active' : ''}`}
+              onClick={() => handleTabChange('closed')}
+            >
+              Закрытые объекты
+            </button>
+          )}
+          {hasCommunicationPosts && (
+            <button
+              className={`tab-button-facilities ${activeTab === 'posts' ? 'active' : ''}`}
+              onClick={() => handleTabChange('posts')}
+            >
+              Посты связи
+            </button>
+          )}
+        </div>
+
+        <div className="section-search-container">
+          <SearchBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            placeholder={
+              activeTab === 'posts'
+                ? "Поиск по названию поста связи..."
+                : "Поиск по названию, адресу, типу, классу или посту связи..."
+            }
+          />
+        </div>
+
+        {(activeTab === 'open' || activeTab === 'closed') && (
+          <FacilityTypeFilter
+            facilities={facilities.filter(f =>
+              (activeTab === 'open' ? !f.is_closed : f.is_closed) &&
+              matchesSubdivision(f)
+            )}
+            selectedType={filterType}
+            onTypeChange={setFilterType}
+            selectedClass={facilityClassFilter}
+            onClassChange={setFacilityClassFilter}
+          />
+        )}
+
         {activeTab === 'posts' ? (
-          <button
-            onClick={handleAddPost}
-            className="add-facility-button"
-          >
-            <Plus size={18} />
-            <span>Добавить пост связи</span>
-          </button>
+          <CommunicationPostsList
+            posts={communicationPosts}
+            onPostDeleted={handlePostDeleted}
+          />
         ) : (
-          <button
-            onClick={handleAddFacility}
-            className="add-facility-button"
-          >
-            <Plus size={18} />
-            <span>Добавить объект</span>
-          </button>
+          <FacilityList
+            viewType={viewType}
+            onViewChange={handleViewChange}
+            facilities={displayFacilities}
+            onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
+            showDifferentFields={true}
+            onFacilityDeleted={handleFacilityDeleted}
+          />
         )}
-        {addCommunicationPosts &&
-          <button
-            onClick={handleAddPost}
-            className="add-facility-button"
-          >
-            <Plus size={18} />
-            <span>Добавить пост связи</span>
-          </button>}
-      </div>
 
-      <div className="tabs">
-        {hasOpenFacilities && (
-          <button
-            className={`tab-button-facilities ${activeTab === 'open' ? 'active' : ''}`}
-            onClick={() => handleTabChange('open')}
-          >
-            Открытые объекты
-          </button>
-        )}
-        {hasClosedFacilities && (
-          <button
-            className={`tab-button-facilities ${activeTab === 'closed' ? 'active' : ''}`}
-            onClick={() => handleTabChange('closed')}
-          >
-            Закрытые объекты
-          </button>
-        )}
-        {hasCommunicationPosts && (
-          <button
-            className={`tab-button-facilities ${activeTab === 'posts' ? 'active' : ''}`}
-            onClick={() => handleTabChange('posts')}
-          >
-            Посты связи
-          </button>
-        )}
       </div>
-
-      <div className="section-search-container">
-        <SearchBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          placeholder={
-            activeTab === 'posts'
-              ? "Поиск по названию поста связи..."
-              : "Поиск по названию, адресу, типу, классу или посту связи..."
-          }
-        />
-      </div>
-
-      {activeTab === 'closed' && hasClosedFacilities && (
-        <FacilityTypeFilter
-          facilities={facilities.filter(f => f.is_closed && matchesSubdivision(f))}
-          selectedType={filterType}
-          onTypeChange={setFilterType}
-          selectedClass={facilityClassFilter}
-          onClassChange={setFacilityClassFilter}
-        />
+      {division.facilities_count > 0 && (
+        <div className="division-map-overlay">
+          <MapView
+            divisionId={division.id}
+            subdivisionId={subdivisionId || null}
+            searchTerm={searchTerm} // Передаем поисковый запрос
+          />
+        </div>
       )}
-
-      {activeTab === 'posts' ? (
-        <CommunicationPostsList
-          posts={communicationPosts}
-          onPostDeleted={handlePostDeleted}
-        />
-      ) : (
-        <FacilityList
-          viewType={viewType}
-          onViewChange={handleViewChange}
-          facilities={filteredFacilities}
-          onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
-          showDifferentFields={true}
-          onFacilityDeleted={handleFacilityDeleted}
-        />
-      )}
-     
-    </div>
-    {division.facilities_count > 0 && (
-          <div className="division-map-overlay">
-            <MapView divisionId={division.id} />
-          </div>
-        )}
     </>
   );
 }

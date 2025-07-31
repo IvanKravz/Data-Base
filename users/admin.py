@@ -2,6 +2,7 @@ from django.contrib import admin
 # from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from .models import Employee, ShaWorkerDetails, ShaEquipmentConclusion, User
+from django.utils.html import format_html
 
 class CustomUserAdmin(UserAdmin):
     actions = ['create_user_for_employee']
@@ -18,10 +19,16 @@ class CustomUserAdmin(UserAdmin):
                 user.save()
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'user_account', 'id', 'rank', 'position', 'category', 'subcategory', 'priority')
+    list_display = ('full_name', 'user_account', 'id', 'rank', 'position', 'category', 'subcategory', 'priority', 'photo_preview')
     list_filter = ('category', 'subcategory')
     search_fields = ('full_name', 'position')
     ordering = ('priority', 'full_name')
+
+    def photo_preview(self, obj):
+        if obj.photo:
+            return format_html('<img src="{}" width="50" height="50" />', obj.photo.url)
+        return "-"
+    photo_preview.short_description = 'Фото'
 
 class ShaWorkerDetailsAdmin(admin.ModelAdmin):
     list_display = ('employee', 'access_level', 'start_date')

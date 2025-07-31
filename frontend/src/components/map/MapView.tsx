@@ -1,5 +1,5 @@
 // MapView.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -13,6 +13,7 @@ import './style.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useDebounce } from '../../utils/useDebounce';
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -31,9 +32,11 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
 
 interface MapViewProps {
   divisionId: string;
+  subdivisionId: string | null;
+  searchTerm?: string; // Добавляем пропс для поискового запроса
 }
 
-const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
+const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm = '' }) => {
   const [foundLocation, setFoundLocation] = useState<[number, number] | null>(null);
   const [selectedObject, setSelectedObject] = useState<any>(null);
   const [objects, setObjects] = useState<any[]>([]);
@@ -42,31 +45,82 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
     center: [number, number];
     zoom: number;
   } | null>(null);
+  const popupRefs = useRef<{ [key: string]: L.Popup | null }>({});
+  const setPopupRef = (id: string, popup: L.Popup | null) => {
+    popupRefs.current[id] = popup;
+  };
+  const mapRef = useRef<L.Map | null>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+
+
+  useEffect(() => {
+    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
+      setSelectedObject(null);
+      setFoundLocation(null);
+      return;
+    }
+
+    const normalizedSearch = debouncedSearchTerm.toLowerCase()
+      .replace(/,/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const foundObj = objects.find(obj => {
+      const fullAddress = `${obj.address || ''}`.toLowerCase()
+        .replace(/,/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return fullAddress.includes(normalizedSearch) ||
+        obj.name.toLowerCase().includes(normalizedSearch);
+    });
+
+    if (foundObj && foundObj.lat && foundObj.lng) {
+      setSelectedObject(foundObj);
+      setFoundLocation([foundObj.lat, foundObj.lng]);
+
+      setTimeout(() => {
+        if (foundObj.id && popupRefs.current[foundObj.id]) {
+          popupRefs.current[foundObj.id]?.openOn(mapRef.current);
+        }
+      }, 300);
+    } else {
+      setSelectedObject(null);
+      setFoundLocation(null);
+    }
+  }, [debouncedSearchTerm, objects]);
 
   useEffect(() => {
     let isMounted = true;
-  
+
     const fetchData = async () => {
       try {
         await loadGeoJSONData();
         if (!isMounted) return;
-  
+
         const facilities = await facilitiesApi.getFacilities({
           token: localStorage.getItem('accessToken') || '',
-          division: divisionId
+          division: divisionId,
+          subdivision: subdivisionId || undefined
         });
-  
+
         const mappedObjects = await Promise.all(
           facilities.map(async (facility) => {
+            // Проверяем принадлежность к подразделению, если указано
+            if (subdivisionId && facility.subdivision?.toString() !== subdivisionId) {
+              return null;
+            }
+
             const geocoded = facility.address ? geocodeAddress(facility.address) : null;
             let lat = null;
             let lng = null;
-  
+
             if (geocoded) {
               lat = Array.isArray(geocoded.lat) ? geocoded.lat[1] : geocoded.lat;
               lng = Array.isArray(geocoded.lng) ? geocoded.lng[0] : geocoded.lng;
             }
-  
+
             return {
               id: facility.id,
               name: facility.name,
@@ -81,16 +135,16 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
               color: facility.is_closed ? 'grey' : 'blue'
             };
           })
-        );
-  
+        ).then(results => results.filter(Boolean)); // Удаляем null значения
+
         if (isMounted && mappedObjects.length > 0) {
           setObjects(mappedObjects);
-          
+
           // Находим объект с наименьшим ID
-          const objectWithMinId = mappedObjects.reduce((prev, current) => 
+          const objectWithMinId = mappedObjects.reduce((prev, current) =>
             (prev.id < current.id) ? prev : current
           );
-  
+
           // Устанавливаем позицию на объект с наименьшим ID
           if (objectWithMinId.lat && objectWithMinId.lng) {
             setInitialPosition({
@@ -104,43 +158,14 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
         console.error('Ошибка загрузки:', error);
       }
     };
-  
+
     fetchData();
     return () => { isMounted = false; };
-  }, [divisionId]);
+  }, [divisionId, subdivisionId]);
 
   if (!mapReady) {
     return <div className="loading-spinner">Загрузка карты...</div>;
   }
-
-  const handleAddressFound = (coords: [number, number]) => {
-    setFoundLocation(coords);
-    // Найти объект по координатам
-    const foundObj = objects.find(obj =>
-      obj.lat === coords[0] && obj.lng === coords[1]
-    );
-    setSelectedObject(foundObj || null);
-  };
-
-  const handleNameFound = (name: string) => {
-    // Ищем объект по точному или частичному совпадению имени
-    const foundObj = objects.find(obj => 
-      obj.name.toLowerCase().includes(name.toLowerCase())
-    );
-    
-    if (foundObj) {
-      setSelectedObject(foundObj);
-      if (foundObj.lat && foundObj.lng) {
-        setFoundLocation([foundObj.lat, foundObj.lng]);
-      }
-    } else {
-      // Если не нашли по имени, пробуем найти в geoJSON данных
-      const geoResult = geocodeAddress(name);
-      if (geoResult) {
-        setFoundLocation([geoResult.lat, geoResult.lng]);
-      }
-    }
-  };
 
   // Создаем кастомную иконку для найденного объекта
   const foundIcon = new L.DivIcon({
@@ -155,6 +180,19 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
     iconAnchor: [15, 42]
   });
 
+  if (objects.length === 0 && mapReady) {
+    return (
+      <div className="map-page-container">
+        <div className="map-header">
+          <h1 className="map-title">Карта объектов</h1>
+        </div>
+        <div className="no-objects-message">
+          Нет объектов для отображения в выбранном подразделении
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="map-page-container">
       <div className="map-header">
@@ -162,12 +200,13 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
       </div>
 
       <div className="map-container">
-      <AddressSearch 
+        {/* <AddressSearch 
         onAddressFound={handleAddressFound} 
         onNameFound={handleNameFound} 
-      />
+      /> */}
 
         <MapContainer
+          ref={mapRef}
           center={initialPosition?.center || [48.4833, 135.0667]}
           zoom={initialPosition?.zoom || 10}
           className="map"
@@ -192,6 +231,8 @@ const MapView: React.FC<MapViewProps> = ({ divisionId }) => {
                 key={obj.id}
                 object={obj}
                 isSelected={selectedObject?.id === obj.id}
+                searchTerm={searchTerm}
+                setPopupRef={setPopupRef}
               />
             )
           ))}

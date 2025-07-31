@@ -1,6 +1,9 @@
+from venv import logger
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
+import os
+from django.core.files.storage import default_storage
 
 from facilities.models import Division, Subdivision
 
@@ -144,6 +147,12 @@ class Employee(models.Model):
             ('Мичман', 'Мичман')
         ]
 
+    photo = models.ImageField(
+        upload_to='employee_photos/',
+        verbose_name='Фотография',
+        null=True,
+        blank=True
+    )
     full_name = models.CharField(max_length=50, verbose_name='ФИО')
     position = models.CharField(max_length=256, verbose_name='Должность')
     rank = models.CharField(max_length=20, verbose_name='Звание', null=True)
@@ -208,8 +217,50 @@ class Employee(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+    @property
+    def photo_url(self):
+        if self.photo and hasattr(self.photo, 'url'):
+            return self.photo.url
+        return None
+
+    def delete_photo(self):
+        """Полностью удаляет фото сотрудника"""
+        if self.photo:
+            try:
+                # Получаем путь к файлу перед удалением
+                file_path = self.photo.path
+                
+                # Удаляем файл из хранилища
+                self.photo.delete(save=False)
+                
+                # Удаляем запись из базы данных
+                self.photo = None
+                self.save()
+                
+                # Двойная проверка: убедимся, что файл удален
+                if os.path.exists(file_path):
+                    logger.error(f"Файл фото не был удален: {file_path}")
+                    return False
+                    
+                return True
+            except Exception as e:
+                logger.error(f"Ошибка удаления фото: {str(e)}")
+                return False
+        return False
 
     def save(self, *args, **kwargs):
+        # Если это существующая запись и фото было изменено
+        if self.pk:
+            try:
+                old_employee = Employee.objects.get(pk=self.pk)
+                if old_employee.photo and old_employee.photo != self.photo:
+                    old_employee.photo.delete(save=False)
+            except Employee.DoesNotExist:
+                pass
+            
+        super().save(*args, **kwargs)
+
     # Автоматически устанавливаем приоритет в зависимости от категории, должности и звания
         if self.category == 'management':
             if self.subcategory == 'chief':
