@@ -124,18 +124,14 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
 
     def get_photo_url(self, obj):
+        """Возвращаем только относительный путь или None"""
         if not obj.photo:
             return None
             
         try:
-            if obj.photo and hasattr(obj.photo, 'url'):
-                request = self.context.get('request')
-                if request is not None:
-                    return request.build_absolute_uri(obj.photo.url)
-                return obj.photo.url
+            return obj.photo.url  # Только относительный путь
         except Exception:
             return None
-        return None
     
     def validate_photo(self, value):
         if value:
@@ -251,6 +247,19 @@ class EmployeeSerializer(serializers.ModelSerializer):
             representation['subdivision'] = None
         return representation
     
+    def validate_photo(self, value):
+        if value:
+            # Проверка размера файла (не более 2MB)
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("Фото слишком большое. Максимальный размер - 2MB.")
+            
+            # Проверка типа файла
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+            ext = os.path.splitext(value.name)[1].lower()
+            if ext not in valid_extensions:
+                raise serializers.ValidationError("Неподдерживаемый формат изображения. Используйте JPG, PNG или WebP.")
+        return value
+    
     
 class EmployeeDictionariesSerializer(serializers.Serializer):
     categories = serializers.ListField(
@@ -295,28 +304,13 @@ class EmployeeDictionariesSerializer(serializers.Serializer):
     )
 
 class EmployeePhotoSerializer(serializers.ModelSerializer):
-    photo_url = serializers.SerializerMethodField(read_only=True)
-    
+    photo_url = serializers.SerializerMethodField()
+
+    def get_photo_url(self, obj):
+        if obj.photo:
+            return obj.photo.url
+        return None  # ← Важно: возвращаем None, а не пропущенное поле
+
     class Meta:
         model = Employee
-        fields = ['id', 'photo', 'photo_url']
-        read_only_fields = ['id']
-    
-    def get_photo_url(self, obj):
-        """
-        Явно возвращаем URL или None
-        Обновляем состояние при каждом запросе
-        """
-        if hasattr(obj, 'photo') and obj.photo:
-            try:
-                # Принудительно обновляем объект
-                obj.refresh_from_db()
-                
-                if obj.photo:
-                    request = self.context.get('request')
-                    if request:
-                        return request.build_absolute_uri(obj.photo.url)
-                    return obj.photo.url
-            except Exception:
-                pass
-        return None
+        fields = ['id', 'photo_url']

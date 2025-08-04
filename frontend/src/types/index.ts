@@ -135,3 +135,21 @@ export interface CommunicationPost {
   created_at: string;
   updated_at: string;
 }
+
+export interface Network {
+  id: number;
+  name: string;
+  description?: string;
+  network_class: string;
+  security_level: 'public' | 'confidential' | 'secret' | 'top_secret';
+  divisions: Division[];
+  subdivisions: Subdivisions[];
+  facilities: Facility[];
+  equipment: Equipment[];
+  created_at: string;
+  updated_at: string;
+  ip_range: string;
+  bandwidth: string;
+  throughput?: number;
+  protocol: 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
+};

@@ -1,0 +1,66 @@
+.communication-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e1e5eb;
+}
+
+.communication-header-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+}
+
+.communication-header-back-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 12px;
+    color: #4a5568;
+    transition: color 0.2s;
+}
+
+.communication-header-back-button:hover {
+    color: #2d3748;
+}
+
+.communication-header-back-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.communication-header-create-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.communication-header-create-button:hover {
+    background-color: #3182ce;
+}
+
+@media (max-width: 768px) {
+    .communication-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .communication-header-create-button {
+        width: 100%;
+        justify-content: center;
+    }
+}

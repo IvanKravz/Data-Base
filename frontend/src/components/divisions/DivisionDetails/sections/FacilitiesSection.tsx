@@ -226,8 +226,6 @@ export function FacilitiesSection() {
     navigate(`/divisions/${id}/communication-posts/new${subdivisionId ? `?subdivision=${subdivisionId}` : ''}`);
   };
 
-  console.log('facilities', facilities)
-
   return (
     <>
       <div className="section-container">

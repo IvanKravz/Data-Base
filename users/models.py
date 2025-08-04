@@ -2,10 +2,31 @@ from venv import logger
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
+from django.core.files.storage import default_storage
 import os
+import re
+import uuid
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.core.files.storage import default_storage
 
 from facilities.models import Division, Subdivision
+
+def employee_photo_path(instance, filename):
+    # Очищаем ФИО от недопустимых символов
+    full_name = re.sub(r'[^\w\s]', '', instance.full_name)  # Удаляем спецсимволы
+    full_name = full_name.replace(' ', '_')  # Заменяем пробелы на подчеркивания
+    
+    # Получаем расширение файла
+    ext = os.path.splitext(filename)[1]
+    
+    # Формируем имя файла
+    if instance.id:
+        return f'employee_photos/{full_name}_id_{instance.id}{ext}'
+    else:
+        # Для новых объектов (еще без ID) используем временное имя
+        return f'employee_photos/temp/{uuid.uuid4()}{ext}'
+    
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -148,7 +169,7 @@ class Employee(models.Model):
         ]
 
     photo = models.ImageField(
-        upload_to='employee_photos/',
+        upload_to=employee_photo_path,
         verbose_name='Фотография',
         null=True,
         blank=True
@@ -223,31 +244,47 @@ class Employee(models.Model):
         if self.photo and hasattr(self.photo, 'url'):
             return self.photo.url
         return None
+    
+    def delete(self, *args, **kwargs):
+        # Удаляем все файлы фото
+        self.delete_photo()
+        super().delete(*args, **kwargs)
 
     def delete_photo(self):
-        """Полностью удаляет фото сотрудника"""
-        if self.photo:
-            try:
-                # Получаем путь к файлу перед удалением
-                file_path = self.photo.path
-                
-                # Удаляем файл из хранилища
-                self.photo.delete(save=False)
-                
-                # Удаляем запись из базы данных
-                self.photo = None
-                self.save()
-                
-                # Двойная проверка: убедимся, что файл удален
-                if os.path.exists(file_path):
-                    logger.error(f"Файл фото не был удален: {file_path}")
-                    return False
-                    
-                return True
-            except Exception as e:
-                logger.error(f"Ошибка удаления фото: {str(e)}")
-                return False
-        return False
+        """Удаляет все фото сотрудника по шаблону имени"""
+        if not self.id:
+            return False
+
+        # Формируем базовое имя файла без расширения
+        full_name_clean = re.sub(r'[^\w\s]', '', self.full_name)
+        full_name_clean = full_name_clean.replace(' ', '_')
+        base_name = f'employee_photos/{full_name_clean}_id_{self.id}'
+
+        storage = default_storage
+        deleted = False
+
+        try:
+            # Получаем список файлов в директории employee_photos
+            dir_path = os.path.dirname(base_name)
+            _, files = storage.listdir(dir_path)
+        except FileNotFoundError:
+            return False
+
+        # Удаляем все файлы, начинающиеся с base_name
+        for filename in files:
+            if filename.startswith(os.path.basename(base_name) + '.'):
+                file_path = os.path.join(dir_path, filename)
+                try:
+                    storage.delete(file_path)
+                    deleted = True
+                except Exception as e:
+                    logger.error(f"Ошибка удаления файла {file_path}: {str(e)}")
+
+        # Очищаем поле фото
+        self.photo = None
+        self.save(update_fields=['photo'])
+        return deleted
+    
 
     def save(self, *args, **kwargs):
         # Если это существующая запись и фото было изменено
@@ -378,3 +415,56 @@ class ShaEquipmentConclusion(models.Model):
 
     def __str__(self):
         return f"Заключение {self.conclusion_number} для {self.sha_worker.employee.full_name}"
+    
+@receiver(post_save, sender=Employee)
+def update_employee_photo(sender, instance, created, **kwargs):
+    if created and instance.photo:
+        # Для только что созданных объектов с фото
+        try:
+            old_photo_name = instance.photo.name
+            # Генерируем новое имя с ID
+            full_name = re.sub(r'[^\w\s]', '', instance.full_name)
+            full_name = full_name.replace(' ', '_')
+            ext = os.path.splitext(old_photo_name)[1]
+            new_photo_name = f'employee_photos/{full_name}_id_{instance.id}{ext}'
+            
+            # Перемещаем файл
+            storage = instance.photo.storage
+            if storage.exists(old_photo_name):
+                # Копируем в новое расположение
+                with storage.open(old_photo_name) as f:
+                    new_file = storage.save(new_photo_name, f)
+                # Удаляем временный файл
+                storage.delete(old_photo_name)
+                # Обновляем поле photo
+                instance.photo.name = new_photo_name
+                instance.save(update_fields=['photo'])
+        except Exception as e:
+            logger.error(f"Ошибка при переименовании фото: {str(e)}")
+    
+    # При изменении ФИО переименовываем файл
+    elif instance.photo and not created:
+        try:
+            old_instance = Employee.objects.get(pk=instance.pk)
+            if old_instance.full_name != instance.full_name:
+                # Удаляем файлы со старым именем
+                old_full_name = re.sub(r'[^\w\s]', '', old_instance.full_name)
+                old_full_name = old_full_name.replace(' ', '_')
+                base_name = f'employee_photos/{old_full_name}_id_{instance.id}'
+                
+                storage = instance.photo.storage
+                try:
+                    dir_path = os.path.dirname(base_name)
+                    _, files = storage.listdir(dir_path)
+                except FileNotFoundError:
+                    files = []
+                
+                # Удаляем все файлы со старым именем
+                for filename in files:
+                    if filename.startswith(os.path.basename(base_name) + '.'):
+                        file_path = os.path.join(dir_path, filename)
+                        storage.delete(file_path)
+                
+                ...  # Существующий код для переименования файла
+        except Exception as e:
+            logger.error(f"Ошибка при переименовании фото: {str(e)}")

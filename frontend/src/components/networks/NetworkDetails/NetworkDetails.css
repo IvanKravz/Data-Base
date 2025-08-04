@@ -1,0 +1,272 @@
+.network-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.network-details-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #64748b;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.network-details-empty-icon {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.network-details-empty-text {
+    margin-top: 12px;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    max-width: 280px;
+}
+
+.network-details-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.network-details-title::before {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 24px;
+    background: #3b82f6;
+    border-radius: 3px;
+}
+
+.network-details-section {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    border: 1px solid #f1f5f9;
+}
+
+.network-details-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #345280;
+    margin: 0 0 20px 0;
+}
+
+.network-details-section-title svg {
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+}
+
+.network-details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.network-details-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    border-bottom: 1px solid #f8fafc;
+}
+
+.network-details-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.network-details-label-text {
+    font-size: 1rem;
+    color: #345280;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.network-details-value-sidebar {
+    font-size: 0.95rem;
+    color: #1e293b;
+    /* font-weight: 500; */
+    text-align: right;
+    max-width: 60%;
+}
+
+.security-public {
+    color: #10b981;
+    background: #ecfdf5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.security-confidential {
+    color: #f59e0b;
+    background: #fffbeb;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.security-secret {
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.security-top_secret {
+    color: #8b5cf6;
+    background: #f5f3ff;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+/* Иерархия сети */
+.network-hierarchy {
+    margin-top: 8px;
+}
+
+.hierarchy-node {
+    margin-bottom: 8px;
+}
+
+.hierarchy-item {
+    padding: 10px 12px; 
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    font-size: 1rem; 
+    position: relative;
+    z-index: 2;
+    border: 1px solid transparent;
+}
+
+.hierarchy-item:hover {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.hierarchy-division {
+    font-weight: 600;
+    color: #1e40af;
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.hierarchy-subdivision {
+    font-weight: 500;
+    color: #2563eb;
+    /* margin-left: 28px; */
+    background-color: #f0f9ff;
+    border-left: 4px solid #60a5fa;
+}
+
+.hierarchy-facility {
+    color: #0284c7;
+    /* margin-left: 52px; */
+    background-color: #f8fafc;
+    border-left: 4px solid #7dd3fc;
+}
+
+/* Иконки из lucide */
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.toggle-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.hierarchy-toggle {
+    margin-right: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.hierarchy-toggle svg {
+    width: 14px;
+    height: 14px;
+    color: #3b82f6;
+    transition: transform 0.2s;
+}
+
+.hierarchy-item.expanded .hierarchy-toggle svg {
+    transform: rotate(90deg);
+}
+
+.hierarchy-children {
+    margin-left: 10px;
+    padding-left: 8px;
+    border-left: 2px dashed #e2e8f0;
+    padding-top: 8px;
+    animation: expand 0.3s ease-out;
+    overflow: hidden;
+}
+
+@keyframes expand {
+    from { 
+        opacity: 0; 
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to { 
+        opacity: 1; 
+        max-height: 2000px;
+        transform: translateY(0);
+    }
+}
+
+/* Иконки для элементов */
+.hierarchy-icon {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Состояния элементов */
+.hierarchy-item.highlighted {
+    background-color: #dbeafe;
+    box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+/* Пустой текст */
+.empty-hierarchy {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-top: 12px;
+}

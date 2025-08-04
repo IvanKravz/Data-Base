@@ -29,6 +29,7 @@ import { DivisionTasksSection } from './divisions/DivisionDetails/sections/Tasks
 import { AddFacilityPage } from './facilities/AddFacilityPage';
 import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
 import { CreatePersonnelForm } from './forms';
+import CommunicationNetworks from './divisions/DivisionDetails/sections/CommunicationNetworks';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -68,6 +69,7 @@ export function MainLayout() {
         <Route path="/divisions/:id/facilities/new" element={<AddFacilityPage />} />
         <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm  />} />
         <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
+        <Route path="/divisions/:id/networks" element={<CommunicationNetworks />} />
 
         {/* Equipment Routes */}
         <Route path="/equipment-open" element={<OpenEquipmentPage />} />
@@ -89,6 +91,10 @@ export function MainLayout() {
         <Route path="/facilities/:id" element={<FacilityDetails />} />
         <Route path="/facilities-open/create" element={<CreateOpenFacilityPage />} />
         <Route path="/facilities-closed/create" element={<CreateClosedFacilityPage />} />
+
+
+        {/* CommunicationNetworks */}
+        {/* <Route path="/networks" element={<CommunicationNetworks />} /> */}
 
         {/* Other Routes */}
         <Route path="/tasks" element={<TasksSection />} />

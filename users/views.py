@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from django.db.models import Q
 from rest_framework.parsers import MultiPartParser
 from rest_framework.decorators import action
+from django.views.decorators.cache import never_cache
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
@@ -150,32 +151,33 @@ class EmployeePhotoView(APIView):
     
     def patch(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
-        old_photo = employee.photo.path if employee.photo else None
+        new_photo = request.FILES.get('photo')
+        
+        if not new_photo:
+            return Response(
+                {'error': 'No photo provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         try:
-            serializer = EmployeePhotoSerializer(
-                employee, 
-                data=request.data, 
-                partial=True,
-                context={'request': request}
-            )
+            # Delete old photo if exists
+            if employee.photo:
+                employee.photo.delete(save=False)
             
-            if serializer.is_valid():
-                # Удаляем старое фото после успешной валидации
-                if old_photo and os.path.exists(old_photo):
-                    try:
-                        os.remove(old_photo)
-                    except OSError as e:
-                        logger.error(f"Error deleting old photo: {str(e)}")
-                
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+            # Save new photo
+            employee.photo = new_photo
+            employee.save()
+            
+            # Return simple response without URL encoding
+            return Response({
+                'id': employee.id,
+                'photo_url': employee.photo.url if employee.photo else None
+            })
+            
         except Exception as e:
             logger.error(f"Error updating photo: {str(e)}")
             return Response(
-                {'error': 'Failed to update photo'}, 
+                {'error': 'Failed to update photo'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -183,30 +185,28 @@ class EmployeePhotoView(APIView):
         employee = get_object_or_404(Employee, pk=pk)
         
         try:
-            # Сохраняем состояние до удаления для отката
-            original_photo = employee.photo
-            
-            if employee.delete_photo():
-                # Убедимся, что изменения применились
-                employee.refresh_from_db()
-                
-                # Возвращаем обновленные данные
-                serializer = EmployeeSerializer(employee, context={'request': request})
-                return Response(serializer.data)
+            if employee.photo or employee.photo_url:
+                employee.delete_photo()
+                # Возвращаем JSON с id и явным photo_url: null
+                return Response(
+                    {
+                        'id': employee.id,
+                        'photo_url': None  # Явно указываем null
+                    },
+                    headers={
+                        'Cache-Control': 'no-store, no-cache, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                )
             
             return Response(
-                {'error': 'No photo to delete'}, 
+                {'error': 'No photo to delete'},
                 status=status.HTTP_404_NOT_FOUND
             )
-            
         except Exception as e:
-            # Откатываем изменения в случае ошибки
-            if original_photo:
-                employee.photo = original_photo
-                employee.save()
-                
             logger.error(f"Ошибка удаления фото: {str(e)}")
             return Response(
-                {'error': 'Failed to delete photo'}, 
+                {'error': 'Failed to delete photo'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

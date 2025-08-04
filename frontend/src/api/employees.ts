@@ -96,30 +96,30 @@ export const employeesApi = {
   // Update existing person
   updatePerson: async (token: string, id: string, personData: Partial<Employee>) => {
     // Подготавливаем данные для отправки
-    const dataToSend = {
-      ...personData,
-      // Преобразуем даты в строки, если они есть
-      birth_date: personData.birth_date ? formatDate(personData.birth_date) : undefined,
-      contract_date: personData.contract_date ? formatDate(personData.contract_date) : undefined,
-      data_state_secrets: personData.data_state_secrets ? formatDate(personData.data_state_secrets) : undefined,
-      year_graduation: personData.year_graduation ? formatDate(personData.year_graduation) : undefined,
-      date_start_work: personData.date_start_work ? formatDate(personData.date_start_work) : undefined,
-      date_end_work: personData.date_end_work ? formatDate(personData.date_end_work) : undefined,
-      order_rank: personData.order_rank || null,
-      // Убираем лишние поля, которые бэкенд не ожидает
-      id: undefined,
-      created_at: undefined,
-      updated_at: undefined,
-      division: undefined,
-      subdivision: undefined,
-      // Обрабатываем подразделения
-      division_id: personData.division?.id || null,
-      subdivision_id: personData.subdivision?.id || null,
-      // Обрабатываем sha_details
-      sha_details: personData.is_sha_worker ? personData.sha_details : null
-    };
+    // const dataToSend = {
+    //   ...personData,
+    //   // Преобразуем даты в строки, если они есть
+    //   birth_date: personData.birth_date ? formatDate(personData.birth_date) : undefined,
+    //   contract_date: personData.contract_date ? formatDate(personData.contract_date) : undefined,
+    //   data_state_secrets: personData.data_state_secrets ? formatDate(personData.data_state_secrets) : undefined,
+    //   year_graduation: personData.year_graduation ? formatDate(personData.year_graduation) : undefined,
+    //   date_start_work: personData.date_start_work ? formatDate(personData.date_start_work) : undefined,
+    //   date_end_work: personData.date_end_work ? formatDate(personData.date_end_work) : undefined,
+    //   order_rank: personData.order_rank || null,
+    //   // Убираем лишние поля, которые бэкенд не ожидает
+    //   id: undefined,
+    //   created_at: undefined,
+    //   updated_at: undefined,
+    //   division: undefined,
+    //   subdivision: undefined,
+    //   // Обрабатываем подразделения
+    //   division_id: personData.division?.id || null,
+    //   subdivision_id: personData.subdivision?.id || null,
+    //   // Обрабатываем sha_details
+    //   sha_details: personData.is_sha_worker ? personData.sha_details : null
+    // };
 
-    const { data } = await api.patch(`users/employees/${id}/`, dataToSend, {
+    const { data } = await api.patch(`users/employees/${id}/`, personData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,

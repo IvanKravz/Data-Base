@@ -36,72 +36,46 @@ export function PersonnelDetails() {
   const handlePhotoChange = async (file: File) => {
     if (!token || !id || !person) return;
 
-    // Объявляем переменную вне блока try
     let previewUrl: string | null = null;
 
     try {
-      // 1. СОЗДАНИЕ ВРЕМЕННОГО URL (BLOB)
-      previewUrl = URL.createObjectURL(file);
-      const updatedPerson = { ...person, photo_url: previewUrl };
+        // 1. Create preview URL
+        previewUrl = URL.createObjectURL(file);
+        const updatedPerson = { ...person, photo_url: previewUrl };
 
-      // 2. ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ REDUX
-      dispatch(updatePersonAsync({
-        token,
-        id,
-        personData: updatedPerson
-      }));
+        // 2. Optimistic update
+        dispatch(updatePersonAsync({
+            token,
+            id,
+            personData: updatedPerson
+        }));
 
-      // 3. ОТПРАВКА ФОТО НА СЕРВЕР
-      await employeesApi.uploadPhoto(token, id, file);
+        // 3. Upload to server
+        await employeesApi.uploadPhoto(token, id, file);
 
-      // 4. ЗАПРОС АКТУАЛЬНЫХ ДАННЫХ
-      dispatch(fetchPersonById({ token, id }));
+        // 4. Refresh data
+        await dispatch(fetchPersonById({ token, id }));
 
     } catch (error) {
-      console.error('Ошибка загрузки фото:', error);
-      // 5. ОТКАТ ИЗМЕНЕНИЙ ПРИ ОШИБКЕ
-      dispatch(updatePersonAsync({
-        token,
-        id,
-        personData: person
-      }));
-      message.error('Ошибка загрузки фото');
+        console.error('Photo upload error:', error);
+        // Rollback on error
+        await dispatch(updatePersonAsync({
+            token,
+            id,
+            personData: person
+        }));
+        message.error('Photo upload failed');
     } finally {
-      // 6. ОСВОБОЖДЕНИЕ ПАМЯТИ
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+        // Clean up
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
     }
-  };
+};
 
   const handlePhotoRemove = async () => {
-    if (!token || !id || !person) return;
-
-    try {
-      // Оптимистичное обновление
-      const updatedPerson = { ...person, photo_url: null };
-      dispatch(updatePersonAsync({ token, id, personData: updatedPerson }));
-
-      // Удаление фото на сервере и получение обновленных данных
-      const response = await employeesApi.deletePhoto(token, id);
-
-      // Если сервер подтвердил удаление
-      if (response && !response.photo_url) {
-        dispatch(updatePersonAsync({
-          token,
-          id,
-          personData: response
-        }));
-      } else {
-        // Если что-то пошло не так, возвращаем исходные данные
-        dispatch(updatePersonAsync({ token, id, personData: person }));
-        message.error('Не удалось удалить фото');
-      }
-
-    } catch (error) {
-      // Откат изменений при ошибке
-      dispatch(updatePersonAsync({ token, id, personData: person }));
-      message.error('Ошибка удаления фото');
-    }
+    await employeesApi.deletePhoto(token, id);
+    await dispatch(fetchPersonById({ token, id })); // Получаем свежие данные
   };
+  
 
   if (error) {
     return (

@@ -86,8 +86,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         setIsModalVisible(false);
     };
 
-    console.log('pers', person)
-
     return (
         <div className="photo-card info-card">
             <div className="photo-card-content">
