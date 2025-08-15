@@ -29,14 +29,15 @@ export const exportEquipmentToExcel = (equipment: Equipment[]) => {
   const data = equipment.map(item => ({
     'Название': item.name,
     'Тип': item.type,
-    'Категория': getEquipmentCategory(item.category),
-    'Статус': getEquipmentStatus(item.status),
-    'Подразделение': `${item.division}${item.subdivision ? ` - ${item.subdivision}` : ''}`,
-    'Серийный номер': item.serialNumber || '-',
-    'Инвентарный номер': item.inventoryNumber || '-',
-    'Дата производства': formatDate(item.manufacturingDate),
-    'Дата покупки': formatDate(item.purchaseDate),
-    'Закреплено за': item.assignedTo || '-'
+    'Категория': getEquipmentCategory(item.category_display),
+    'Статус': getEquipmentStatus(item.status_display),
+    'Подразделение': `${item.division.name}${item.subdivision.name ? ` - ${item.subdivision.name}` : ''}`,
+    'Серийный номер': item.serial_number || '-',
+    'Инвентарный номер': item.inventory_number || '-',
+    'Дата производства': formatDate(item.manufacturing_date),
+    'Дата покупки': formatDate(item.purchase_date),
+    'Версия ПО': formatDate(item.ver_software),
+    'Закреплено за': item.assigned_to.full_name || '-'
   }));
 
   const ws = utils.json_to_sheet(data);

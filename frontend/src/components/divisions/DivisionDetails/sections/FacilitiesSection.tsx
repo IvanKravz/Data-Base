@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Plus,
+  FolderOpen,
+  FolderClosed,
+  SatelliteDish,
+  Map
+} from 'lucide-react';
 import { facilitiesApi, communicationPostsApi } from '../../../../api';
 import { FacilityList } from '../../../facilities/FacilityList';
 import { CommunicationPostsList } from './CommunicationPosts/CommunicationPostsList';
@@ -8,10 +15,16 @@ import { SearchBar } from '../../../common/SearchBar';
 import { FacilityTypeFilter } from '../../../facilities/FacilityTypeFilter';
 import { divisionsApi } from '../../../../api';
 import { Facility, CommunicationPost } from '../../../../types';
-import './style.css';
+import './FacilitiesSection.css';
 import MapView from '../../../map/MapView';
 import { normalizeSearchString } from '../../../../utils/normalizeSearchString';
 import { useDebounce } from '../../../../utils/useDebounce';
+
+const TAB_ICONS = {
+  'open': <FolderOpen className="facilities-tab-icon" size={16} />,
+  'closed': <FolderClosed className="facilities-tab-icon" size={16} />,
+  'posts': <SatelliteDish className="facilities-tab-icon" size={16} />
+};
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
@@ -20,6 +33,10 @@ export function FacilitiesSection() {
   const subdivisionId = searchParams.get('subdivision');
   const token = localStorage.getItem('accessToken');
 
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const indicatorRef = useRef<HTMLDivElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({});
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | number>('all');
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
@@ -37,36 +54,29 @@ export function FacilitiesSection() {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = useState<Facility[]>([]);
 
+  // Эффект для обновления позиции индикатора
   useEffect(() => {
-    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
-      setSearchResults([]);
-      return;
-    }
-
-    const normalizedSearch = debouncedSearchTerm.toLowerCase()
-      .replace(/,/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    const results = facilities.filter(facility => {
-      if (!matchesSubdivision(facility)) return false;
-
-      const isOpenTab = activeTab === 'open';
-      const matchesStatus = isOpenTab ? !facility.is_closed : facility.is_closed;
-
-      const fullAddress = `${facility.address || ''}`.toLowerCase()
-        .replace(/,/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      return matchesStatus &&
-        (fullAddress.includes(normalizedSearch) ||
-          facility.name.toLowerCase().includes(normalizedSearch));
-    });
-
-    setSearchResults(results);
-  }, [debouncedSearchTerm, facilities, activeTab, subdivisionId]);
-
+    const updateIndicator = () => {
+      if (!tabsRef.current || !indicatorRef.current) return;
+      
+      const activeTabElement = tabsRef.current.querySelector('.facilities-tab-button.active') as HTMLElement;
+      if (!activeTabElement) return;
+      
+      const tabRect = activeTabElement.getBoundingClientRect();
+      const containerRect = tabsRef.current.getBoundingClientRect();
+      
+      setIndicatorStyle({
+        left: tabRect.left - containerRect.left,
+        width: tabRect.width,
+        opacity: 1
+      });
+    };
+    
+    updateIndicator();
+    window.addEventListener('resize', updateIndicator);
+    
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [activeTab]);
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
@@ -121,6 +131,14 @@ export function FacilitiesSection() {
     setSearchParams(searchParams);
   };
 
+  const handleFacilityDeleted = (deletedId: string) => {
+    setFacilities(prev => prev.filter(f => f.id !== deletedId));
+  };
+
+  const handlePostDeleted = (deletedId: string) => {
+    setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
+  };
+
   const matchesSubdivision = (facility: Facility) => {
     if (!subdivisionId) return true;
     const facilitySubdivision = facility.subdivision?.toString() || '';
@@ -159,14 +177,18 @@ export function FacilitiesSection() {
     setFacilityClassFilter('all');
     searchParams.set('tab', tab);
     setSearchParams(searchParams);
-  };
-
-  const handleFacilityDeleted = (deletedId: string) => {
-    setFacilities(prev => prev.filter(f => f.id !== deletedId));
-  };
-
-  const handlePostDeleted = (deletedId: string) => {
-    setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
+    
+    // Прокрутка к активной вкладке
+    setTimeout(() => {
+      const activeTabElement = document.querySelector('.facilities-tab-button.active');
+      if (activeTabElement) {
+        activeTabElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 10);
   };
 
   // Фильтрация по типу, классу и статусу
@@ -211,11 +233,11 @@ export function FacilitiesSection() {
   };
 
   if (loading) {
-    return <div>Загрузка данных...</div>;
+    return <div className="flex justify-center py-12">Загрузка данных...</div>;
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return <div className="facilities-error-message">{error}</div>;
   }
 
   const handleAddFacility = () => {
@@ -228,117 +250,150 @@ export function FacilitiesSection() {
 
   return (
     <>
-      <div className="section-container">
-        <h2 className="section-title">
-          <button type="button" onClick={onBack} className="back-button">
-            <ArrowLeft className="back-button-icon" />
-          </button>
-          Объекты: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
-        </h2>
-
-        <div className='block-add-facility-button'>
-          {activeTab === 'posts' ? (
-            <button
-              onClick={handleAddPost}
-              className="add-facility-button"
-            >
-              <Plus size={18} />
-              <span>Добавить пост связи</span>
+      <div className="facilities-container">
+        {/* Header Block с кнопкой справа */}
+        <div className="facilities-header">
+          <div className="flex items-center">
+            <button type="button" onClick={onBack} className="back-button">
+              <ArrowLeft className="back-button-icon" />
             </button>
-          ) : (
-            <button
-              onClick={handleAddFacility}
-              className="add-facility-button"
-            >
-              <Plus size={18} />
-              <span>Добавить объект</span>
-            </button>
-          )}
-          {addCommunicationPosts &&
-            <button
-              onClick={handleAddPost}
-              className="add-facility-button"
-            >
-              <Plus size={18} />
-              <span>Добавить пост связи</span>
-            </button>}
-        </div>
-
-        <div className="tabs">
-          {hasOpenFacilities && (
-            <button
-              className={`tab-button-facilities ${activeTab === 'open' ? 'active' : ''}`}
-              onClick={() => handleTabChange('open')}
-            >
-              Открытые объекты
-            </button>
-          )}
-          {hasClosedFacilities && (
-            <button
-              className={`tab-button-facilities ${activeTab === 'closed' ? 'active' : ''}`}
-              onClick={() => handleTabChange('closed')}
-            >
-              Закрытые объекты
-            </button>
-          )}
-          {hasCommunicationPosts && (
-            <button
-              className={`tab-button-facilities ${activeTab === 'posts' ? 'active' : ''}`}
-              onClick={() => handleTabChange('posts')}
-            >
-              Посты связи
-            </button>
-          )}
-        </div>
-
-        <div className="section-search-container">
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            placeholder={
-              activeTab === 'posts'
-                ? "Поиск по названию поста связи..."
-                : "Поиск по названию, адресу, типу, классу или посту связи..."
-            }
-          />
-        </div>
-
-        {(activeTab === 'open' || activeTab === 'closed') && (
-          <FacilityTypeFilter
-            facilities={facilities.filter(f =>
-              (activeTab === 'open' ? !f.is_closed : f.is_closed) &&
-              matchesSubdivision(f)
+            <h2 className="facilities-title ml-3">
+              Объекты: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
+            </h2>
+          </div>
+          
+          <div className="facilities-add-buttons">
+            {activeTab === 'posts' ? (
+              <button
+                onClick={handleAddPost}
+                className="facilities-add-button"
+              >
+                <Plus size={18} />
+                <span>Добавить пост связи</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleAddFacility}
+                className="facilities-add-button"
+              >
+                <Plus size={18} />
+                <span>Добавить объект</span>
+              </button>
             )}
-            selectedType={filterType}
-            onTypeChange={setFilterType}
-            selectedClass={facilityClassFilter}
-            onClassChange={setFacilityClassFilter}
-          />
-        )}
+            {addCommunicationPosts &&
+              <button
+                onClick={handleAddPost}
+                className="facilities-add-button"
+              >
+                <Plus size={18} />
+                <span>Добавить пост связи</span>
+              </button>}
+          </div>
+        </div>
+        
 
-        {activeTab === 'posts' ? (
-          <CommunicationPostsList
-            posts={communicationPosts}
-            onPostDeleted={handlePostDeleted}
-          />
-        ) : (
-          <FacilityList
-            viewType={viewType}
-            onViewChange={handleViewChange}
-            facilities={displayFacilities}
-            onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
-            showDifferentFields={true}
-            onFacilityDeleted={handleFacilityDeleted}
-          />
-        )}
+        {/* Обертка для контента */}
+        <div className="facilities-content-wrapper">
+          {/* Tabs Navigation */}
+          <div className="facilities-tabs-container">
+            <div 
+              className="facilities-tabs"
+              ref={tabsRef}
+            >
+              {/* Индикатор активной вкладки */}
+              <div 
+                className="facilities-tab-indicator"
+                ref={indicatorRef}
+                style={{
+                  ...indicatorStyle,
+                  transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+              />
+              
+              {hasOpenFacilities && (
+                <button
+                  className={`facilities-tab-button ${activeTab === 'open' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('open')}
+                >
+                  {TAB_ICONS.open}
+                  Открытые объекты
+                </button>
+              )}
+              {hasClosedFacilities && (
+                <button
+                  className={`facilities-tab-button ${activeTab === 'closed' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('closed')}
+                >
+                  {TAB_ICONS.closed}
+                  Закрытые объекты
+                </button>
+              )}
+              {hasCommunicationPosts && (
+                <button
+                  className={`facilities-tab-button ${activeTab === 'posts' ? 'active' : ''}`}
+                  onClick={() => handleTabChange('posts')}
+                >
+                  {TAB_ICONS.posts}
+                  Посты связи
+                </button>
+              )}
+            </div>
+            
+          </div>
 
+          {/* Content Block */}
+          <div className="facilities-content">
+            
+            <div className="facilities-search-container">
+              <SearchBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                placeholder={
+                  activeTab === 'posts'
+                    ? "Поиск по названию поста связи..."
+                    : "Поиск по названию, адресу, типу, классу или посту связи..."
+                }
+              />
+            </div>
+
+            {(activeTab === 'open' || activeTab === 'closed') && (
+              <FacilityTypeFilter
+                facilities={facilities.filter(f =>
+                  (activeTab === 'open' ? !f.is_closed : f.is_closed) &&
+                  matchesSubdivision(f)
+                )}
+                selectedType={filterType}
+                onTypeChange={setFilterType}
+                selectedClass={facilityClassFilter}
+                onClassChange={setFacilityClassFilter}
+              />
+            )}
+
+            {activeTab === 'posts' ? (
+              <CommunicationPostsList
+                posts={communicationPosts}
+                onPostDeleted={handlePostDeleted}
+              />
+            ) : (
+              <FacilityList
+                viewType={viewType}
+                onViewChange={handleViewChange}
+                facilities={displayFacilities}
+                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
+                showDifferentFields={true}
+                onFacilityDeleted={handleFacilityDeleted}
+              />
+            )}
+          </div>
+        </div>
       </div>
+      
       {division.facilities_count > 0 && (
-        <div className="division-map-overlay">
+        <div className="facilities-map-overlay">
           <MapView
             divisionId={division.id}
             subdivisionId={subdivisionId || null}
-            searchTerm={searchTerm} // Передаем поисковый запрос
+            searchTerm={searchTerm}
           />
         </div>
       )}

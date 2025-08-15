@@ -29,7 +29,7 @@
 
 .tasks-main-section {
     background-color: white;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -64,7 +64,7 @@
     justify-content: space-between;
     padding: 1.5rem;
     background-color: white;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -92,7 +92,7 @@
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     background-color: #f1f5f9;
     transition: all 0.2s;
 }
@@ -108,7 +108,7 @@
     padding: 0.75rem 1.25rem;
     background-color: #2563eb;
     color: white;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     font-weight: 500;
     transition: all 0.2s;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -122,7 +122,7 @@
 /* Обновленные стили фильтров */
 .tasks-filters {
     background-color: white;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     padding: 1.5rem;
     display: flex;
@@ -239,7 +239,7 @@
 .tasks-list-item {
     position: relative;
     background-color: white;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     border: 2px solid #e2e8f0;
     padding: 1.5rem;

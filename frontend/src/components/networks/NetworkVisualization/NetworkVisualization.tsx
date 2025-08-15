@@ -8,7 +8,7 @@ import { Network } from '../../../types';
 interface Node {
   id: string;
   name: string;
-  type: 'division' | 'subdivision' | 'facility';
+  type: 'division' | 'facility';
   position: [number, number, number];
   radius: number;
   color: string;
@@ -20,6 +20,7 @@ interface Connection {
   end: [number, number, number];
   startId: string;
   endId: string;
+  isFacilityConnection?: boolean;
 }
 
 interface NetworkVisualizationProps {
@@ -81,10 +82,25 @@ const NetworkScene: React.FC<{
           selectedNode === conn.startId || 
           selectedNode === conn.endId;
         
+        // Определяем стиль соединения
+        let lineColor = 0xffffff;
+        let opacity = 0.3;
+        let lineWidth = 1;
+
+        if (conn.isFacilityConnection) {
+          lineColor = 0xff0000; // Красный для связей между объектами
+          opacity = isHighlighted ? 0.9 : 0.2;
+          lineWidth = 2; // Более толстые линии
+        } else if (isHighlighted) {
+          lineColor = 0x61dafb;
+          opacity = 1;
+        }
+
         const material = new THREE.LineBasicMaterial({
-          color: isHighlighted ? 0x61dafb : 0xffffff,
-          opacity: isHighlighted ? 1 : 0.3,
-          transparent: true
+          color: lineColor,
+          opacity: opacity,
+          transparent: true,
+          linewidth: lineWidth
         });
         
         const geometry = new THREE.BufferGeometry().setFromPoints([
@@ -145,33 +161,26 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     const { nodes, connections } = useMemo(() => {
       const nodes: Node[] = [];
       const connections: Connection[] = [];
+      const allFacilities: Node[] = [];
       
       // Group elements by division
       const divisions = network.divisions || [];
       const subdivisions = network.subdivisions || [];
       const facilities = network.facilities || [];
       
-      // Group subdivisions by division
-      const subdivisionsByDivision: Record<number, typeof subdivisions> = {};
-      subdivisions.forEach(sub => {
-        const parentDivision = divisions.find(d => d.id == sub.division); // Используем id подразделения для поиска родителя
-        if (parentDivision) {
-          if (!subdivisionsByDivision[parentDivision.id]) {
-            subdivisionsByDivision[parentDivision.id] = [];
-          }
-          subdivisionsByDivision[parentDivision.id].push(sub);
-        }
+      // Group facilities by division through subdivision
+      const facilitiesByDivision: Record<number, typeof facilities> = {};
+      
+      // Initialize empty arrays for each division
+      divisions.forEach(div => {
+        facilitiesByDivision[div.id] = [];
       });
       
-      // Group facilities by subdivision
-      const facilitiesBySubdivision: Record<number, typeof facilities> = {};
-      facilities.forEach(fac => {
-        const parentSubdivision = subdivisions.find(s => s.id == fac.subdivision); // Используем id объекта для поиска родителя
-        if (parentSubdivision) {
-          if (!facilitiesBySubdivision[parentSubdivision.id]) {
-            facilitiesBySubdivision[parentSubdivision.id] = [];
-          }
-          facilitiesBySubdivision[parentSubdivision.id].push(fac);
+      // Map facilities to their divisions
+      subdivisions.forEach(sub => {
+        if (facilitiesByDivision[sub.division]) {
+          const facs = facilities.filter(fac => fac.subdivision === sub.id);
+          facilitiesByDivision[sub.division].push(...facs);
         }
       });
       
@@ -185,108 +194,80 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
         // Position division
         const divX = divisionRadius * Math.cos(divisionAngle);
         const divZ = divisionRadius * Math.sin(divisionAngle);
+        const divY = 20;
         nodes.push({
           id: `division-${div.id}`,
           name: div.name,
           type: 'division',
-          position: [divX, 20, divZ],
+          position: [divX, divY, divZ],
           radius: 2.0,
           color: '#4a6fa5',
           originalColor: '#4a6fa5'
         });
         
-        // Position subdivisions for this division in a circle around it
-        const subs = subdivisionsByDivision[div.id] || [];
-        const subRadius = 6;
-        const subAngleStep = subs.length > 0 ? (2 * Math.PI) / subs.length : 0;
+        // Position facilities for this division in a circle around it
+        const facs = facilitiesByDivision[div.id] || [];
+        const facRadius = 8;
+        const facAngleStep = facs.length > 0 ? (2 * Math.PI) / facs.length : 0;
         
-        subs.forEach((sub, subIndex) => {
-          const subAngle = subIndex * subAngleStep;
-          const subX = divX + subRadius * Math.cos(subAngle);
-          const subZ = divZ + subRadius * Math.sin(subAngle);
+        facs.forEach((fac, facIndex) => {
+          const facAngle = facIndex * facAngleStep;
+          const facX = divX + facRadius * Math.cos(facAngle);
+          const facZ = divZ + facRadius * Math.sin(facAngle);
+          const facY = 8;
           
-          nodes.push({
-            id: `subdivision-${sub.id}`,
-            name: sub.name,
-            type: 'subdivision',
-            position: [subX, 15, subZ],
-            radius: 1.6,
-            color: '#63b3ed',
-            originalColor: '#63b3ed'
-          });
+          const facilityNode: Node = {
+            id: `facility-${fac.id}`,
+            name: fac.name,
+            type: 'facility',
+            position: [facX, facY, facZ],
+            radius: 1.5,
+            color: '#90cdf4',
+            originalColor: '#90cdf4'
+          };
+          nodes.push(facilityNode);
+          allFacilities.push(facilityNode);
           
-          // Connect division to subdivision
+          // Connect division to facility
           connections.push({
-            start: [divX, 22, divZ],
-            end: [subX, 15, subZ],
+            start: [divX, divY, divZ],
+            end: [facX, facY, facZ],
             startId: `division-${div.id}`,
-            endId: `subdivision-${sub.id}`
-          });
-          
-          // Position facilities for this subdivision in a circle around it
-          const facs = facilitiesBySubdivision[sub.id] || [];
-          const facRadius = 5;
-          const facAngleStep = facs.length > 0 ? (2 * Math.PI) / facs.length : 0;
-          
-          facs.forEach((fac, facIndex) => {
-            const facAngle = facIndex * facAngleStep;
-            const facX = subX + facRadius * Math.cos(facAngle);
-            const facZ = subZ + facRadius * Math.sin(facAngle);
-            
-            nodes.push({
-              id: `facility-${fac.id}`,
-              name: fac.name,
-              type: 'facility',
-              position: [facX, 8, facZ],
-              radius: 1.5,
-              color: '#90cdf4',
-              originalColor: '#90cdf4'
-            });
-            
-            // Connect subdivision to facility
-            connections.push({
-              start: [subX, 15, subZ],
-              end: [facX, 8, facZ],
-              startId: `subdivision-${sub.id}`,
-              endId: `facility-${fac.id}`
-            });
+            endId: `facility-${fac.id}`
           });
         });
       });
       
-      // Add orphaned subdivisions (without parent division)
-      let orphanSubIndex = 0;
-      subdivisions.forEach(sub => {
-        if (!divisions.some(d => d.id == sub.id) && !nodes.some(n => n.id == `subdivision-${sub.id}`)) {
-          nodes.push({
-            id: `subdivision-${sub.id}`,
-            name: sub.name,
-            type: 'subdivision',
-            position: [30, 0, orphanSubIndex * 8 - 16],
-            radius: 1.6,
-            color: '#63b3ed',
-            originalColor: '#63b3ed'
-          });
-          orphanSubIndex++;
-        }
-      });
-      
-      // Add orphaned facilities (without parent subdivision)
-      let orphanFacIndex = 0;
+      // Add orphaned facilities (without parent division)
+      const processedFacilityIds = new Set(allFacilities.map(f => f.id));
       facilities.forEach(fac => {
-        if (!subdivisions.some(s => s.id == fac.id) && !nodes.some(n => n.id == `facility-${fac.id}`)) {
-          nodes.push({
+        if (!processedFacilityIds.has(`facility-${fac.id}`)) {
+          const orphanedFacilityNode: Node = {
             id: `facility-${fac.id}`,
             name: fac.name,
             type: 'facility',
-            position: [30, -10, orphanFacIndex * 8 - 16],
+            position: [30, -10, allFacilities.length * 8 - 16],
             radius: 1.4,
             color: '#90cdf4',
             originalColor: '#90cdf4'
-          });
-          orphanFacIndex++;
+          };
+          nodes.push(orphanedFacilityNode);
+          allFacilities.push(orphanedFacilityNode);
         }
       });
+      
+      // Create connections between all facilities
+      for (let i = 0; i < allFacilities.length; i++) {
+        for (let j = i + 1; j < allFacilities.length; j++) {
+          connections.push({
+            start: allFacilities[i].position,
+            end: allFacilities[j].position,
+            startId: allFacilities[i].id,
+            endId: allFacilities[j].id,
+            isFacilityConnection: true
+          });
+        }
+      }
       
       return { nodes, connections };
     }, [network]);
@@ -302,9 +283,6 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     switch(type) {
       case 'division':
         node = network.divisions?.find(d => d.id === parseInt(id));
-        break;
-      case 'subdivision':
-        node = network.subdivisions?.find(s => s.id === parseInt(id));
         break;
       case 'facility':
         node = network.facilities?.find(f => f.id === parseInt(id));

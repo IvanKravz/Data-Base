@@ -38,11 +38,11 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
       <table className="networks-table">
         <thead>
           <tr>
-            <th className="table-header">Название</th>
-            <th className="table-header">Класс</th>
-            <th className="table-header">Секретность</th>
-            <th className="table-header">Протокол</th>
-            <th className="table-header">IP диапазон</th>
+            <th className="network-table-header">Название</th>
+            <th className="network-table-header">Класс</th>
+            <th className="network-table-header">Секретность</th>
+            <th className="network-table-header">Протокол</th>
+            <th className="network-table-header">IP диапазон</th>
           </tr>
         </thead>
         <tbody>

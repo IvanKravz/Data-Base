@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from facilities.models import Division, Subdivision, Facility
-from .models import ClosedEquipmentCategory, Equipment, OpenEquipmentCategory, ProductStructure
+from .models import VLAN, NetworkInterface, IPAddress, IPRange, ClosedEquipmentCategory, Equipment, OpenEquipmentCategory, ProductStructure
 from users.serializers import EmployeeSerializer
 
 class DivisionShortSerializer(serializers.ModelSerializer):
@@ -33,6 +33,26 @@ class ProductStructureSerializer(serializers.ModelSerializer):
         model = ProductStructure
         fields = ['id', 'name', 'model', 'serial_number', 'note']
 
+class VLANSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VLAN
+        fields = ['id', 'vlan_id', 'name', 'description']
+
+class NetworkInterfaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetworkInterface
+        fields = ['id', 'name', 'interface_type', 'physical_type', 'enabled', 'vlan', 'is_trunk', 'native_vlan']
+
+class IPAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IPAddress
+        fields = ['id', 'address', 'netmask', 'version', 'is_primary', 'gateway']
+
+class IPRangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IPRange
+        fields = ['id', 'network', 'description', 'vlan', 'devices']
+
 class EquipmentSerializer(serializers.ModelSerializer):
     assigned_to = EmployeeSerializer(read_only=True)
     division = DivisionShortSerializer(read_only=True)
@@ -47,6 +67,8 @@ class EquipmentSerializer(serializers.ModelSerializer):
     first_invoice = serializers.CharField(required=False, allow_null=True)
     material_invoice = serializers.CharField(required=False, allow_null=True)
     ver_software = serializers.CharField(required=False, allow_null=True)
+    network_interfaces = serializers.SerializerMethodField()
+    ip_ranges = serializers.SerializerMethodField()
 
     class Meta:
         model = Equipment
@@ -55,7 +77,8 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'status', 'status_display', 'serial_number', 'inventory_number',
             'first_invoice', 'material_invoice', 'ver_software', 'product_structures',
             'manufacturing_date', 'purchase_date', 'division', 'subdivision', 
-            'facility', 'assigned_to', 'comments', 'created_at', 'updated_at', 'disposal_info'
+            'facility', 'assigned_to', 'comments', 'created_at', 'updated_at', 'disposal_info',
+            'network_interfaces', 'ip_ranges'
         ]
         extra_kwargs = {
             'division': {'write_only': True},
@@ -77,6 +100,22 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'disposalCertDate': obj.disposal_cert_date,
             'comments': obj.disposal_comments
         }
+    
+    def get_network_interfaces(self, obj):
+        """Возвращает сетевые интерфейсы только для сетевого оборудования"""
+        if not hasattr(obj, 'is_network_device') or not obj.is_network_device:
+            return []
+        
+        interfaces = obj.network_interfaces.all()
+        return NetworkInterfaceSerializer(interfaces, many=True).data
+
+    def get_ip_ranges(self, obj):
+        """Возвращает IP диапазоны для оборудования"""
+        if not hasattr(obj, 'ip_ranges'):
+            return []
+        
+        ranges = obj.ip_ranges.all()
+        return IPRangeSerializer(ranges, many=True).data
 
     def update(self, instance, validated_data):
         # Получаем данные о составе изделия из запроса

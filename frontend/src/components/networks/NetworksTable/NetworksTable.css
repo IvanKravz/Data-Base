@@ -1,7 +1,7 @@
 .networks-table-wrapper {
     width: 100%;
     overflow-x: auto;
-    border-radius: 12px;
+    border-radius: 0.5rem;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
     background: white;
     border: 1px solid #f1f5f9;
@@ -14,7 +14,7 @@
     min-width: 800px;
 }
 
-.table-header {
+.network-table-header {
     padding: 18px 24px;
     text-align: left;
     background-color: #2c5282;
@@ -109,7 +109,7 @@
 }
 
 @media (max-width: 1024px) {
-    .table-header {
+    .network-table-header {
         padding: 14px 20px;
         font-size: 0.8rem;
     }

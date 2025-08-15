@@ -5,6 +5,9 @@ import { Employee, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { EquipmentModal } from '../../../equipment/EquipmentModal';
 import { equipmentApi } from '../../../../api/equipment';
+import { ExportButton } from '../../../common/ExportButton';
+import { exportEquipmentToExcel } from '../../../../utils/exportToExcel';
+import { useSearchParams } from 'react-router-dom';
 
 interface AssignedEquipmentProps {
   person: Employee;
@@ -17,6 +20,8 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('accessToken');
+  const [searchParams] = useSearchParams();
+  const subdivisionId = searchParams.get('subdivision');
 
   useEffect(() => {
     const fetchAssignedEquipment = async () => {
@@ -55,14 +60,26 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
     return <div className="text-center py-4 text-red-500">{error}</div>;
   }
 
+  const filteredEquipment = subdivisionId
+  ? assignedEquipment.filter(item => item.subdivision?.id == subdivisionId)
+  : assignedEquipment;
+
+  console.log('filteredEquipment', filteredEquipment)
+
   return (
     <div className="equipment-container">
       <div className="equipment-header">
         <h2 className="equipment-title">Закрепленная техника</h2>
+        
         <div className="equipment-summary">
           <HardDrive className="equipment-summary-icon" />
           <span className="equipment-summary-text">Всего: {assignedEquipment.length}</span>
+          <ExportButton
+          onClick={() => exportEquipmentToExcel(filteredEquipment)}
+          label="Экспорт техники"
+        />
         </div>
+       
       </div>
       <EquipmentList
         equipment={assignedEquipment}

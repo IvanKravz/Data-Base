@@ -74,7 +74,7 @@ export function AddFacilityPage() {
             <div className="facility-edit-header">
                 <button
                     onClick={handleBack}
-                    className="facility-btn facility-btn--icon"
+                    className="back-button facility-btn--icon"
                 >
                     <ArrowLeft size={20} />
                 </button>

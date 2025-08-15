@@ -41,10 +41,6 @@ export function EquipmentList({
   return (
     <>
       <div className="mb-4 flex justify-end">
-        <ExportButton
-          onClick={() => exportEquipmentToExcel(filteredEquipment)}
-          label="Экспорт техники"
-        />
       </div>
       <TableView
         equipment={filteredEquipment}
