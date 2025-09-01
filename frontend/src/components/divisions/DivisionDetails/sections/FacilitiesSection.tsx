@@ -251,7 +251,6 @@ export function FacilitiesSection() {
   return (
     <>
       <div className="facilities-container">
-        {/* Header Block с кнопкой справа */}
         <div className="facilities-header">
           <div className="flex items-center">
             <button type="button" onClick={onBack} className="back-button">
@@ -294,7 +293,6 @@ export function FacilitiesSection() {
 
         {/* Обертка для контента */}
         <div className="facilities-content-wrapper">
-          {/* Tabs Navigation */}
           <div className="facilities-tabs-container">
             <div 
               className="facilities-tabs"

@@ -1,8 +1,19 @@
 /* Удалены все стили, относящиеся к FacilitiesSection */
 
 .header-divisions {
+  background: white;
+  padding: 1.2rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
-  margin-bottom: 3rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* Карточка статистики */
@@ -17,7 +28,7 @@
   align-items: center;
   text-align: center;
   gap: 1rem;
-  border: 1.5px solid #bcc1cb;
+  border: 1.5px solid #ced3dd;
 }
 
 /* Заголовок карточки */
@@ -90,6 +101,7 @@
   color: #111827;
   margin-bottom: 1.5rem;
   gap: 0.75rem;
+  margin: 0;
 }
 
 /* Контейнер для поиска */
@@ -410,10 +422,21 @@
 }
 
 .personnel-header-wrapper {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 1.2rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .create-employee-button {

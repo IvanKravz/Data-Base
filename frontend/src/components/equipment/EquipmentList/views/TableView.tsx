@@ -4,6 +4,7 @@ import { Equipment } from '../../../../types';
 import { Pencil, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { getStatusIcon, getStatusLabel, getStatusColor } from '../../../../utils/statusUtils';
 import { equipmentApi } from '../../../../api';
+import { format } from 'date-fns';
 import './style.css';
 
 interface TableViewProps {
@@ -31,6 +32,22 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
     navigate(`/equipment/${item.id}`);
   };
 
+  // Функция для форматирования даты в формат DD.MM.YYYY
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      // Проверяем, что дата валидна
+      if (isNaN(date.getTime())) return '-';
+      
+      return format(date, 'dd.MM.yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
+  };
+
   const sortedEquipment = [...equipment].sort((a, b) => {
     let aValue = a[sortField];
     let bValue = b[sortField];
@@ -47,7 +64,7 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
       bValue = getStatusLabel(b.status);
     }
 
-    if (sortField === 'manufacturingDate' || sortField === 'purchaseDate') {
+    if (sortField === 'manufacturingDate' || sortField === 'exploitation_date') {
       aValue = new Date(a[sortField]).getTime();
       bValue = new Date(b[sortField]).getTime();
     }
@@ -107,14 +124,15 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
         <thead className="table-header">
           <tr>
             {renderHeaderCell('name', 'Название')}
-            {renderHeaderCell('type', 'Тип')}
+            {renderHeaderCell('type', 'Модель')}
             {renderHeaderCell('category', 'Категория')}
             {renderHeaderCell('status', 'Статус')}
             {renderHeaderCell('division', 'Подразделение')}
             {renderHeaderCell('serial_number', 'Серийный номер')}
             {renderHeaderCell('inventory_number', 'Инв. номер')}
             {renderHeaderCell('manufacturing_date', 'Дата производства')}
-            {renderHeaderCell('purchase_date', 'Дата покупки')}
+            {renderHeaderCell('exploitation_date', 'Дата ввода в экспл.')}
+            {renderHeaderCell('facility', 'Объект')}
             {renderHeaderCell('assigned_to', 'Закреплено за')}
             <th className="table-header-actions">Действия</th>
           </tr>
@@ -147,7 +165,7 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                   <div className="cell-content">
                     {item.division.name}
                   </div>
-                  {item.subdivision.name && `  ${item.subdivision.name}`}
+                  {item.subdivision?.name && `  ${item.subdivision.name}`}
                 </td>
                 <td className="table-cell">
                   <div className="cell-content">{item.serial_number}</div>
@@ -156,10 +174,13 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                   <div className="cell-content">{item.inventory_number}</div>
                 </td>
                 <td className="table-cell">
-                  <div className="cell-content">{item.manufacturing_date}</div>
+                  <div className="cell-content">{formatDate(item.manufacturing_date)}</div>
                 </td>
                 <td className="table-cell">
-                  <div className="cell-content">{item.purchase_date}</div>
+                  <div className="cell-content">{formatDate(item.exploitation_date)}</div>
+                </td>
+                <td className="table-cell">
+                  <div className="cell-content">{item.facility ? item.facility?.name : '-'}</div>
                 </td>
                 <td className="table-cell table-cell-assigned-to">
                   <div className="cell-content">

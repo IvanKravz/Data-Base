@@ -66,11 +66,7 @@
     left: 0;
     right: 0;
     height: 1.5px;
-    background: linear-gradient(to right,
-            transparent 0%,
-            #e5e7eb 10%,
-            #e5e7eb 90%,
-            transparent 100%);
+    background: #e5e7eb;
 }
 
 .facilities-tabs::-webkit-scrollbar {

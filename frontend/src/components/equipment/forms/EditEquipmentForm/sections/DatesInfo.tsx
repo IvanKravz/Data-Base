@@ -1,5 +1,5 @@
 import React from 'react';
-import { Equipment } from '../../../../types';
+import { Equipment } from '../../../../../types';
 import { CalendarDays, Calendar } from 'lucide-react';
 import '../style.css';
 
@@ -21,7 +21,6 @@ export function DatesInfo({ formData, onChange }: DatesInfoProps) {
           </label>
           <input
             type="date"
-            required
             value={formData.manufacturing_date || ''}
             onChange={(e) => onChange({ manufacturing_date: e.target.value })}
             className="form-input-edit"
@@ -33,9 +32,8 @@ export function DatesInfo({ formData, onChange }: DatesInfoProps) {
           </label>
           <input
             type="date"
-            required
-            value={formData.purchase_date || ''}
-            onChange={(e) => onChange({ purchase_date: e.target.value })}
+            value={formData.exploitation_date || ''}
+            onChange={(e) => onChange({ exploitation_date: e.target.value })}
             className="form-input-edit"
           />
         </div>

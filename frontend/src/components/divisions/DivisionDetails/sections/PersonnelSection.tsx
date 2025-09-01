@@ -14,7 +14,7 @@ export function PersonnelSection() {
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchDivision = async () => {
       try {
@@ -42,9 +42,9 @@ export function PersonnelSection() {
   };
 
   return (
-    <div className="personnel-container">
-      <div className="personnel-header-wrapper"> {/* Добавлен враппер для заголовка */}
-        <h2 className="personnel-header-division">
+    <>
+      <div className="personnel-header-wrapper">
+        <h3 className="personnel-header-division">
           <button
             onClick={onBack}
             className="back-button"
@@ -52,8 +52,8 @@ export function PersonnelSection() {
             <ArrowLeft className="back-button-icon" />
           </button>
           Личный состав
-        </h2>
-        <button 
+        </h3>
+        <button
           onClick={onCreateEmployee}
           className="create-employee-button"
         >
@@ -61,21 +61,24 @@ export function PersonnelSection() {
           <span>Создать сотрудника</span>
         </button>
       </div>
-      <div className="search-container">
-        <SearchBar
+
+      <div className="personnel-container">
+        <div className="search-container">
+          <SearchBar
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            placeholder="Поиск по ФИО, званию, должности, личному номеру, телефону..."
+          />
+        </div>
+
+        <PersonnelList
+          selectedDivision={division?.name}
+          selectedCategory="all"
+          selectedAccessClass="all"
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          placeholder="Поиск по ФИО, званию, должности, личному номеру, телефону..."
+          division={division}
         />
       </div>
-
-      <PersonnelList
-        selectedDivision={division?.name}
-        selectedCategory="all"
-        selectedAccessClass="all"
-        searchTerm={searchTerm}
-        division={division}
-      />
-    </div>
+    </>
   );
 }

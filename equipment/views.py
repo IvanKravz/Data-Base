@@ -4,80 +4,89 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from .models import Equipment, OpenEquipmentCategory, ClosedEquipmentCategory
+from .models import Equipment, EquipmentCategory
 from .serializers import (
+    ACLSerializer,
     EquipmentSerializer, 
     EquipmentStatsSerializer, 
-    OpenEquipmentCategorySerializer,
-    ClosedEquipmentCategorySerializer
+    EquipmentCategorySerializer,
+    IPAddressSerializer,
+    NetworkInterfaceSerializer,
+    RoutingTableSerializer,
+    VLANSerializer
 )
 from users.models import Employee
 from facilities.models import Facility
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
+from django.apps import apps
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.select_related(
-        'division', 'subdivision', 'facility', 'assigned_to'
-    ).prefetch_related('open_category', 'closed_category')
+        'division', 'subdivision', 'facility', 'assigned_to', 'category'
+    ).prefetch_related(
+        'product_structures', 
+        'net_interfaces',
+        'net_interfaces__ip_addresses',
+        'vlans',
+        'routing_table',
+        'acls'
+    ).annotate(
+        network_interfaces_count=Count('net_interfaces'),
+        ip_addresses_count=Count('net_interfaces__ip_addresses')
+    )
     serializer_class = EquipmentSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['facility']  # Добавляем фильтр по facility
+    filterset_fields = ['facility', 'is_network', 'status']
 
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Получаем подразделение пользователя (если не администратор)
         user_division = None
         if not self.request.user.is_staff:
             user_division = getattr(self.request.user, 'employee', None) and self.request.user.employee.division
         
-        # Фильтрация по подразделению пользователя
         if user_division:
             queryset = queryset.filter(division=user_division)
         
-        # Получаем параметры запроса
         division = self.request.query_params.get('division', None)
         category = self.request.query_params.get('category', None)
         status = self.request.query_params.get('status', None)
         type = self.request.query_params.get('type', None)
         search = self.request.query_params.get('search', None)
         facility = self.request.query_params.get('facility', None)
+        is_network = self.request.query_params.get('is_network', None)
 
-        # Фильтрация по division (если передан в запросе)
         if division:
             queryset = queryset.filter(division=division)
 
-        # Фильтрация по category
         if category:
-            queryset = queryset.filter(
-                Q(open_category__value=category) | 
-                Q(closed_category__name=category)
-            )
+            queryset = queryset.filter(category__value=category)
 
-        # Фильтрация по status
         if status:
             queryset = queryset.filter(status=status)
 
-        # Фильтрация по type (open или closed)
         if type == 'open':
             queryset = queryset.filter(is_closed=False)
         elif type == 'closed':
             queryset = queryset.filter(is_closed=True)
 
-        # Фильтрация по facility
         if facility:
             queryset = queryset.filter(facility=facility)
 
-        # Поиск по name, serial_number, inventory_number, assigned_to
+        if is_network:
+            queryset = queryset.filter(is_network=is_network.lower() == 'true')
+
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
                 Q(serial_number__icontains=search) |
                 Q(inventory_number__icontains=search) |
-                Q(assigned_to__name__icontains=search)
-            )
+                Q(assigned_to__name__icontains=search) |
+                Q(net_interfaces__name__icontains=search) |
+                Q(net_interfaces__ip_addresses__address__icontains=search)
+            ).distinct()
 
         return queryset
     
@@ -134,33 +143,21 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         stats = {
             'total': queryset.count(),
-            'by_category': dict(queryset.values('open_category').annotate(count=Count('id')).values_list('open_category', 'count')),
+            'by_category': dict(queryset.values('category__name').annotate(count=Count('id')).values_list('category__name', 'count')),
             'by_status': dict(queryset.values('status').annotate(count=Count('id')).values_list('status', 'count')),
-            'by_division': dict(queryset.values('division__name').annotate(count=Count('id')).values_list('division__name', 'count'))
+            'by_division': dict(queryset.values('division__name').annotate(count=Count('id')).values_list('division__name', 'count')),
+            'network_equipment_count': queryset.filter(is_network=True).count(),
+            'network_interfaces_total': sum(equip.network_interfaces_count for equip in queryset if equip.network_interfaces_count),
+            'ip_addresses_total': sum(equip.ip_addresses_count for equip in queryset if equip.ip_addresses_count),
         }
         serializer = EquipmentStatsSerializer(stats)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def equipment_categories(self, request):
-        print(">>> Categories endpoint called!")
-        # cache_key = 'all_equipment_categories'
-        # categories = cache.get(cache_key)
-        
-        # if not categories:
-        open_categories = OpenEquipmentCategory.objects.all()
-        closed_categories = ClosedEquipmentCategory.objects.all()
-        
-        open_serializer = OpenEquipmentCategorySerializer(open_categories, many=True)
-        closed_serializer = ClosedEquipmentCategorySerializer(closed_categories, many=True)
-        
-        categories = {
-            'open': open_serializer.data,
-            'closed': closed_serializer.data
-        }
-            # cache.set(cache_key, categories, 60*60*24)  # Кэшируем на 24 часа
-        
-        return Response(categories)
+        categories = EquipmentCategory.objects.all()
+        serializer = EquipmentCategorySerializer(categories, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
     def comments(self, request, pk=None):
@@ -176,3 +173,32 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         queryset = queryset.filter(assigned_to_id=employee_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def network_config(self, request, pk=None):
+        """Получить полную сетевую конфигурацию оборудования"""
+        equipment = self.get_object()
+        
+        if not equipment.is_network:
+            return Response({'error': 'Оборудование не является сетевым'}, status=400)
+        
+        NetworkInterface = apps.get_model('networks', 'NetworkInterface')
+        VLAN = apps.get_model('networks', 'VLAN')
+        RoutingTable = apps.get_model('networks', 'RoutingTable')
+        ACL = apps.get_model('networks', 'ACL')
+        
+        config = {
+            'equipment': self.get_serializer(equipment).data,
+            'interfaces': [],
+            'vlans': VLANSerializer(equipment.vlans.all(), many=True).data,
+            'routing_table': RoutingTableSerializer(equipment.routing_table.all(), many=True).data,
+            'acls': ACLSerializer(equipment.acls.all(), many=True).data,
+        }
+        
+        interfaces = equipment.net_interfaces.all().prefetch_related('ip_addresses', 'vlan_configurations')
+        for interface in interfaces:
+            interface_data = NetworkInterfaceSerializer(interface).data
+            interface_data['ip_addresses'] = IPAddressSerializer(interface.ip_addresses.all(), many=True).data
+            config['interfaces'].append(interface_data)
+        
+        return Response(config)

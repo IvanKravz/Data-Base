@@ -1,35 +1,48 @@
 import React from 'react';
 import './Header.css';
 import { ArrowLeft } from 'lucide-react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Network } from '../../../types';
 
 interface HeaderProps {
-  onCreateNetwork?: () => void;
+  onCreateNetwork: (networkData: Omit<Network, 'id'>) => void;
+  onToggleView: () => void;
+  viewMode: string;
 }
 
-
-
-export function Header({ onCreateNetwork }: HeaderProps) {
+export function Header({ onCreateNetwork, onToggleView, viewMode }: HeaderProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
     navigate(-1);
   };
 
+  const getHeaderTitle = () => {
+    return viewMode === 'networks' ? 'Сети связи' : 'Управление сетевыми объектами';
+  };
+
+  const getToggleButtonText = () => {
+    return viewMode === 'networks' ? 'Управление сетевыми объектами' : 'Просмотр сетей';
+  };
+
   return (
     <div className="communication-header">
       <div className="communication-header-title">
         <button onClick={handleBack} className="back-button">
-          <ArrowLeft className="back-button-icon" />
+          <ArrowLeft className="communication-header-back-icon" />
         </button>
-        <h1>Сети связи</h1>
+        <h1>{getHeaderTitle()}</h1>
       </div>
-      <button
-        className="communication-header-create-button"
-        onClick={onCreateNetwork}
-      >
-        <span>Create Network</span>
-      </button>
+      <div className="header-actions">
+        <button className="view-toggle-button" onClick={onToggleView}>
+          {getToggleButtonText()}
+        </button>
+        {viewMode === 'networks' && (
+          <button className="communication-header-create-button" onClick={() => onCreateNetwork({})}>
+            Создать сеть
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,8 @@ import NetworkDetails from '../../../networks/NetworkDetails/NetworkDetails';
 import NetworkVisualization from '../../../networks/NetworkVisualization/NetworkVisualization';
 import { networksApi } from '../../../../api/networksApi';
 import { Header } from '../../../networks/Header/Header';
-// import LoadingSpinner from '../../../common/LoadingSpinner/LoadingSpinner';
+import NetworkTabs from '../../../networks/NetworkTabs/NetworkTabs';
+
 
 const CommunicationNetworks: React.FC = () => {
   const token = localStorage.getItem('accessToken');
@@ -15,6 +16,7 @@ const CommunicationNetworks: React.FC = () => {
   const [networks, setNetworks] = useState<Network[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState('networks'); // 'networks' или 'management'
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -29,12 +31,14 @@ const CommunicationNetworks: React.FC = () => {
       }
     };
 
-    fetchNetworks();
-  }, [token]);
+    if (token && activeView === 'networks') {
+      fetchNetworks();
+    }
+  }, [token, activeView]);
 
   const handleCreateNetwork = async (networkData: Omit<Network, 'id'>) => {
     try {
-      const newNetwork = await networksApi.createNetwork(token, networkData);
+      const newNetwork = await networksApi.createNetwork(token!, networkData);
       setNetworks(prev => [...prev, newNetwork]);
     } catch (err) {
       setError('Ошибка при создании сети');
@@ -50,35 +54,49 @@ const CommunicationNetworks: React.FC = () => {
     setHighlightedNode(null);
   };
 
-  // if (loading) return <LoadingSpinner />;
+  const toggleView = () => {
+    setActiveView(activeView === 'networks' ? 'management' : 'networks');
+  };
+
   if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div className="communication-networks-container">
       <div className="communication-networks-main">
-        <Header onCreateNetwork={handleCreateNetwork} />
-        <div className="networks-content">
-          <NetworksTable 
-            networks={networks}
-            onSelect={setSelectedNetwork} 
-            selectedNetwork={selectedNetwork} 
-          />
-          {selectedNetwork && (
-            <NetworkVisualization 
-              network={selectedNetwork} 
-              highlightedNode={highlightedNode}
+        <Header 
+          onCreateNetwork={handleCreateNetwork} 
+          onToggleView={toggleView}
+          viewMode={activeView}
+        />
+        
+        {activeView === 'networks' ? (
+          <div className="networks-content">
+            <NetworksTable 
+              networks={networks}
+              onSelect={setSelectedNetwork} 
+              selectedNetwork={selectedNetwork} 
             />
-          )}
-        </div>
+            {selectedNetwork && (
+              <NetworkVisualization 
+                network={selectedNetwork} 
+                highlightedNode={highlightedNode}
+              />
+            )}
+          </div>
+        ) : (
+          <NetworkTabs token={token} />
+        )}
       </div>
       
-      <aside className="network-details-sidebar">
-        <NetworkDetails 
-          network={selectedNetwork} 
-          onHighlightNode={handleHighlightNode}
-          onClearHighlight={handleClearHighlight}
-        />
-      </aside>
+      {activeView === 'networks' && (
+        <aside className="network-details-sidebar">
+          <NetworkDetails 
+            network={selectedNetwork} 
+            onHighlightNode={handleHighlightNode}
+            onClearHighlight={handleClearHighlight}
+          />
+        </aside>
+      )}
     </div>
   );
 };

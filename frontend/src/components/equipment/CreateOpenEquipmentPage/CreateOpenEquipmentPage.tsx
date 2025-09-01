@@ -4,7 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Equipment } from '../../../types';
 import { useDispatch } from 'react-redux';
 import { addEquipment } from '../../../store/slices/equipmentSlice';
-import { EditEquipmentForm } from '../forms/EditEquipmentForm';
+import { EditEquipmentForm } from '../../forms/equipment/EditEquipmentForm';
+// import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 
 export function CreateOpenEquipmentPage() {
   const navigate = useNavigate();

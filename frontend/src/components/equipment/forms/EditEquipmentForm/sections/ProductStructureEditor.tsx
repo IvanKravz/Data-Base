@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Equipment, ProductStructure } from '../../../../types';
+import { Equipment, ProductStructure } from '../../../../../types';
 import { Plus, Trash2 } from 'lucide-react';
 import '../style.css';
 

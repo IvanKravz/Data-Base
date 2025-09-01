@@ -2,15 +2,14 @@
     display: grid;
     grid-template-columns: 1fr 350px;
     gap: 24px;
-    padding: 24px;
+    /* padding: 24px; */
     min-height: calc(100vh - 48px);
-    background-color: #f5f7fa;
+    /* background-color: #f5f7fa; */
 }
 
 .communication-networks-main {
     display: flex;
     flex-direction: column;
-    gap: 24px;
 }
 
 .networks-content {

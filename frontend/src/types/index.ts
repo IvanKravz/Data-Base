@@ -61,7 +61,7 @@ export interface Equipment {
   serial_number: string;
   inventory_number: string;
   manufacturing_date: string;  // ISO date string
-  purchase_date: string;       // ISO date string
+  exploitation_date: string;       // ISO date string
   division: number;            // ID of Division
   subdivision?: number | null; // ID of Subdivision
   facility?: number | null;    // ID of Facility
@@ -153,3 +153,51 @@ export interface Network {
   throughput?: number;
   protocol: 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
 };
+
+export interface VLAN {
+  id: string;
+  vlan_id: number;
+  name: string;
+  description: string;
+  created_at: string;
+}
+
+export interface NetworkInterface {
+  id: string;
+  equipment: Equipment;
+  name: string;
+  interface_type: string;
+  physical_type: string | null;
+  port_number: number | null;
+  slot: number | null;
+  module: number | null;
+  enabled: boolean;
+  mac_address: string;
+  mtu: number;
+  speed: string | null;
+  vlan: VLAN | null;
+  is_trunk: boolean;
+  native_vlan: VLAN | null;
+  connected_to: NetworkInterface | null;
+}
+
+export interface IPAddress {
+  id: string;
+  interface: NetworkInterface;
+  address: string;
+  netmask: string;
+  version: string;
+  is_primary: boolean;
+  gateway: string | null;
+  dns_servers: string | null;
+  description: string | null;
+}
+
+export interface IPRange {
+  id: string;
+  network: string;
+  description: string;
+  vlan: VLAN | null;
+  devices: Equipment[];
+  created_at: string;
+}

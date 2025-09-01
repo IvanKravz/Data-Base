@@ -32,7 +32,6 @@
   box-sizing: border-box;
 }
 
-/* ===== PERSONNEL EDIT FORM ===== */
 .personnel-edit-form {
   display: flex;
   flex-direction: column;
@@ -47,7 +46,7 @@
   gap: 1.2rem;
 }
 
-/* ===== PERSONNEL CARD ===== */
+/* ===== КАРТА СОТРУДНИКА ===== */
 .personnel-card {
   background-color: white;
   border-radius: 0.5rem;
@@ -117,7 +116,7 @@
   resize: vertical;
 }
 
-/* ===== CHECKBOX ===== */
+/* ===== ЧЕКБОКС ===== */
 .personnel-checkbox-group {
   display: flex;
   align-items: center;
@@ -148,7 +147,7 @@
   cursor: pointer;
 }
 
-/* ===== BUTTONS ===== */
+/* ===== КНОПКИ ===== */
 .personnel-btn {
   width: 12rem;
   display: inline-flex;
@@ -203,7 +202,7 @@
   background-color: var(--red-200);
 }
 
-/* ===== DATES GRID ===== */
+/* ===== ДАТЫ ===== */
 .personnel-dates-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -271,7 +270,7 @@
   border-radius: 0.375rem;
 }
 
-/* ===== COMMENTS ===== */
+/* ===== КОММЕНТАРИИ ===== */
 .personnel-comment-group {
   display: flex;
   align-items: flex-start;
@@ -287,7 +286,7 @@
   border-top: 1px solid var(--gray-200);
 }
 
-/* ===== RESPONSIVE ===== */
+
 @media (max-width: 768px) {
 
   .personnel-dates-grid,
@@ -304,14 +303,24 @@
 } */
 
 .page-title {
-  display: flex;
-  gap: 1rem;
-  /* text-align: center; */
-  font-size: 1.8rem;
-  /* margin: 0 auto; */
+  font-size: 1.6rem;
   font-weight: 600;
   color: #111827;
   margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 1.2rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  /* justify-content: space-between; */
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .form-error {

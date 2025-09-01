@@ -24,7 +24,7 @@ export function DatesInfo({ equipment }: DatesInfoProps) {
           icon={Calendar}
           iconColor="text-green-500"
           label="Дата ввода в эксплуатацию"
-          value={format(new Date(equipment.purchase_date), 'dd.MM.yyyy')}
+          value={format(new Date(equipment.exploitation_date), 'dd.MM.yyyy')}
         />
       </div>
     </InfoCard>

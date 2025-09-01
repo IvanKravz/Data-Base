@@ -1,42 +1,44 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Filter } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { EquipmentList } from '../../../equipment/EquipmentList';
 import { divisionsApi, equipmentApi } from '../../../../api';
 import { SearchBar } from '../../../common/SearchBar';
 import { StatusButtons } from '../../../equipment';
+import { AdvancedSearchModal } from '../../../equipment/forms/AdvancedSearchModal/AdvancedSearchModal';
 import './EquipmentSection.css';
-import { 
-  Server, 
-  RadioTower, 
-  Monitor, 
-  BatteryCharging, 
-  Antenna, 
-  Zap, 
+import {
+  Server,
+  RadioTower,
+  Monitor,
+  BatteryCharging,
+  Antenna,
+  Zap,
   Box,
   Trash2
 } from 'lucide-react';
 
 const CATEGORY_ICONS = {
-  'ТКО': <Server className="equipment-tab-icon" size={16} />,
-  'Радио': <RadioTower className="equipment-tab-icon" size={16} />,
-  'СВТ': <Monitor className="equipment-tab-icon" size={16} />,
-  'АКБ': <BatteryCharging className="equipment-tab-icon" size={16} />,
-  'Антенны, мачты': <Antenna className="equipment-tab-icon" size={16} />,
-  'Источники питания': <Zap className="equipment-tab-icon" size={16} />,
-  'Материалы': <Box className="equipment-tab-icon" size={16} />,
+  'tko': <Server className="equipment-tab-icon" size={16} />,
+  'radio': <RadioTower className="equipment-tab-icon" size={16} />,
+  'computer': <Monitor className="equipment-tab-icon" size={16} />,
+  'battery': <BatteryCharging className="equipment-tab-icon" size={16} />,
+  'antenna': <Antenna className="equipment-tab-icon" size={16} />,
+  'power': <Zap className="equipment-tab-icon" size={16} />,
+  'material': <Box className="equipment-tab-icon" size={16} />,
   'closed': <Trash2 className="equipment-tab-icon" size={16} />
 };
 
-const MAIN_CATEGORIES = [
-  'ТКО',
-  'Радио',
-  'СВТ',
-  'АКБ',
-  'Антенны, мачты',
-  'Источники питания',
-  'Материалы'
-];
+interface AdvancedSearchFilters {
+  names: string[];
+  serialNumbers: string[];
+  inventoryNumbers: string[];
+  manufacturingDateFrom: string;
+  manufacturingDateTo: string;
+  exploitationDateFrom: string;
+  exploitationDateTo: string;
+  assignedTo: string[];
+}
 
 export function EquipmentSection() {
   const navigate = useNavigate();
@@ -44,51 +46,64 @@ export function EquipmentSection() {
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
   const token = localStorage.getItem('accessToken');
-  
+
   const tabsRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({});
-  
+
   const [division, setDivision] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [equipment, setEquipment] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [subdivisionName, setSubdivisionName] = useState('');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedSearchFilters>({
+    names: [],
+    serialNumbers: [],
+    inventoryNumbers: [],
+    manufacturingDateFrom: '',
+    manufacturingDateTo: '',
+    exploitationDateFrom: '',
+    exploitationDateTo: '',
+    assignedTo: []
+  });
 
-  // Эффект для обновления позиции индикатора
   useEffect(() => {
     const updateIndicator = () => {
       if (!tabsRef.current || !indicatorRef.current) return;
-      
+
       const activeTabElement = tabsRef.current.querySelector('.equipment-tab-button.active') as HTMLElement;
       if (!activeTabElement) return;
-      
+
       const tabRect = activeTabElement.getBoundingClientRect();
       const containerRect = tabsRef.current.getBoundingClientRect();
-      
+
       setIndicatorStyle({
         left: tabRect.left - containerRect.left,
         width: tabRect.width,
         opacity: 1
       });
     };
-    
+
     updateIndicator();
     window.addEventListener('resize', updateIndicator);
-    
+
     return () => window.removeEventListener('resize', updateIndicator);
   }, [activeTab]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const div = await divisionsApi.getDivisionById(id, token);
-        const equip = await equipmentApi.getEquipment(token, { division: div.id });
-        
+        const [div, equip, cats] = await Promise.all([
+          divisionsApi.getDivisionById(id, token),
+          equipmentApi.getEquipment(token, { division: id }),
+          equipmentApi.getEquipmentCategories(token)
+        ]);
+
         if (subdivisionId) {
           const subdivision = div.subdivisions?.find(s => s.id.toString() === subdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
@@ -96,6 +111,7 @@ export function EquipmentSection() {
 
         setDivision(div);
         setEquipment(equip);
+        setCategories(cats);
       } catch (err) {
         setError('Не удалось загрузить данные');
         console.error(err);
@@ -109,7 +125,7 @@ export function EquipmentSection() {
 
   const filterBySubdivision = (items) => {
     if (!subdivisionId) return items;
-    return items.filter(item => 
+    return items.filter(item =>
       item.subdivision?.id?.toString() === subdivisionId.toString()
     );
   };
@@ -125,11 +141,11 @@ export function EquipmentSection() {
   );
 
   const availableCategories = useMemo(() => {
-    const categoriesWithEquipment = [...new Set(openEquipment.map(item => item.category_display))];
-    return MAIN_CATEGORIES.filter(category =>
-      categoriesWithEquipment.includes(category)
+    const openCategories = categories.filter(cat => !cat.is_closed);
+    return openCategories.filter(cat =>
+      openEquipment.some(item => item.category?.value === cat.value)
     );
-  }, [openEquipment]);
+  }, [categories, openEquipment]);
 
   const statusButtonsEquipment = useMemo(() => {
     if (activeTab === 'closed') {
@@ -137,47 +153,44 @@ export function EquipmentSection() {
     } else if (activeTab === 'all') {
       return [...openEquipment, ...closedEquipment];
     } else {
-      return openEquipment.filter(item => item.category_display === activeTab);
+      return openEquipment.filter(item => item.category?.value === activeTab);
     }
   }, [activeTab, openEquipment, closedEquipment]);
 
   const filteredEquipment = useMemo(() => {
     return statusButtonsEquipment.filter(item => {
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
-      const matchesSearch = searchTerm === '' ||
+      
+      // Базовый поиск
+      const matchesBasicSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.assigned_to?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.subdivision?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.inventory_number?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === null || item.category_display === selectedCategory;
-
-      return matchesStatus && matchesSearch && matchesCategory;
+  
+      // Расширенный поиск
+      const matchesAdvancedSearch = 
+        (advancedFilters.names.length === 0 || advancedFilters.names.some(name => 
+          item.name.toLowerCase().includes(name.toLowerCase()))) &&
+        (advancedFilters.serialNumbers.length === 0 || advancedFilters.serialNumbers.some(sn => 
+          item.serial_number.toLowerCase().includes(sn.toLowerCase()))) &&
+        (advancedFilters.inventoryNumbers.length === 0 || advancedFilters.inventoryNumbers.some(inv => 
+          item.inventory_number?.toLowerCase().includes(inv.toLowerCase()))) &&
+        (advancedFilters.assignedTo.length === 0 || advancedFilters.assignedTo.some(assigned => 
+          item.assigned_to?.full_name?.toLowerCase().includes(assigned.toLowerCase()))) &&
+        (!advancedFilters.manufacturingDateFrom || item.manufacturing_date >= advancedFilters.manufacturingDateFrom) &&
+        (!advancedFilters.manufacturingDateTo || item.manufacturing_date <= advancedFilters.manufacturingDateTo) &&
+        (!advancedFilters.exploitationDateFrom || item.exploitation_date >= advancedFilters.exploitationDateFrom) &&
+        (!advancedFilters.exploitationDateTo || item.exploitation_date <= advancedFilters.exploitationDateTo);
+  
+      return matchesStatus && matchesBasicSearch && matchesAdvancedSearch;
     });
-  }, [statusButtonsEquipment, selectedStatus, searchTerm, selectedCategory]);
-
-  const uniqueClosedCategories = [...new Set(closedEquipment.map(item => item.category_display))];
-
-  const activeCategories = useMemo(() => {
-    const filteredByStatus = statusButtonsEquipment.filter(item =>
-      selectedStatus === 'all' || item.status === selectedStatus
-    );
-    return [...new Set(filteredByStatus.map(item => item.category_display))];
-  }, [statusButtonsEquipment, selectedStatus]);
-
-  const handleCategoryClick = (category: string) => {
-    if (selectedCategory === category) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(category);
-    }
-  };
+  }, [statusButtonsEquipment, selectedStatus, searchTerm, advancedFilters]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setSelectedCategory(null);
-    
-    // Прокрутка к активной вкладке
+
     setTimeout(() => {
       const activeTabElement = document.querySelector('.equipment-tab-button.active');
       if (activeTabElement) {
@@ -190,6 +203,38 @@ export function EquipmentSection() {
     }, 10);
   };
 
+  console.log('e', equipment)
+
+  const handleAdvancedFilterChange = (filterType: keyof AdvancedSearchFilters, values: string[]) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      [filterType]: values
+    }));
+  };
+
+  const clearAdvancedFilters = () => {
+    setAdvancedFilters({
+      names: [],
+      serialNumbers: [],
+      inventoryNumbers: [],
+      manufacturingDateFrom: '',
+      manufacturingDateTo: '',
+      exploitationDateFrom: '',
+      exploitationDateTo: '',
+      assignedTo: []
+    });
+  };
+
+  const hasActiveAdvancedFilters =
+    advancedFilters.names.length > 0 ||
+    advancedFilters.serialNumbers.length > 0 ||
+    advancedFilters.inventoryNumbers.length > 0 ||
+    advancedFilters.manufacturingDateFrom !== '' ||
+    advancedFilters.manufacturingDateTo !== '' ||
+    advancedFilters.exploitationDateFrom !== '' ||
+    advancedFilters.exploitationDateTo !== '' ||
+    advancedFilters.assignedTo.length > 0;
+
   if (loading) {
     return <div className="flex justify-center py-12">Загрузка данных о технике...</div>;
   }
@@ -198,10 +243,8 @@ export function EquipmentSection() {
     return <div className="equipment-error-message">{error}</div>;
   }
 
-  console.log('filteredEquipment',filteredEquipment)
-
   return (
-    <div className="equipment-container">
+    <>
       <div className="equipment-header">
         <h2 className="equipment-title">
           <button onClick={() => navigate(`/divisions/${id}`)} className="back-button">
@@ -213,12 +256,11 @@ export function EquipmentSection() {
 
       <div className="equipment-content-wrapper">
         <div className="equipment-tabs-container">
-          <div 
+          <div
             className="equipment-tabs"
             ref={tabsRef}
           >
-            {/* Индикатор активной вкладки */}
-            <div 
+            <div
               className="equipment-tab-indicator"
               ref={indicatorRef}
               style={{
@@ -226,7 +268,7 @@ export function EquipmentSection() {
                 transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             />
-            
+
             <button
               className={`equipment-tab-button ${activeTab === 'all' ? 'active' : ''}`}
               onClick={() => handleTabChange('all')}
@@ -239,12 +281,12 @@ export function EquipmentSection() {
 
             {availableCategories.map(category => (
               <button
-                key={category}
-                className={`equipment-tab-button ${activeTab === category ? 'active' : ''}`}
-                onClick={() => handleTabChange(category)}
+                key={category.value}
+                className={`equipment-tab-button ${activeTab === category.value ? 'active' : ''}`}
+                onClick={() => handleTabChange(category.value)}
               >
-                {CATEGORY_ICONS[category]}
-                {category}
+                {CATEGORY_ICONS[category.value] || <Box className="equipment-tab-icon" size={16} />}
+                {category.name}
               </button>
             ))}
 
@@ -254,7 +296,7 @@ export function EquipmentSection() {
                 onClick={() => handleTabChange('closed')}
               >
                 {CATEGORY_ICONS.closed}
-                Шатехника
+                Закрытая техника
               </button>
             )}
           </div>
@@ -262,12 +304,83 @@ export function EquipmentSection() {
 
         <div className="equipment-content">
           <div className="equipment-search-container">
-            <SearchBar
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено..."
+            <div className="search-bar-with-filters">
+              <SearchBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено..."
+              />
+              <button
+                className={`advanced-filter-button ${hasActiveAdvancedFilters ? 'active' : ''}`}
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              >
+                <Filter size={18} />
+                {hasActiveAdvancedFilters && <span className="filter-indicator"></span>}
+              </button>
+            </div>
+
+            <AdvancedSearchModal
+              isOpen={showAdvancedSearch}
+              filters={advancedFilters}
+              onFilterChange={handleAdvancedFilterChange}
+              onClose={() => setShowAdvancedSearch(false)}
+              onClearFilters={clearAdvancedFilters}
+              equipment={equipment}
             />
           </div>
+
+          {hasActiveAdvancedFilters && (
+            <div className="active-filters">
+              {advancedFilters.names.length > 0 && (
+                <span className="filter-tag">
+                  Названия: {advancedFilters.names.join(', ')}
+                  <button onClick={() => handleAdvancedFilterChange('names', [])}>×</button>
+                </span>
+              )}
+              {advancedFilters.serialNumbers.length > 0 && (
+                <span className="filter-tag">
+                  Серийные номера: {advancedFilters.serialNumbers.join(', ')}
+                  <button onClick={() => handleAdvancedFilterChange('serialNumbers', [])}>×</button>
+                </span>
+              )}
+              {advancedFilters.inventoryNumbers.length > 0 && (
+                <span className="filter-tag">
+                  Инвентарные номера: {advancedFilters.inventoryNumbers.join(', ')}
+                  <button onClick={() => handleAdvancedFilterChange('inventoryNumbers', [])}>×</button>
+                </span>
+              )}
+              {advancedFilters.assignedTo.length > 0 && (
+                <span className="filter-tag">
+                  Закреплено за: {advancedFilters.assignedTo.join(', ')}
+                  <button onClick={() => handleAdvancedFilterChange('assignedTo', [])}>×</button>
+                </span>
+              )}
+              {advancedFilters.manufacturingDateFrom && (
+                <span className="filter-tag">
+                  Дата производства от: {advancedFilters.manufacturingDateFrom}
+                  <button onClick={() => handleAdvancedFilterChange('manufacturingDateFrom', '')}>×</button>
+                </span>
+              )}
+              {advancedFilters.manufacturingDateTo && (
+                <span className="filter-tag">
+                  Дата производства до: {advancedFilters.manufacturingDateTo}
+                  <button onClick={() => handleAdvancedFilterChange('manufacturingDateTo', '')}>×</button>
+                </span>
+              )}
+              {advancedFilters.exploitationDateFrom && (
+                <span className="filter-tag">
+                  Дата ввода от: {advancedFilters.exploitationDateFrom}
+                  <button onClick={() => handleAdvancedFilterChange('exploitationDateFrom', '')}>×</button>
+                </span>
+              )}
+              {advancedFilters.exploitationDateTo && (
+                <span className="filter-tag">
+                  Дата ввода до: {advancedFilters.exploitationDateTo}
+                  <button onClick={() => handleAdvancedFilterChange('exploitationDateTo', '')}>×</button>
+                </span>
+              )}
+            </div>
+          )}
 
           {statusButtonsEquipment.length > 0 && (
             <StatusButtons
@@ -277,41 +390,13 @@ export function EquipmentSection() {
             />
           )}
 
-          {activeTab === 'closed' && closedEquipment.length > 0 && (
-            <div className="equipment-filters">
-              <div className="equipment-category-filters">
-                {uniqueClosedCategories.map(category => (
-                  category && (
-                    <button
-                      key={category}
-                      className={`equipment-category-filter-button 
-                        ${selectedCategory === category ? 'active' : ''}
-                        ${!activeCategories.includes(category) ? 'inactive' : ''}
-                      `}
-                      onClick={() => handleCategoryClick(category)}
-                      disabled={!activeCategories.includes(category)}
-                    >
-                      {category}
-                      <span className="equipment-category-badge">
-                        {closedEquipment.filter(item =>
-                          item.category_display === category &&
-                          (selectedStatus === 'all' || item.status === selectedStatus)
-                        ).length}
-                      </span>
-                    </button>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-
-          <EquipmentList 
-            equipment={filteredEquipment} 
-            onUpdateEquipment={() => {}} 
-            onDeleteEquipment={() => {}} 
+          <EquipmentList
+            equipment={filteredEquipment}
+            onUpdateEquipment={() => { }}
+            onDeleteEquipment={() => { }}
           />
         </div>
       </div>
-    </div>
+      </>
   );
 }

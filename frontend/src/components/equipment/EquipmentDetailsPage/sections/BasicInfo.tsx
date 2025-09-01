@@ -8,7 +8,7 @@ interface BasicInfoProps {
 }
 
 export function BasicInfo({ equipment }: BasicInfoProps) {
-   return (
+  return (
     <div className="equipment-card">
       <h2 className="equipment-card__title">Основная информация</h2>
       <div className="equipment-card-content">
@@ -21,17 +21,15 @@ export function BasicInfo({ equipment }: BasicInfoProps) {
             </div>
           </div>
 
-          {!equipment.is_closed && (
-            <div className="equipment-info-item">
-              <Box className="equipment-info-item__icon text-green-500" size={20} />
-              <div>
-                <p className="equipment-info-item__label">Категория</p>
-                <p className="equipment-info-item__value">
-                  {equipment.open_category?.name || 'Не указана'}
-                </p>
-              </div>
+          <div className="equipment-info-item">
+            <Box className="equipment-info-item__icon text-green-500" size={20} />
+            <div>
+              <p className="equipment-info-item__label">Категория</p>
+              <p className="equipment-info-item__value">
+                {equipment.category_display || 'Не указана'}
+              </p>
             </div>
-          )}
+          </div>
 
           <div className="equipment-info-item">
             <HardDrive className="equipment-info-item__icon text-brown-500" size={20} />

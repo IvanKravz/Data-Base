@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
 import { equipmentApi } from '../../../api';
 import './style.css';
@@ -20,6 +19,7 @@ import { Equipment } from '../../../types';
 import { CommentsInfo } from './sections/CommentsInfo';
 import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureTable } from './sections/ProductStructureTable';
+import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 
 
 export function EquipmentDetailsPage() {

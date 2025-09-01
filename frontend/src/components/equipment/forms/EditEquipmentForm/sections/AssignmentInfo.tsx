@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, User, MapPin } from 'lucide-react';
-import { Equipment } from '../../../../types';
+import { Equipment } from '../../../../../types';
 import '../style.css';
 
 interface AssignmentInfoProps {

@@ -40,8 +40,6 @@ export function EquipmentList({
 
   return (
     <>
-      <div className="mb-4 flex justify-end">
-      </div>
       <TableView
         equipment={filteredEquipment}
         onEdit={handleEdit}

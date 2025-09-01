@@ -1,6 +1,6 @@
 import React from 'react';
-import { Equipment } from '../../../../types';
-import { Package, Code } from 'lucide-react';
+import { Equipment } from '../../../../../types';
+import { Package } from 'lucide-react';
 import '../style.css';
 
 interface BasicInformationProps {
@@ -8,7 +8,7 @@ interface BasicInformationProps {
   onChange: (data: Partial<Equipment>) => void;
   isClosedEquipment?: boolean;
   isDisposed?: boolean;
-  equipmentCategories: { value?: string; id?: string; name: string }[];
+  equipmentCategories: { value: string; name: string }[];
 }
 
 export function BasicInformation({
@@ -16,7 +16,7 @@ export function BasicInformation({
   onChange,
   isClosedEquipment = false,
   isDisposed = false,
-  equipmentCategories
+  equipmentCategories = []
 }: BasicInformationProps) {
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -26,16 +26,12 @@ export function BasicInformation({
     );
 
     onChange({
-      [isClosedEquipment ? 'closed_category' : 'open_category']: selectedCategory ? {
-        value: selectedCategory.value,
-        name: selectedCategory.name
-      } : null,
-      [isClosedEquipment ? 'open_category' : 'closed_category']: null
+      category: selectedCategory || null
     });
   };
 
   const getCurrentCategoryValue = () => {
-    return formData[isClosedEquipment ? 'closed_category' : 'open_category']?.value || '';
+    return formData.category?.value || '';
   };
 
   return (

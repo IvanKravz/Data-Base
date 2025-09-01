@@ -1,5 +1,5 @@
 import React from 'react';
-import { Equipment } from '../../../../types';
+import { Equipment } from '../../../../../types';
 import { Fingerprint, Barcode } from 'lucide-react';
 import '../style.css';
 

@@ -30,13 +30,12 @@ table-container {
 .table-header-cell {
   padding: 0.625rem 1rem;
   /* Уменьшил padding */
-  text-align: left;
+  text-align: center;
   font-size: 0.6875rem;
   /* Уменьшил размер шрифта */
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
   /* Уменьшил межбуквенный интервал */
   border-bottom: 1px solid #e2e8f0;
 }

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Equipment } from '../../../types';
+import { Equipment } from '../../../../types';
 import { BasicInformation } from './sections/BasicInformation';
 import { IdentificationInfo } from './sections/IdentificationInfo';
 import { DatesInfo } from './sections/DatesInfo';
 import { AssignmentInfo } from './sections/AssignmentInfo';
 import { FormActions } from './sections/FormActions';
-import { DisposalModal } from '../DisposalModal';
-import { divisionsApi, employeesApi, equipmentApi } from '../../../api';
+import { DisposalModal } from '../../DisposalModal';
+import { divisionsApi, employeesApi, equipmentApi } from '../../../../api';
 import './style.css';
 import { EditCommentsCard } from './sections/EditCommentsCard';
 import { DocumentsInfo } from './sections/DocumentsInfo';
@@ -31,9 +31,10 @@ interface Division {
   }[];
 }
 
-interface EquipmentCategories {
-  open: Array<{ value: string; name: string }>;
-  closed: Array<{ value: string; name: string }>;
+interface EquipmentCategory {
+  value: string;
+  name: string;
+  is_closed: boolean;
 }
 
 export function EditEquipmentForm({
@@ -50,10 +51,7 @@ export function EditEquipmentForm({
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [personnel, setPersonnel] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState<EquipmentCategories>({
-    open: [],
-    closed: [],
-  });
+  const [categories, setCategories] = useState<EquipmentCategory[]>([]);
   const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -90,7 +88,6 @@ export function EditEquipmentForm({
     const newFormData = { ...formData, ...data };
     setFormData(newFormData);
 
-    // Если изменилось подразделение - загружаем новый список персонала и сбрасываем отделение
     if (data.division?.id && data.division.id !== formData.division?.id && token) {
       setIsLoading(true);
       try {
@@ -117,21 +114,17 @@ export function EditEquipmentForm({
       return;
     }
 
-    // Подготавливаем данные для отправки в соответствии с моделью Django
+    // Подготавливаем данные для отправки
     const dataToSend = {
       ...formData,
-      // Категории
-      open_category: isClosedEquipment ? null : formData.open_category?.value || null,
-      closed_category: isClosedEquipment ? formData.closed_category?.value || null : null, // Изменено с id на value
+      category: formData.category?.value || null,
       is_closed: isClosedEquipment,
-      // Связи с другими моделями
       division: formData.division?.id || null,
       subdivision: formData.subdivision?.id || null,
       facility: formData.facility?.id || null,
       assigned_to: formData.assigned_to?.id || null,
       product_structures: formData.product_structures || []
     };
-
 
     try {
       setIsLoading(true);
@@ -167,58 +160,60 @@ export function EditEquipmentForm({
     return division?.subdivisions || [];
   };
 
-  const currentCategories = isClosedEquipment ? categories.closed : categories.open;
+  // Фильтруем категории в зависимости от типа оборудования
+  const currentCategories = categories.filter(cat => 
+    isClosedEquipment ? cat.is_closed : !cat.is_closed
+  );
 
   return (
     <div className="equipment-form-container">
-    <form onSubmit={handleSubmit}>
-      <div className="equipment-form">
-        <BasicInformation
-          formData={formData}
-          onChange={handleChange}
-          isClosedEquipment={isClosedEquipment}
-          isDisposed={formData.status === 'disposed'}
-          equipmentCategories={currentCategories}
-        />
+      <form onSubmit={handleSubmit}>
+        <div className="equipment-form">
+          <BasicInformation
+            formData={formData}
+            onChange={handleChange}
+            isClosedEquipment={isClosedEquipment}
+            isDisposed={formData.status === 'disposed'}
+            equipmentCategories={currentCategories}
+          />
 
-        <DocumentsInfo
-          formData={formData}
-          onChange={handleChange}
-          isDisposed={formData.status === 'disposed'}
-        />
+          <DocumentsInfo
+            formData={formData}
+            onChange={handleChange}
+            isDisposed={formData.status === 'disposed'}
+          />
 
-        <IdentificationInfo formData={formData} onChange={handleChange} />
+          <IdentificationInfo formData={formData} onChange={handleChange} />
 
-        <DatesInfo formData={formData} onChange={handleChange} />
+          <DatesInfo formData={formData} onChange={handleChange} />
 
-        <AssignmentInfo
-          formData={formData}
-          onChange={handleChange}
-          availableSubdivisions={getCurrentSubdivisions()}
-          availablePersonnel={personnel}
-          divisions={divisions}
-          isLoading={isLoading}
-        />
+          <AssignmentInfo
+            formData={formData}
+            onChange={handleChange}
+            availableSubdivisions={getCurrentSubdivisions()}
+            availablePersonnel={personnel}
+            divisions={divisions}
+            isLoading={isLoading}
+          />
 
-        <EditCommentsCard
-          comments={formData.comments || ''}
-          onChange={(value) => handleChange({ comments: value })}
-        />
-      </div>
+          <EditCommentsCard
+            comments={formData.comments || ''}
+            onChange={(value) => handleChange({ comments: value })}
+          />
+        </div>
 
-      <ProductStructureEditor
+        <ProductStructureEditor
           productStructures={formData.product_structures || []}
           onChange={handleStructureChange}
           isDisposed={formData.status === 'disposed'}
         />
 
-      <FormActions
-        onCancel={onCancel}
-        showDisposeButton={formData.status !== 'disposed'}
-        onDispose={() => setShowDisposalModal(true)}
-      />
-    </form>
-    
+        <FormActions
+          onCancel={onCancel}
+          showDisposeButton={formData.status !== 'disposed'}
+          onDispose={() => setShowDisposalModal(true)}
+        />
+      </form>
 
       {showDisposalModal && (
         <DisposalModal

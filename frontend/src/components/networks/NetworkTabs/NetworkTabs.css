@@ -1,0 +1,37 @@
+.network-tabs {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tab-button {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    color: #495057;
+    background: #e9ecef;
+}
+
+.tab-button.active {
+    color: #0d6efd;
+    background: white;
+    border-bottom: 2px solid #0d6efd;
+}
+
+.tab-content {
+    padding: 20px;
+}

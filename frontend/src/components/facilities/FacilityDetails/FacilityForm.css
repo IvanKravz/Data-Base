@@ -41,7 +41,7 @@
 /* ===== Base Styles ===== */
 .facility-details-container {
     margin: 0 auto;
-    padding: var(--spacing-md);
+    /* padding: var(--spacing-md); */
     max-width: 100%;
 }
 
@@ -231,15 +231,24 @@
 
 /* ===== Header ===== */
 .facility-header {
+    background: white;
+    padding: 1.2rem 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    position: relative;
+    z-index: 2;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .facility-header__title {
     font-size: var(--text-2xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--color-text);
 }
 
