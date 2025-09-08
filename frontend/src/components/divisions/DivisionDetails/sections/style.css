@@ -19,7 +19,7 @@
 /* Карточка статистики */
 .stat-card {
   background: white;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   padding: 1rem;
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
@@ -28,7 +28,7 @@
   align-items: center;
   text-align: center;
   gap: 1rem;
-  border: 1.5px solid #ced3dd;
+  border: 1px solid #d1d6df;
 }
 
 /* Заголовок карточки */
@@ -314,7 +314,7 @@
   display: flex;
   flex-direction: column;
   background: white;
-  border-radius: 12px;
+  border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 24px;
   width: 100%;
@@ -340,7 +340,7 @@
   min-width: auto;
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   padding: 16px;
   transition: all 0.3s ease;
   box-sizing: border-box;

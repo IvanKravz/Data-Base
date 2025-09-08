@@ -161,7 +161,7 @@ export function EditEquipmentForm({
   };
 
   // Фильтруем категории в зависимости от типа оборудования
-  const currentCategories = categories.filter(cat => 
+  const currentCategories = categories.filter(cat =>
     isClosedEquipment ? cat.is_closed : !cat.is_closed
   );
 
@@ -174,7 +174,7 @@ export function EditEquipmentForm({
             onChange={handleChange}
             isClosedEquipment={isClosedEquipment}
             isDisposed={formData.status === 'disposed'}
-            equipmentCategories={currentCategories}
+            equipmentCategories={categories}
           />
 
           <DocumentsInfo

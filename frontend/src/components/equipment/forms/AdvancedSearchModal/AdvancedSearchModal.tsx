@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { SearchField } from './sections/SearchField';
+import { DateField } from './sections/DateField';
+import './AdvancedSearchModal.css';
 
 interface AdvancedSearchFilters {
   names: string[];
@@ -36,7 +39,6 @@ export function AdvancedSearchModal({
     assignedTo: ''
   });
   
-
   const [dateFilters, setDateFilters] = useState({
     manufacturingDateFrom: filters.manufacturingDateFrom || '',
     manufacturingDateTo: filters.manufacturingDateTo || '',
@@ -44,8 +46,6 @@ export function AdvancedSearchModal({
     exploitationDateTo: filters.exploitationDateTo || ''
   });
 
-  const [focusedField, setFocusedField] = useState<keyof typeof currentInputs | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRefs = {
     names: useRef<HTMLInputElement>(null),
     serialNumbers: useRef<HTMLInputElement>(null),
@@ -53,7 +53,6 @@ export function AdvancedSearchModal({
     assignedTo: useRef<HTMLInputElement>(null)
   };
 
-  // Получаем уникальные значения из оборудования для подсказок
   const suggestions = useMemo(() => {
     const names = new Set<string>();
     const serialNumbers = new Set<string>();
@@ -75,92 +74,58 @@ export function AdvancedSearchModal({
     };
   }, [equipment]);
 
-  // Фильтруем подсказки based on input
-  const filteredSuggestions = useMemo(() => {
-    if (!focusedField || !currentInputs[focusedField]) return [];
-    
-    return suggestions[focusedField].filter(suggestion =>
-      suggestion.toLowerCase().includes(currentInputs[focusedField].toLowerCase())
-    ).slice(0, 10);
-  }, [focusedField, currentInputs, suggestions]);
-
-  // Обработчик изменения значения в поле ввода
-  const handleInputChange = (filterType: keyof typeof currentInputs, value: string) => {
+  const handleInputChange = (filterType: string, value: string) => {
     setCurrentInputs(prev => ({ ...prev, [filterType]: value }));
-    setShowSuggestions(value.length > 0);
   };
 
-  // Обработчик изменения дат
-  const handleDateChange = (filterType: keyof typeof dateFilters, value: string) => {
+  const handleDateChange = (filterType: string, value: string) => {
     setDateFilters(prev => ({ ...prev, [filterType]: value }));
     onFilterChange(filterType as keyof AdvancedSearchFilters, value);
   };
 
-  // Обработчик фокуса на поле ввода
-  const handleFocus = (filterType: keyof typeof currentInputs) => {
-    setFocusedField(filterType);
-    setShowSuggestions(currentInputs[filterType].length > 0);
+  const handleFocus = (filterType: string) => {
+    // Фокус обрабатывается внутри SearchField
   };
 
-  // Обработчик потери фокуса
   const handleBlur = () => {
-    setTimeout(() => {
-      setFocusedField(null);
-      setShowSuggestions(false);
-    }, 200);
+    // Блюр обрабатывается внутри SearchField
   };
 
-  // Обработчик выбора подсказки
   const handleSuggestionSelect = (suggestion: string) => {
-    if (!focusedField) return;
-    
-    // Добавляем выбранное значение к фильтрам
-    const newValues = [...filters[focusedField], suggestion];
-    onFilterChange(focusedField, newValues);
-    
-    // Очищаем поле ввода
-    setCurrentInputs(prev => ({ ...prev, [focusedField]: '' }));
-    setShowSuggestions(false);
+    // Эта функция будет вызываться из SearchField
+    // Но нам нужно знать, для какого поля была выбрана подсказка
+    // Поэтому мы будем передавать эту информацию через замыкание
   };
 
-  // Обработчик добавления значения через Enter
-  const handleKeyPress = (e: React.KeyboardEvent, filterType: keyof typeof currentInputs) => {
-    if (e.key === 'Enter' && currentInputs[filterType].trim()) {
-      // Добавляем текущее значение к фильтрам
-      const newValues = [...filters[filterType], currentInputs[filterType].trim()];
-      onFilterChange(filterType, newValues);
+  const handleKeyPress = (e: React.KeyboardEvent, filterType: string) => {
+    if (e.key === 'Enter' && currentInputs[filterType as keyof typeof currentInputs].trim()) {
+      const newValues = [...filters[filterType as keyof AdvancedSearchFilters] as string[], currentInputs[filterType as keyof typeof currentInputs].trim()];
+      onFilterChange(filterType as keyof AdvancedSearchFilters, newValues);
       
-      // Очищаем поле ввода
       setCurrentInputs(prev => ({ ...prev, [filterType]: '' }));
-      setShowSuggestions(false);
     }
   };
 
-  // Обработчик удаления отдельного фильтра
-  const removeFilter = (filterType: keyof AdvancedSearchFilters, index: number) => {
+  const removeFilter = (filterType: string, index: number) => {
     if (filterType === 'manufacturingDateFrom' || filterType === 'manufacturingDateTo' || 
         filterType === 'exploitationDateFrom' || filterType === 'exploitationDateTo') {
-      onFilterChange(filterType, '');
+      onFilterChange(filterType as keyof AdvancedSearchFilters, '');
       setDateFilters(prev => ({ ...prev, [filterType]: '' }));
     } else {
-      const newValues = [...filters[filterType]];
+      const newValues = [...filters[filterType as keyof AdvancedSearchFilters] as string[]];
       newValues.splice(index, 1);
-      onFilterChange(filterType, newValues);
+      onFilterChange(filterType as keyof AdvancedSearchFilters, newValues);
     }
   };
 
-  // Обработчик применения фильтров (кнопка "Применить")
   const handleApply = () => {
-    // Добавляем все текущие значения к фильтрам
     Object.entries(currentInputs).forEach(([key, value]) => {
-      const filterType = key as keyof typeof currentInputs;
       if (value.trim()) {
-        const newValues = [...filters[filterType], value.trim()];
-        onFilterChange(filterType, newValues);
+        const newValues = [...filters[key as keyof AdvancedSearchFilters] as string[], value.trim()];
+        onFilterChange(key as keyof AdvancedSearchFilters, newValues);
       }
     });
     
-    // Очищаем все поля ввода
     setCurrentInputs({
       names: '',
       serialNumbers: '',
@@ -168,11 +133,9 @@ export function AdvancedSearchModal({
       assignedTo: ''
     });
     
-    setShowSuggestions(false);
     onClose();
   };
 
-  // Обработчик очистки всех фильтров
   const handleClearFilters = () => {
     onClearFilters();
     setCurrentInputs({
@@ -187,7 +150,6 @@ export function AdvancedSearchModal({
       exploitationDateFrom: '',
       exploitationDateTo: ''
     });
-    setShowSuggestions(false);
   };
 
   useEffect(() => {
@@ -211,221 +173,113 @@ export function AdvancedSearchModal({
         </div>
         
         <div className="advanced-search-fields">
-          <div className="search-field">
-            <label>Названия</label>
-            <input
-              ref={inputRefs.names}
-              type="text"
-              placeholder="Введите название"
-              value={currentInputs.names}
-              onChange={(e) => handleInputChange('names', e.target.value)}
-              onFocus={() => handleFocus('names')}
-              onBlur={handleBlur}
-              onKeyPress={(e) => handleKeyPress(e, 'names')}
-            />
-            
-            {focusedField === 'names' && showSuggestions && filteredSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {filteredSuggestions.map(suggestion => (
-                  <div
-                    key={suggestion}
-                    className="suggestion-item"
-                    onMouseDown={() => handleSuggestionSelect(suggestion)}
-                  >
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="selected-filters">
-              {filters.names.map((value, index) => (
-                <span key={index} className="filter-tag">
-                  {value}
-                  <button onClick={() => removeFilter('names', index)}>×</button>
-                </span>
-              ))}
-            </div>
-          </div>
+          <SearchField
+            type="names"
+            label="Названия"
+            placeholder="Введите название"
+            currentInputs={currentInputs}
+            filters={filters}
+            suggestions={suggestions}
+            onInputChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            onRemoveFilter={removeFilter}
+            onSuggestionSelect={(suggestion) => {
+              const newValues = [...filters.names, suggestion];
+              onFilterChange('names', newValues);
+              setCurrentInputs(prev => ({ ...prev, names: '' }));
+            }}
+            inputRef={inputRefs.names}
+          />
           
-          <div className="search-field">
-            <label>Серийные номера</label>
-            <input
-              ref={inputRefs.serialNumbers}
-              type="text"
-              placeholder="Введите серийный номер"
-              value={currentInputs.serialNumbers}
-              onChange={(e) => handleInputChange('serialNumbers', e.target.value)}
-              onFocus={() => handleFocus('serialNumbers')}
-              onBlur={handleBlur}
-              onKeyPress={(e) => handleKeyPress(e, 'serialNumbers')}
-            />
-            
-            {focusedField === 'serialNumbers' && showSuggestions && filteredSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {filteredSuggestions.map(suggestion => (
-                  <div
-                    key={suggestion}
-                    className="suggestion-item"
-                    onMouseDown={() => handleSuggestionSelect(suggestion)}
-                  >
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="selected-filters">
-              {filters.serialNumbers.map((value, index) => (
-                <span key={index} className="filter-tag">
-                  {value}
-                  <button onClick={() => removeFilter('serialNumbers', index)}>×</button>
-                </span>
-              ))}
-            </div>
-          </div>
+          <SearchField
+            type="serialNumbers"
+            label="Серийные номера"
+            placeholder="Введите серийный номер"
+            currentInputs={currentInputs}
+            filters={filters}
+            suggestions={suggestions}
+            onInputChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            onRemoveFilter={removeFilter}
+            onSuggestionSelect={(suggestion) => {
+              const newValues = [...filters.serialNumbers, suggestion];
+              onFilterChange('serialNumbers', newValues);
+              setCurrentInputs(prev => ({ ...prev, serialNumbers: '' }));
+            }}
+            inputRef={inputRefs.serialNumbers}
+          />
           
-          <div className="search-field">
-            <label>Инвентарные номера</label>
-            <input
-              ref={inputRefs.inventoryNumbers}
-              type="text"
-              placeholder="Введите инвентарный номер"
-              value={currentInputs.inventoryNumbers}
-              onChange={(e) => handleInputChange('inventoryNumbers', e.target.value)}
-              onFocus={() => handleFocus('inventoryNumbers')}
-              onBlur={handleBlur}
-              onKeyPress={(e) => handleKeyPress(e, 'inventoryNumbers')}
-            />
-            
-            {focusedField === 'inventoryNumbers' && showSuggestions && filteredSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {filteredSuggestions.map(suggestion => (
-                  <div
-                    key={suggestion}
-                    className="suggestion-item"
-                    onMouseDown={() => handleSuggestionSelect(suggestion)}
-                  >
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="selected-filters">
-              {filters.inventoryNumbers.map((value, index) => (
-                <span key={index} className="filter-tag">
-                  {value}
-                  <button onClick={() => removeFilter('inventoryNumbers', index)}>×</button>
-                </span>
-              ))}
-            </div>
-          </div>
+          <SearchField
+            type="inventoryNumbers"
+            label="Инвентарные номера"
+            placeholder="Введите инвентарный номер"
+            currentInputs={currentInputs}
+            filters={filters}
+            suggestions={suggestions}
+            onInputChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            onRemoveFilter={removeFilter}
+            onSuggestionSelect={(suggestion) => {
+              const newValues = [...filters.inventoryNumbers, suggestion];
+              onFilterChange('inventoryNumbers', newValues);
+              setCurrentInputs(prev => ({ ...prev, inventoryNumbers: '' }));
+            }}
+            inputRef={inputRefs.inventoryNumbers}
+          />
 
-          <div className="search-field">
-            <label>Дата производства (от)</label>
-            <input
-              type="date"
-              value={dateFilters.manufacturingDateFrom}
-              onChange={(e) => handleDateChange('manufacturingDateFrom', e.target.value)}
-            />
-            {dateFilters.manufacturingDateFrom && (
-              <div className="selected-filters">
-                <span className="filter-tag">
-                  {dateFilters.manufacturingDateFrom}
-                  <button onClick={() => removeFilter('manufacturingDateFrom', 0)}>×</button>
-                </span>
-              </div>
-            )}
-          </div>
+          <DateField
+            label="Дата производства (от)"
+            value={dateFilters.manufacturingDateFrom}
+            onChange={(value) => handleDateChange('manufacturingDateFrom', value)}
+            onRemove={() => removeFilter('manufacturingDateFrom', 0)}
+          />
 
-          <div className="search-field">
-            <label>Дата производства (до)</label>
-            <input
-              type="date"
-              value={dateFilters.manufacturingDateTo}
-              onChange={(e) => handleDateChange('manufacturingDateTo', e.target.value)}
-            />
-            {dateFilters.manufacturingDateTo && (
-              <div className="selected-filters">
-                <span className="filter-tag">
-                  {dateFilters.manufacturingDateTo}
-                  <button onClick={() => removeFilter('manufacturingDateTo', 0)}>×</button>
-                </span>
-              </div>
-            )}
-          </div>
+          <DateField
+            label="Дата производства (до)"
+            value={dateFilters.manufacturingDateTo}
+            onChange={(value) => handleDateChange('manufacturingDateTo', value)}
+            onRemove={() => removeFilter('manufacturingDateTo', 0)}
+          />
 
-          <div className="search-field">
-            <label>Дата ввода в эксплуатацию (от)</label>
-            <input
-              type="date"
-              value={dateFilters.exploitationDateFrom}
-              onChange={(e) => handleDateChange('exploitationDateFrom', e.target.value)}
-            />
-            {dateFilters.exploitationDateFrom && (
-              <div className="selected-filters">
-                <span className="filter-tag">
-                  {dateFilters.exploitationDateFrom}
-                  <button onClick={() => removeFilter('exploitationDateFrom', 0)}>×</button>
-                </span>
-              </div>
-            )}
-          </div>
+          <DateField
+            label="Дата ввода в эксплуатацию (от)"
+            value={dateFilters.exploitationDateFrom}
+            onChange={(value) => handleDateChange('exploitationDateFrom', value)}
+            onRemove={() => removeFilter('exploitationDateFrom', 0)}
+          />
 
-          <div className="search-field">
-            <label>Дата ввода в эксплуатацию (до)</label>
-            <input
-              type="date"
-              value={dateFilters.exploitationDateTo}
-              onChange={(e) => handleDateChange('exploitationDateTo', e.target.value)}
-            />
-            {dateFilters.exploitationDateTo && (
-              <div className="selected-filters">
-                <span className="filter-tag">
-                  {dateFilters.exploitationDateTo}
-                  <button onClick={() => removeFilter('exploitationDateTo', 0)}>×</button>
-                </span>
-              </div>
-            )}
-          </div>
+          <DateField
+            label="Дата ввода в эксплуатацию (до)"
+            value={dateFilters.exploitationDateTo}
+            onChange={(value) => handleDateChange('exploitationDateTo', value)}
+            onRemove={() => removeFilter('exploitationDateTo', 0)}
+          />
           
-          <div className="search-field">
-            <label>Закреплено за</label>
-            <input
-              ref={inputRefs.assignedTo}
-              type="text"
-              placeholder="Введите ФИО сотрудника"
-              value={currentInputs.assignedTo}
-              onChange={(e) => handleInputChange('assignedTo', e.target.value)}
-              onFocus={() => handleFocus('assignedTo')}
-              onBlur={handleBlur}
-              onKeyPress={(e) => handleKeyPress(e, 'assignedTo')}
-            />
-            
-            {focusedField === 'assignedTo' && showSuggestions && filteredSuggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {filteredSuggestions.map(suggestion => (
-                  <div
-                    key={suggestion}
-                    className="suggestion-item"
-                    onMouseDown={() => handleSuggestionSelect(suggestion)}
-                  >
-                    {suggestion}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="selected-filters">
-              {filters.assignedTo.map((value, index) => (
-                <span key={index} className="filter-tag">
-                  {value}
-                  <button onClick={() => removeFilter('assignedTo', index)}>×</button>
-                </span>
-              ))}
-            </div>
-          </div>
+          <SearchField
+            type="assignedTo"
+            label="Закреплено за"
+            placeholder="Введите ФИО сотрудника"
+            currentInputs={currentInputs}
+            filters={filters}
+            suggestions={suggestions}
+            onInputChange={handleInputChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            onRemoveFilter={removeFilter}
+            onSuggestionSelect={(suggestion) => {
+              const newValues = [...filters.assignedTo, suggestion];
+              onFilterChange('assignedTo', newValues);
+              setCurrentInputs(prev => ({ ...prev, assignedTo: '' }));
+            }}
+            inputRef={inputRefs.assignedTo}
+          />
         </div>
         
         <div className="advanced-search-actions">

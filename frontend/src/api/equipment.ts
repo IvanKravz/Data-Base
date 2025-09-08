@@ -96,5 +96,12 @@ export const equipmentApi = {
       comments
     });
     return data;
-  }
+  },
+
+  getNetworkConfig: async (token: string, equipmentId: string) => {
+    const { data } = await api.get(`/equipment/${equipmentId}/network_config/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
 };

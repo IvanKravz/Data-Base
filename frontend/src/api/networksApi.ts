@@ -156,4 +156,18 @@ export const networksApi = {
     });
     return Array.isArray(data) ? data : data.results || [];
   },
+
+  updateRoutingTable: async (token: string, id: string, routeData: Partial<RoutingTable>) => {
+    const { data } = await api.patch(`/routing-table/${id}/`, routeData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
+  
+  updateACL: async (token: string, id: string, aclData: Partial<ACL>) => {
+    const { data } = await api.patch(`/acls/${id}/`, aclData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
 };

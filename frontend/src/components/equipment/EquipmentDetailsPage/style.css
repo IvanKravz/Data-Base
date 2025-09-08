@@ -44,6 +44,38 @@
   padding: 2rem;
 }
 
+.equipment-edit-header {
+  background: white;
+  padding: 1.2rem 1.5rem;
+  border-radius: 0.5rem;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.equipment-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.equipment-edit-header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
 /* ===== Card Components ===== */
 .equipment-card {
   background: var(--color-white);
@@ -63,7 +95,7 @@
   cursor: default;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-color: rgba(37, 99, 235, 0.2);
 }
 
@@ -236,13 +268,13 @@
 
 .equipment-btn--icon {
   display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    background-color: #f1f5f9;
-    transition: all 0.2s;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: #f1f5f9;
+  transition: all 0.2s;
 }
 
 .equipment-btn--icon:hover {
@@ -294,15 +326,19 @@
 .equipment-info-item .text-blue-500 {
   color: var(--color-primary);
 }
+
 .equipment-info-item .text-green-500 {
   color: var(--color-success);
 }
+
 .equipment-info-item .text-brown-500 {
   color: #997959;
 }
+
 .equipment-info-item .text-orange-500 {
   color: #0ec28f;
 }
+
 .equipment-info-item .text-indigo-500 {
   color: #6366f1;
 }
@@ -361,9 +397,9 @@
   margin: 0;
   white-space: pre-line;
   line-height: 1.5;
-  word-break: break-word; 
-  overflow-wrap: break-word; 
-  max-width: 100%; 
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
   display: inline;
 }
 
@@ -396,13 +432,13 @@
   .equipment-card {
     padding: var(--spacing-md);
   }
-  
+
   .equipment-info-item {
     flex-direction: column;
     gap: 0.25rem;
     padding: 0.5rem 0;
   }
-  
+
   .equipment-info-item__icon {
     margin-top: 0;
   }
@@ -482,6 +518,7 @@
 
 /* Responsive adjustments for table */
 @media (max-width: 768px) {
+
   .structure-table th,
   .structure-table td {
     padding: 0.5rem;

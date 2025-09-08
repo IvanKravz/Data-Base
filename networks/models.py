@@ -148,7 +148,7 @@ class NetworkInterface(models.Model):
     equipment = models.ForeignKey(
         'equipment.Equipment',
         on_delete=models.CASCADE,
-        related_name='net_interfaces',  # Изменяем related_name
+        related_name='net_interfaces',
         verbose_name="Оборудование"
     )
     name = models.CharField("Название", max_length=50)

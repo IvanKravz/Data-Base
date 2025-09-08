@@ -20,6 +20,7 @@ import { CommentsInfo } from './sections/CommentsInfo';
 import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureTable } from './sections/ProductStructureTable';
 import { EditEquipmentForm } from '../forms/EditEquipmentForm';
+import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
 
 
 export function EquipmentDetailsPage() {
@@ -73,14 +74,14 @@ export function EquipmentDetailsPage() {
 
   const handleUpdate = async (updatedEquipment: Partial<Equipment>) => {
     if (!equipment?.id || !token) return;
-    
+
     try {
       setLoading(true);
       console.log('Обновляемые данные:', updatedEquipment);
-      
+
       // Нормализуем данные перед отправкой
       const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
-      
+
       // Обновляем локальное состояние с учетом полных объектов
       const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
       dispatch(updateEquipment(fullUpdatedData));
@@ -97,14 +98,18 @@ export function EquipmentDetailsPage() {
   if (isEditing) {
     return (
       <div className="equipment-details-container">
-        <div className="equipment-flex equipment-items-center equipment-gap-md">
-          <button
-            onClick={() => setIsEditing(false)}
-            className="equipment-btn--icon"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="equipment-header__title">Редактирование техники</h1>
+        <div className="equipment-edit-header">
+          <div className="equipment-header-left">
+            <button
+              onClick={() => setIsEditing(false)}
+              className="equipment-btn--icon"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="equipment-edit-header-title">
+              Редактирование техники
+            </h1>
+          </div>
         </div>
 
         <div className="equipment-card--edit">
@@ -136,6 +141,12 @@ export function EquipmentDetailsPage() {
         <AssignmentInfo equipment={equipment} />
         <CommentsInfo equipment={equipment} />
         <ProductStructureTable equipment={equipment} />
+        {equipment.is_network && (
+          <NetworkConfigBlock
+            equipment={equipment}
+            token={token}
+          />
+        )}
       </div>
 
       {equipment.status === 'disposed' && (

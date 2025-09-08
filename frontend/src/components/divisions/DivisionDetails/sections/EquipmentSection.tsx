@@ -15,7 +15,7 @@ import {
   Antenna,
   Zap,
   Box,
-  Trash2
+  KeyRound
 } from 'lucide-react';
 
 const CATEGORY_ICONS = {
@@ -26,7 +26,7 @@ const CATEGORY_ICONS = {
   'antenna': <Antenna className="equipment-tab-icon" size={16} />,
   'power': <Zap className="equipment-tab-icon" size={16} />,
   'material': <Box className="equipment-tab-icon" size={16} />,
-  'closed': <Trash2 className="equipment-tab-icon" size={16} />
+  'closed': <KeyRound className="equipment-tab-icon" size={16} />
 };
 
 interface AdvancedSearchFilters {
