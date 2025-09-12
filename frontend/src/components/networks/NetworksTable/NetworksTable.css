@@ -33,7 +33,7 @@
 
 .table-row:hover {
     background-color: #f8fafc;
-    cursor: pointer;
+    cursor: default;
 }
 
 .table-row.selected {
@@ -118,4 +118,27 @@
         padding: 14px 20px;
         font-size: 0.9rem;
     }
+
+    .edit-button {
+        padding: 6px;
+    }
+}
+
+.edit-button {
+    width: 1.5rem;
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 2px;
+    /* border-radius: 4px; */
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-button:hover {
+    color: #0ea5e9;
+    background-color: #f1f5f9;
 }

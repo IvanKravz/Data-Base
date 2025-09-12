@@ -56,33 +56,7 @@ class CommunicationNetwork(models.Model):
         default='TCP/IP',
         verbose_name="Протокол связи"
     )
-    
-    # Связи с другими моделями
-    divisions = models.ManyToManyField(
-        Division, 
-        verbose_name="Подразделения", 
-        related_name='communication_networks', 
-        blank=True
-    )
-    subdivisions = models.ManyToManyField(
-        Subdivision, 
-        verbose_name="Отделения", 
-        related_name='communication_networks', 
-        blank=True
-    )
-    facilities = models.ManyToManyField(
-        Facility, 
-        verbose_name="Объекты", 
-        related_name='communication_networks', 
-        blank=True
-    )
-    equipment = models.ManyToManyField(
-        'equipment.Equipment',  # Используем строковую ссылку
-        verbose_name="Техника", 
-        related_name='communication_networks', 
-        blank=True
-    )
-    
+          
     # Метаданные
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -94,6 +68,38 @@ class CommunicationNetwork(models.Model):
         verbose_name = "Сеть связи"
         verbose_name_plural = "Сети связи"
         ordering = ['name']
+
+class NetworkMembership(models.Model):
+    """Модель для хранения конкретных связей между сетью, подразделением, объектами и оборудованием"""
+    network = models.ForeignKey(
+        CommunicationNetwork,
+        on_delete=models.CASCADE,
+        related_name='memberships',
+        verbose_name="Сеть"
+    )
+    division = models.ForeignKey(
+        Division,
+        on_delete=models.CASCADE,
+        verbose_name="Подразделение"
+    )
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        verbose_name="Объект"
+    )
+    equipment = models.ForeignKey(
+        'equipment.Equipment',
+        on_delete=models.CASCADE,
+        verbose_name="Оборудование"
+    )
+    
+    class Meta:
+        verbose_name = "Принадлежность сети"
+        verbose_name_plural = "Принадлежности сетей"
+        unique_together = ['network', 'division', 'facility', 'equipment']
+    
+    def __str__(self):
+        return f"{self.network.name} - {self.division.name} - {self.facility.name} - {self.equipment.name}"        
 
 # СЕТЕВЫЕ НАСТРОЙКИ
 class VLAN(models.Model):

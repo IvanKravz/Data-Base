@@ -1,13 +1,18 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import ACL, CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, RoutingTable, VLANConfiguration
+from .models import ACL, CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, RoutingTable, VLANConfiguration, NetworkMembership
 from facilities.models import Division, Subdivision, Facility
 from equipment.models import Equipment
+
+class NetworkMembershipInline(admin.TabularInline):
+    model = NetworkMembership
+    extra = 1
+    raw_id_fields = ['division', 'facility', 'equipment']
 
 class CommunicationNetworkAdmin(admin.ModelAdmin):
     list_display = [
         'name', 
-        'get_equipment_count', 
+        'get_memberships_count',
         'network_class', 
         'security_level',
         'protocol',
@@ -24,7 +29,7 @@ class CommunicationNetworkAdmin(admin.ModelAdmin):
         'description',
         'ip_range'
     ]
-    filter_horizontal = ('divisions', 'subdivisions', 'facilities', 'equipment')
+    inlines = [NetworkMembershipInline]
     
     fieldsets = (
         ('Основная информация', {
@@ -37,16 +42,11 @@ class CommunicationNetworkAdmin(admin.ModelAdmin):
                 'ip_range', 'throughput', 'protocol'
             )
         }),
-        ('Связанные объекты', {
-            'fields': (
-                'divisions', 'subdivisions', 'facilities', 'equipment'
-            )
-        }),
     )
     
-    def get_equipment_count(self, obj):
-        return obj.equipment.count()
-    get_equipment_count.short_description = 'Количество техники'
+    def get_memberships_count(self, obj):
+        return obj.memberships.count()
+    get_memberships_count.short_description = 'Количество связей'
 
 class VLANAdmin(admin.ModelAdmin):
     list_display = ['vlan_id', 'name', 'description']
@@ -102,8 +102,15 @@ class ACLAdmin(admin.ModelAdmin):
     raw_id_fields = ['equipment']
     ordering = ['equipment', 'name', 'sequence']
 
+class NetworkMembershipAdmin(admin.ModelAdmin):
+    list_display = ['network', 'division', 'facility', 'equipment']
+    list_filter = ['network', 'division', 'facility']
+    search_fields = ['network__name', 'division__name', 'facility__name', 'equipment__name']
+    raw_id_fields = ['network', 'division', 'facility', 'equipment']
+
 # Регистрация моделей
 admin.site.register(CommunicationNetwork, CommunicationNetworkAdmin)
+admin.site.register(NetworkMembership, NetworkMembershipAdmin)
 admin.site.register(VLAN, VLANAdmin)
 admin.site.register(VLANConfiguration, VLANConfigurationAdmin)
 admin.site.register(NetworkInterface, NetworkInterfaceAdmin)

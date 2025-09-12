@@ -1,1 +1,0 @@
-export { CreateEquipmentForm } from './CreateEquipmentForm';

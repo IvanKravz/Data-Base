@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Database, Plug } from 'lucide-react';
 import { Facility, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
-import { EquipmentModal } from '../../../equipment/EquipmentModal';
 import { equipmentApi } from '../../../../api/equipment';
 import '../FacilityForm.css';
 
@@ -107,15 +106,6 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
           onUpdateEquipment={handleUpdateEquipment}
           onDeleteEquipment={handleDeleteEquipment}
           viewType="table"
-        />
-      )}
-
-      {selectedEquipment && (
-        <EquipmentModal
-          equipment={selectedEquipment}
-          onClose={() => setSelectedEquipment(null)}
-          onUpdate={handleUpdateEquipment}
-          isEditing={false}
         />
       )}
     </div>

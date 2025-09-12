@@ -1,18 +1,29 @@
 import React from 'react';
 import './NetworksTable.css';
 import { Network } from '../../../types';
+import { useNavigate } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
 
 interface NetworksTableProps {
   networks: Network[];
   onSelect: (network: Network) => void;
   selectedNetwork: Network | null;
+  divisionId?: string; 
 }
 
 const NetworksTable: React.FC<NetworksTableProps> = ({
   networks,
   onSelect,
-  selectedNetwork
+  selectedNetwork,
+  divisionId
 }) => {
+  const navigate = useNavigate();
+
+  const handleEdit = (e: React.MouseEvent, networkId: string) => {
+    e.stopPropagation();
+    navigate(`/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`);
+  };
+
   const getSecurityClass = (level: Network['security_level']): string => {
     const securityClasses = {
       'public': 'security-public',
@@ -43,6 +54,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
             <th className="network-table-header">Секретность</th>
             <th className="network-table-header">Протокол</th>
             <th className="network-table-header">IP диапазон</th>
+            <th className="network-table-header">Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -65,6 +77,15 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
               </td>
               <td className="table-cell">{network.protocol}</td>
               <td className="table-cell">{network.ip_range || '-'}</td>
+              <td className="table-cell">
+                <button 
+                  className="edit-button"
+                  onClick={(e) => handleEdit(e, network.id)}
+                  title="Редактировать сеть"
+                >
+                  <Pencil />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

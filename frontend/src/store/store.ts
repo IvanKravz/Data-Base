@@ -5,6 +5,7 @@ import storageReducer from './slices/storageSlice';
 import equipmentReducer from './slices/equipmentSlice';
 import facilitiesReducer from './slices/facilitiesSlice';
 import personnelReducer from './slices/personnelSlice';
+import networksReducer from './slices/networksSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     equipment: equipmentReducer,
     facilities: facilitiesReducer,
     personnel: personnelReducer,
+    networks: networksReducer,
   },
 });
 

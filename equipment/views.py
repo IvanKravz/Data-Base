@@ -202,3 +202,21 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             config['interfaces'].append(interface_data)
         
         return Response(config)
+    
+    @action(detail=False, methods=['get'])
+    def shd_equipment(self, request):
+        """Получить технику категории SHD"""
+        shd_category = get_object_or_404(EquipmentCategory, value='shd')
+        equipment = Equipment.objects.filter(category=shd_category)
+        
+        # Фильтрация по подразделению и объекту
+        division_id = request.query_params.get('division')
+        facility_id = request.query_params.get('facility')
+        
+        if division_id:
+            equipment = equipment.filter(division_id=division_id)
+        if facility_id:
+            equipment = equipment.filter(facility_id=facility_id)
+        
+        serializer = self.get_serializer(equipment, many=True)
+        return Response(serializer.data)    

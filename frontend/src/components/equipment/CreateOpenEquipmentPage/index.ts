@@ -1,1 +1,0 @@
-export { CreateOpenEquipmentPage } from './CreateOpenEquipmentPage';

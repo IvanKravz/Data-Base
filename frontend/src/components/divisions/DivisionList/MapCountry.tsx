@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Modal from './Modal';
-
 
 export const MapCountry = () => {
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const svgRef = useRef<SVGSVGElement>(null);
 
     const handleMouseEnter = (e: React.MouseEvent<SVGPathElement>) => {
         const regionName = e.currentTarget.getAttribute('name');
@@ -41,6 +42,50 @@ export const MapCountry = () => {
         setIsModalOpen(false);
     };
 
+    // Функция для поиска и выделения региона
+    const searchRegion = () => {
+        // Сначала сбрасываем все выделения
+        const allPaths = document.querySelectorAll('path.rus_zone');
+        allPaths.forEach(path => {
+            path.style.fill = '#c9dfec';
+        });
+
+        if (!searchQuery.trim()) return;
+
+        // Ищем регион по имени (без учета регистра)
+        const foundElements = document.querySelectorAll(`path[name]`);
+        let found = false;
+
+        foundElements.forEach(element => {
+            const name = element.getAttribute('name');
+            if (name && name.toLowerCase().includes(searchQuery.toLowerCase())) {
+                element.style.fill = '#4169E1';
+                element.style.transition = '0.4s';
+                found = true;
+
+                // Прокручиваем карту к найденному элементу
+                const rect = element.getBoundingClientRect();
+                if (svgRef.current) {
+                    svgRef.current.scrollTo({
+                        left: rect.left - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+
+        if (!found) {
+            alert('Регион не найден');
+        }
+    };
+
+    // Обработка нажатия клавиши Enter в поле поиска
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            searchRegion();
+        }
+    };
+
     // Пример данных о регионах (можно вынести в отдельный файл)
     const regionData: Record<string, { capital: string; population: string; area: string }> = {
         "Республика Саха (Якутия)": {
@@ -68,11 +113,36 @@ export const MapCountry = () => {
 
     return (
         <div className='map-region'>
-            <div className='map-region-text'>Территориальные органы ФСБ России</div>
+            <div className='map-region-text'>
+                Территориальные органы ФСБ России
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Поиск региона..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="search-input"
+                    />
+                    <button
+                        onClick={searchRegion}
+                        className="search-button"
+                    >
+                        Найти
+                    </button>
+                </div>
+            </div>
             <div className='hovered-region-name'>
                 {hoveredRegion}
             </div>
-            <svg version="1.1" width="100%" height="100%" viewBox="0 0 809 459" >
+            <svg
+                ref={svgRef}
+                version="1.1"
+                width="100%"
+                height="100%"
+                viewBox="0 0 809 459"
+                style={{ overflow: 'auto' }}
+            >
                 <path fill="#c9dfec" stroke="#606778" name="Республика Адыгея" className="rus_zone"
                     d="M32.7,366.7L31.900000000000002,365.5L30.500000000000004,364.1L29.800000000000004,364.40000000000003V365.6L30.400000000000006,
                     366.70000000000005L33.10000000000001,369.50000000000006H34.400000000000006L34.800000000000004,369.00000000000006L36.2,

@@ -8,13 +8,16 @@ interface HeaderProps {
   onCreateNetwork: (networkData: Omit<Network, 'id'>) => void;
   onToggleView: () => void;
   viewMode: string;
+  divisionId: string;
 }
 
-export function Header({ onCreateNetwork, onToggleView, viewMode }: HeaderProps) {
+export function Header({ onCreateNetwork, onToggleView, viewMode, divisionId }: HeaderProps) {
   const navigate = useNavigate();
 
+  // console.log('divisionId', divisionId)
+
   const handleBack = () => {
-    navigate(-1);
+    navigate(`/divisions/${divisionId}`);
   };
 
   const getHeaderTitle = () => {

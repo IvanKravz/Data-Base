@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import './CommunicationNetworks.css';
 import { Network } from '../../../../types';
 import NetworksTable from '../../../networks/NetworksTable/NetworksTable';
@@ -10,6 +11,7 @@ import NetworkTabs from '../../../networks/NetworkTabs/NetworkTabs';
 
 
 const CommunicationNetworks: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
   const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
@@ -18,10 +20,12 @@ const CommunicationNetworks: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState('networks'); // 'networks' или 'management'
 
+  console.log('id', id)
+
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
-        const data = await networksApi.getNetworks(token!);
+        const data = await networksApi.getNetworks(token!, id!);
         setNetworks(data);
       } catch (err) {
         setError('Не удалось загрузить список сетей');
@@ -34,7 +38,7 @@ const CommunicationNetworks: React.FC = () => {
     if (token && activeView === 'networks') {
       fetchNetworks();
     }
-  }, [token, activeView]);
+  }, [token, activeView, id]);
 
   const handleCreateNetwork = async (networkData: Omit<Network, 'id'>) => {
     try {
@@ -63,22 +67,24 @@ const CommunicationNetworks: React.FC = () => {
   return (
     <div className="communication-networks-container">
       <div className="communication-networks-main">
-        <Header 
-          onCreateNetwork={handleCreateNetwork} 
+        <Header
+          onCreateNetwork={handleCreateNetwork}
           onToggleView={toggleView}
           viewMode={activeView}
+          divisionId={id}
         />
-        
+
         {activeView === 'networks' ? (
           <div className="networks-content">
-            <NetworksTable 
+            <NetworksTable
               networks={networks}
-              onSelect={setSelectedNetwork} 
-              selectedNetwork={selectedNetwork} 
+              onSelect={setSelectedNetwork}
+              selectedNetwork={selectedNetwork}
+              divisionId={id}
             />
             {selectedNetwork && (
-              <NetworkVisualization 
-                network={selectedNetwork} 
+              <NetworkVisualization
+                network={selectedNetwork}
                 highlightedNode={highlightedNode}
               />
             )}
@@ -87,13 +93,14 @@ const CommunicationNetworks: React.FC = () => {
           <NetworkTabs token={token} />
         )}
       </div>
-      
+
       {activeView === 'networks' && (
         <aside className="network-details-sidebar">
-          <NetworkDetails 
-            network={selectedNetwork} 
+          <NetworkDetails
+            network={selectedNetwork}
             onHighlightNode={handleHighlightNode}
             onClearHighlight={handleClearHighlight}
+            divisionId={id}
           />
         </aside>
       )}

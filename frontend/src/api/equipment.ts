@@ -36,6 +36,20 @@ export const equipmentApi = {
     return data;
   },
 
+  getShdEquipment: async (token: string, divisionId?: string, facilityId?: string): Promise<Equipment[]> => {
+    const params: any = { category: 'shd' };
+    if (divisionId) params.division = divisionId;
+    if (facilityId) params.facility = facilityId;
+    
+    const { data } = await api.get('/equipment/', { 
+      params,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data.results || [];
+  },
+
   createEquipment: async (equipmentData: Omit<Equipment, 'id'>) => {
     const { data } = await api.post('/equipment/', equipmentData);
     return data;

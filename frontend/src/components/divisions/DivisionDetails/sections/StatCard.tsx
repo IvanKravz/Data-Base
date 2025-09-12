@@ -9,7 +9,6 @@ interface StatCardProps {
   count: number | null;
   icon: typeof LucideIcon;
   iconColor: string;
-  gradientClass: string;
   details: Array<{
     label: string;
     value: number;
@@ -23,26 +22,28 @@ export function StatCard({
   count,
   icon: Icon,
   iconColor,
-  gradientClass,
-  details,
   onClick,
   loading = false
 }: StatCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`stat-card ${gradientClass} transition-all duration-300 hover:scale-[1.02]`}
+      className={`division-stat-card`}
     >
-      <div className="stat-card-header">
-        <Icon className={`stat-card-icon ${iconColor} transition-colors duration-300`} />
-        <h2 className="stat-card-title">{title}</h2>
-        {loading ? (
-          <CircularProgress size="30px"/>
-        ) : (
-          <p className="stat-card-count animate-fadeIn">
-            {count !== null ? count : '—'}
-          </p>
-        )}
+      <div className="division-stat-card-content">
+        <div className="division-stat-card-header">
+          <div className="division-icon-container" style={{ backgroundColor: `${iconColor}20` }}>
+            <Icon className="division-stat-card-icon" style={{ color: iconColor }} />
+          </div>
+          <h3 className="division-stat-card-title">{title}</h3>
+        </div>
+        <div className="division-stat-card-value">
+          {loading ? (
+            <CircularProgress size={30} thickness={5} />
+          ) : (
+            <span className="division-count">{count !== null ? count : '—'}</span>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { HardDrive } from 'lucide-react';
 import { Employee, Equipment } from '../../../../types';
 import { EquipmentList } from '../../../equipment/EquipmentList';
-import { EquipmentModal } from '../../../equipment/EquipmentModal';
 import { equipmentApi } from '../../../../api/equipment';
 import { ExportButton } from '../../../common/ExportButton';
 import { exportEquipmentToExcel } from '../../../../utils/exportToExcel';
@@ -87,15 +86,6 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
         onDeleteEquipment={handleDeleteEquipment}
         // viewType="table"
       />
-
-      {selectedEquipment && (
-        <EquipmentModal
-          equipment={selectedEquipment}
-          onClose={() => setSelectedEquipment(null)}
-          onUpdate={handleUpdateEquipment}
-          isEditing={false}
-        />
-      )}
     </div>
   );
 }

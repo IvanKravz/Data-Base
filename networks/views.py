@@ -4,9 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, VLANConfiguration, RoutingTable, ACL
+from .models import CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, NetworkMembership, VLANConfiguration, RoutingTable, ACL
 from .serializers import (
-    CommunicationNetworkSerializer, 
+    CommunicationNetworkSerializer,
+    NetworkMembershipSerializer, 
     VLANSerializer, 
     NetworkInterfaceSerializer, 
     IPAddressSerializer, 
@@ -19,10 +20,11 @@ from .serializers import (
 class CommunicationNetworkViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = CommunicationNetwork.objects.all().prefetch_related(
-        'divisions', 'subdivisions', 'facilities', 'equipment'
-    )
+        'memberships__division',
+        'memberships__facility',
+        'memberships__equipment'
+    )    
     serializer_class = CommunicationNetworkSerializer
-    
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = {
         'network_class': ['exact'],
@@ -34,6 +36,65 @@ class CommunicationNetworkViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description', 'ip_range']
     ordering_fields = ['name', 'network_class', 'security_level', 'throughput']
     ordering = ['name']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        division_id = self.request.query_params.get('division')
+        if division_id:
+            queryset = queryset.filter(memberships__division_id=division_id)
+        return queryset.distinct()
+
+    @action(detail=True, methods=['get'])
+    def get_network(self, request, pk=None):
+        """Получение одной сети по ID"""
+        try:
+            network = self.get_object()
+            serializer = self.get_serializer(network)
+            return Response(serializer.data)
+        except CommunicationNetwork.DoesNotExist:
+            return Response({'error': 'Network not found'}, status=404)
+
+class NetworkMembershipViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = NetworkMembership.objects.all()
+    serializer_class = NetworkMembershipSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['network']
+    
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Массовое создание связей"""
+        network_id = request.data.get('network')
+        memberships = request.data.get('memberships', [])
+        
+        # Удаляем старые связи
+        NetworkMembership.objects.filter(network_id=network_id).delete()
+        
+        # Создаем новые связи
+        created = []
+        for membership in memberships:
+            # Преобразуем старые поля в новые
+            if 'division' in membership:
+                membership['division_id'] = membership.pop('division')
+            if 'facility' in membership:
+                membership['facility_id'] = membership.pop('facility')
+            if 'equipment' in membership:
+                membership['equipment_id'] = membership.pop('equipment')
+                
+            # Добавляем network_id к данным
+            membership_data = {
+                **membership,
+                'network': network_id
+            }
+            
+            serializer = self.get_serializer(data=membership_data)
+            if serializer.is_valid():
+                serializer.save()
+                created.append(serializer.data)
+            else:
+                return Response(serializer.errors, status=400)
+        
+        return Response(created, status=201)
 
 class VLANViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

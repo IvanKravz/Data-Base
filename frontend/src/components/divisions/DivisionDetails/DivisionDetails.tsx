@@ -40,7 +40,7 @@ export function DivisionDetails() {
     return (
       <div className="division-details-loading">
         <Skeleton variant="rectangular" width="100%" height={72} />
-        <div className="stats-grid">
+        <div className="division-stats-grid">
           {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton
               key={i}

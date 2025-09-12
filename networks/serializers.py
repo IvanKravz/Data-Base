@@ -1,18 +1,55 @@
+from equipment.models import Equipment
 from equipment.serializers import EquipmentSerializer
+from facilities.models import Division, Facility
 from facilities.serializers import DivisionSerializer, FacilitySerializer, SubdivisionSerializer
-from .models import VLAN, CommunicationNetwork, IPAddress, IPRange, NetworkInterface, VLANConfiguration, RoutingTable, ACL
+from .models import VLAN, CommunicationNetwork, IPAddress, IPRange, NetworkInterface, NetworkMembership, VLANConfiguration, RoutingTable, ACL
 from rest_framework import serializers
 
-
+class NetworkMembershipSerializer(serializers.ModelSerializer):
+    division = DivisionSerializer(read_only=True)
+    facility = FacilitySerializer(read_only=True)
+    equipment = EquipmentSerializer(read_only=True)
+    division_id = serializers.PrimaryKeyRelatedField(
+        queryset=Division.objects.all(), 
+        source='division', 
+        write_only=True
+    )
+    facility_id = serializers.PrimaryKeyRelatedField(
+        queryset=Facility.objects.all(), 
+        source='facility', 
+        write_only=True
+    )
+    equipment_id = serializers.PrimaryKeyRelatedField(
+        queryset=Equipment.objects.all(), 
+        source='equipment', 
+        write_only=True
+    )
+    
+    class Meta:
+        model = NetworkMembership
+        fields = [
+            'id', 'network', 'division', 'facility', 'equipment',
+            'division_id', 'facility_id', 'equipment_id'
+        ]
+        
 class CommunicationNetworkSerializer(serializers.ModelSerializer):
-    divisions = DivisionSerializer(many=True, read_only=True)
-    subdivisions = SubdivisionSerializer(many=True, read_only=True)
-    facilities = FacilitySerializer(many=True, read_only=True)
-    equipment = EquipmentSerializer(many=True, read_only=True)
+    memberships = NetworkMembershipSerializer(many=True, read_only=True)
     
     class Meta:
         model = CommunicationNetwork
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'description', 'network_class', 'security_level',
+            'ip_range', 'throughput', 'protocol', 'created_at', 'updated_at',
+            'memberships'
+        ]
+    
+    def update(self, instance, validated_data):
+        # Обновляем основные поля
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        return instance
 
 class VLANSerializer(serializers.ModelSerializer):
     class Meta:
