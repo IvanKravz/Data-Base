@@ -3,12 +3,11 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import './NetworkVisualization.css';
-import { Network } from '../../../types';
 
 interface Node {
   id: string;
   name: string;
-  type: 'division' | 'facility';
+  type: 'division' | 'facility' | 'equipment';
   position: [number, number, number];
   radius: number;
   color: string;
@@ -20,11 +19,16 @@ interface Connection {
   end: [number, number, number];
   startId: string;
   endId: string;
-  isFacilityConnection?: boolean;
+  isDirection: boolean;
+  bandwidth?: number;
+  latency?: number;
+  description?: string;
 }
 
 interface NetworkVisualizationProps {
-  network: Network;
+  network: any;
+  memberships: any[];
+  directions: any[];
   highlightedNode?: string | null;
 }
 
@@ -87,10 +91,10 @@ const NetworkScene: React.FC<{
         let opacity = 0.3;
         let lineWidth = 1;
 
-        if (conn.isFacilityConnection) {
-          lineColor = 0xff0000; // Красный для связей между объектами
-          opacity = isHighlighted ? 0.9 : 0.2;
-          lineWidth = 2; // Более толстые линии
+        if (conn.isDirection) {
+          lineColor = 0xff0000; // Красный для направлений
+          opacity = isHighlighted ? 0.9 : 0.6;
+          lineWidth = 2; // Более толстые линии для направлений
         } else if (isHighlighted) {
           lineColor = 0x61dafb;
           opacity = 1;
@@ -149,6 +153,8 @@ const NetworkScene: React.FC<{
 
 const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({ 
   network,
+  memberships,
+  directions,
   highlightedNode: externalHighlightedNode
 }) => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -158,120 +164,161 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     ? externalHighlightedNode 
     : internalHighlightedNode;
 
-    const { nodes, connections } = useMemo(() => {
-      const nodes: Node[] = [];
-      const connections: Connection[] = [];
-      const allFacilities: Node[] = [];
+  const { nodes, connections } = useMemo(() => {
+    const nodes: Node[] = [];
+    const connections: Connection[] = [];
+    const divisionsMap = new Map<number, any>();
+    const facilitiesMap = new Map<number, any>();
+    const equipmentMap = new Map<number, any>();
+
+    // Собираем все уникальные подразделения, объекты и оборудование из членств
+    memberships.forEach(membership => {
+      if (membership.division && !divisionsMap.has(membership.division.id)) {
+        divisionsMap.set(membership.division.id, membership.division);
+      }
+      if (membership.facility && !facilitiesMap.has(membership.facility.id)) {
+        facilitiesMap.set(membership.facility.id, membership.facility);
+      }
+      if (membership.equipment && !equipmentMap.has(membership.equipment.id)) {
+        equipmentMap.set(membership.equipment.id, membership.equipment);
+      }
+    });
+
+    // Создаем узлы для подразделений
+    const divisions = Array.from(divisionsMap.values());
+    const divisionRadius = 15;
+    const divisionAngleStep = (2 * Math.PI) / Math.max(1, divisions.length);
+    
+    divisions.forEach((div, divIndex) => {
+      const divisionAngle = divIndex * divisionAngleStep;
+      const divX = divisionRadius * Math.cos(divisionAngle);
+      const divZ = divisionRadius * Math.sin(divisionAngle);
+      const divY = 20;
       
-      // Group elements by division
-      const divisions = network.divisions || [];
-      const subdivisions = network.subdivisions || [];
-      const facilities = network.facilities || [];
-      
-      // Group facilities by division through subdivision
-      const facilitiesByDivision: Record<number, typeof facilities> = {};
-      
-      // Initialize empty arrays for each division
-      divisions.forEach(div => {
-        facilitiesByDivision[div.id] = [];
+      nodes.push({
+        id: `division-${div.id}`,
+        name: div.name,
+        type: 'division',
+        position: [divX, divY, divZ],
+        radius: 2.0,
+        color: '#4a6fa5',
+        originalColor: '#4a6fa5'
       });
+    });
+
+    // Создаем узлы для объектов и связываем их с подразделениями
+    const facilities = Array.from(facilitiesMap.values());
+    facilities.forEach((fac, facIndex) => {
+      // Находим подразделение для этого объекта
+      const divisionMembership = memberships.find(m => 
+        m.facility && m.facility.id === fac.id && m.division
+      );
       
-      // Map facilities to their divisions
-      subdivisions.forEach(sub => {
-        if (facilitiesByDivision[sub.division]) {
-          const facs = facilities.filter(fac => fac.subdivision === sub.id);
-          facilitiesByDivision[sub.division].push(...facs);
-        }
-      });
-      
-      // Position divisions in a circle
-      const divisionRadius = 15;
-      const divisionAngleStep = (2 * Math.PI) / Math.max(1, divisions.length);
-      
-      divisions.forEach((div, divIndex) => {
+      let divX = 0, divZ = 0;
+      if (divisionMembership && divisionMembership.division) {
+        const divIndex = divisions.findIndex(d => d.id === divisionMembership.division.id);
         const divisionAngle = divIndex * divisionAngleStep;
-        
-        // Position division
-        const divX = divisionRadius * Math.cos(divisionAngle);
-        const divZ = divisionRadius * Math.sin(divisionAngle);
-        const divY = 20;
-        nodes.push({
-          id: `division-${div.id}`,
-          name: div.name,
-          type: 'division',
-          position: [divX, divY, divZ],
-          radius: 2.0,
-          color: '#4a6fa5',
-          originalColor: '#4a6fa5'
+        divX = divisionRadius * Math.cos(divisionAngle);
+        divZ = divisionRadius * Math.sin(divisionAngle);
+      }
+      
+      // Позиционируем объекты вокруг их подразделений
+      const facRadius = 8;
+      const facAngle = (facIndex % 8) * (Math.PI / 4); // 8 объектов вокруг каждого подразделения
+      const facX = divX + facRadius * Math.cos(facAngle);
+      const facZ = divZ + facRadius * Math.sin(facAngle);
+      const facY = 8;
+      
+      nodes.push({
+        id: `facility-${fac.id}`,
+        name: fac.name,
+        type: 'facility',
+        position: [facX, facY, facZ],
+        radius: 1.5,
+        color: '#90cdf4',
+        originalColor: '#90cdf4'
+      });
+      
+      // Создаем соединение между подразделением и объектами
+      if (divisionMembership && divisionMembership.division) {
+        connections.push({
+          start: [divX, 20, divZ],
+          end: [facX, facY, facZ],
+          startId: `division-${divisionMembership.division.id}`,
+          endId: `facility-${fac.id}`,
+          isDirection: false
         });
-        
-        // Position facilities for this division in a circle around it
-        const facs = facilitiesByDivision[div.id] || [];
-        const facRadius = 8;
-        const facAngleStep = facs.length > 0 ? (2 * Math.PI) / facs.length : 0;
-        
-        facs.forEach((fac, facIndex) => {
-          const facAngle = facIndex * facAngleStep;
-          const facX = divX + facRadius * Math.cos(facAngle);
-          const facZ = divZ + facRadius * Math.sin(facAngle);
-          const facY = 8;
+      }
+    });
+
+    // Создаем узлы для оборудования и связываем их с объектами
+    const equipmentList = Array.from(equipmentMap.values());
+    equipmentList.forEach((eq, eqIndex) => {
+      // Находим объект для этого оборудования
+      const facilityMembership = memberships.find(m => 
+        m.equipment && m.equipment.id === eq.id && m.facility
+      );
+      
+      if (facilityMembership && facilityMembership.facility) {
+        const facilityNode = nodes.find(n => n.id === `facility-${facilityMembership.facility.id}`);
+        if (facilityNode) {
+          const eqRadius = 4;
+          const eqAngle = (eqIndex % 6) * (Math.PI / 3); // 6 единиц оборудования вокруг каждого объекта
+          const eqX = facilityNode.position[0] + eqRadius * Math.cos(eqAngle);
+          const eqZ = facilityNode.position[2] + eqRadius * Math.sin(eqAngle);
+          const eqY = 0;
           
-          const facilityNode: Node = {
-            id: `facility-${fac.id}`,
-            name: fac.name,
-            type: 'facility',
-            position: [facX, facY, facZ],
-            radius: 1.5,
-            color: '#90cdf4',
-            originalColor: '#90cdf4'
-          };
-          nodes.push(facilityNode);
-          allFacilities.push(facilityNode);
-          
-          // Connect division to facility
-          connections.push({
-            start: [divX, divY, divZ],
-            end: [facX, facY, facZ],
-            startId: `division-${div.id}`,
-            endId: `facility-${fac.id}`
+          nodes.push({
+            id: `equipment-${eq.id}`,
+            name: eq.name,
+            type: 'equipment',
+            position: [eqX, eqY, eqZ],
+            radius: 1.0,
+            color: '#f6ad55',
+            originalColor: '#f6ad55'
           });
-        });
-      });
-      
-      // Add orphaned facilities (without parent division)
-      const processedFacilityIds = new Set(allFacilities.map(f => f.id));
-      facilities.forEach(fac => {
-        if (!processedFacilityIds.has(`facility-${fac.id}`)) {
-          const orphanedFacilityNode: Node = {
-            id: `facility-${fac.id}`,
-            name: fac.name,
-            type: 'facility',
-            position: [30, -10, allFacilities.length * 8 - 16],
-            radius: 1.4,
-            color: '#90cdf4',
-            originalColor: '#90cdf4'
-          };
-          nodes.push(orphanedFacilityNode);
-          allFacilities.push(orphanedFacilityNode);
-        }
-      });
-      
-      // Create connections between all facilities
-      for (let i = 0; i < allFacilities.length; i++) {
-        for (let j = i + 1; j < allFacilities.length; j++) {
+          
+          // Создаем соединение между объектами и оборудованием
           connections.push({
-            start: allFacilities[i].position,
-            end: allFacilities[j].position,
-            startId: allFacilities[i].id,
-            endId: allFacilities[j].id,
-            isFacilityConnection: true
+            start: facilityNode.position,
+            end: [eqX, eqY, eqZ],
+            startId: `facility-${facilityMembership.facility.id}`,
+            endId: `equipment-${eq.id}`,
+            isDirection: false
           });
         }
       }
-      
-      return { nodes, connections };
-    }, [network]);
-  
+    });
+
+    // Создаем соединения для направлений
+    directions.forEach(direction => {
+      if (direction.from_membership_details && direction.to_membership_details) {
+        const fromEquipment = direction.from_membership_details.equipment;
+        const toEquipment = direction.to_membership_details.equipment;
+        
+        if (fromEquipment && toEquipment) {
+          const fromNode = nodes.find(n => n.id === `equipment-${fromEquipment.id}`);
+          const toNode = nodes.find(n => n.id === `equipment-${toEquipment.id}`);
+          
+          if (fromNode && toNode) {
+            connections.push({
+              start: fromNode.position,
+              end: toNode.position,
+              startId: `equipment-${fromEquipment.id}`,
+              endId: `equipment-${toEquipment.id}`,
+              isDirection: true,
+              bandwidth: direction.bandwidth,
+              latency: direction.latency,
+              description: direction.description
+            });
+          }
+        }
+      }
+    });
+
+    return { nodes, connections };
+  }, [network, memberships, directions]);
+
   const handleNodeClick = (nodeId: string) => {
     setSelectedNode(prev => prev === nodeId ? null : nodeId);
   };
@@ -282,10 +329,19 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     
     switch(type) {
       case 'division':
-        node = network.divisions?.find(d => d.id === parseInt(id));
+        const division = Array.from(new Map(memberships.map(m => 
+          [m.division.id, m.division])).values()).find(d => d.id === parseInt(id));
+        node = division;
         break;
       case 'facility':
-        node = network.facilities?.find(f => f.id === parseInt(id));
+        const facility = Array.from(new Map(memberships.map(m => 
+          [m.facility.id, m.facility])).values()).find(f => f.id === parseInt(id));
+        node = facility;
+        break;
+      case 'equipment':
+        const equipment = Array.from(new Map(memberships.map(m => 
+          [m.equipment.id, m.equipment])).values()).find(e => e.id === parseInt(id));
+        node = equipment;
         break;
       default:
         return null;
@@ -296,12 +352,13 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     return (
       <>
         <div className="network-details-item">
-          <div className="network-details-label">Name</div>
+          <div className="network-details-label">Название</div>
           <div className="network-details-value">{node.name}</div>
         </div>
         <div className="network-details-item">
-          <div className="network-details-label">Type</div>
-          <div className="network-details-value">{type}</div>
+          <div className="network-details-label">Тип</div>
+          <div className="network-details-value">{type === 'division' ? 'Подразделение' : 
+                                              type === 'facility' ? 'Объект' : 'Оборудование'}</div>
         </div>
         <div className="network-details-item">
           <div className="network-details-label">ID</div>
@@ -331,7 +388,9 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
         
         <div className={`network-visualization-details ${selectedNode ? 'active' : ''}`}>
           <h4 className="network-visualization-details-title">
-            {selectedNode ? selectedNode.split('-')[0] : 'Node'} Details
+            {selectedNode ? selectedNode.split('-')[0] === 'division' ? 'Подразделение' :
+                          selectedNode.split('-')[0] === 'facility' ? 'Объект' : 'Оборудование' 
+                          : 'Детали'}
           </h4>
           <div className="network-visualization-details-content">
             {selectedNode && renderNodeDetails(selectedNode)}

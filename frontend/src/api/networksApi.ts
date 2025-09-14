@@ -5,7 +5,8 @@ import {
   NetworkInterface,
   IPAddress,
   IPRange,
-  Equipment
+  Equipment,
+  NetworkDirection
 } from '../types';
 
 export const networksApi = {
@@ -77,13 +78,51 @@ export const networksApi = {
   bulkUpdateNetworkMemberships: async (token: string, networkId: string, memberships: any[]) => {
     // Используем существующий bulk_create эндпоинт
     const { data } = await api.post('/networks/network-memberships/bulk_create/', {
-        network: networkId,
-        memberships: memberships
+      network: networkId,
+      memberships: memberships
     }, {
-        headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     });
     return data;
-},
+  },
+
+  // Методы для управления направлениями сети
+  getNetworkDirections: async (token: string, networkId: string) => {
+    const { data } = await api.get(`/networks/network-directions/?network=${networkId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return Array.isArray(data) ? data : data.results || [];
+  },
+
+  createNetworkDirection: async (token: string, directionData: any) => {
+    const { data } = await api.post('/networks/network-directions/', directionData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
+
+  updateNetworkDirection: async (token: string, id: string, directionData: any) => {
+    const { data } = await api.patch(`/networks/network-directions/${id}/`, directionData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
+
+  deleteNetworkDirection: async (token: string, id: string) => {
+    await api.delete(`/networks/network-directions/${id}/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+
+  bulkUpdateNetworkDirections: async (token: string, networkId: string, directions: NetworkDirection[]) => {
+    const { data } = await api.post('/networks/network-directions/bulk_create/', {
+      network: parseInt(networkId),
+      directions: directions
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return data;
+  },
 
   // Методы для VLAN
   getVlans: async (token: string): Promise<VLAN[]> => {
@@ -212,3 +251,4 @@ export const networksApi = {
     return data;
   },
 };
+

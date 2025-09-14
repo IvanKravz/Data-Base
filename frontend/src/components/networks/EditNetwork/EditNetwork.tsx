@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../../store';
+import { AppDispatch, RootState } from '../../../store/store';
 import { fetchNetwork, updateNetwork } from '../../../store/slices/networksSlice';
 import { divisionsApi } from '../../../api/divisions';
 import { facilitiesApi } from '../../../api/facilities';
 import { equipmentApi } from '../../../api/equipment';
 import { networksApi } from '../../../api/networksApi';
-import { Network } from '../../../types';
+import NetworkHeader from './components/NetworkHeader';
+import BasicInfoSection from './components/BasicInfoSection';
+import ClassificationSection from './components/ClassificationSection';
+import TechnicalParamsSection from './components/TechnicalParamsSection';
+import MembershipSection from './components/MembershipSection';
+import ConnectionSection from './components/ConnectionSection';
+import NetworkActions from './components/NetworkActions';
+import ConnectionsDisplay from './components/ConnectionsDisplay';
 import './EditNetwork.css';
 
 interface SelectedItem {
     division: { id: string; name: string };
     facility: { id: string; name: string };
     equipment: { id: string; name: string; serial_number: string };
+}
+
+interface NetworkDirection {
+    from: SelectedItem;
+    to: SelectedItem;
+    bandwidth?: number;
+    latency?: number;
+    description?: string;
 }
 
 const EditNetwork: React.FC = () => {
@@ -28,12 +43,12 @@ const EditNetwork: React.FC = () => {
     const [facilities, setFacilities] = useState<any[]>([]);
     const [equipment, setEquipment] = useState<any[]>([]);
     const [selectedConnections, setSelectedConnections] = useState<SelectedItem[]>([]);
+    const [selectedDirections, setSelectedDirections] = useState<NetworkDirection[]>([]);
 
     const [currentDivision, setCurrentDivision] = useState<string>('');
     const [currentFacility, setCurrentFacility] = useState<string>('');
     const [currentEquipment, setCurrentEquipment] = useState<string>('');
 
-    // Загрузка данных сети и подразделений при монтировании компонента
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (token && id) {
@@ -42,17 +57,15 @@ const EditNetwork: React.FC = () => {
         }
     }, [id, dispatch]);
 
-    // Загрузка членств сети
     useEffect(() => {
-        const loadMemberships = async () => {
+        const loadNetworkData = async () => {
             const token = localStorage.getItem('accessToken');
-            if (token && id) {
+            if (token && id && currentNetwork) {
                 try {
+                    // Загрузка членств
                     const memberships = await networksApi.getNetworkMemberships(token, id);
-                    
-                    // Преобразуем членства в selectedConnections
                     const items: SelectedItem[] = memberships
-                        .filter((membership: any) => 
+                        .filter((membership: any) =>
                             membership?.division?.id &&
                             membership?.facility?.id &&
                             membership?.equipment?.id
@@ -74,18 +87,57 @@ const EditNetwork: React.FC = () => {
                         }));
 
                     setSelectedConnections(items);
+
+                    // Загрузка направлений
+                    const directions = await networksApi.getNetworkDirections(token, id);
+                    const formattedDirections: NetworkDirection[] = directions.map((dir: any) => ({
+                        from: {
+                            division: {
+                                id: dir.from_membership_details.division.id.toString(),
+                                name: dir.from_membership_details.division.name
+                            },
+                            facility: {
+                                id: dir.from_membership_details.facility.id.toString(),
+                                name: dir.from_membership_details.facility.name
+                            },
+                            equipment: {
+                                id: dir.from_membership_details.equipment.id.toString(),
+                                name: dir.from_membership_details.equipment.name,
+                                serial_number: dir.from_membership_details.equipment.serial_number
+                            }
+                        },
+                        to: {
+                            division: {
+                                id: dir.to_membership_details.division.id.toString(),
+                                name: dir.to_membership_details.division.name
+                            },
+                            facility: {
+                                id: dir.to_membership_details.facility.id.toString(),
+                                name: dir.to_membership_details.facility.name
+                            },
+                            equipment: {
+                                id: dir.to_membership_details.equipment.id.toString(),
+                                name: dir.to_membership_details.equipment.name,
+                                serial_number: dir.to_membership_details.equipment.serial_number
+                            }
+                        },
+                        bandwidth: dir.bandwidth,
+                        latency: dir.latency,
+                        description: dir.description
+                    }));
+
+                    setSelectedDirections(formattedDirections);
                 } catch (error) {
-                    console.error('Ошибка загрузки членств сети:', error);
+                    console.error('Ошибка загрузки данных сети:', error);
                 }
             }
         };
 
         if (currentNetwork) {
-            loadMemberships();
+            loadNetworkData();
         }
     }, [currentNetwork, id]);
 
-    // Обработчик изменения выбранного подразделения
     const handleDivisionChange = async (divisionId: string) => {
         const token = localStorage.getItem('accessToken');
         setCurrentDivision(divisionId);
@@ -106,7 +158,6 @@ const EditNetwork: React.FC = () => {
         }
     };
 
-    // Обработчик изменения выбранного объекта
     const handleFacilityChange = async (facilityId: string) => {
         const token = localStorage.getItem('accessToken');
         setCurrentFacility(facilityId);
@@ -126,14 +177,12 @@ const EditNetwork: React.FC = () => {
         }
     };
 
-    // Добавление новой связи
     const handleAddItem = () => {
         if (!currentDivision || !currentFacility || !currentEquipment) {
             console.error('Не все поля выбраны');
             return;
         }
 
-        // Находим выбранные элементы
         const selectedDivision = divisions.find(d => d.id?.toString() === currentDivision);
         const selectedFacility = facilities.find(f => f.id?.toString() === currentFacility);
         const selectedEquipment = equipment.find(e => e.id?.toString() === currentEquipment);
@@ -155,7 +204,6 @@ const EditNetwork: React.FC = () => {
                 }
             };
 
-            // Проверяем, нет ли уже такой связи
             const exists = selectedConnections.some(conn =>
                 conn.division.id === newConnection.division.id &&
                 conn.facility.id === newConnection.facility.id &&
@@ -172,14 +220,22 @@ const EditNetwork: React.FC = () => {
         }
     };
 
-    // Удаление связи
     const handleRemoveConnection = (index: number) => {
         const newConnections = [...selectedConnections];
         newConnections.splice(index, 1);
         setSelectedConnections(newConnections);
     };
 
-    // Отправка формы
+    const handleAddDirection = (direction: NetworkDirection) => {
+        setSelectedDirections([...selectedDirections, direction]);
+    };
+
+    const handleRemoveDirection = (index: number) => {
+        const newDirections = [...selectedDirections];
+        newDirections.splice(index, 1);
+        setSelectedDirections(newDirections);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentNetwork) return;
@@ -189,29 +245,59 @@ const EditNetwork: React.FC = () => {
 
         if (token) {
             try {
-                // Формируем данные для отправки (без связей)
                 const { memberships, ...networkData } = currentNetwork;
                 const networkToUpdate = networkData;
 
-                // Обновляем основную информацию сети
                 await dispatch(updateNetwork({
                     token,
                     id: currentNetwork.id,
                     networkData: networkToUpdate
                 })).unwrap();
 
-                // Обновляем связи через отдельный API
+                // Сначала сохраняем членства
                 const membershipsToSend = selectedConnections.map(conn => ({
                     division: parseInt(conn.division.id),
                     facility: parseInt(conn.facility.id),
                     equipment: parseInt(conn.equipment.id)
                 }));
 
-                await networksApi.bulkUpdateNetworkMemberships(
-                    token, 
-                    currentNetwork.id, 
+                const createdMemberships = await networksApi.bulkUpdateNetworkMemberships(
+                    token,
+                    currentNetwork.id,
                     membershipsToSend
                 );
+
+                // Преобразуем направления для отправки
+                const directionsToSend = selectedDirections.map(direction => {
+                    // Находим ID членств для from и to оборудования
+                    const fromMembership = createdMemberships.find(
+                        (m: any) => m.equipment.id.toString() === direction.from.equipment.id
+                    );
+                    const toMembership = createdMemberships.find(
+                        (m: any) => m.equipment.id.toString() === direction.to.equipment.id
+                    );
+
+                    if (!fromMembership || !toMembership) {
+                        throw new Error('Не найдено членство для оборудования в направлении');
+                    }
+
+                    return {
+                        from_membership: fromMembership.id,
+                        to_membership: toMembership.id,
+                        bandwidth: direction.bandwidth,
+                        latency: direction.latency,
+                        description: direction.description || ''
+                    };
+                });
+
+                // Сохраняем направления
+                if (directionsToSend.length > 0) {
+                    await networksApi.bulkUpdateNetworkDirections(
+                        token,
+                        currentNetwork.id,
+                        directionsToSend
+                    );
+                }
 
                 navigate(`/divisions/${divisionId}/networks`);
             } catch (error) {
@@ -221,12 +307,10 @@ const EditNetwork: React.FC = () => {
         }
     };
 
-    // Обработчик отмены
     const handleCancel = () => {
         navigate(`/divisions/${divisionId}/networks`);
     };
 
-    // Обработчик изменения полей формы
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         if (!currentNetwork) return;
 
@@ -263,239 +347,68 @@ const EditNetwork: React.FC = () => {
 
     return (
         <div className="edit-network-container">
-            <div className="edit-network-header">
-                <h1>Редактирование сети: {currentNetwork.name}</h1>
-                <button
-                    className="edit-network-back-button"
-                    onClick={handleCancel}
-                >
-                    Назад к списку
-                </button>
-            </div>
+            <NetworkHeader
+                networkName={currentNetwork.name}
+                onCancel={handleCancel}
+            />
 
             {error && <div className="edit-network-error-message">{error}</div>}
 
             <form onSubmit={handleSubmit} className="edit-network-form">
                 <div className="edit-network-sections">
-                    {/* Основная информация */}
-                    <div className="edit-network-section">
-                        <h3 className="edit-network-section-title">Основная информация</h3>
-                        <div className="edit-network-form-group">
-                            <label htmlFor="name" className="edit-network-label">Название сети</label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={currentNetwork.name}
-                                onChange={handleChange}
-                                className="edit-network-input"
-                                required
-                            />
-                        </div>
+                    <BasicInfoSection
+                        currentNetwork={currentNetwork}
+                        onChange={handleChange}
+                    />
 
-                        <div className="edit-network-form-group">
-                            <label htmlFor="description" className="edit-network-label">Описание</label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                value={currentNetwork.description || ''}
-                                onChange={handleChange}
-                                rows={3}
-                                className="edit-network-textarea"
-                            />
-                        </div>
-                    </div>
+                    <ClassificationSection
+                        currentNetwork={currentNetwork}
+                        onChange={handleChange}
+                    />
 
-                    {/* Классификация */}
-                    <div className="edit-network-section">
-                        <h3 className="edit-network-section-title">Классификация</h3>
-                        <div className="edit-network-form-group">
-                            <label htmlFor="network_class" className="edit-network-label">Класс сети</label>
-                            <select
-                                id="network_class"
-                                name="network_class"
-                                value={currentNetwork.network_class || ''}
-                                onChange={handleChange}
-                                className="edit-network-select"
-                            >
-                                <option value="">Выберите класс</option>
-                                <option value="1">1 класс</option>
-                                <option value="2">2 класс</option>
-                            </select>
-                        </div>
-
-                        <div className="edit-network-form-group">
-                            <label htmlFor="security_level" className="edit-network-label">Степень секретности</label>
-                            <select
-                                id="security_level"
-                                name="security_level"
-                                value={currentNetwork.security_level}
-                                onChange={handleChange}
-                                className="edit-network-select"
-                                required
-                            >
-                                <option value="public">Открычная</option>
-                                <option value="confidential">Конфиденциальная</option>
-                                <option value="secret">Секретная</option>
-                                <option value="top_secret">Совершенно секретная</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Технические параметры */}
-                    <div className="edit-network-section">
-                        <h3 className="edit-network-section-title">Технические параметры</h3>
-                        <div className="edit-network-form-group">
-                            <label htmlFor="protocol" className="edit-network-label">Протокол связи</label>
-                            <select
-                                id="protocol"
-                                name="protocol"
-                                value={currentNetwork.protocol}
-                                onChange={handleChange}
-                                className="edit-network-select"
-                            >
-                                <option value="TCP/IP">TCP/IP</option>
-                                <option value="UDP">UDP</option>
-                                <option value="MPLS">MPLS</option>
-                                <option value="Other">Другой</option>
-                            </select>
-                        </div>
-
-                        <div className="edit-network-form-group">
-                            <label htmlFor="ip_range" className="edit-network-label">IP диапазон</label>
-                            <input
-                                type="text"
-                                id="ip_range"
-                                name="ip_range"
-                                value={currentNetwork.ip_range || ''}
-                                onChange={handleChange}
-                                placeholder="192.168.1.0/24"
-                                className="edit-network-input"
-                            />
-                        </div>
-
-                        <div className="edit-network-form-group">
-                            <label htmlFor="throughput" className="edit-network-label">Пропускная способность (Mbps)</label>
-                            <input
-                                type="number"
-                                id="throughput"
-                                name="throughput"
-                                value={currentNetwork.throughput || ''}
-                                onChange={handleChange}
-                                min="0"
-                                className="edit-network-input"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Принадлежность */}
-                    <div className="edit-network-section">
-                        <h3 className="edit-network-section-title">Принадлежность</h3>
-
-                        <div className="edit-network-form-group">
-                            <label className="edit-network-label">Выберите подразделение</label>
-                            <select
-                                value={currentDivision}
-                                onChange={(e) => handleDivisionChange(e.target.value)}
-                                className="edit-network-select"
-                            >
-                                <option value="">Выберите подразделение</option>
-                                {divisions.map(division => (
-                                    <option key={division.id} value={division.id.toString()}>
-                                        {division.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {currentDivision && (
-                            <div className="edit-network-form-group">
-                                <label className="edit-network-label">Выберите объект</label>
-                                <select
-                                    value={currentFacility}
-                                    onChange={(e) => handleFacilityChange(e.target.value)}
-                                    className="edit-network-select"
-                                >
-                                    <option value="">Выберите объект</option>
-                                    {facilities.map(facility => (
-                                        <option key={facility.id} value={facility.id.toString()}>
-                                            {facility.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {currentFacility && (
-                            <div className="edit-network-form-group">
-                                <label className="edit-network-label">Выберите технику (SHД)</label>
-                                <select
-                                    value={currentEquipment}
-                                    onChange={(e) => setCurrentEquipment(e.target.value)}
-                                    className="edit-network-select"
-                                >
-                                    <option value="">Выберите технику</option>
-                                    {equipment.map(eq => (
-                                        <option key={eq.id} value={eq.id.toString()}>
-                                            {eq.name} ({eq.serial_number})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
-                        {currentDivision && currentFacility && currentEquipment && (
-                            <div className="edit-network-form-group">
-                                <button
-                                    type="button"
-                                    onClick={handleAddItem}
-                                    className="edit-network-add-button"
-                                >
-                                    Добавить
-                                </button>
-                            </div>
-                        )}
-
-                        {selectedConnections.length > 0 && (
-                            <div className="edit-network-form-group">
-                                <label className="edit-network-label">Добавленные связи:</label>
-                                <div className="selected-items-list">
-                                    {selectedConnections.map((item, index) => (
-                                        <div key={index} className="selected-item">
-                                            <span className="item-text">
-                                                {item.division.name} - {item.facility.name} - {item.equipment.name} ({item.equipment.serial_number})
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveConnection(index)}
-                                                className="remove-item-button"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <TechnicalParamsSection
+                        currentNetwork={currentNetwork}
+                        onChange={handleChange}
+                    />
                 </div>
 
-                <div className="edit-network-actions">
-                    <button
-                        type="button"
-                        className="edit-network-cancel-button"
-                        onClick={handleCancel}
-                    >
-                        Отмена
-                    </button>
-                    <button
-                        type="submit"
-                        className="edit-network-save-button"
-                        disabled={saving}
-                    >
-                        {saving ? 'Сохранение...' : 'Сохранить изменения'}
-                    </button>
+                {/* Контейнер для форм принадлежности и направлений */}
+                <div className="edit-network-connections-container">
+                    <MembershipSection
+                        divisions={divisions}
+                        facilities={facilities}
+                        equipment={equipment}
+                        currentDivision={currentDivision}
+                        currentFacility={currentFacility}
+                        currentEquipment={currentEquipment}
+                        selectedConnections={selectedConnections}
+                        onDivisionChange={handleDivisionChange}
+                        onFacilityChange={handleFacilityChange}
+                        onEquipmentChange={setCurrentEquipment}
+                        onAddItem={handleAddItem}
+                        onRemoveConnection={handleRemoveConnection}
+                    />
+
+                    <ConnectionSection
+                        selectedConnections={selectedConnections}
+                        selectedDirections={selectedDirections}
+                        onAddDirection={handleAddDirection}
+                        onRemoveDirection={handleRemoveDirection}
+                    />
                 </div>
+
+                {/* Новый компонент для отображения связей и направлений */}
+                <ConnectionsDisplay
+                    selectedConnections={selectedConnections}
+                    selectedDirections={selectedDirections}
+                    onRemoveConnection={handleRemoveConnection}
+                    onRemoveDirection={handleRemoveDirection}
+                />
+
+                <NetworkActions
+                    saving={saving}
+                    onCancel={handleCancel}
+                />
             </form>
         </div>
     );

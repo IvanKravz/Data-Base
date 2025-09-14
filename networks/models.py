@@ -101,6 +101,49 @@ class NetworkMembership(models.Model):
     def __str__(self):
         return f"{self.network.name} - {self.division.name} - {self.facility.name} - {self.equipment.name}"        
 
+
+class NetworkDirection(models.Model):
+    """Модель для хранения направлений связи между NetworkMembership"""
+    network = models.ForeignKey(
+        CommunicationNetwork,
+        on_delete=models.CASCADE,
+        related_name='directions',
+        verbose_name="Сеть"
+    )
+    from_membership = models.ForeignKey(
+        NetworkMembership,
+        on_delete=models.CASCADE,
+        related_name='outgoing_directions',
+        verbose_name="Откуда (источник)"
+    )
+    to_membership = models.ForeignKey(
+        NetworkMembership,
+        on_delete=models.CASCADE,
+        related_name='incoming_directions',
+        verbose_name="Куда (назначение)"
+    )
+    bandwidth = models.PositiveIntegerField(
+        "Пропускная способность (Mbps)",
+        null=True,
+        blank=True
+    )
+    latency = models.PositiveIntegerField(
+        "Задержка (ms)",
+        null=True,
+        blank=True
+    )
+    description = models.TextField("Описание", blank=True)
+    created_at = models.DateTimeField("Создано", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Направление сети"
+        verbose_name_plural = "Направления сетей"
+        unique_together = ['network', 'from_membership', 'to_membership']
+
+    def __str__(self):
+        return f"{self.from_membership} → {self.to_membership}"
+
+
 # СЕТЕВЫЕ НАСТРОЙКИ
 class VLAN(models.Model):
     """Модель VLAN для сетевого оборудования"""

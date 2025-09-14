@@ -201,3 +201,11 @@ export interface IPRange {
   devices: Equipment[];
   created_at: string;
 }
+
+export interface NetworkDirection {
+  from_membership: number;
+  to_membership: number;
+  bandwidth?: number;
+  latency?: number;
+  description?: string;
+}

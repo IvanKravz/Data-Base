@@ -9,18 +9,17 @@ import { networksApi } from '../../../../api/networksApi';
 import { Header } from '../../../networks/Header/Header';
 import NetworkTabs from '../../../networks/NetworkTabs/NetworkTabs';
 
-
 const CommunicationNetworks: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
   const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
+  const [memberships, setMemberships] = useState<any[]>([]);
+  const [directions, setDirections] = useState<any[]>([]);
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const [networks, setNetworks] = useState<Network[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState('networks'); // 'networks' или 'management'
-
-  console.log('id', id)
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -39,6 +38,28 @@ const CommunicationNetworks: React.FC = () => {
       fetchNetworks();
     }
   }, [token, activeView, id]);
+
+  // Загрузка членств и направлений при выборе сети
+  useEffect(() => {
+    const fetchNetworkData = async () => {
+      if (!selectedNetwork || !token) return;
+      
+      try {
+        // Загрузка членств сети
+        const membershipsData = await networksApi.getNetworkMemberships(token, selectedNetwork.id.toString());
+        setMemberships(membershipsData);
+        
+        // Загрузка направлений сети
+        const directionsData = await networksApi.getNetworkDirections(token, selectedNetwork.id.toString());
+        setDirections(directionsData);
+      } catch (err) {
+        console.error('Ошибка загрузки данных сети:', err);
+        setError('Не удалось загрузить данные сети');
+      }
+    };
+
+    fetchNetworkData();
+  }, [selectedNetwork, token]);
 
   const handleCreateNetwork = async (networkData: Omit<Network, 'id'>) => {
     try {
@@ -85,6 +106,8 @@ const CommunicationNetworks: React.FC = () => {
             {selectedNetwork && (
               <NetworkVisualization
                 network={selectedNetwork}
+                memberships={memberships}
+                directions={directions}
                 highlightedNode={highlightedNode}
               />
             )}

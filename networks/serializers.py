@@ -2,7 +2,7 @@ from equipment.models import Equipment
 from equipment.serializers import EquipmentSerializer
 from facilities.models import Division, Facility
 from facilities.serializers import DivisionSerializer, FacilitySerializer, SubdivisionSerializer
-from .models import VLAN, CommunicationNetwork, IPAddress, IPRange, NetworkInterface, NetworkMembership, VLANConfiguration, RoutingTable, ACL
+from .models import VLAN, CommunicationNetwork, IPAddress, IPRange, NetworkDirection, NetworkInterface, NetworkMembership, VLANConfiguration, RoutingTable, ACL
 from rest_framework import serializers
 
 class NetworkMembershipSerializer(serializers.ModelSerializer):
@@ -31,7 +31,68 @@ class NetworkMembershipSerializer(serializers.ModelSerializer):
             'id', 'network', 'division', 'facility', 'equipment',
             'division_id', 'facility_id', 'equipment_id'
         ]
+
+
+class NetworkDirectionSerializer(serializers.ModelSerializer):
+    from_membership_details = NetworkMembershipSerializer(source='from_membership', read_only=True)
+    to_membership_details = NetworkMembershipSerializer(source='to_membership', read_only=True)
+    
+    class Meta:
+        model = NetworkDirection
+        fields = [
+            'id', 'network', 'from_membership', 'to_membership',
+            'from_membership_details', 'to_membership_details',
+            'bandwidth', 'latency', 'description', 'created_at'
+        ]
+
+
+class NetworkDirectionBulkCreateSerializer(serializers.Serializer):
+    network = serializers.PrimaryKeyRelatedField(queryset=CommunicationNetwork.objects.all())
+    directions = serializers.ListField(child=serializers.DictField())
+
+    def create(self, validated_data):
+        network = validated_data['network']
+        directions_data = validated_data['directions']
+        directions = []
         
+        # Удаляем старые направления для этой сети
+        NetworkDirection.objects.filter(network=network).delete()
+        
+        # Предварительно загружаем все необходимые членства
+        membership_ids = set()
+        for direction_data in directions_data:
+            membership_ids.add(direction_data['from_membership'])
+            membership_ids.add(direction_data['to_membership'])
+        
+        memberships = NetworkMembership.objects.filter(id__in=membership_ids)
+        membership_dict = {m.id: m for m in memberships}
+        
+        for direction_data in directions_data:
+            # Получаем объекты членств
+            from_membership = membership_dict.get(direction_data['from_membership'])
+            to_membership = membership_dict.get(direction_data['to_membership'])
+            
+            if not from_membership or not to_membership:
+                raise serializers.ValidationError(
+                    f"Не найдено членство с ID: {direction_data['from_membership']} или {direction_data['to_membership']}"
+                )
+            
+            # Создаем каждое направление
+            direction = NetworkDirection.objects.create(
+                network=network,
+                from_membership=from_membership,
+                to_membership=to_membership,
+                bandwidth=direction_data.get('bandwidth'),
+                latency=direction_data.get('latency'),
+                description=direction_data.get('description', '')
+            )
+            directions.append(direction)
+        
+        return directions
+
+    def to_representation(self, instance):
+        return NetworkDirectionSerializer(instance, many=True).data
+
 class CommunicationNetworkSerializer(serializers.ModelSerializer):
     memberships = NetworkMembershipSerializer(many=True, read_only=True)
     

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import ACL, CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, RoutingTable, VLANConfiguration, NetworkMembership
+from .models import ACL, CommunicationNetwork, VLAN, NetworkDirection, NetworkInterface, IPAddress, IPRange, RoutingTable, VLANConfiguration, NetworkMembership
 from facilities.models import Division, Subdivision, Facility
 from equipment.models import Equipment
 
@@ -108,6 +108,29 @@ class NetworkMembershipAdmin(admin.ModelAdmin):
     search_fields = ['network__name', 'division__name', 'facility__name', 'equipment__name']
     raw_id_fields = ['network', 'division', 'facility', 'equipment']
 
+
+class NetworkDirectionAdmin(admin.ModelAdmin):
+    list_display = ['network', 'get_from_membership', 'get_to_membership', 'bandwidth', 'latency']
+    list_filter = ['network']
+    search_fields = [
+        'network__name',
+        'from_membership__division__name',
+        'from_membership__facility__name',
+        'to_membership__division__name',
+        'to_membership__facility__name'
+    ]
+    raw_id_fields = ['network', 'from_membership', 'to_membership']
+    
+    def get_from_membership(self, obj):
+        return f"{obj.from_membership.division.name} - {obj.from_membership.facility.name}"
+    get_from_membership.short_description = 'Откуда'
+    
+    def get_to_membership(self, obj):
+        return f"{obj.to_membership.division.name} - {obj.to_membership.facility.name}"
+    get_to_membership.short_description = 'Куда'
+
+
+
 # Регистрация моделей
 admin.site.register(CommunicationNetwork, CommunicationNetworkAdmin)
 admin.site.register(NetworkMembership, NetworkMembershipAdmin)
@@ -118,3 +141,4 @@ admin.site.register(IPAddress, IPAddressAdmin)
 admin.site.register(IPRange, IPRangeAdmin)
 admin.site.register(RoutingTable, RoutingTableAdmin)
 admin.site.register(ACL, ACLAdmin)
+admin.site.register(NetworkDirection, NetworkDirectionAdmin)

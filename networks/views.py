@@ -4,9 +4,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import CommunicationNetwork, VLAN, NetworkInterface, IPAddress, IPRange, NetworkMembership, VLANConfiguration, RoutingTable, ACL
+from .models import CommunicationNetwork, VLAN, NetworkDirection, NetworkInterface, IPAddress, IPRange, NetworkMembership, VLANConfiguration, RoutingTable, ACL
 from .serializers import (
     CommunicationNetworkSerializer,
+    NetworkDirectionBulkCreateSerializer,
+    NetworkDirectionSerializer,
     NetworkMembershipSerializer, 
     VLANSerializer, 
     NetworkInterfaceSerializer, 
@@ -95,6 +97,34 @@ class NetworkMembershipViewSet(viewsets.ModelViewSet):
                 return Response(serializer.errors, status=400)
         
         return Response(created, status=201)
+
+
+class NetworkDirectionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = NetworkDirection.objects.select_related(
+        'from_membership__division',
+        'from_membership__facility',
+        'from_membership__equipment',
+        'to_membership__division',
+        'to_membership__facility',
+        'to_membership__equipment'
+    )
+    serializer_class = NetworkDirectionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['network']
+
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Массовое создание направлений"""
+        serializer = NetworkDirectionBulkCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            directions = serializer.save()
+            return Response(
+                NetworkDirectionSerializer(directions, many=True).data,
+                status=201
+            )
+        return Response(serializer.errors, status=400)
+
 
 class VLANViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
