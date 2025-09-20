@@ -32,12 +32,12 @@
 
 .network-visualization-details {
     position: absolute;
-    bottom: 24px;
+    bottom: 5px;
     left: 24px;
     right: 24px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px;
     color: white;
     backdrop-filter: blur(6px);
     transform: translateY(120%);
@@ -52,39 +52,109 @@
 .network-visualization-details-title {
     margin: 0 0 12px 0;
     color: #63b3ed;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .network-visualization-details-content {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 12px;
 }
 
 .network-details-item {
-    margin-bottom: 8px;
+    display: flex;
+    border-bottom: 2px solid rgba(250, 250, 250, 0.7) !important;
+}
+
+.network-details-item-button {
+    display: none;
 }
 
 .network-details-label {
-    font-size: 0.75rem;
+    font-size: 1.1rem;
     color: #a0aec0;
     margin-bottom: 2px;
 }
 
 .network-details-value {
-    font-size: 0.85rem;
+    font-size: 1.1rem;
+}
+
+.network-details-button {
+    background: rgb(99, 179, 237, 0.3);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.network-details-button:hover {
+    background: rgb(66, 153, 225, 0.9);
+}
+
+.network-details-button:active {
+    background: #3182ce;
+}
+
+.network-visualization-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.network-visualization-details-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.network-details-close-button {
+    background: rgb(251, 84, 84, 0.4);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px;
+}
+
+.network-details-close-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    background: rgb(249, 60, 60, 0.8);
 }
 
 @media (max-width: 768px) {
     .network-visualization {
         padding: 16px;
     }
-    
+
     .network-visualization-nodes {
         height: 400px;
     }
-    
+
     .network-visualization-details-content {
         grid-template-columns: 1fr;
+    }
+
+    .network-visualization-details-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .network-visualization-details-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
 }

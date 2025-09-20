@@ -52,7 +52,7 @@
 .network-details-section {
     background-color: #ffffff;
     border-radius: 0.5rem;
-    padding: 24px;
+    padding: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     border: 1px solid #f1f5f9;
 }
@@ -83,7 +83,6 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-
     border-bottom: 1px solid #f8fafc;
 }
 
@@ -147,18 +146,18 @@
 }
 
 .hierarchy-node {
-    margin-bottom: 8px;
+    margin-bottom: 3px;
 }
 
 .hierarchy-item {
-    padding: 10px 12px; 
+    padding: 8px 10px;
     border-radius: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     user-select: none;
-    font-size: 1rem; 
+    font-size: 1rem;
     position: relative;
     z-index: 2;
     border: 1px solid transparent;
@@ -189,6 +188,14 @@
     /* margin-left: 52px; */
     background-color: #f8fafc;
     border-left: 4px solid #7dd3fc;
+}
+
+.hierarchy-equipment {
+    color: #475569;
+    margin-left: 3px;
+    background-color: #f8fafc;
+    border-left: 4px solid #94a3b8;
+    margin-bottom: 3px;
 }
 
 /* Иконки из lucide */
@@ -225,22 +232,23 @@
 }
 
 .hierarchy-children {
-    margin-left: 10px;
-    padding-left: 8px;
+    margin-left: 6px;
+    padding-left: 4px;
     border-left: 2px dashed #e2e8f0;
-    padding-top: 8px;
+    padding-top: 5px;
     animation: expand 0.3s ease-out;
     overflow: hidden;
 }
 
 @keyframes expand {
-    from { 
-        opacity: 0; 
+    from {
+        opacity: 0;
         max-height: 0;
         transform: translateY(-10px);
     }
-    to { 
-        opacity: 1; 
+
+    to {
+        opacity: 1;
         max-height: 2000px;
         transform: translateY(0);
     }

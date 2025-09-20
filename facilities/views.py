@@ -10,7 +10,9 @@ from .serializers import CommunicationPostSerializer, DivisionSerializer, Facili
 class DivisionViewSet(viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
         'subdivisions',
-        'facilities' 
+        'facilities'
+    ).annotate(
+        networks_count=Count('networkmembership__network', distinct=True)
     )
     serializer_class = DivisionSerializer
     permission_classes = [IsAuthenticated]
@@ -30,6 +32,7 @@ class DivisionViewSet(viewsets.ModelViewSet):
             'officers_count': division.get_officers_count(),
             'warrant_officers_count': division.get_warrant_officers_count(),
             'civilian_count': division.get_civilian_count(),
+            'networks_count': division.get_networks_count(),
             'subdivisions': SubdivisionSerializer(division.subdivisions.all(), many=True).data,
             'facilities': FacilitySerializer(division.facilities.all(), many=True).data
         })

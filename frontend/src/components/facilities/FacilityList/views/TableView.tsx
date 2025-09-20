@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { Facility } from '../../../../types';
-import { ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Trash2, LocateFixed } from 'lucide-react';
 import '../style.css';
 
 interface TableViewProps {
   facilities: Facility[];
   onFacilityClick: (facility: Facility) => void;
   onDelete: (id: string) => void;
+  onLocate?: (facility: Facility) => void;
   showDifferentFields?: boolean;
 }
 
 type SortField = keyof Facility;
 type SortDirection = 'asc' | 'desc';
 
-export function TableView({ facilities, onFacilityClick, onDelete, showDifferentFields = false }: TableViewProps) {
+export function TableView({ facilities, onFacilityClick, onDelete, onLocate, showDifferentFields = false }: TableViewProps) {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const hasClosedFacilities = facilities.some(f => f.is_closed);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -42,7 +44,6 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
     const result = String(aValue).localeCompare(String(bValue));
     return sortDirection === 'asc' ? result : -result;
   });
-
 
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
@@ -78,7 +79,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
         <>
           {renderHeaderCell('name', 'Наименование')}
           {renderHeaderCell('type', 'Тип')}
-          {renderHeaderCell('facility_class', 'Класс')}
+          {hasClosedFacilities && renderHeaderCell('facility_class', 'Класс')}
           {renderHeaderCell('address', 'Адрес')}
           {renderHeaderCell('division_name', 'Подразделение')}
         </>
@@ -89,16 +90,40 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
       <>
         {renderHeaderCell('name', 'Наименование')}
         {renderHeaderCell('type', 'Тип')}
-        {facilities.some(f => f.is_closed) && renderHeaderCell('facility_class', 'Класс')}
+        {renderHeaderCell('facility_class', 'Класс')}
         {renderHeaderCell('communication_posts', 'Посты связи')}
         {renderHeaderCell('address', 'Адрес')}
         {renderHeaderCell('division_name', 'Подразделение')}
-        {facilities.some(f => f.is_closed) && renderHeaderCell('inn', 'ИНН')}
+        {renderHeaderCell('inn', 'ИНН')}
       </>
     );
   };
 
   const renderRow = (facility: Facility) => {
+    if (!showDifferentFields) {
+      return (
+        <>
+          <td className="facility-table-cell facility-table-cell-primary">
+            {facility.name}
+          </td>
+          <td className="facility-table-cell">
+            {facility.type.name}
+          </td>
+          {hasClosedFacilities && (
+            <td className="facility-table-cell">
+              {facility.is_closed ? `${facility.facility_class} класс` : '-'}
+            </td>
+          )}
+          <td className="facility-table-cell">
+            {facility.address}
+          </td>
+          <td className="facility-table-cell">
+            {facility.division_name} / {facility.subdivision_name}
+          </td>
+        </>
+      );
+    }
+
     return (
       <>
         <td className="facility-table-cell facility-table-cell-primary">
@@ -107,26 +132,21 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
         <td className="facility-table-cell">
           {facility.type.name}
         </td>
-        {facility.is_closed && (
-          <td className="facility-table-cell">
-            {facility.facility_class} класс
-          </td>
-        )}
+        <td className="facility-table-cell">
+          {facility.facility_class ? `${facility.facility_class} класс` : '-'}
+        </td>
         <td className="facility-table-cell">
           {facility.communication_posts?.map(post => post.name).join(', ') || '-'}
         </td>
-
         <td className="facility-table-cell">
           {facility.address}
         </td>
         <td className="facility-table-cell">
           {facility.division_name} / {facility.subdivision_name}
         </td>
-        {facility.is_closed && (
-          <td className="facility-table-cell">
-            {facility.inn}
-          </td>
-        )}
+        <td className="facility-table-cell">
+          {facility.inn || '-'}
+        </td>
       </>
     );
   };
@@ -151,16 +171,30 @@ export function TableView({ facilities, onFacilityClick, onDelete, showDifferent
             >
               {renderRow(facility)}
               <td className="facility-table-cell facility-table-cell-actions">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(facility.id);
-                  }}
-                  className="facility-delete-btn"
-                  aria-label="Удалить объект"
-                >
-                  <Trash2 className="facility-sort-icon" />
-                </button>
+                <div className="facility-action-buttons">
+                  {onLocate && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onLocate(facility);
+                      }}
+                      className="facility-locate-btn"
+                      aria-label="Найти на карте"
+                    >
+                      <LocateFixed className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(facility.id);
+                    }}
+                    className="facility-delete-btn"
+                    aria-label="Удалить объект"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

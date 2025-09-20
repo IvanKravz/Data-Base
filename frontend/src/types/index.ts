@@ -88,6 +88,7 @@ export interface Division {
   equipment_count: number;
   facilities_count: number;
   tasks_count: number;
+  networks_count: number;
 }
 
 export interface Facility {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, MapPin, Shield, Star, Trash2 } from 'lucide-react';
+import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react'; // Добавляем LocateFixed
 import { Facility } from '../../../../types';
 import '../style.css';
 
@@ -7,13 +7,14 @@ interface GridViewProps {
   facilities: Facility[];
   onFacilityClick: (facility: Facility) => void;
   onDelete: (id: string) => void;
+  onLocate: (facility: Facility) => void; // Добавляем обработчик геолокации
 }
 
-export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProps) {
+export function GridView({ facilities, onFacilityClick, onDelete, onLocate }: GridViewProps) {
   return (
     <div className="facility-grid-container">
       {facilities.map((facility) => (
-        <div key={facility.id} className="facility-card" onClick={() => onFacilityClick(facility)}>
+        <div key={facility.id} className="facility-card-grid" onClick={() => onFacilityClick(facility)}>
           <div className="facility-card-header">
             <h3 className="facility-card-title">
               {facility.name}
@@ -21,16 +22,28 @@ export function GridView({ facilities, onFacilityClick, onDelete }: GridViewProp
                 {facility.type.name}
               </div>
             </h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(facility.id);
-              }}
-              className="facility-card-delete-btn"
-              aria-label="Удалить объект"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <div className="facility-card-actions">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLocate(facility);
+                }}
+                className="facility-card-locate-btn"
+                aria-label="Найти на карте"
+              >
+                <LocateFixed className="h-5 w-5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(facility.id);
+                }}
+                className="facility-card-delete-btn"
+                aria-label="Удалить объект"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div className="facility-card-content">

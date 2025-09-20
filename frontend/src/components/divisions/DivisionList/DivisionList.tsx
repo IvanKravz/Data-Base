@@ -53,6 +53,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
 
   return (
     <>
+    <div className="division-list-header-text">Отделы и отделения</div>
       <div className="grid-container">
         {divisions.map((division) => (
           <div

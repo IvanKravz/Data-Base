@@ -13,7 +13,7 @@ import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updateFacility, deleteFacility } from '../../../store/slices/facilitiesSlice';
 import { facilitiesApi } from '../../../api/facilities';
 import './FacilityForm.css';
-import { EditFacilityForm } from '../forms/EditFacilityForm';
+import { EditFacilityForm } from '../forms/EditFacilityForm/EditFacilityForm';
 import { ClassificationtFacility } from './sections/ClassificationtFacility';
 
 export function FacilityDetails() {

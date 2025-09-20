@@ -16,14 +16,17 @@ import { CreatePersonnelPage } from './personnel/CreatePersonnelPage/CreatePerso
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection';
-import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection';
-import { FacilitiesSection } from './divisions/DivisionDetails/sections/FacilitiesSection';
+import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection/EquipmentSection';
+import { FacilitiesSection } from './divisions/DivisionDetails/sections/FacilitiesSection/FacilitiesSection';
 import { DivisionTasksSection } from './divisions/DivisionDetails/sections/TasksSection/DivisionTasksSection';
-import { AddFacilityPage } from './facilities/AddFacilityPage';
+import { AddFacilityPage } from './facilities/forms/AddFacilityPage';
 import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
 import { CreatePersonnelForm } from './forms';
-import CommunicationNetworks from './divisions/DivisionDetails/sections/CommunicationNetworks';
-import EditNetwork from './networks/EditNetwork/EditNetwork';
+import CommunicationNetworks from './divisions/DivisionDetails/sections/CommunicationNetworks/CommunicationNetworks';
+import NetworkManagement from './networks/NetworkManagement/NetworkManagement';
+import CreateNetwork from './networks/forms/CreateNetwork/CreateNetwork';
+import EditNetwork from './networks/forms/EditNetwork/EditNetwork';
+import { CreateEquipmentForm } from './equipment/forms/CreateEquipmentForm/CreateEquipmentForm';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -64,6 +67,7 @@ export function MainLayout() {
         <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm  />} />
         <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
         <Route path="/divisions/:id/networks" element={<CommunicationNetworks />} />
+        <Route path="/divisions/:id/equipment/create" element={<CreateEquipmentForm />} />
 
         {/* Equipment Routes */}
         <Route path="/equipment-disposed" element={<DisposedEquipmentPage />} />
@@ -80,8 +84,9 @@ export function MainLayout() {
         <Route path="/facilities/:id" element={<FacilityDetails />} />
 
         {/* CommunicationNetworks */}
-        {/* <Route path="/networks" element={<CommunicationNetworks />} /> */}
-        <Route path="/divisions/:divisionId/networks/communication-networks/edit/:id" element={<EditNetwork />} />
+        <Route path="/divisions/:id/networks/communication-networks/edit/:id" element={<EditNetwork />} />
+        <Route path="/divisions/:id/networks/management" element={<NetworkManagement />} />
+        <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
                 
         {/* Other Routes */}
         <Route path="/tasks" element={<TasksSection />} />

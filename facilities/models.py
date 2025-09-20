@@ -39,6 +39,9 @@ class Division(models.Model):
     def get_tasks_count(self):
         return self.tasks.count()
 
+    def get_networks_count(self):
+        return self.networkmembership_set.values('network').distinct().count()
+
     class Meta:
         ordering = ['name']
         verbose_name = 'Подразделение'

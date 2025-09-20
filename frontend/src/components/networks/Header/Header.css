@@ -22,21 +22,23 @@
 }
 
 .communication-header-back-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-right: 12px;
-    color: #4a5568;
-    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background-color: #f1f5f9;
+    transition: all 0.2s;
 }
 
 .communication-header-back-button:hover {
-    color: #2d3748;
+    background-color: #e2e8f0;
 }
 
 .communication-header-back-icon {
-    width: 24px;
-    height: 24px;
+    height: 1.25rem;
+    width: 1.25rem;
 }
 
 .communication-header-create-button {

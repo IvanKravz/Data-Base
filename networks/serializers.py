@@ -135,7 +135,14 @@ class NetworkInterfaceSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = NetworkInterface
-        fields = '__all__'
+        fields = [
+            'id', 'equipment', 'equipment_name', 'name', 'interface_type', 
+            'physical_type', 'port_number', 'slot', 'module', 'enabled',
+            'mode', 'mac_address', 'mtu', 'speed', 'access_vlan', 'access_vlan_name',
+            'is_trunk', 'native_vlan', 'native_vlan_name', 'connected_to',
+            'connected_to_name', 'connected_device', 'connected_device_name',
+            'vlan_configurations', 'ip_addresses'
+        ]
     
     def get_ip_addresses(self, obj):
         return IPAddressSerializer(obj.ip_addresses.all(), many=True).data

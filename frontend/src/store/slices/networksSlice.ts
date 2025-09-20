@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-// import { Network } from '../types';
 import { networksApi } from '../../api/networksApi';
 import { Network } from '../../types';
 
@@ -42,6 +41,21 @@ export const fetchNetwork = createAsyncThunk(
   }
 );
 
+export const createNetwork = createAsyncThunk(
+  'networks/createNetwork',
+  async (
+    { token, networkData }: { token: string; networkData: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await networksApi.createNetwork(token, networkData);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || 'Ошибка создания сети');
+    }
+  }
+);
+
 export const updateNetwork = createAsyncThunk(
   'networks/updateNetwork',
   async (
@@ -70,6 +84,9 @@ const networksSlice = createSlice({
     setCurrentNetwork: (state, action: PayloadAction<Network>) => {
       state.currentNetwork = action.payload;
     },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -83,6 +100,20 @@ const networksSlice = createSlice({
         state.networks = action.payload;
       })
       .addCase(fetchNetworks.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Create Network
+      .addCase(createNetwork.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createNetwork.fulfilled, (state, action: PayloadAction<Network>) => {
+        state.loading = false;
+        state.networks.push(action.payload);
+        state.currentNetwork = action.payload;
+      })
+      .addCase(createNetwork.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -114,5 +145,5 @@ const networksSlice = createSlice({
   },
 });
 
-export const { clearCurrentNetwork, setNetworks, setCurrentNetwork } = networksSlice.actions;
+export const { clearCurrentNetwork, setNetworks, setCurrentNetwork, setError } = networksSlice.actions;
 export default networksSlice.reducer;

@@ -32,7 +32,7 @@ export function StatCard({
     >
       <div className="division-stat-card-content">
         <div className="division-stat-card-header">
-          <div className="division-icon-container" style={{ backgroundColor: `${iconColor}20` }}>
+          <div className="division-icon-container" style={{ backgroundColor: `${iconColor}8` }}>
             <Icon className="division-stat-card-icon" style={{ color: iconColor }} />
           </div>
           <h3 className="division-stat-card-title">{title}</h3>

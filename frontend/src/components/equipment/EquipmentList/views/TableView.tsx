@@ -132,7 +132,7 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
             {renderHeaderCell('inventory_number', 'Инв. номер')}
             {renderHeaderCell('manufacturing_date', 'Дата производства')}
             {renderHeaderCell('exploitation_date', 'Дата ввода в экспл.')}
-            {renderHeaderCell('facility', 'Объект')}
+            {/* {renderHeaderCell('facility', 'Объект')} */}
             {renderHeaderCell('assigned_to', 'Закреплено за')}
             <th className="table-header-actions">Действия</th>
           </tr>
@@ -179,9 +179,9 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                 <td className="table-cell">
                   <div className="cell-content">{formatDate(item.exploitation_date)}</div>
                 </td>
-                <td className="table-cell">
+                {/* <td className="table-cell">
                   <div className="cell-content">{item.facility ? item.facility?.name : '-'}</div>
-                </td>
+                </td> */}
                 <td className="table-cell table-cell-assigned-to">
                   <div className="cell-content">
                     {item.assigned_to ? (

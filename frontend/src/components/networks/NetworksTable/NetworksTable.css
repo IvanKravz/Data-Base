@@ -15,7 +15,7 @@
 }
 
 .network-table-header {
-    padding: 18px 24px;
+    padding: 12px 24px;
     text-align: left;
     background-color: #2c5282;
     color: #f5f6f7;
@@ -53,7 +53,7 @@
 }
 
 .table-cell {
-    padding: 16px 24px;
+    padding: 8px 24px;
     vertical-align: middle;
     font-size: 0.95rem;
 }

@@ -1,50 +1,39 @@
 import React from 'react';
 import './Header.css';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Network } from '../../../types';
 
 interface HeaderProps {
-  onCreateNetwork: (networkData: Omit<Network, 'id'>) => void;
-  onToggleView: () => void;
-  viewMode: string;
+  onNavigateToManagement: () => void;
+  onNavigateToCreate: () => void;
   divisionId: string;
 }
 
-export function Header({ onCreateNetwork, onToggleView, viewMode, divisionId }: HeaderProps) {
+export function Header({ onNavigateToManagement, onNavigateToCreate, divisionId }: HeaderProps) {
   const navigate = useNavigate();
-
-  // console.log('divisionId', divisionId)
 
   const handleBack = () => {
     navigate(`/divisions/${divisionId}`);
   };
 
-  const getHeaderTitle = () => {
-    return viewMode === 'networks' ? 'Сети связи' : 'Управление сетевыми объектами';
-  };
-
-  const getToggleButtonText = () => {
-    return viewMode === 'networks' ? 'Управление сетевыми объектами' : 'Просмотр сетей';
-  };
-
   return (
     <div className="communication-header">
       <div className="communication-header-title">
-        <button onClick={handleBack} className="back-button">
+        <button onClick={handleBack} className="communication-header-back-button">
           <ArrowLeft className="communication-header-back-icon" />
         </button>
-        <h1>{getHeaderTitle()}</h1>
+        <h1>Сети связи</h1>
       </div>
       <div className="header-actions">
-        <button className="view-toggle-button" onClick={onToggleView}>
-          {getToggleButtonText()}
+        <button className="view-toggle-button" onClick={onNavigateToManagement}>
+          <Settings size={18} />
+          Управление сетевыми объектами
         </button>
-        {viewMode === 'networks' && (
-          <button className="communication-header-create-button" onClick={() => onCreateNetwork({})}>
-            Создать сеть
-          </button>
-        )}
+        <button className="communication-header-create-button" onClick={onNavigateToCreate}>
+          <Plus size={18} />
+          Создать сеть
+        </button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Marker, Popup } from 'react-leaflet';
 import { MapObject } from './data/objects';
@@ -41,7 +41,6 @@ interface ObjectMarkerProps {
   setPopupRef?: (id: string, popup: L.Popup | null) => void;
 }
 
-
 const ObjectMarker: React.FC<ObjectMarkerProps> = ({
   object,
   isSelected = false,
@@ -49,6 +48,7 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({
   setPopupRef
 }) => {
   const navigate = useNavigate();
+  const popupRef = useRef<L.Popup | null>(null);
 
   if (!object.lat || !object.lng) {
     return null;
@@ -81,7 +81,10 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({
       className={isSelected ? 'selected-marker' : ''}
     >
       <Popup
-        ref={(popup) => setPopupRef && setPopupRef(object.id, popup)}
+        ref={(popup) => {
+          popupRef.current = popup;
+          setPopupRef && setPopupRef(object.id, popup);
+        }}
         className={isSelected ? 'leaflet-popup-auto' : ''}
       >
         <div className="popup-content">

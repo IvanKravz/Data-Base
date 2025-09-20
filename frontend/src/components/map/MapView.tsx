@@ -5,7 +5,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import AddressSearch from './AddressSearch';
 import ObjectMarker from './ObjectMarker';
-import { facilitiesApi } from '../../api/facilities';
 import { geocodeAddress, loadGeoJSONData } from './data/addresses';
 import './style.css';
 
@@ -31,14 +30,12 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
 };
 
 interface MapViewProps {
-  divisionId: string;
-  subdivisionId: string | null;
-  searchTerm?: string; // Добавляем пропс для поискового запроса
+  facilities: any[];
+  searchTerm?: string;
 }
 
-const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm = '' }) => {
+const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
   const [foundLocation, setFoundLocation] = useState<[number, number] | null>(null);
-  const [selectedObject, setSelectedObject] = useState<any>(null);
   const [objects, setObjects] = useState<any[]>([]);
   const [mapReady, setMapReady] = useState(false);
   const [initialPosition, setInitialPosition] = useState<{
@@ -46,18 +43,25 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
     zoom: number;
   } | null>(null);
   const popupRefs = useRef<{ [key: string]: L.Popup | null }>({});
+  const mapRef = useRef<L.Map | null>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+
   const setPopupRef = (id: string, popup: L.Popup | null) => {
     popupRefs.current[id] = popup;
   };
-  const mapRef = useRef<L.Map | null>(null);
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
-
 
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
-      setSelectedObject(null);
+      setSelectedObjectId(null);
       setFoundLocation(null);
+
+      // Закрываем все открытые попапы при сбросе поиска
+      Object.values(popupRefs.current).forEach(popup => {
+        if (popup && mapRef.current) {
+          mapRef.current.closePopup(popup);
+        }
+      });
       return;
     }
 
@@ -77,7 +81,7 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
     });
 
     if (foundObj && foundObj.lat && foundObj.lng) {
-      setSelectedObject(foundObj);
+      setSelectedObjectId(foundObj.id);
       setFoundLocation([foundObj.lat, foundObj.lng]);
 
       setTimeout(() => {
@@ -86,32 +90,49 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
         }
       }, 300);
     } else {
-      setSelectedObject(null);
+      setSelectedObjectId(null);
       setFoundLocation(null);
     }
   }, [debouncedSearchTerm, objects]);
 
   useEffect(() => {
+    if (!mapRef.current) return;
+
+    const handlePopupClose = (e: L.PopupEvent) => {
+      const popupContent = e.popup.getContent();
+      if (popupContent && typeof popupContent === 'string') {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(popupContent, 'text/html');
+        const titleElement = doc.querySelector('h3.font-bold');
+        if (titleElement) {
+          const objectName = titleElement.textContent;
+          const foundObject = objects.find(obj => obj.name === objectName);
+          if (foundObject && foundObject.id === selectedObjectId) {
+            setSelectedObjectId(null);
+          }
+        }
+      }
+    };
+
+    mapRef.current.on('popupclose', handlePopupClose);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('popupclose', handlePopupClose);
+      }
+    };
+  }, [objects, selectedObjectId]);
+
+  useEffect(() => {
     let isMounted = true;
 
-    const fetchData = async () => {
+    const processFacilities = async () => {
       try {
         await loadGeoJSONData();
         if (!isMounted) return;
 
-        const facilities = await facilitiesApi.getFacilities({
-          token: localStorage.getItem('accessToken') || '',
-          division: divisionId,
-          subdivision: subdivisionId || undefined
-        });
-
         const mappedObjects = await Promise.all(
           facilities.map(async (facility) => {
-            // Проверяем принадлежность к подразделению, если указано
-            if (subdivisionId && facility.subdivision?.toString() !== subdivisionId) {
-              return null;
-            }
-
             const geocoded = facility.address ? geocodeAddress(facility.address) : null;
             let lat = null;
             let lng = null;
@@ -135,36 +156,36 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
               color: facility.is_closed ? 'grey' : 'blue'
             };
           })
-        ).then(results => results.filter(Boolean)); // Удаляем null значения
+        ).then(results => results.filter(Boolean));
 
-        if (isMounted && mappedObjects.length > 0) {
+        if (isMounted) {
           setObjects(mappedObjects);
 
-          // Находим объект с наименьшим ID
-          const objectWithMinId = mappedObjects.reduce((prev, current) =>
-            (prev.id < current.id) ? prev : current
-          );
+          if (mappedObjects.length > 0) {
+            const objectWithMinId = mappedObjects.reduce((prev, current) =>
+              (prev.id < current.id) ? prev : current
+            );
 
-          // Устанавливаем позицию на объект с наименьшим ID
-          if (objectWithMinId.lat && objectWithMinId.lng) {
-            setInitialPosition({
-              center: [objectWithMinId.lat, objectWithMinId.lng],
-              zoom: 10
-            });
+            if (objectWithMinId.lat && objectWithMinId.lng) {
+              setInitialPosition({
+                center: [objectWithMinId.lat, objectWithMinId.lng],
+                zoom: 10
+              });
+            }
           }
+          setMapReady(true);
         }
-        setMapReady(true);
       } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('Ошибка обработки объектов:', error);
       }
     };
 
-    fetchData();
+    processFacilities();
     return () => { isMounted = false; };
-  }, [divisionId, subdivisionId]);
+  }, [facilities]);
 
   if (!mapReady) {
-    return <div className="loading-spinner">Загрузка карты...</div>;
+    return <div className="loading-spinner">Загрузка карта...</div>;
   }
 
   // Создаем кастомную иконку для найденного объекта
@@ -187,7 +208,7 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
           <h1 className="map-title">Карта объектов</h1>
         </div>
         <div className="no-objects-message">
-          Нет объектов для отображения в выбранном подразделении
+          Нет объектов для отображения
         </div>
       </div>
     );
@@ -200,11 +221,6 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
       </div>
 
       <div className="map-container">
-        {/* <AddressSearch 
-        onAddressFound={handleAddressFound} 
-        onNameFound={handleNameFound} 
-      /> */}
-
         <MapContainer
           ref={mapRef}
           center={initialPosition?.center || [48.4833, 135.0667]}
@@ -230,18 +246,13 @@ const MapView: React.FC<MapViewProps> = ({ divisionId, subdivisionId, searchTerm
               <ObjectMarker
                 key={obj.id}
                 object={obj}
-                isSelected={selectedObject?.id === obj.id}
+                isSelected={selectedObjectId === obj.id}
                 searchTerm={searchTerm}
                 setPopupRef={setPopupRef}
               />
             )
           ))}
 
-          {foundLocation && !selectedObject && (
-            <Marker position={foundLocation} icon={foundIcon}>
-              <Popup>Найденный адрес</Popup>
-            </Marker>
-          )}
         </MapContainer>
       </div>
     </div>

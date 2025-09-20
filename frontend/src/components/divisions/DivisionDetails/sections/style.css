@@ -247,7 +247,7 @@
 .division-metric-icon {
   width: 18px;
   height: 18px;
-  color: #4f46e5;
+  color: #193ec6;
 }
 
 .division-metric-info {
@@ -285,7 +285,9 @@
 }
 
 @keyframes division-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.6;
   }
 
@@ -369,13 +371,19 @@
 .create-employee-button {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #3891da;
   color: white;
+  border: none;
   border-radius: 0.5rem;
+  cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s;
+}
+
+.create-employee-button:hover {
+  background-color: #3182ce;
 }
 
 .personnel-container {
@@ -388,4 +396,3 @@
 .search-container {
   margin-bottom: 1.5rem;
 }
-

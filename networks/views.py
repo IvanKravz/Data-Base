@@ -138,10 +138,10 @@ class VLANViewSet(viewsets.ModelViewSet):
 
 class NetworkInterfaceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = NetworkInterface.objects.select_related('equipment', 'vlan')
+    queryset = NetworkInterface.objects.select_related('equipment', 'access_vlan', 'native_vlan')
     serializer_class = NetworkInterfaceSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['equipment', 'interface_type', 'enabled', 'vlan']
+    filterset_fields = ['equipment', 'interface_type', 'enabled', 'access_vlan', 'native_vlan']  # Исправлено здесь
     search_fields = ['name', 'mac_address']
     ordering_fields = ['name', 'equipment']
     ordering = ['equipment', 'name']

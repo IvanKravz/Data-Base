@@ -70,6 +70,7 @@ class DivisionSerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()
     facilities_count = serializers.SerializerMethodField()
     tasks_count = serializers.SerializerMethodField()
+    networks_count = serializers.IntegerField(read_only=True)
     subdivisions = SubdivisionSerializer(many=True, read_only=True)
     facilities = FacilityShortSerializer(many=True, read_only=True)
     # staff_completion = serializers.SerializerMethodField()
@@ -83,7 +84,7 @@ class DivisionSerializer(serializers.ModelSerializer):
             'staff_planned_civilian',
             'employees_count', 'management_count', 'officers_count', 
             'warrant_officers_count', 'civilian_count', 'equipment_count', 
-            'tasks_count', 'facilities_count', 'subdivisions', 'facilities',
+            'tasks_count', 'facilities_count', 'networks_count', 'subdivisions', 'facilities',
             'created_at', 'updated_at'
         ]
 
@@ -110,6 +111,9 @@ class DivisionSerializer(serializers.ModelSerializer):
     
     def get_tasks_count(self, obj):
         return obj.get_tasks_count()
+    
+    def get_networks_count(self, obj):
+        return obj.get_networks_count()
     
     # def get_staff_completion(self, obj):
     # # Расчет укомплектованности по общему штату

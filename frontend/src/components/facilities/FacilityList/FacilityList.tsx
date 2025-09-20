@@ -17,8 +17,10 @@ interface FacilityListProps {
   onViewChange: (type: 'grid' | 'table') => void;
   facilities: Facility[];
   onSelectFacility?: (facility: Facility) => void;
+  onLocateFacility?: (facility: Facility) => void;
   showDifferentFields?: boolean;
   onFacilityDeleted?: (deletedId: string) => void;
+  onDeleteInitiated?: (id: string) => void;
 }
 
 export function FacilityList({
@@ -26,12 +28,11 @@ export function FacilityList({
   onViewChange,
   facilities,
   onSelectFacility,
+  onLocateFacility,
   showDifferentFields = false,
-  onFacilityDeleted
+  onFacilityDeleted,
+  onDeleteInitiated // Принимаем новый пропс
 }: FacilityListProps) {
-  // Удаляем локальное состояние viewType, так как оно теперь управляется извне
-  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
-  const [facilityToDelete, setFacilityToDelete] = React.useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
 
@@ -44,33 +45,11 @@ export function FacilityList({
     ? facilities.filter(facility => facility.subdivision == subdivisionId)
     : facilities;
 
-  const handleDelete = (id: string) => {
-    setFacilityToDelete(id);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (facilityToDelete) {
-      try {
-        await facilitiesApi.deleteFacility(facilityToDelete);
-        dispatch(deleteFacility(facilityToDelete));
-        // Вызываем колбэк после успешного удаления
-        if (onFacilityDeleted) {
-          onFacilityDeleted(facilityToDelete);
-        }
-      } catch (error) {
-        console.error('Ошибка при удалении объекта:', error);
-      } finally {
-        setShowDeleteModal(false);
-        setFacilityToDelete(null);
+    const handleDelete = (id: string) => {
+      if (onDeleteInitiated) {
+        onDeleteInitiated(id);
       }
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
-    setFacilityToDelete(null);
-  };
+    };
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -81,8 +60,8 @@ export function FacilityList({
               <button
                 onClick={() => handleViewTypeChange('table')}
                 className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-l-md ${viewType === 'table'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
                   }`}
               >
                 <Table className="h-4 w-4" />
@@ -91,8 +70,8 @@ export function FacilityList({
               <button
                 onClick={() => handleViewTypeChange('grid')}
                 className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-r-md ${viewType === 'grid'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
                   }`}
               >
                 <Grid className="h-4 w-4" />
@@ -122,6 +101,7 @@ export function FacilityList({
                 facilities={filteredFacilities}
                 onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
+                onLocate={onLocateFacility} // Передаем обработчик
                 showDifferentFields={showDifferentFields}
               />
             ) : (
@@ -129,6 +109,7 @@ export function FacilityList({
                 facilities={filteredFacilities}
                 onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
+                onLocate={onLocateFacility} // Передаем обработчик
                 showDifferentFields={showDifferentFields}
               />
             )}
@@ -146,14 +127,6 @@ export function FacilityList({
         )}
       </div>
 
-      {showDeleteModal && (
-        <DeleteConfirmationModal
-          title="Удаление объекта"
-          message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
-      )}
     </div>
   );
 }

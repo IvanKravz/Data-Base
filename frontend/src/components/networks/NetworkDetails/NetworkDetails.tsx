@@ -15,14 +15,28 @@ import {
 
 interface NetworkDetailsProps {
   network: Network | null;
-  onHighlightNode?: (id: string, type: 'division' | 'subdivision' | 'facility') => void;
+  onHighlightNode?: (id: string, type: 'division' | 'facility' | 'equipment') => void;
   onClearHighlight?: () => void;
+  onNodeSelect?: (nodeId: string) => void;
 }
+
+// Функция для безопасного извлечения строкового значения
+const getStringValue = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (value && typeof value === 'object') {
+    if (value.name && typeof value.name === 'string') return value.name;
+    if (value.title && typeof value.title === 'string') return value.title;
+    if (value.value && typeof value.value === 'string') return value.value;
+  }
+  return 'Не указано';
+};
 
 const NetworkDetails: React.FC<NetworkDetailsProps> = ({
   network,
   onHighlightNode,
-  onClearHighlight
+  onClearHighlight,
+  onNodeSelect
 }) => {
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
   const [highlightedItem, setHighlightedItem] = useState<string | null>(null);
@@ -45,8 +59,6 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
     return expandedNodes[`${type}-${id}`];
   };
 
-  console.log('network', network)
-
   const securityDisplay = {
     'public': 'Открытая',
     'confidential': 'Конфиденциальная',
@@ -54,7 +66,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
     'top_secret': 'Совершенно секретная',
   };
 
-  const handleNodeHover = (id: string, type: 'division' | 'subdivision' | 'facility') => {
+  const handleNodeHover = (id: string, type: 'division' | 'facility' | 'equipment') => {
     setHighlightedItem(id);
     if (onHighlightNode) onHighlightNode(id, type);
   };
@@ -62,6 +74,12 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
   const handleNodeLeave = () => {
     setHighlightedItem(null);
     if (onClearHighlight) onClearHighlight();
+  };
+
+  const handleNodeClick = (nodeId: string) => {
+    if (onNodeSelect) {
+      onNodeSelect(nodeId);
+    }
   };
 
   if (!network) {
@@ -78,9 +96,34 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
     );
   }
 
+  // Извлекаем данные из сети в соответствии с актуальной моделью
+  // Предполагаем, что сеть содержит информацию о членствах (memberships)
+  const memberships = network.memberships || [];
+
+  // Собираем уникальные подразделения, объекты и оборудование
+  const divisionsMap = new Map();
+  const facilitiesMap = new Map();
+  const equipmentMap = new Map();
+
+  memberships.forEach(membership => {
+    if (membership.division && !divisionsMap.has(membership.division.id)) {
+      divisionsMap.set(membership.division.id, membership.division);
+    }
+    if (membership.facility && !facilitiesMap.has(membership.facility.id)) {
+      facilitiesMap.set(membership.facility.id, membership.facility);
+    }
+    if (membership.equipment && !equipmentMap.has(membership.equipment.id)) {
+      equipmentMap.set(membership.equipment.id, membership.equipment);
+    }
+  });
+
+  const divisions = Array.from(divisionsMap.values());
+  const facilities = Array.from(facilitiesMap.values());
+  const equipment = Array.from(equipmentMap.values());
+
   return (
     <div className="network-details-container">
-      <h3 className="network-details-title">{network.name}</h3>
+      <h3 className="network-details-title">{getStringValue(network.name)}</h3>
 
       <div className="network-details-section">
         <h4 className="network-details-section-title">
@@ -92,14 +135,14 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
             <span className="network-details-label">
               <span className="network-details-label-text">Класс:</span>
             </span>
-            <span className="network-details-value-sidebar">{network.network_class}</span>
+            <span className="network-details-value-sidebar">{getStringValue(network.network_class)}</span>
           </div>
           <div className="network-details-item">
             <span className="network-details-label">
               <span className="network-details-label-text">Уровень секретности:</span>
             </span>
             <span className={`network-details-value-sidebar security-${network.security_level}`}>
-              {securityDisplay[network.security_level] || network.security_level}
+              {securityDisplay[network.security_level] || getStringValue(network.security_level)}
             </span>
           </div>
           {network.description && (
@@ -107,7 +150,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
               <span className="network-details-label">
                 <span className="network-details-label-text">Описание:</span>
               </span>
-              <span className="network-details-value-sidebar">{network.description}</span>
+              <span className="network-details-value-sidebar">{getStringValue(network.description)}</span>
             </div>
           )}
         </div>
@@ -123,14 +166,14 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
             <span className="network-details-label">
               <span className="network-details-label-text">Протокол:</span>
             </span>
-            <span className="network-details-value-sidebar">{network.protocol}</span>
+            <span className="network-details-value-sidebar">{getStringValue(network.protocol)}</span>
           </div>
           {network.ip_range && (
             <div className="network-details-item">
               <span className="network-details-label">
                 <span className="network-details-label-text">IP диапазон:</span>
               </span>
-              <span className="network-details-value-sidebar">{network.ip_range}</span>
+              <span className="network-details-value-sidebar">{getStringValue(network.ip_range)}</span>
             </div>
           )}
           {network.throughput && (
@@ -138,7 +181,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
               <span className="network-details-label">
                 <span className="network-details-label-text">Пропускная способность:</span>
               </span>
-              <span className="network-details-value-sidebar">{network.throughput} Mbps</span>
+              <span className="network-details-value-sidebar">{getStringValue(network.throughput)} Mbps</span>
             </div>
           )}
         </div>
@@ -150,12 +193,15 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
           Иерархия сети
         </h4>
         <div className="network-hierarchy">
-          {network.divisions && network.divisions.length > 0 ? (
-            network.divisions.map(division => {
-              // Находим подразделения, принадлежащие текущему отделу
-              const divisionSubdivisions = network.subdivisions?.filter(
-                sub => sub.division === division.id
-              ) || [];
+          {divisions.length > 0 ? (
+            divisions.map(division => {
+              // Находим объекты, принадлежащие текущему подразделению
+              const divisionFacilities = facilities.filter(facility => {
+                return memberships.some(m =>
+                  m.division && m.division.id === division.id &&
+                  m.facility && m.facility.id === facility.id
+                );
+              });
 
               return (
                 <div key={`division-${division.id}`} className="hierarchy-node">
@@ -163,7 +209,10 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
                     className={`hierarchy-item hierarchy-division ${highlightedItem === `division-${division.id}` ? 'highlighted' : ''} ${isNodeExpanded('division', division.id) ? 'expanded' : ''}`}
                     onMouseEnter={() => handleNodeHover(`division-${division.id}`, 'division')}
                     onMouseLeave={handleNodeLeave}
-                    onClick={() => toggleNode('division', division.id)}
+                    onClick={() => {
+                      toggleNode('division', division.id);
+                      handleNodeClick(`division-${division.id}`);
+                    }}
                   >
                     <span className="hierarchy-toggle">
                       <ChevronRight
@@ -172,53 +221,59 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
                       />
                     </span>
                     <Building size={18} className="hierarchy-icon" />
-                    {division.name}
+                    {getStringValue(division.name)}
                   </div>
 
                   {isNodeExpanded('division', division.id) && (
                     <div className="hierarchy-children">
-                      {divisionSubdivisions.length > 0 ? (
-                        divisionSubdivisions.map(subdivision => {
-                          // Находим объекты, принадлежащие текущему подразделению
-                          const subdivisionFacilities = network.facilities?.filter(
-                            fac => fac.subdivision === subdivision.id
-                          ) || [];
+                      {divisionFacilities.length > 0 ? (
+                        divisionFacilities.map(facility => {
+                          // Находим оборудование, принадлежащее текущему объекту
+                          const facilityEquipment = equipment.filter(eq => {
+                            return memberships.some(m =>
+                              m.facility && m.facility.id === facility.id &&
+                              m.equipment && m.equipment.id === eq.id
+                            );
+                          });
 
                           return (
-                            <div key={`subdivision-${subdivision.id}`} className="hierarchy-node">
+                            <div key={`facility-${facility.id}`} className="hierarchy-node">
                               <div
-                                className={`hierarchy-item hierarchy-subdivision ${highlightedItem === `subdivision-${subdivision.id}` ? 'highlighted' : ''} ${isNodeExpanded('subdivision', subdivision.id) ? 'expanded' : ''}`}
-                                onMouseEnter={() => handleNodeHover(`subdivision-${subdivision.id}`, 'subdivision')}
+                                className={`hierarchy-item hierarchy-facility ${highlightedItem === `facility-${facility.id}` ? 'highlighted' : ''} ${isNodeExpanded('facility', facility.id) ? 'expanded' : ''}`}
+                                onMouseEnter={() => handleNodeHover(`facility-${facility.id}`, 'facility')}
                                 onMouseLeave={handleNodeLeave}
-                                onClick={() => toggleNode('subdivision', subdivision.id)}
+                                onClick={() => {
+                                  toggleNode('facility', facility.id);
+                                  handleNodeClick(`facility-${facility.id}`);
+                                }}
                               >
                                 <span className="hierarchy-toggle">
                                   <ChevronRight
-                                    className={`toggle-icon ${isNodeExpanded('subdivision', subdivision.id) ? 'expanded' : ''}`}
+                                    className={`toggle-icon ${isNodeExpanded('facility', facility.id) ? 'expanded' : ''}`}
                                     size={18}
                                   />
                                 </span>
                                 <Building size={18} className="hierarchy-icon" />
-                                {subdivision.name}
+                                {getStringValue(facility.name)}
                               </div>
 
-                              {isNodeExpanded('subdivision', subdivision.id) && (
+                              {isNodeExpanded('facility', facility.id) && (
                                 <div className="hierarchy-children">
-                                  {subdivisionFacilities.length > 0 ? (
-                                    subdivisionFacilities.map(facility => (
+                                  {facilityEquipment.length > 0 ? (
+                                    facilityEquipment.map(eq => (
                                       <div
-                                        key={`facility-${facility.id}`}
-                                        className={`hierarchy-item hierarchy-facility ${highlightedItem === `facility-${facility.id}` ? 'highlighted' : ''}`}
-                                        onMouseEnter={() => handleNodeHover(`facility-${facility.id}`, 'facility')}
+                                        className={`hierarchy-item hierarchy-equipment ${highlightedItem === `equipment-${eq.id}` ? 'highlighted' : ''}`}
+                                        onMouseEnter={() => handleNodeHover(`equipment-${eq.id}`, 'equipment')}
                                         onMouseLeave={handleNodeLeave}
+                                        onClick={() => handleNodeClick(`equipment-${eq.id}`)}
                                       >
-                                        <Building size={18} className="hierarchy-icon" />
-                                        {facility.name}
+                                        <Cpu size={18} className="hierarchy-icon" />
+                                        {getStringValue(eq.name)}
                                       </div>
                                     ))
                                   ) : (
                                     <div className="empty-hierarchy">
-                                      Нет объектов в подразделении
+                                      Нет оборудования в объекте
                                     </div>
                                   )}
                                 </div>
@@ -228,7 +283,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
                         })
                       ) : (
                         <div className="empty-hierarchy">
-                          Нет подразделений в отделе
+                          Нет объектов в подразделении
                         </div>
                       )}
                     </div>
@@ -238,11 +293,10 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
             })
           ) : (
             <div className="empty-hierarchy">
-              Иерархия сети не определена
+              В сети нет подразделений
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
