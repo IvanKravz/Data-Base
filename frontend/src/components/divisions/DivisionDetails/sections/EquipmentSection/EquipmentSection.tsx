@@ -17,6 +17,9 @@ import {
   Box,
   KeyRound
 } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setEquipment, deleteEquipment } from '../../../../../store/slices/equipmentSlice';
+import { RootState } from '../../../../../store/store';
 
 const CATEGORY_ICONS = {
   'tko': <Server className="equipment-tab-icon" size={16} />,
@@ -46,6 +49,8 @@ export function EquipmentSection() {
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
   const token = localStorage.getItem('accessToken');
+  const dispatch = useDispatch();
+  const equipment = useSelector((state: RootState) => state.equipment.equipment);
 
   const tabsRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
@@ -56,7 +61,6 @@ export function EquipmentSection() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [equipment, setEquipment] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [subdivisionName, setSubdivisionName] = useState('');
@@ -110,7 +114,7 @@ export function EquipmentSection() {
         }
 
         setDivision(div);
-        setEquipment(equip);
+        dispatch(setEquipment(equip)); // Сохраняем оборудование в Redux
         setCategories(cats);
       } catch (err) {
         setError('Не удалось загрузить данные');
@@ -121,7 +125,7 @@ export function EquipmentSection() {
     };
 
     fetchData();
-  }, [id, token, subdivisionId]);
+  }, [id, token, subdivisionId, dispatch]);
 
   const filterBySubdivision = (items) => {
     if (!subdivisionId) return items;
@@ -240,6 +244,16 @@ export function EquipmentSection() {
         isClosed: activeTab === 'closed'
       }
     });
+  };
+
+  const handleDeleteEquipment = async (id: string) => {
+    try {
+      await equipmentApi.deleteEquipment(id);
+      // Обновляем состояние Redux после удаления
+      dispatch(deleteEquipment(id));
+    } catch (error) {
+      console.error('Error deleting equipment:', error);
+    }
   };
 
   if (loading) {
@@ -410,7 +424,7 @@ export function EquipmentSection() {
           <EquipmentList
             equipment={filteredEquipment}
             onUpdateEquipment={() => { }}
-            onDeleteEquipment={() => { }}
+            onDeleteEquipment={handleDeleteEquipment}
           />
         </div>
       </div>

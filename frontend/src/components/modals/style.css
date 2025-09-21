@@ -1,5 +1,5 @@
 /* Общие стили для модального окна */
-..modal-overlay {
+.modal-overlay {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -11,17 +11,17 @@
   animation: fade-in 0.3s ease-in-out;
 }
 
-.modal-content {
+.modal-content-delete {
   background-color: white;
   border-radius: 0.5rem;
   width: 100%;
-  max-width: 28rem;
+  width: 30rem;
   transform: scale(1);
   transition: transform 0.2s ease-in-out;
 }
 
-.modal-header {
-  padding: 1.5rem 1rem;
+.modal-header-delete {
+  padding: 1rem 1rem;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
@@ -63,17 +63,20 @@
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .modal-message {
+  display: flex;
+  justify-content: center;
   margin-bottom: 1.5rem;
+  font-size: 1.1rem;
   color: #4b5563;
 }
 
-.modal-actions {
+.modal-actions-delete {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.75rem;
 }
 
@@ -82,14 +85,14 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  background-color: white;
+  background-color: rgb(202, 207, 222);
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease-in-out;
 }
 
 .cancel-button:hover {
-  background-color: #f9fafb;
+  background-color: rgb(228, 231, 240);
 }
 
 .confirm-button {
@@ -97,13 +100,13 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
-  background-color: #dc2626;
+  background-color: #eb4b4b;
   border-radius: 0.5rem;
   transition: background-color 0.2s ease-in-out;
 }
 
 .confirm-button:hover {
-  background-color: #b91c1c;
+  background-color: #f03535;
 }
 
 /* Анимации */

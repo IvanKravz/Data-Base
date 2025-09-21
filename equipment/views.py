@@ -30,7 +30,8 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         'net_interfaces__ip_addresses',
         'vlans',
         'routing_table',
-        'acls'
+        'acls',
+        'category'
     ).annotate(
         network_interfaces_count=Count('net_interfaces'),
         ip_addresses_count=Count('net_interfaces__ip_addresses')
@@ -39,6 +40,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['facility', 'is_network', 'status']
+    pagination_class = None 
 
     def get_queryset(self):
         queryset = super().get_queryset()

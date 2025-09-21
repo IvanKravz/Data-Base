@@ -65,6 +65,7 @@ body {
 /* ===== LAYOUT STYLES ===== */
 .equipment-form-container {
   margin: 0 auto;
+  padding-bottom: 80px;
 }
 
 .page-header {
@@ -91,7 +92,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: var(--space-lg);
   animation: fadeIn 0.3s ease-out;
-  margin-bottom: 5rem; /* Добавляем отступ для фиксированного футера */
+
 }
 
 @keyframes fadeIn {
@@ -99,6 +100,7 @@ body {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -367,11 +369,16 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .equipment-form-container {
+    padding-bottom: 120px;
+    /* Больше отступ для мобильных */
+  }
+
   .equipment-form-footer {
     flex-direction: column;
     padding: 0.5rem;
   }
-  
+
   .equipment-form-footer-button {
     width: 100%;
     min-width: auto;
@@ -410,6 +417,7 @@ body {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -427,6 +435,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

@@ -6,16 +6,18 @@ export const equipmentApi = {
     division?: string;
     category?: string;
     status?: string;
-    type?: 'open' | 'closed';
+    type?: string;
     search?: string;
     facility?: string;
   }) => {
-    const { data } = await api.get('/equipment/', { params , 
+    console.log('params', params)
+    const { data } = await api.get('/equipment/', {
+      params,
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
-    return data.results;
+    return data;
   },
 
   getEquipmentByEmployee: async (token: string, employeeId: string) => {
@@ -40,22 +42,34 @@ export const equipmentApi = {
     const params: any = { category: 'shd' };
     if (divisionId) params.division = divisionId;
     if (facilityId) params.facility = facilityId;
-    
-    const { data } = await api.get('/equipment/', { 
+
+    const { data } = await api.get('/equipment/', {
       params,
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
-    return data.results || [];
+    return data || [];
   },
 
-  createEquipment: async (equipmentData: Omit<Equipment, 'id'>) => {
-    const { data } = await api.post('/equipment/', equipmentData);
-    return data;
+  createEquipment: async (token: string, data: any) => {
+    try {
+      const response = await api.post('/equipment/', data, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('response data', response)
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating equipment:', error.response?.data);
+      throw error;
+    }
   },
 
   updateEquipment: async (token: string, id: string, equipmentData: Partial<Equipment>) => {
+    console.log('equipmentData', equipmentData)
     const { data } = await api.put(`/equipment/${id}/`, equipmentData, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -66,10 +80,15 @@ export const equipmentApi = {
   },
 
   deleteEquipment: async (id: string) => {
-    await api.delete(`/equipment/${id}/`);
+    const token = localStorage.getItem('accessToken');
+    await api.delete(`/equipment/${id}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
   },
 
-  getEquipmentCategories: async (token: string): Promise<{value: string; name: string; is_closed: boolean}[]> => {
+  getEquipmentCategories: async (token: string): Promise<{ value: string; name: string; is_closed: boolean }[]> => {
     try {
       const { data } = await api.get('/equipment/categories/', {
         headers: {

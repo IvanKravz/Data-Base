@@ -20,8 +20,8 @@ export function DeleteConfirmationModal({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-header">
+      <div className="modal-content-delete">
+        <div className="modal-header-delete">
           <div className="header-content">
             <AlertTriangle className="warning-icon" />
             <h2 className="modal-title">
@@ -41,7 +41,7 @@ export function DeleteConfirmationModal({
             {message}
           </p>
 
-          <div className="modal-actions">
+          <div className="modal-actions-delete">
             <button
               onClick={onCancel}
               className="cancel-button"

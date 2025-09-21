@@ -25,6 +25,7 @@ export function BasicInformation({
       cat => cat.value === selectedValue
     );
 
+    // Отправляем полный объект категории
     onChange({
       category: selectedCategory || null
     });
@@ -79,10 +80,9 @@ export function BasicInformation({
         </div>
 
         <div className="form-group">
-          <label className="form-label">Тип техники</label>
+          <label className="form-label">Модель</label>
           <input
             type="text"
-            required
             value={formData.type || ''}
             onChange={(e) => onChange({ type: e.target.value })}
             className="form-input-edit"
@@ -106,7 +106,7 @@ export function BasicInformation({
             {isDisposed && <option value="disposed">Списано</option>}
           </select>
         </div>
-        
+
         <div className="form-group">
           <label className="form-label">Версия ПО</label>
           <input

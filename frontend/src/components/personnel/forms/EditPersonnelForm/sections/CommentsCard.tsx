@@ -48,13 +48,15 @@ export function CommentsCard({ description, onChange }: CommentsCardProps) {
             )}
           </div>
         ))}
-        <button
-          type="button"
-          onClick={handleAddComment}
-          className="personnel-btn personnel-btn-primary personnel-btn-sm"
-        >
-          + Добавить комментарий
-        </button>
+        <div>
+          <button
+            type="button"
+            onClick={handleAddComment}
+            className="personnel-btn personnel-btn-primary personnel-btn-sm"
+          >
+            + Добавить комментарий
+          </button>
+        </div>
       </div>
     </div>
   );

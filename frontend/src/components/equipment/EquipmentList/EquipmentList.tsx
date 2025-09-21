@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Equipment } from '../../../types';
 import { TableView } from './views/TableView';
-import { GridView } from './views/GridView';
-import { useDeleteConfirmation } from '../../../hooks/useDeleteConfirmation';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { ExportButton } from '../../common/ExportButton';
-import { exportEquipmentToExcel } from '../../../utils/exportToExcel';
 
 interface EquipmentListProps {
   equipment: Equipment[];
@@ -19,15 +15,9 @@ export function EquipmentList({
   onUpdateEquipment,
   onDeleteEquipment,
 }: EquipmentListProps) {
-  const {
-    showDeleteModal,
-    handleDelete,
-    handleConfirmDelete,
-    handleCancelDelete
-  } = useDeleteConfirmation();
-
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
   const filteredEquipment = subdivisionId
     ? equipment.filter(item => item.subdivision?.id == subdivisionId)
@@ -36,6 +26,19 @@ export function EquipmentList({
   const handleEdit = (e: React.MouseEvent, item: Equipment) => {
     e.stopPropagation();
     onUpdateEquipment(item);
+  };
+
+  const handleDelete = (id: string) => {
+    setDeleteModal({ isOpen: true, equipmentId: id });
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteEquipment(deleteModal.equipmentId);
+    setDeleteModal({ isOpen: false, equipmentId: '' });
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModal({ isOpen: false, equipmentId: '' });
   };
 
   return (
@@ -56,11 +59,11 @@ export function EquipmentList({
         </div>
       )}
 
-      {showDeleteModal && (
+      {deleteModal.isOpen && (
         <DeleteConfirmationModal
           title="Удаление техники"
-          message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
-          onConfirm={() => handleConfirmDelete(onDeleteEquipment)}
+          message="Вы уверены, что хотите удалить технику?"
+          onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />
       )}

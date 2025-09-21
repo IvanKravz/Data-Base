@@ -27,7 +27,7 @@ class Equipment(models.Model):
     ]
 
     name = models.CharField(max_length=255, verbose_name='Название')
-    type = models.CharField(max_length=255, verbose_name='Тип')
+    type = models.CharField(max_length=255, verbose_name='Тип', null=True, blank=True)
     is_closed = models.BooleanField(default=False, verbose_name='Закрытая техника')
     is_network = models.BooleanField(default=False, verbose_name='Сетевое оборудование')
     category = models.ForeignKey(

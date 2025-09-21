@@ -7,7 +7,6 @@ import { BasicInfo } from './sections/BasicInfo';
 import { ContactInfo } from './sections/ContactInfo';
 import { ResponsibilityInfo } from './sections/ResponsibilityInfo';
 import { AssignedEquipment } from './sections/AssignedEquipment';
-import { EditPersonnelForm } from '../../forms/personnel/EditPersonnelForm';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updatePersonAsync, fetchPersonById } from '../../../store/slices/personnelSlice';
 import { employeesApi } from '../../../api';
@@ -15,6 +14,7 @@ import { CommentsInfo } from './sections/CommentsInfo';
 import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
 import { Employee } from '../../../types';
+import { EditPersonnelForm } from '../forms/EditPersonnelForm';
 
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();

@@ -127,29 +127,46 @@ export function CreateEquipmentForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('Form data before send:', formData);
         if (!token) {
             console.error('Токен отсутствует');
             return;
         }
 
-        // Подготавливаем данные для отправки
-        const dataToSend = {
-            ...formData,
-            category: formData.category?.value || null,
-            is_closed: isClosedEquipment,
-            division: formData.division?.id || null,
-            subdivision: formData.subdivision?.id || null,
-            facility: formData.facility?.id || null,
-            assigned_to: formData.assigned_to?.id || null,
-            product_structures: formData.product_structures || []
-        };
+        // Проверка обязательных полей
+        if (!formData.division) {
+            alert('Пожалуйста, выберите подразделение');
+            return;
+        }
 
         try {
             setIsLoading(true);
+            const dataToSend = {
+                ...formData,
+                name: formData.name || '',
+                type: formData.type || '',
+                status: formData.status || 'in-operation', // Обязательное поле
+                category: formData.category ? {
+                    value: formData.category.value || formData.category,
+                    name: formData.category.name || formData.category
+                } : null,
+                is_closed: isClosedEquipment,
+                division_id: formData.division ? formData.division.id : null,
+                subdivision_id: formData.subdivision ? formData.subdivision.id : null,
+                facility_id: formData.facility ? formData.facility.id : null,
+                assigned_to_id: formData.assigned_to ? formData.assigned_to.id : null,
+                product_structures: formData.product_structures || []
+            };
+            console.log('dataToSend', dataToSend);
+
             await equipmentApi.createEquipment(token, dataToSend);
+            await new Promise(resolve => setTimeout(resolve, 100));
             navigate(`/divisions/${id}/equipment`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Ошибка создания техники:', error);
+            if (error.response?.data) {
+                console.error('Детали ошибки:', error.response.data);
+            }
         } finally {
             setIsLoading(false);
         }

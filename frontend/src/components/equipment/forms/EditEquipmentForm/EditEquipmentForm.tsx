@@ -114,15 +114,18 @@ export function EditEquipmentForm({
       return;
     }
 
-    // Подготавливаем данные для отправки
+    // Подготавливаем данные для отправки - используем правильные имена полей
     const dataToSend = {
       ...formData,
-      category: formData.category?.value || null,
+      category: formData.category ? {
+        value: formData.category.value || formData.category,
+        name: formData.category.name || formData.category
+      } : null,
       is_closed: isClosedEquipment,
-      division: formData.division?.id || null,
-      subdivision: formData.subdivision?.id || null,
-      facility: formData.facility?.id || null,
-      assigned_to: formData.assigned_to?.id || null,
+      division_id: formData.division?.id || null,
+      subdivision_id: formData.subdivision?.id || null,
+      facility_id: formData.facility?.id || null,
+      assigned_to_id: formData.assigned_to?.id || null,
       product_structures: formData.product_structures || []
     };
 

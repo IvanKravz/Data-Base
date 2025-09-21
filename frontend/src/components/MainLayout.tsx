@@ -12,7 +12,6 @@ import { UserMenu } from './common/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
 import { ClosedFacilitiesPage } from './facilities/ClosedFacilitiesPage/ClosedFacilitiesPage';
 import { PersonnelPage } from './personnel/PersonnelPage/PersonnelPage';
-import { CreatePersonnelPage } from './personnel/CreatePersonnelPage/CreatePersonnelPage';
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection';
@@ -21,7 +20,7 @@ import { FacilitiesSection } from './divisions/DivisionDetails/sections/Faciliti
 import { DivisionTasksSection } from './divisions/DivisionDetails/sections/TasksSection/DivisionTasksSection';
 import { AddFacilityPage } from './facilities/forms/AddFacilityPage';
 import { AddCommunicationPostForm } from './divisions/DivisionDetails/sections/CommunicationPosts/AddCommunicationPostForm';
-import { CreatePersonnelForm } from './forms';
+import { CreatePersonnelForm } from './personnel/forms';
 import CommunicationNetworks from './divisions/DivisionDetails/sections/CommunicationNetworks/CommunicationNetworks';
 import NetworkManagement from './networks/NetworkManagement/NetworkManagement';
 import CreateNetwork from './networks/forms/CreateNetwork/CreateNetwork';

@@ -33,7 +33,6 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
           <label className="form-label">Инвентарный номер</label>
           <input
             type="text"
-            required
             value={formData.inventory_number || ''}
             onChange={(e) => onChange({ inventory_number: e.target.value })}
             className="form-input-edit"

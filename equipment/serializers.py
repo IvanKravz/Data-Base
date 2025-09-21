@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from facilities.models import Division, Subdivision, Facility
+from users.models import Employee
 from .models import EquipmentCategory, Equipment, ProductStructure
 from users.serializers import EmployeeSerializer
 from django.apps import apps
@@ -23,6 +24,9 @@ class EquipmentCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = EquipmentCategory
         fields = ['value', 'name', 'is_closed']
+        extra_kwargs = {
+            'value': {'validators': []},
+        }
 
 class ProductStructureSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,14 +59,44 @@ class ACLSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class EquipmentSerializer(serializers.ModelSerializer):
+    # Существующие поля для чтения
     assigned_to = EmployeeSerializer(read_only=True)
-    division = DivisionShortSerializer(read_only=True)
+    division = DivisionShortSerializer(read_only=True)  # для чтения
     subdivision = SubdivisionShortSerializer(read_only=True)
     facility = FacilityShortSerializer(read_only=True)
+    
+    # Добавьте эти поля для записи
+    division_id = serializers.PrimaryKeyRelatedField(
+        queryset=Division.objects.all(),
+        write_only=True,
+        source='division',
+        required=True
+    )
+    subdivision_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subdivision.objects.all(),
+        write_only=True,
+        source='subdivision',
+        required=False,
+        allow_null=True
+    )
+    facility_id = serializers.PrimaryKeyRelatedField(
+        queryset=Facility.objects.all(),
+        write_only=True,
+        source='facility',
+        required=False,
+        allow_null=True
+    )
+    assigned_to_id = serializers.PrimaryKeyRelatedField(
+        queryset=Employee.objects.all(),
+        write_only=True,
+        source='assigned_to',
+        required=False,
+        allow_null=True
+    )
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     category_display = serializers.SerializerMethodField()
     disposal_info = serializers.SerializerMethodField()
-    category = EquipmentCategorySerializer(read_only=True)
+    category = EquipmentCategorySerializer(required=False, allow_null=True)
     product_structures = ProductStructureSerializer(many=True, read_only=True)
     first_invoice = serializers.CharField(required=False, allow_null=True)
     material_invoice = serializers.CharField(required=False, allow_null=True)
@@ -81,13 +115,16 @@ class EquipmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipment
         fields = [
+            # все существующие поля
             'id', 'name', 'type', 'is_closed', 'is_network', 'category', 'category_display',
             'status', 'status_display', 'serial_number', 'inventory_number',
             'first_invoice', 'material_invoice', 'ver_software', 'product_structures',
             'manufacturing_date', 'exploitation_date', 'division', 'subdivision', 
             'facility', 'assigned_to', 'comments', 'created_at', 'updated_at', 'disposal_info',
             'network_interfaces', 'vlans', 'ip_addresses', 'routing_table', 'acls',
-            'network_interfaces_count', 'ip_addresses_count'
+            'network_interfaces_count', 'ip_addresses_count',
+            # добавьте новые поля для записи
+            'division_id', 'subdivision_id', 'facility_id', 'assigned_to_id'
         ]
         extra_kwargs = {
             'division': {'write_only': True},
@@ -109,35 +146,120 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'disposalCertDate': obj.disposal_cert_date,
             'comments': obj.disposal_comments
         }
+    
+    def to_internal_value(self, data):
+        # Обрабатываем поля связанных объектов
+        for field_name in ['division', 'subdivision', 'facility', 'assigned_to']:
+            if field_name in data and data[field_name] is not None:
+                if isinstance(data[field_name], dict) and 'id' in data[field_name]:
+                    # Преобразуем объект в ID
+                    data[f'{field_name}_id'] = data[field_name]['id']
+                    del data[field_name]
+                elif isinstance(data[field_name], (int, str)):
+                    # Если пришел ID, преобразуем в правильное поле
+                    data[f'{field_name}_id'] = data[field_name]
+                    del data[field_name]
+        
+        # Обрабатываем category
+        if 'category' in data and data['category'] is not None:
+            if isinstance(data['category'], (int, str)):
+                data['category'] = {'value': data['category']}
+            elif isinstance(data['category'], dict):
+                if 'value' in data['category']:
+                    pass
+                elif 'id' in data['category']:
+                    data['category'] = {'value': data['category']['id']}
+                else:
+                    raise serializers.ValidationError({
+                        'category': "Invalid format. Expected object with 'value' or 'id'."
+                    })
+            else:
+                raise serializers.ValidationError({
+                    'category': "Invalid format. Expected ID or object with value."
+                })
+        
+        return super().to_internal_value(data)
+    
+    def create(self, validated_data):
+        print("Validated data in create:", validated_data)
+        
+        # Извлекаем данные для связанных полей
+        division = validated_data.pop('division', None)
+        subdivision = validated_data.pop('subdivision', None)
+        facility = validated_data.pop('facility', None)
+        assigned_to = validated_data.pop('assigned_to', None)
+        category_data = validated_data.pop('category', None)
+        product_structures_data = validated_data.pop('product_structures', [])
+
+        if not division:
+            raise serializers.ValidationError({
+                "division": "Это поле обязательно для заполнения."
+            })
+
+        # Создаем объект Equipment
+        equipment = Equipment.objects.create(
+            division=division,
+            subdivision=subdivision,
+            facility=facility,
+            assigned_to=assigned_to,
+            **validated_data
+        )
+
+        # Обрабатываем категорию
+        if category_data:
+            category_value = category_data.get('value')
+            try:
+                equipment.category = EquipmentCategory.objects.get(value=category_value)
+            except EquipmentCategory.DoesNotExist:
+                # Если категория не найдена, создаем новую
+                equipment.category = EquipmentCategory.objects.create(**category_data)
+        else:
+            equipment.category = None
+            
+        equipment.save()
+
+        # Создаем структуры продукта
+        for structure_data in product_structures_data:
+            ProductStructure.objects.create(
+                equipment=equipment,
+                **structure_data
+            )
+        
+        return equipment
 
     def update(self, instance, validated_data):
+        print("Validated data in update:", validated_data)
         product_structures_data = self.context['request'].data.get('product_structures', [])
         
-        division_id = self.context['request'].data.get('division')
-        if division_id:
+        # Получаем ID из validated_data вместо request.data
+        division_id = validated_data.pop('division_id', None)
+        if division_id is not None:
             instance.division_id = division_id
         
-        subdivision_id = self.context['request'].data.get('subdivision')
-        if subdivision_id:
+        subdivision_id = validated_data.pop('subdivision_id', None)
+        if subdivision_id is not None:
             instance.subdivision_id = subdivision_id
             
-        facility_id = self.context['request'].data.get('facility')
-        if facility_id:
+        facility_id = validated_data.pop('facility_id', None)
+        if facility_id is not None:
             instance.facility_id = facility_id
             
-        assigned_to_id = self.context['request'].data.get('assigned_to')
-        if assigned_to_id:
+        assigned_to_id = validated_data.pop('assigned_to_id', None)
+        if assigned_to_id is not None:
             instance.assigned_to_id = assigned_to_id
             
-        category_value = self.context['request'].data.get('category')
-        if category_value:
+        # Обработка категории
+        category_data = validated_data.pop('category', None)
+        if category_data is not None:
+            category_value = category_data.get('value')
             try:
                 instance.category = EquipmentCategory.objects.get(value=category_value)
             except EquipmentCategory.DoesNotExist:
-                instance.category = None
-        elif category_value is None:
+                # Если категория не найдена, создаем новую
+                instance.category = EquipmentCategory.objects.create(**category_data)
+        elif category_data is None:
             instance.category = None
-            
+                
         # Обработка сетевых интерфейсов
         network_interfaces_data = self.context['request'].data.get('network_interfaces', [])
         if network_interfaces_data and instance.is_network:
@@ -165,7 +287,7 @@ class EquipmentSerializer(serializers.ModelSerializer):
             for interface_id, interface in current_interfaces.items():
                 if interface_id not in new_interface_ids:
                     interface.delete()
-            
+                
         if product_structures_data:
             current_structures = {str(s.id): s for s in instance.product_structures.all()}
             new_structure_ids = []
@@ -195,7 +317,7 @@ class EquipmentSerializer(serializers.ModelSerializer):
                     structure.delete()
             
         for attr, value in validated_data.items():
-            if attr not in ['division', 'subdivision', 'facility', 'assigned_to', 'category', 'product_structures', 'network_interfaces']:
+            if attr not in ['division_id', 'subdivision_id', 'facility_id', 'assigned_to_id', 'category', 'product_structures', 'network_interfaces']:
                 setattr(instance, attr, value)
                 
         instance.save()

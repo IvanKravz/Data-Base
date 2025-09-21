@@ -19,6 +19,8 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [equipmentCategories, setEquipmentCategories] = useState<Record<string, string>>({});
 
+
+
   const handleSort = (field: keyof Equipment) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -200,7 +202,7 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                 </td>
                 <td className="table-cell-actions">
                   <div className="actions-container">
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onEdit(e, item);
@@ -209,7 +211,7 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                       aria-label="Редактировать"
                     >
                       <Pencil className="action-icon" />
-                    </button>
+                    </button> */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
