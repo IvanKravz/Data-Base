@@ -242,9 +242,6 @@ export function PersonnelList({
         </div>
         <div className="selected-subdivision-title">
           <div className="title-row">
-            <h3>
-              {subdivisionId ? `${division?.name} / ${selectedSubdivision?.name}` : division?.name}
-            </h3>
             <div className="staff-info">
               <span>По штату: {staffData.staffCount}</span>
               <span>По списку: {staffData.actualCount}</span>

@@ -87,7 +87,6 @@ const IPRangeManagement: React.FC<IPRangeManagementProps> = ({ token }) => {
   return (
     <div className="management-panel">
       <div className="panel-header">
-        <h2>Управление диапазонами IP</h2>
         <button className="btn-primary" onClick={handleCreate}>
           Добавить диапазон IP
         </button>

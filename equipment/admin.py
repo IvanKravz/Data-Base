@@ -2,7 +2,24 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.db import models
 from django.apps import apps
-from .models import EquipmentCategory, ProductStructure, Equipment
+from .models import EquipmentCategory, ProductStructure, Equipment, InterestOrgan
+
+@admin.register(InterestOrgan)
+class InterestOrganAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at') 
+    list_filter = ('created_at',)
+    search_fields = ('name',)
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name',) 
+        }),
+        ('Системная информация', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 @admin.register(EquipmentCategory)
 class EquipmentCategoryAdmin(admin.ModelAdmin):
@@ -40,18 +57,33 @@ class VLANInline(admin.TabularInline):
 
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'get_category_display', 'status_colored', 'is_network', 'division', 'subdivision', 'assigned_to', 'facility', 'network_interfaces_count')
-    list_filter = ('is_closed', 'is_network', 'status', 'division', 'facility', 'category')
+    list_display = (
+        'name', 'type', 'get_category_display', 'status_colored', 
+        'is_network', 'division', 'subdivision', 'assigned_to', 
+        'facility', 'network_interfaces_count', 'secret_level'
+    )
+    list_filter = (
+        'is_closed', 'is_network', 'status', 'division', 
+        'facility', 'category', 'secret_level', 'is_free_use'
+    )
     search_fields = (
         'name', 'serial_number', 'inventory_number', 
         'first_invoice', 'material_invoice', 'ver_software',
-        'comments', 'disposal_act_number', 'disposal_cert_number'
+        'comments', 'disposal_act_number', 'disposal_cert_number',
+        'service_life', 'free_use_act_number'
     )
-    raw_id_fields = ('assigned_to', 'facility', 'category')
+    raw_id_fields = ('assigned_to', 'facility', 'category', 'interest_organ')
     
     fieldsets = (
         ('Основная информация', {
-            'fields': ('name', 'type', 'is_closed', 'is_network', 'category', 'status', 'comments')
+            'fields': (
+                'name', 'type', 'is_closed', 'is_network', 
+                'category', 'status', 'comments', 'service_life',
+                'interest_organ', 
+                'secret_level',
+                'is_free_use',
+                'free_use_act_number'
+            )
         }),
         ('Идентификация', {
             'fields': (

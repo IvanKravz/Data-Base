@@ -85,7 +85,6 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({ token }) => {
   return (
     <div className="management-panel">
       <div className="panel-header">
-        <h2>Управление IP-адресами</h2>
         <button className="btn-primary" onClick={handleCreate}>
           Добавить IP-адрес
         </button>

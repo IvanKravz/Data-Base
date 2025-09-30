@@ -13,12 +13,12 @@ interface HeaderProps {
 export function Header({ division, activeSubdivision, onBack }: HeaderProps) {
   return (
     <div className="header-divisions">
-      <div className="flex items-center gap-5">
+      <div className="divisions-title-container">
         <button type="button" onClick={onBack} className="back-button">
           <ArrowLeft className="back-button-icon" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="divisions-title">
             {division.name}
             {activeSubdivision && ` - ${activeSubdivision}`}
           </h1>

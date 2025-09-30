@@ -1,6 +1,6 @@
 import React from 'react';
 import { Equipment } from '../../../../types';
-import { Package, Box, HardDrive, CircleEllipsis, Code } from 'lucide-react';
+import { Package, Box, HardDrive, CircleEllipsis, Code, Clock, Shield, Target, Gift } from 'lucide-react';
 import '../style.css'
 
 interface BasicInfoProps {
@@ -8,6 +8,15 @@ interface BasicInfoProps {
 }
 
 export function BasicInfo({ equipment }: BasicInfoProps) {
+  const getSecretLevelDisplay = (level: string) => {
+    switch (level) {
+      case 'OV': return 'ОВ';
+      case 'SS': return 'СС';
+      case 'SECRET': return 'Секретно';
+      case 'DSP': return 'ДСП';
+      default: return level;
+    }
+  };
   return (
     <div className="equipment-card">
       <h2 className="equipment-card__title">Основная информация</h2>
@@ -34,7 +43,7 @@ export function BasicInfo({ equipment }: BasicInfoProps) {
           <div className="equipment-info-item">
             <HardDrive className="equipment-info-item__icon text-brown-500" size={20} />
             <div>
-              <p className="equipment-info-item__label">Тип техники</p>
+              <p className="equipment-info-item__label">Модель техники</p>
               <p className="equipment-info-item__value">{equipment.type}</p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Equipment } from '../../../../types';
-import { FileText, ClipboardList } from 'lucide-react';
+import { FileText, ClipboardList, FileCheck } from 'lucide-react';
 import '../style.css';
 
 interface DocumentsInfoProps {
@@ -29,6 +29,17 @@ export function DocumentsInfo({ equipment }: DocumentsInfoProps) {
               <div>
                 <p className="equipment-info-item__label">Накладная на МОЛ</p>
                 <p className="equipment-info-item__value">{equipment.material_invoice}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Новое поле - акт безвозмездного пользования */}
+          {equipment.is_free_use && equipment.free_use_act_number && (
+            <div className="equipment-info-item">
+              <FileCheck className="equipment-info-item__icon text-purple-500" size={20} />
+              <div>
+                <p className="equipment-info-item__label">Акт безвозмездного пользования</p>
+                <p className="equipment-info-item__value">{equipment.free_use_act_number}</p>
               </div>
             </div>
           )}

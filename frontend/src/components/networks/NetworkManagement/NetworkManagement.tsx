@@ -15,10 +15,10 @@ const NetworkManagement: React.FC = () => {
 
   return (
     <div className="network-management-container">
-      <div className="communication-header">
-        <div className="communication-header-title">
-          <button onClick={handleBack} className="communication-header-back-button">
-            <ArrowLeft className="communication-header-back-icon" />
+      <div className="network-management-header">
+        <div className="network-management-header-title">
+          <button onClick={handleBack} className="back-button">
+            <ArrowLeft className="back-icon" />
           </button>
           <h1>Управление сетевыми объектами</h1>
         </div>

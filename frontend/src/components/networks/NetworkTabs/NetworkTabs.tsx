@@ -5,7 +5,6 @@ import InterfaceManagement from '../InterfaceManagement/InterfaceManagement';
 import IPAddressManagement from '../IPAddressManagement/IPAddressManagement';
 import IPRangeManagement from '../IPRangeManagement/IPRangeManagement';
 
-
 interface NetworkTabsProps {
   token: string | null;
 }
@@ -32,6 +31,7 @@ const NetworkTabs: React.FC<NetworkTabsProps> = ({ token }) => {
             {tab.label}
           </button>
         ))}
+        <div className="tab-indicator" data-active-tab={activeTab}></div>
       </div>
       
       <div className="tab-content">

@@ -65,92 +65,95 @@ const ConnectionSection: React.FC<ConnectionSectionProps> = ({
 
     return (
         <div className="network-form-section">
-            <h3 className="network-form-section-title">Создание направлений</h3>
-            
-            {directionError && (
-                <div className="network-form-error-message">{directionError}</div>
-            )}
-            
-            <div className="network-form-group">
-                <label className="network-form-label">Откуда (Источник)</label>
-                <select
-                    value={fromConnection}
-                    onChange={(e) => setFromConnection(e.target.value)}
-                    className="network-form-select"
-                >
-                    <option value="">Выберите источник</option>
-                    {selectedConnections.map((conn, index) => (
-                        <option 
-                            key={index} 
-                            value={`${conn.division.id}-${conn.facility.id}-${conn.equipment.id}`}
-                        >
-                            {conn.division.name} - {conn.facility.name} - {conn.equipment.name}, зав. № {conn.equipment.serial_number}
-                        </option>
-                    ))}
-                </select>
+            <div className="network-form-section-header">
+                <h3 className="network-form-section-title">Создание направлений</h3>
             </div>
+            <div className="network-form-section-content">
+                {directionError && (
+                    <div className="network-form-error-message">{directionError}</div>
+                )}
+                
+                <div className="network-form-group">
+                    <label className="network-form-label">Откуда (Источник)</label>
+                    <select
+                        value={fromConnection}
+                        onChange={(e) => setFromConnection(e.target.value)}
+                        className="network-form-select"
+                    >
+                        <option value="">Выберите источник</option>
+                        {selectedConnections.map((conn, index) => (
+                            <option 
+                                key={index} 
+                                value={`${conn.division.id}-${conn.facility.id}-${conn.equipment.id}`}
+                            >
+                                {conn.division.name} - {conn.facility.name} - {conn.equipment.name}, зав. № {conn.equipment.serial_number}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-            <div className="network-form-group">
-                <label className="network-form-label">Куда (Назначение)</label>
-                <select
-                    value={toConnection}
-                    onChange={(e) => setToConnection(e.target.value)}
-                    className="network-form-select"
-                >
-                    <option value="">Выберите назначение</option>
-                    {selectedConnections.map((conn, index) => (
-                        <option 
-                            key={index} 
-                            value={`${conn.division.id}-${conn.facility.id}-${conn.equipment.id}`}
-                        >
-                            {conn.division.name} - {conn.facility.name} - {conn.equipment.name}, зав. № {conn.equipment.serial_number}
-                        </option>
-                    ))}
-                </select>
-            </div>
+                <div className="network-form-group">
+                    <label className="network-form-label">Куда (Назначение)</label>
+                    <select
+                        value={toConnection}
+                        onChange={(e) => setToConnection(e.target.value)}
+                        className="network-form-select"
+                    >
+                        <option value="">Выберите назначение</option>
+                        {selectedConnections.map((conn, index) => (
+                            <option 
+                                key={index} 
+                                value={`${conn.division.id}-${conn.facility.id}-${conn.equipment.id}`}
+                            >
+                                {conn.division.name} - {conn.facility.name} - {conn.equipment.name}, зав. № {conn.equipment.serial_number}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-            <div className="network-form-group">
-                <label className="network-form-label">Пропускная способность (Mbps)</label>
-                <input
-                    type="number"
-                    value={bandwidth}
-                    onChange={(e) => setBandwidth(e.target.value)}
-                    className="network-form-input"
-                    placeholder="Не указано"
-                />
-            </div>
+                <div className="network-form-group">
+                    <label className="network-form-label">Пропускная способность (Mbps)</label>
+                    <input
+                        type="number"
+                        value={bandwidth}
+                        onChange={(e) => setBandwidth(e.target.value)}
+                        className="network-form-input"
+                        placeholder="Не указано"
+                    />
+                </div>
 
-            <div className="network-form-group">
-                <label className="network-form-label">Задержка (ms)</label>
-                <input
-                    type="number"
-                    value={latency}
-                    onChange={(e) => setLatency(e.target.value)}
-                    className="network-form-input"
-                    placeholder="Не указано"
-                />
-            </div>
+                <div className="network-form-group">
+                    <label className="network-form-label">Задержка (ms)</label>
+                    <input
+                        type="number"
+                        value={latency}
+                        onChange={(e) => setLatency(e.target.value)}
+                        className="network-form-input"
+                        placeholder="Не указано"
+                    />
+                </div>
 
-            <div className="network-form-group">
-                <label className="network-form-label">Описание</label>
-                <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="network-form-textarea"
-                    placeholder="Описание направления"
-                    rows={3}
-                />
-            </div>
+                <div className="network-form-group">
+                    <label className="network-form-label">Описание</label>
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="network-form-textarea"
+                        placeholder="Описание направления"
+                        rows={3}
+                    />
+                </div>
 
-            <div className="network-form-group">
-                <button
-                    type="button"
-                    onClick={handleAddDirection}
-                    className="network-form-add-button"
-                    disabled={!fromConnection || !toConnection}
-                >
-                    Добавить направление
-                </button>
+                <div className="network-form-group">
+                    <button
+                        type="button"
+                        onClick={handleAddDirection}
+                        className="network-form-add-button"
+                        disabled={!fromConnection || !toConnection}
+                    >
+                        Добавить направление
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -4,13 +4,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from .models import Equipment, EquipmentCategory
+from .models import Equipment, EquipmentCategory, InterestOrgan
 from .serializers import (
     ACLSerializer,
     EquipmentSerializer, 
     EquipmentStatsSerializer, 
     EquipmentCategorySerializer,
     IPAddressSerializer,
+    InterestOrganSerializer,
     NetworkInterfaceSerializer,
     RoutingTableSerializer,
     VLANSerializer
@@ -20,6 +21,22 @@ from facilities.models import Facility
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 from django.apps import apps
+
+class InterestOrganViewSet(viewsets.ModelViewSet):
+    queryset = InterestOrgan.objects.all()
+    serializer_class = InterestOrganSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_queryset(self):
+        """Получить все органы интересов"""
+        return InterestOrgan.objects.all().order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        """Переопределить метод list для возврата всех записей"""
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.select_related(
@@ -31,7 +48,8 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         'vlans',
         'routing_table',
         'acls',
-        'category'
+        'category',
+        'networkmembership_set__network', 
     ).annotate(
         network_interfaces_count=Count('net_interfaces'),
         ip_addresses_count=Count('net_interfaces__ip_addresses')
@@ -221,4 +239,4 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             equipment = equipment.filter(facility_id=facility_id)
         
         serializer = self.get_serializer(equipment, many=True)
-        return Response(serializer.data)    
+        return Response(serializer.data)

@@ -79,7 +79,6 @@ const VLANManagement: React.FC<VLANManagementProps> = ({ token }) => {
   return (
     <div className="management-panel">
       <div className="panel-header">
-        <h2>Управление VLAN</h2>
         <button className="btn-primary" onClick={handleCreate}>
           Добавить VLAN
         </button>

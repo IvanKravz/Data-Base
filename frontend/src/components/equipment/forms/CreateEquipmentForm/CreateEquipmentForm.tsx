@@ -12,7 +12,7 @@ import '../EditEquipmentForm/style.css';
 import { EditCommentsCard } from '../EditEquipmentForm/sections/EditCommentsCard';
 import { DocumentsInfo } from '../EditEquipmentForm/sections/DocumentsInfo';
 import { ProductStructureEditor } from '../EditEquipmentForm/sections/ProductStructureEditor';
-
+import { AdditionalInfo } from '../EditEquipmentForm/sections/AdditionalInfo';
 
 interface Division {
     id: string;
@@ -50,6 +50,7 @@ export function CreateEquipmentForm() {
     const [personnel, setPersonnel] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<EquipmentCategory[]>([]);
+    const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -57,13 +58,15 @@ export function CreateEquipmentForm() {
 
             setIsLoading(true);
             try {
-                const [divisionsData, categoriesData] = await Promise.all([
+                const [divisionsData, categoriesData, organsData] = await Promise.all([
                     divisionsApi.getDivisions(token),
                     equipmentApi.getEquipmentCategories(token),
+                    equipmentApi.getInterestOrgans(token),
                 ]);
 
                 setDivisions(divisionsData);
                 setCategories(categoriesData);
+                setInterestOrgans(organsData);
 
                 // Установка начального подразделения
                 if (id) {
@@ -155,6 +158,7 @@ export function CreateEquipmentForm() {
                 subdivision_id: formData.subdivision ? formData.subdivision.id : null,
                 facility_id: formData.facility ? formData.facility.id : null,
                 assigned_to_id: formData.assigned_to ? formData.assigned_to.id : null,
+                interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
                 product_structures: formData.product_structures || []
             };
             console.log('dataToSend', dataToSend);
@@ -178,9 +182,9 @@ export function CreateEquipmentForm() {
         return division?.subdivisions || [];
     };
 
-    // Фильтруем категории в зависимости от типа оборудования
+    // Фильтруем категории в зависимости от типа оборудования, но всегда включаем категорию SHD
     const currentCategories = categories.filter(cat =>
-        isClosedEquipment ? cat.is_closed : !cat.is_closed
+        isClosedEquipment ? cat.is_closed : !cat.is_closed || cat.value === 'shd'
     );
 
     return (
@@ -210,7 +214,19 @@ export function CreateEquipmentForm() {
 
                     <IdentificationInfo formData={formData} onChange={handleChange} />
 
-                    <DatesInfo formData={formData} onChange={handleChange} />
+                    <DatesInfo
+                        formData={formData}
+                        onChange={handleChange}
+                        serviceLife={formData.service_life}
+                        onServiceLifeChange={(value) => handleChange({ service_life: value })}
+                    />
+
+                    <AdditionalInfo
+                        formData={formData}
+                        onChange={handleChange}
+                        interestOrgans={interestOrgans}
+                        isDisposed={false}
+                    />
 
                     <AssignmentInfo
                         formData={formData}

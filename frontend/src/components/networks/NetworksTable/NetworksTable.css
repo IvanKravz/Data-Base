@@ -1,4 +1,5 @@
-.networks-table-wrapper {
+/* NetworksTable.css */
+.nt-wrapper {
     width: 100%;
     overflow-x: auto;
     border-radius: 0.5rem;
@@ -7,14 +8,14 @@
     border: 1px solid #f1f5f9;
 }
 
-.networks-table {
+.nt-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     min-width: 800px;
 }
 
-.network-table-header {
+.nt-header {
     padding: 12px 24px;
     text-align: left;
     background-color: #2c5282;
@@ -26,22 +27,22 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
-.table-row {
+.nt-row {
     transition: background-color 0.2s;
     border-bottom: 1px solid #f1f5f9;
 }
 
-.table-row:hover {
+.nt-row:hover {
     background-color: #f8fafc;
     cursor: default;
 }
 
-.table-row.selected {
+.nt-row.selected {
     background-color: #f0f9ff;
     position: relative;
 }
 
-.table-row.selected::after {
+.nt-row.selected::after {
     content: "";
     position: absolute;
     left: 0;
@@ -52,18 +53,18 @@
     border-radius: 2px;
 }
 
-.table-cell {
+.nt-cell {
     padding: 8px 24px;
     vertical-align: middle;
     font-size: 0.95rem;
 }
 
-.name-cell {
+.nt-name-cell {
     font-weight: 500;
     color: #1e293b;
 }
 
-.class-cell {
+.nt-class-cell {
     font-weight: 600;
     color: #2563eb;
     background: #eff6ff;
@@ -72,7 +73,7 @@
     display: inline-block;
 }
 
-.security-public {
+.nt-security-public {
     color: #10b981;
     background: #ecfdf5;
     padding: 4px 12px;
@@ -81,7 +82,7 @@
     display: inline-block;
 }
 
-.security-confidential {
+.nt-security-confidential {
     color: #f59e0b;
     background: #fffbeb;
     padding: 4px 12px;
@@ -90,7 +91,7 @@
     display: inline-block;
 }
 
-.security-secret {
+.nt-security-secret {
     color: #ef4444;
     background: #fef2f2;
     padding: 4px 12px;
@@ -99,7 +100,7 @@
     display: inline-block;
 }
 
-.security-top-secret {
+.nt-security-top-secret {
     color: #8b5cf6;
     background: #f5f3ff;
     padding: 4px 12px;
@@ -109,36 +110,35 @@
 }
 
 @media (max-width: 1024px) {
-    .network-table-header {
+    .nt-header {
         padding: 14px 20px;
         font-size: 0.8rem;
     }
 
-    .table-cell {
+    .nt-cell {
         padding: 14px 20px;
         font-size: 0.9rem;
     }
 
-    .edit-button {
+    .nt-edit-button {
         padding: 6px;
     }
 }
 
-.edit-button {
+.nt-edit-button {
     width: 1.5rem;
     background: none;
     border: none;
     color: #64748b;
     cursor: pointer;
     padding: 2px;
-    /* border-radius: 4px; */
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.edit-button:hover {
+.nt-edit-button:hover {
     color: #0ea5e9;
     background-color: #f1f5f9;
 }

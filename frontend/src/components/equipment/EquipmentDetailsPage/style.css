@@ -348,6 +348,21 @@
   color: #6366f1;
 }
 
+.equipment-info-item .text-purple-500 {
+  color: #8b5cf6;
+}
+
+.equipment-info-item .text-red-500 {
+  color: #ef4444;
+}
+
+/* Адаптивность для дополнительной информации */
+@media (max-width: 768px) {
+  .equipment-additional-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Editing mode styles */
 .equipment-card--editing {
   border: 1px solid rgba(37, 99, 235, 0.3);
@@ -528,5 +543,300 @@
   .structure-table td {
     padding: 0.5rem;
     font-size: 0.8125rem;
+  }
+}
+
+/* ===== Network Configuration Styles ===== */
+.network-config-card {
+  grid-column: 1 / -1;
+}
+
+.network-config-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.network-info-full-width {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
+
+.network-info-full-width .equipment-card {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .network-info-full-width {
+    margin: 0 -1rem;
+    width: calc(100% + 2rem);
+  }
+
+  .network-info-full-width .equipment-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* Network Status Row */
+.network-status-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.network-status-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+}
+
+.network-status-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.network-status-icon.active {
+  color: var(--color-success);
+}
+
+.network-status-icon.inactive {
+  color: var(--color-text-light);
+}
+
+.network-status-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  font-weight: 500;
+  flex: 1;
+}
+
+.network-status-value {
+  font-size: var(--text-base);
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+
+.network-status-value.active {
+  color: var(--color-success);
+  border-color: var(--color-success);
+  background: #f0f9ff;
+}
+
+.network-status-value.inactive {
+  color: var(--color-text-light);
+}
+
+/* Network Section */
+.network-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.network-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.5rem;
+  /* background: var(--color-bg); */
+  /* border-bottom: 1px solid var(--color-border); */
+}
+
+.network-section-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+
+.network-section-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  flex: 1;
+}
+
+.network-count {
+  background: var(--color-primary);
+  color: var(--color-white);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Networks Table */
+.networks-table-container {
+  overflow-x: auto;
+}
+
+.networks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.networks-table th {
+  background: var(--color-bg);
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.networks-table td {
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.network-row:hover {
+  background: var(--color-bg);
+}
+
+.network-name-cell {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.network-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.network-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* Badges */
+.security-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.security-public {
+  /* background-color: #f0fdf4;  */
+  color: #166534;
+  /* border: 1px solid #bbf7d0; */
+}
+
+.security-confidential {
+  /* background-color: #eff6ff;  */
+  color: #1e40af;
+  /* border: 1px solid #bfdbfe; */
+}
+
+.security-secret-table {
+  /* background-color: #fefce8;  */
+  color: #854d0e;
+  /* border: 1px solid #fde68a; */
+}
+
+.security-top_secret {
+  /* background-color: #fef2f2;  */
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.class-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  /* background: #f3f4f6; */
+  color: #374151;
+  /* border: 1px solid #e5e7eb; */
+  white-space: nowrap;
+}
+
+.ip-range,
+.throughput,
+.protocol {
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+/* Empty State */
+.networks-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-border);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .networks-table {
+    font-size: 0.8125rem;
+  }
+
+  .networks-table th,
+  .networks-table td {
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  .network-status-row {
+    grid-template-columns: 1fr;
+  }
+
+  .networks-table-container {
+    font-size: 0.75rem;
+  }
+
+  .networks-table th {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .network-config-card {
+    margin: 0 -var(--spacing-md);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }

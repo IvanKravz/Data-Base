@@ -336,7 +336,7 @@ export function FacilitiesSection() {
             <button type="button" onClick={onBack} className="back-button">
               <ArrowLeft className="back-button-icon" />
             </button>
-            <h2 className="facilities-title ml-3">
+            <h2 className="facilities-title">
               Объекты: {division?.name ? ` ${division?.name}` : ''} {subdivisionName ? ` / ${subdivisionName}` : ''}
             </h2>
           </div>

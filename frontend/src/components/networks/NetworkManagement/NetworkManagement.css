@@ -1,0 +1,119 @@
+/* NetworkManagement.css */
+.network-management-container {
+    min-height: 100vh;
+    /* background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%); */
+    /* padding: 24px; */
+}
+
+.network-management-header {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 1.4rem;
+    margin-bottom: 32px;
+    border: 1px solid #e1e8f0;
+}
+
+.network-management-header-title {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.network-management-header h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    color: #1e293b;
+    margin: 0;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.025em;
+}
+
+.network-management-content {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    position: relative;
+}
+
+/* .network-management-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4b86e5, #3672d3, #1c2fe2);
+    z-index: 1;
+} */
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .network-management-container {
+        padding: 16px;
+    }
+
+    .network-management-header {
+        padding: 20px 24px;
+        margin-bottom: 24px;
+    }
+
+    .network-management-header-title {
+        gap: 16px;
+    }
+
+    .network-management-back-button {
+        width: 44px;
+        height: 44px;
+    }
+
+    .network-management-header h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .network-management-container {
+        padding: 12px;
+    }
+
+    .network-management-header {
+        padding: 16px 20px;
+    }
+
+    .network-management-header-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .network-management-header h1 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.network-management-container {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.network-management-content {
+    animation: fadeInUp 0.4s ease-out 0.2s both;
+}

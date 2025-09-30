@@ -21,6 +21,8 @@ import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureTable } from './sections/ProductStructureTable';
 import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
+import { NetworkInfo } from './sections/NetworkInfo';
+import { AdditionalInfo } from './sections/AdditionalInfo';
 
 
 export function EquipmentDetailsPage() {
@@ -138,16 +140,19 @@ export function EquipmentDetailsPage() {
         <DocumentsInfo equipment={equipment} />
         <IdentificationInfo equipment={equipment} />
         <DatesInfo equipment={equipment} />
+        <AdditionalInfo equipment={equipment} />
         <AssignmentInfo equipment={equipment} />
         <CommentsInfo equipment={equipment} />
         <ProductStructureTable equipment={equipment} />
-        {equipment.is_network && (
-          <NetworkConfigBlock
-            equipment={equipment}
-            token={token}
-          />
-        )}
       </div>
+
+      {equipment.network_memberships.length > 0 && <NetworkInfo equipment={equipment} />}
+      {equipment.is_network && (
+        <NetworkConfigBlock
+          equipment={equipment}
+          token={token}
+        />
+      )}
 
       {equipment.status === 'disposed' && (
         <DisposalInfo

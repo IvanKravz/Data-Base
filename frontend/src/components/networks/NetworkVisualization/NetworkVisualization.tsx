@@ -10,9 +10,9 @@ interface NetworkVisualizationProps {
   memberships: any[];
   directions: any[];
   highlightedNode?: string | null;
-  selectedNode?: string | null; // Новый пропс
-  onNodeSelect?: (nodeId: string) => void; // Новый пропс
-  onClearSelection?: () => void; // Новый пропс
+  selectedNode?: string | null; 
+  onNodeSelect?: (nodeId: string) => void; 
+  onClearSelection?: () => void; 
 }
 
 const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
@@ -20,9 +20,9 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
   memberships,
   directions,
   highlightedNode: externalHighlightedNode,
-  selectedNode: externalSelectedNode, // Новый пропс
-  onNodeSelect, // Новый пропс
-  onClearSelection // Новый пропс
+  selectedNode: externalSelectedNode, 
+  onNodeSelect, 
+  onClearSelection 
 }) => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [internalHighlightedNode, setInternalHighlightedNode] = useState<string | null>(null);

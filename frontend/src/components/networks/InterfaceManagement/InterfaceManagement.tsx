@@ -87,7 +87,6 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
   return (
     <div className="management-panel">
       <div className="panel-header">
-        <h2>Управление сетевыми интерфейсами</h2>
         <button className="btn-primary" onClick={handleCreate}>
           Добавить интерфейс
         </button>

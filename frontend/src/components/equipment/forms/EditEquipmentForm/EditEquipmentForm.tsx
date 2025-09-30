@@ -11,6 +11,7 @@ import './style.css';
 import { EditCommentsCard } from './sections/EditCommentsCard';
 import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureEditor } from './sections/ProductStructureEditor';
+import { AdditionalInfo } from './sections/AdditionalInfo'; // Добавляем новый компонент
 
 interface EditEquipmentFormProps {
   initialData: Equipment;
@@ -52,6 +53,7 @@ export function EditEquipmentForm({
   const [personnel, setPersonnel] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<EquipmentCategory[]>([]);
+  const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
   const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -60,13 +62,15 @@ export function EditEquipmentForm({
 
       setIsLoading(true);
       try {
-        const [divisionsData, categoriesData] = await Promise.all([
+        const [divisionsData, categoriesData, organsData] = await Promise.all([
           divisionsApi.getDivisions(token),
           equipmentApi.getEquipmentCategories(token),
+          equipmentApi.getInterestOrgans(token),
         ]);
 
         setDivisions(divisionsData);
         setCategories(categoriesData);
+        setInterestOrgans(organsData);
 
         if (formData.division?.id) {
           const personnelData = await employeesApi.getPersonnel(token, {
@@ -103,7 +107,7 @@ export function EditEquipmentForm({
     }
   };
 
-  const handleStructureChange = (structures: ProductStructure[]) => {
+  const handleStructureChange = (structures: any[]) => {
     handleChange({ product_structures: structures });
   };
 
@@ -126,6 +130,7 @@ export function EditEquipmentForm({
       subdivision_id: formData.subdivision?.id || null,
       facility_id: formData.facility?.id || null,
       assigned_to_id: formData.assigned_to?.id || null,
+      interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null, // Добавьте эту строку
       product_structures: formData.product_structures || []
     };
 
@@ -188,7 +193,19 @@ export function EditEquipmentForm({
 
           <IdentificationInfo formData={formData} onChange={handleChange} />
 
-          <DatesInfo formData={formData} onChange={handleChange} />
+          <DatesInfo
+            formData={formData}
+            onChange={handleChange}
+            serviceLife={formData.service_life}
+            onServiceLifeChange={(value) => handleChange({ service_life: value })}
+          />
+
+          <AdditionalInfo
+            formData={formData}
+            onChange={handleChange}
+            interestOrgans={interestOrgans}
+            isDisposed={formData.status === 'disposed'}
+          />
 
           <AssignmentInfo
             formData={formData}

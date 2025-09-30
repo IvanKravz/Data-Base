@@ -1,3 +1,4 @@
+/* NetworkTabs.css */
 .network-tabs {
     background: white;
     border-radius: 8px;
@@ -7,8 +8,9 @@
 
 .tabs-header {
     display: flex;
-    background: #f8f9fa;
+    background: #ffffff;
     border-bottom: 1px solid #dee2e6;
+    position: relative;
 }
 
 .tab-button {
@@ -19,19 +21,49 @@
     font-weight: 500;
     color: #6c757d;
     transition: all 0.3s ease;
+    flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
 .tab-button:hover {
     color: #495057;
-    background: #e9ecef;
+    background: #f6f9fb;
 }
 
 .tab-button.active {
     color: #0d6efd;
-    background: white;
-    border-bottom: 2px solid #0d6efd;
 }
 
-.tab-content {
-    padding: 20px;
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background: #0d6efd;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
 }
+
+.tab-indicator[data-active-tab="vlan"] {
+    left: 0%;
+    width: 25%;
+}
+
+.tab-indicator[data-active-tab="interfaces"] {
+    left: 25%;
+    width: 25%;
+}
+
+.tab-indicator[data-active-tab="ipaddresses"] {
+    left: 50%;
+    width: 25%;
+}
+
+.tab-indicator[data-active-tab="ipranges"] {
+    left: 75%;
+    width: 25%;
+}
+
+/* .tab-content {
+    padding: 20px;
+} */

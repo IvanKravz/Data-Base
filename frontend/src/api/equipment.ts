@@ -10,7 +10,6 @@ export const equipmentApi = {
     search?: string;
     facility?: string;
   }) => {
-    console.log('params', params)
     const { data } = await api.get('/equipment/', {
       params,
       headers: {
@@ -136,5 +135,19 @@ export const equipmentApi = {
       headers: { Authorization: `Bearer ${token}` }
     });
     return data;
+  },
+  
+  getInterestOrgans: async (token: string): Promise<{ id: string; name: string }[]> => {
+    try {
+      const { data } = await api.get('/equipment/interest-organs/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error('Error fetching interest organs:', error);
+      return [];
+    }
   },
 };

@@ -9,37 +9,36 @@ interface ClassificationSectionProps {
 const ClassificationSection: React.FC<ClassificationSectionProps> = ({ currentNetwork, onChange }) => {
     return (
         <div className="network-form-section">
-            <h3 className="network-form-section-title">Классификация</h3>
-            <div className="network-form-group">
-                <label htmlFor="network_class" className="network-form-label">Класс сети</label>
-                <select
-                    id="network_class"
-                    name="network_class"
-                    value={currentNetwork.network_class || ''}
-                    onChange={onChange}
-                    className="network-form-select"
-                >
-                    <option value="">Выберите класс</option>
-                    <option value="1">1 класс</option>
-                    <option value="2">2 класс</option>
-                </select>
+            <div className="network-form-section-header">
+                <h3 className="network-form-section-title">Классификация</h3>
             </div>
-
-            <div className="network-form-group">
-                <label htmlFor="security_level" className="network-form-label">Степень секретности</label>
-                <select
-                    id="security_level"
-                    name="security_level"
-                    value={currentNetwork.security_level}
-                    onChange={onChange}
-                    className="network-form-select"
-                    required
-                >
-                    <option value="public">Открычная</option>
-                    <option value="confidential">Конфиденциальная</option>
-                    <option value="secret">Секретная</option>
-                    <option value="top_secret">Совершенно секретная</option>
-                </select>
+            <div className="network-form-section-content">
+                <div className="network-form-group">
+                    <label className="network-form-label">Класс сети</label>
+                    <select
+                        name="network_class"
+                        value={currentNetwork.network_class}
+                        onChange={onChange}
+                        className="network-form-select"
+                    >
+                        <option value="">Выберите класс</option>
+                        <option value="local">Локальная</option>
+                        <option value="global">Глобальная</option>
+                    </select>
+                </div>
+                <div className="network-form-group">
+                    <label className="network-form-label">Уровень безопасности</label>
+                    <select
+                        name="security_level"
+                        value={currentNetwork.security_level}
+                        onChange={onChange}
+                        className="network-form-select"
+                    >
+                        <option value="public">Публичная</option>
+                        <option value="confidential">Конфиденциальная</option>
+                        <option value="secret">Секретная</option>
+                    </select>
+                </div>
             </div>
         </div>
     );

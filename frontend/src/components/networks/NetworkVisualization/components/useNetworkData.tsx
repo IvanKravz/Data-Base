@@ -120,11 +120,11 @@ export const useNetworkData = (network: any, memberships: any[], directions: any
       if (facilityMembership && facilityMembership.facility) {
         const facilityNode = nodes.find(n => n.id === `facility-${facilityMembership.facility.id}`);
         if (facilityNode) {
-          const eqRadius = 6;
-          const eqAngle = (eqIndex % 6) * (Math.PI / 3);
+          const eqRadius = 7;
+          const eqAngle = (eqIndex % 8) * (Math.PI / 4);
           const eqX = facilityNode.position[0] + eqRadius * Math.cos(eqAngle);
           const eqZ = facilityNode.position[2] + eqRadius * Math.sin(eqAngle);
-          const eqY = 7;
+          const eqY = 8;
           
           nodes.push({
             id: `equipment-${eq.id}`,

@@ -1,10 +1,11 @@
 .management-panel {
     padding: 20px;
+    animation: fadeInUp 0.4s ease-out;
 }
 
 .panel-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: end;
     align-items: center;
     margin-bottom: 20px;
 }
@@ -22,9 +23,10 @@
     width: 100%;
     border-collapse: collapse;
     background: white;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
 }
 
 .data-table th,

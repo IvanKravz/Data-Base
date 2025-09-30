@@ -17,6 +17,20 @@ class EquipmentCategory(models.Model):
         verbose_name_plural = 'Категории техники'
         ordering = ['created_at']
 
+class InterestOrgan(models.Model):
+    """Модель для органов, в чьих интересах эксплуатируется техника"""
+    name = models.CharField(max_length=255, verbose_name='Наименование органа')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Орган интересов'
+        verbose_name_plural = 'Органы интересов'
+        ordering = ['name']
+
 class Equipment(models.Model):
     EQUIPMENT_STATUSES = [
         ('in-operation', 'Эксплуатируется'),
@@ -24,6 +38,13 @@ class Equipment(models.Model):
         ('defective', 'Неисправно'),
         ('for-disposal', 'На списание'),
         ('disposed', 'Списано')
+    ]
+
+    SECRET_LEVELS = [
+        ('OV', 'ОВ'),
+        ('SS', 'СС'),
+        ('SECRET', 'Секретно'),
+        ('DSP', 'ДСП'),
     ]
 
     name = models.CharField(max_length=255, verbose_name='Название')
@@ -36,6 +57,36 @@ class Equipment(models.Model):
         null=True,
         blank=True,
         verbose_name='Категория техники'
+    )
+    service_life = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name='Срок службы'
+    )
+    interest_organ = models.ForeignKey(
+        InterestOrgan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='В чьих интересах эксплуатируется'
+    )
+    secret_level = models.CharField(
+        max_length=20, 
+        choices=SECRET_LEVELS, 
+        blank=True, 
+        null=True, 
+        verbose_name='Степень секретности'
+    )
+    is_free_use = models.BooleanField(
+        default=False, 
+        verbose_name='Выдана в безвозмездное пользование'
+    )
+    free_use_act_number = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        verbose_name='Номер акта приема-передачи в безвозмездное пользование'
     )
     status = models.CharField(max_length=20, choices=EQUIPMENT_STATUSES, verbose_name='Статус')
     serial_number = models.CharField(max_length=255, verbose_name='Серийный номер', null=True, blank=True)

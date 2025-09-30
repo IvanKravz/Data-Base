@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from facilities.models import Division, Subdivision, Facility
 from users.models import Employee
-from .models import EquipmentCategory, Equipment, ProductStructure
+from .models import EquipmentCategory, Equipment, InterestOrgan, ProductStructure
 from users.serializers import EmployeeSerializer
 from django.apps import apps
 
@@ -58,12 +58,42 @@ class ACLSerializer(serializers.ModelSerializer):
         model = apps.get_model('networks', 'ACL')
         fields = '__all__'
 
+try:
+    NetworkMembership = apps.get_model('networks', 'NetworkMembership')
+    CommunicationNetwork = apps.get_model('networks', 'CommunicationNetwork')
+    
+    class SimplifiedCommunicationNetworkSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = CommunicationNetwork
+            fields = ['id', 'name', 'network_class', 'security_level', 'ip_range', 'throughput', 'protocol']
+    
+    class EquipmentNetworkMembershipSerializer(serializers.ModelSerializer):
+        network = SimplifiedCommunicationNetworkSerializer(read_only=True)
+        
+        class Meta:
+            model = NetworkMembership
+            fields = ['id', 'network']
+
+except LookupError:
+    # Если приложение networks не установлено
+    class EquipmentNetworkMembershipSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = None
+            fields = ['id']
+
+class InterestOrganSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = InterestOrgan
+        fields = ['id', 'name', 'created_at']
+
 class EquipmentSerializer(serializers.ModelSerializer):
     # Существующие поля для чтения
     assigned_to = EmployeeSerializer(read_only=True)
     division = DivisionShortSerializer(read_only=True)  # для чтения
     subdivision = SubdivisionShortSerializer(read_only=True)
     facility = FacilityShortSerializer(read_only=True)
+    interest_organ = InterestOrganSerializer(read_only=True)
     
     # Добавьте эти поля для записи
     division_id = serializers.PrimaryKeyRelatedField(
@@ -93,16 +123,39 @@ class EquipmentSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    interest_organ_id = serializers.PrimaryKeyRelatedField(
+        queryset=InterestOrgan.objects.all(),
+        write_only=True,
+        source='interest_organ',
+        required=False,
+        allow_null=True
+    )
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     category_display = serializers.SerializerMethodField()
+    secret_level_display = serializers.CharField(source='get_secret_level_display', read_only=True)
     disposal_info = serializers.SerializerMethodField()
     category = EquipmentCategorySerializer(required=False, allow_null=True)
+
+    service_life = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    secret_level = serializers.ChoiceField(
+        choices=Equipment.SECRET_LEVELS, 
+        required=False, 
+        allow_null=True
+    )
+    is_free_use = serializers.BooleanField(default=False)
+    free_use_act_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
     product_structures = ProductStructureSerializer(many=True, read_only=True)
     first_invoice = serializers.CharField(required=False, allow_null=True)
     material_invoice = serializers.CharField(required=False, allow_null=True)
     ver_software = serializers.CharField(required=False, allow_null=True)
     
     # Сетевые настройки
+    network_memberships = EquipmentNetworkMembershipSerializer(
+        many=True, 
+        read_only=True, 
+        source='networkmembership_set' 
+    )
     network_interfaces = NetworkInterfaceSerializer(many=True, read_only=True)
     vlans = VLANSerializer(many=True, read_only=True)
     ip_addresses = IPAddressSerializer(many=True, read_only=True)
@@ -123,13 +176,17 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'facility', 'assigned_to', 'comments', 'created_at', 'updated_at', 'disposal_info',
             'network_interfaces', 'vlans', 'ip_addresses', 'routing_table', 'acls',
             'network_interfaces_count', 'ip_addresses_count',
-            # добавьте новые поля для записи
-            'division_id', 'subdivision_id', 'facility_id', 'assigned_to_id'
+            'division_id', 'subdivision_id', 'facility_id', 'assigned_to_id', 'network_memberships',
+            'service_life',
+            'interest_organ', 'interest_organ_id',
+            'secret_level', 'secret_level_display',
+            'is_free_use', 'free_use_act_number'
         ]
         extra_kwargs = {
             'division': {'write_only': True},
             'subdivision': {'write_only': True},
-            'facility': {'write_only': True}
+            'facility': {'write_only': True},
+            'interest_organ': {'write_only': True}
         }
 
     def get_category_display(self, obj):
@@ -147,9 +204,21 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'comments': obj.disposal_comments
         }
     
+    def validate(self, data):
+        # Валидация для безвозмездного пользования
+        is_free_use = data.get('is_free_use', False)
+        free_use_act_number = data.get('free_use_act_number')
+        
+        if is_free_use and not free_use_act_number:
+            raise serializers.ValidationError({
+                'free_use_act_number': 'При выдаче в безвозмездное пользование необходимо указать номер акта'
+            })
+        
+        return data
+    
     def to_internal_value(self, data):
         # Обрабатываем поля связанных объектов
-        for field_name in ['division', 'subdivision', 'facility', 'assigned_to']:
+        for field_name in ['division', 'subdivision', 'facility', 'assigned_to', 'interest_organ']:
             if field_name in data and data[field_name] is not None:
                 if isinstance(data[field_name], dict) and 'id' in data[field_name]:
                     # Преобразуем объект в ID

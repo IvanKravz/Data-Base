@@ -74,6 +74,17 @@ export interface Equipment {
   disposal_comments?: string | null;
   created_at: string;
   updated_at: string;
+  service_life?: string;
+  interest_organ?: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  secret_level?: 'OV' | 'SS' | 'SECRET' | 'DSP' | null;
+  secret_level_display?: string;
+  is_free_use: boolean;
+  free_use_act_number?: string | null;
+}
 }
 
 export interface ClosedEquipmentCategory {
