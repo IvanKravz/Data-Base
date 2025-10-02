@@ -7,7 +7,7 @@
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
     border-radius: 12px;
     padding: 24px;
-    min-height: 500px;
+    min-height: 700px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
@@ -23,7 +23,7 @@
 
 .network-visualization-nodes {
     position: relative;
-    height: 500px;
+    height: 600px;
     width: 100%;
     border-radius: 8px;
     overflow: hidden;
