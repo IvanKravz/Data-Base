@@ -23,7 +23,7 @@ export const tasksApi = {
         'Authorization': `Bearer ${token}`,
       },
     });
-    return data.results;
+    return data;
   },
 
   getTaskById: async (id: string) => {

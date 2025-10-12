@@ -35,7 +35,7 @@ export const facilitiesApi = {
       } : undefined
     });
   
-    return data.results;
+    return data;
   },
 
   // Get facility by ID
@@ -126,7 +126,7 @@ export const communicationPostsApi = {
         Authorization: `Bearer ${params.token}`,
       } : undefined
     });
-    return data.results;
+    return data;
   },
 
   createCommunicationPost: async (postData: {

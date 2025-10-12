@@ -51,17 +51,34 @@ class User(AbstractUser):
         related_name='user_account',
         verbose_name='Сотрудник'
     )
-    email = models.EmailField(blank=True)
+    user_division = models.ForeignKey(
+        Division,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name='Подразделение пользователя'
+    )
+    user_subdivision = models.ForeignKey(
+        Subdivision,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name='Отделение пользователя'
+    )
+    is_global_view = models.BooleanField(
+        default=False,
+        verbose_name='Глобальный режим просмотра'
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Явно указываем related_name для groups и user_permissions
     groups = models.ManyToManyField(
         'auth.Group',
         verbose_name='groups',
         blank=True,
         help_text='The groups this user belongs to.',
-        related_name='custom_user_set',  # Уникальное имя
+        related_name='custom_user_set',
         related_query_name='custom_user'
     )
     user_permissions = models.ManyToManyField(
@@ -69,7 +86,7 @@ class User(AbstractUser):
         verbose_name='user permissions',
         blank=True,
         help_text='Specific permissions for this user.',
-        related_name='custom_user_set',  # Уникальное имя
+        related_name='custom_user_set',
         related_query_name='custom_user'
     )
 
@@ -82,6 +99,101 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    @property
+    def division(self):
+        """Автоматически определяем подразделение через сотрудника или прямое поле"""
+        if self.employee and self.employee.division:
+            return self.employee.division
+        return self.user_division  # Возвращаем прямое поле
+    
+    @property
+    def subdivision(self):
+        """Автоматически определяем отделение через сотрудника или прямое поле"""
+        if self.employee and self.employee.subdivision:
+            return self.employee.subdivision
+        return self.user_subdivision  # Возвращаем прямое поле
+    
+    def has_role(self, role_name):
+        """Проверяет, имеет ли пользователь указанную роль"""
+        from .permissions_config import get_group_name
+        return self.groups.filter(name=get_group_name(role_name)).exists()
+    
+    def get_roles(self):
+        """Возвращает список ролей пользователя"""
+        from .permissions_config import get_role_from_group
+        
+        roles = []
+        for group in self.groups.filter(name__startswith='role_'):
+            role = get_role_from_group(group.name)
+            if role:
+                roles.append(role)
+        return roles
+    
+    def get_permissions_info(self):
+        """Возвращает информацию о правах пользователя"""
+        from .permissions_config import ROLE_PERMISSIONS
+        
+        permissions = {
+            'roles': [],
+            'models': {},
+            'filters': {},
+            'modules': set()
+        }
+        
+        for role in self.get_roles():
+            if role in ROLE_PERMISSIONS:
+                role_config = ROLE_PERMISSIONS[role]
+                permissions['roles'].append({
+                    'id': role,
+                    'name': role_config['name'],
+                    'description': role_config['description']
+                })
+                
+                # Объединяем права на модели
+                for model, actions in role_config['models'].items():
+                    if model not in permissions['models']:
+                        permissions['models'][model] = set()
+                    permissions['models'][model].update(actions)
+                
+                # Объединяем фильтры
+                if 'filters' in role_config:
+                    for model, model_filters in role_config['filters'].items():
+                        if model not in permissions['filters']:
+                            permissions['filters'][model] = {}
+                        permissions['filters'][model].update(model_filters)
+        
+        # Преобразуем обратно в списки
+        permissions['models'] = {
+            model: list(actions) for model, actions in permissions['models'].items()
+        }
+        
+        # Определяем доступные модули
+        permissions['modules'] = self._get_available_modules(permissions['models'])
+        
+        return permissions
+    
+    def _get_available_modules(self, models_permissions):
+        """Определяет доступные модули на основе прав к моделям"""
+        module_mapping = {
+            'Employee': 'employees',
+            'ShaWorkerDetails': 'sha_workers',
+            'ShaEquipmentConclusion': 'sha_equipment',
+            'Equipment': 'equipment',
+            'Object': 'objects',
+            'CommunicationNetwork': 'networks',
+            'Task': 'tasks',
+            'User': 'users',
+            'Division': 'divisions',
+            'Subdivision': 'subdivisions',
+        }
+        
+        modules = set()
+        for model in models_permissions.keys():
+            if model in module_mapping:
+                modules.add(module_mapping[model])
+                
+        return list(modules)
     
 class Employee(models.Model):
     CATEGORY_CHOICES = [
@@ -295,8 +407,6 @@ class Employee(models.Model):
                     old_employee.photo.delete(save=False)
             except Employee.DoesNotExist:
                 pass
-            
-        super().save(*args, **kwargs)
 
     # Автоматически устанавливаем приоритет в зависимости от категории, должности и звания
         if self.category == 'management':
@@ -468,3 +578,17 @@ def update_employee_photo(sender, instance, created, **kwargs):
                 ...  # Существующий код для переименования файла
         except Exception as e:
             logger.error(f"Ошибка при переименовании фото: {str(e)}")
+
+@receiver(post_save, sender=User)
+def assign_default_role(sender, instance, created, **kwargs):
+    """Назначаем роль по умолчанию при создании пользователя"""
+    if created and not instance.groups.exists():
+        from django.contrib.auth.models import Group
+        from .permissions_config import get_group_name
+        
+        # Назначаем роль обычного пользователя, если она существует
+        try:
+            default_group = Group.objects.get(name=get_group_name('user'))
+            instance.groups.add(default_group)
+        except Group.DoesNotExist:
+            pass

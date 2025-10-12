@@ -135,7 +135,7 @@
 .selected-subdivision-title h3 {
   margin: 0;
   font-size: 1.25rem;
-  
+
   color: #2d3748;
 }
 
@@ -162,8 +162,10 @@
   border: 1px solid #e2e8f0;
 }
 
+
 /* Responsive styles */
 @media (max-width: 768px) {
+
   .main-filters,
   .sha-filters,
   .officer-filters {

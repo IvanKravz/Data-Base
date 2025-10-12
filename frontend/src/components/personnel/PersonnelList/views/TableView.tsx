@@ -80,10 +80,10 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
               </td>
               <td className="table-cell">
                 <div className="text-sm text-gray-900">
-                  {person.division?.name}
+                  {person.division?.name || '—'}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {person.subdivision?.name}
+                  {person.subdivision?.name || ''}
                 </div>
               </td>
               <td className="table-cell">
@@ -94,8 +94,8 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
               </td>
               <td className="table-cell">
                 <div className="text-sm text-gray-900">
-                {person.sha_details && `${person.sha_details.access_level} класс / `} 
-                {person.form_state_secrets}
+                  {person.sha_details && `${person.sha_details.access_level} класс / `}
+                  {person.form_state_secrets}
                 </div>
               </td>
               <td className="table-cell text-right">

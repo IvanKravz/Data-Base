@@ -1,3 +1,4 @@
+// MainLayout.tsx
 import React, { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './Layout';
@@ -5,13 +6,11 @@ import { MainContent } from './MainContent';
 import { DivisionDetails } from './divisions/DivisionDetails/DivisionDetails';
 import { PersonnelDetails } from './personnel/PersonnelDetails/PersonnelDetails';
 import { FacilityDetails } from './facilities/FacilityDetails/FacilityDetails';
-import { TasksSection } from './tasks';
 import { StorageSection } from './storage/StorageSection';
 import { CabinetSection } from './cabinet/CabinetSection';
 import { UserMenu } from './common/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
 import { ClosedFacilitiesPage } from './facilities/ClosedFacilitiesPage/ClosedFacilitiesPage';
-import { PersonnelPage } from './personnel/PersonnelPage/PersonnelPage';
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection';
@@ -32,8 +31,6 @@ export function MainLayout() {
   const [viewTypes, setViewTypes] = useState<Record<string, 'grid' | 'table'>>({
     divisions: 'grid',
     equipment: 'grid',
-    'equipment-open': 'grid',
-    'equipment-closed': 'grid',
     personnel: 'table',
     facilities: 'grid',
     tasks: 'list'
@@ -57,6 +54,12 @@ export function MainLayout() {
             />
         } />
 
+        {/* Global Routes (без привязки к подразделению) */}
+        <Route path="/personnel" element={<PersonnelSection />} />
+        <Route path="/equipment" element={<EquipmentSection />} />
+        <Route path="/facilities" element={<FacilitiesSection />} />
+        <Route path="/tasks" element={<DivisionTasksSection />} />
+
         {/* Division Routes */}
         <Route path="/divisions/:id" element={<DivisionDetails />} />
         <Route path="/divisions/:id/personnel" element={<PersonnelSection />} />
@@ -73,7 +76,6 @@ export function MainLayout() {
         <Route path="/equipment/:id" element={<EquipmentDetailsPage />} />
 
         {/* Personnel Routes */}
-        <Route path="/personnel" element={<PersonnelPage />} />
         <Route path="/personnel/create" element={<CreatePersonnelForm />} />
         <Route path="/personnel/:id" element={<PersonnelDetails />} />
         <Route path="/personnel/:id/qualitative" element={<QualitativeCharacteristics />} />
@@ -88,7 +90,6 @@ export function MainLayout() {
         <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
                 
         {/* Other Routes */}
-        <Route path="/tasks" element={<TasksSection />} />
         <Route path="/storage" element={<StorageSection />} />
         <Route path="/cabinet" element={<CabinetSection />} />
 

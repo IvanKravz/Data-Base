@@ -1,5 +1,6 @@
+// Sidebar.tsx
 import React, { useState } from 'react';
-import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight, Trash2 } from 'lucide-react';
+import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -38,26 +39,9 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
 
   const menuItems: MenuItem[] = [
     { id: 'divisions', icon: LayoutGrid, label: 'Подразделения' },
-    {
-      id: 'equipment',
-      icon: Database,
-      label: 'Техника',
-      children: [
-        { id: 'equipment-open', icon: Database, label: 'Открытая', path: '/equipment-open' },
-        { id: 'equipment-closed', icon: Database, label: 'Закрытая', path: '/equipment-closed' },
-        { id: 'equipment-disposed', icon: Trash2, label: 'Списанное', path: '/equipment-disposed' }
-      ]
-    },
-    { id: 'personnel', icon: Users, label: 'Сотрудники' },
-    {
-      id: 'facilities',
-      icon: Building2,
-      label: 'Объекты',
-      children: [
-        { id: 'facilities-open', icon: Building2, label: 'Открытые', path: '/facilities-open' },
-        { id: 'facilities-closed', icon: Building2, label: 'Закрытые', path: '/facilities-closed' }
-      ]
-    },
+    { id: 'equipment', icon: Database, label: 'Техника', path: '/equipment' },
+    { id: 'personnel', icon: Users, label: 'Сотрудники', path: '/personnel' },
+    { id: 'facilities', icon: Building2, label: 'Объекты', path: '/facilities' },
     { id: 'tasks', icon: ListTodo, label: 'Задачи', path: '/tasks' },
     { id: 'storage', icon: HardDrive, label: 'Хранилище', path: '/storage' },
     { id: 'cabinet', icon: UserCog, label: 'Кабинет', path: '/cabinet' }
@@ -65,8 +49,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
 
   const renderMenuItem = (item: MenuItem, level = 0) => {
     const isExpanded = expandedItems.includes(item.id);
-    const isActive = activeTab === item.id ||
-      (item.children?.some(child => activeTab === child.id));
+    const isActive = activeTab === item.id;
     const hasChildren = item.children && item.children.length > 0;
     const Icon = item.icon;
 

@@ -55,21 +55,52 @@ export const employeesApi = {
     return data;
   },
 
-  getPersonnel: async (token: string, params?: {
-    division?: string | null;
-    isMaterialResponsible?: boolean;
-    isShaWorker?: boolean;
-    accessLevel?: string;
-    search?: string;
-  }): Promise<Employee[]> => {
-    const response = await api.get<Employee[]>('users/employees/', {
-      params: params || {}, // Просто передаем params как есть
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  getPersonnel: async (token: string, params?: any): Promise<Employee[]> => {
+    // Добавляем сортировку по умолчанию в параметры
+    const requestParams = {
+      ordering: 'priority,full_name', // Сортировка по приоритету и ФИО
+      ...params
+    };
 
-    return response.data;
+    let allEmployees: Employee[] = [];
+    let nextUrl: string | null = 'users/employees/';
+  
+    while (nextUrl) {
+      const response = await api.get<{ results: Employee[], next: string | null }>(nextUrl, {
+        // Для первого запроса используем параметры, для последующих - не используем, так как nextUrl уже содержит параметры
+        params: nextUrl.includes('users/employees/') ? requestParams : undefined,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+  
+      // Обрабатываем разные форматы ответа (с пагинацией и без)
+      let employees: Employee[];
+      let next: string | null;
+  
+      if (Array.isArray(response.data)) {
+        // Если ответ - массив (без пагинации)
+        employees = response.data;
+        next = null;
+      } else {
+        // Если ответ с пагинацией
+        employees = response.data.results || [];
+        next = response.data.next;
+      }
+  
+      allEmployees = [...allEmployees, ...employees];
+      nextUrl = next;
+    }
+  
+    // Дополнительная сортировка на клиенте для гарантии
+    return allEmployees.sort((a, b) => {
+      // Сначала по приоритету (чем меньше число, тем выше приоритет)
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority;
+      }
+      // Если приоритеты равны, сортируем по ФИО
+      return a.full_name.localeCompare(b.full_name);
+    });
   },
 
   // Get person by ID
@@ -84,7 +115,10 @@ export const employeesApi = {
 
   // Create new person
   createPerson: async (token: string, personData: Omit<Employee, 'id'>) => {
-    const { data } = await api.post('users/employees/', personData, {
+    // Очищаем данные от любого возможного id
+    const { id, ...cleanData } = personData as any;
+
+    const { data } = await api.post('users/employees/', cleanData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -95,30 +129,6 @@ export const employeesApi = {
 
   // Update existing person
   updatePerson: async (token: string, id: string, personData: Partial<Employee>) => {
-    // Подготавливаем данные для отправки
-    // const dataToSend = {
-    //   ...personData,
-    //   // Преобразуем даты в строки, если они есть
-    //   birth_date: personData.birth_date ? formatDate(personData.birth_date) : undefined,
-    //   contract_date: personData.contract_date ? formatDate(personData.contract_date) : undefined,
-    //   data_state_secrets: personData.data_state_secrets ? formatDate(personData.data_state_secrets) : undefined,
-    //   year_graduation: personData.year_graduation ? formatDate(personData.year_graduation) : undefined,
-    //   date_start_work: personData.date_start_work ? formatDate(personData.date_start_work) : undefined,
-    //   date_end_work: personData.date_end_work ? formatDate(personData.date_end_work) : undefined,
-    //   order_rank: personData.order_rank || null,
-    //   // Убираем лишние поля, которые бэкенд не ожидает
-    //   id: undefined,
-    //   created_at: undefined,
-    //   updated_at: undefined,
-    //   division: undefined,
-    //   subdivision: undefined,
-    //   // Обрабатываем подразделения
-    //   division_id: personData.division?.id || null,
-    //   subdivision_id: personData.subdivision?.id || null,
-    //   // Обрабатываем sha_details
-    //   sha_details: personData.is_sha_worker ? personData.sha_details : null
-    // };
-
     const { data } = await api.patch(`users/employees/${id}/`, personData, {
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +142,7 @@ export const employeesApi = {
   deletePerson: async (token: string, id: string) => {
     await api.delete(`users/employees/${id}/`, {
       headers: {
-        'Authorization': `Bearer ${token}`, // Передача токена в заголовке
+        'Authorization': `Bearer ${token}`,
       },
     });
   },
@@ -185,8 +195,6 @@ export const employeesApi = {
     });
     return data;
   },
-
-
 };
 
 function formatDate(date: string | Date): string {

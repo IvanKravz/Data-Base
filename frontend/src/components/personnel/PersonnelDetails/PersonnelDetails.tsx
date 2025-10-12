@@ -9,7 +9,7 @@ import { ResponsibilityInfo } from './sections/ResponsibilityInfo';
 import { AssignedEquipment } from './sections/AssignedEquipment';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updatePersonAsync, fetchPersonById } from '../../../store/slices/personnelSlice';
-import { employeesApi } from '../../../api';
+import { employeesApi, authApi } from '../../../api'; // ИМПОРТИРУЕМ authApi
 import { CommentsInfo } from './sections/CommentsInfo';
 import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
@@ -27,6 +27,9 @@ export function PersonnelDetails() {
   const person = personnel.find(p => p.id == id);
   const token = localStorage.getItem('accessToken');
 
+  // ПОЛУЧАЕМ РЕЖИМ ПРОСМОТРА ИЗ localStorage ЧЕРЕЗ authApi
+  const isGlobalView = authApi.getGlobalView();
+
   useEffect(() => {
     if (id && token && !person) {
       dispatch(fetchPersonById({ token, id }));
@@ -39,43 +42,42 @@ export function PersonnelDetails() {
     let previewUrl: string | null = null;
 
     try {
-        // 1. Create preview URL
-        previewUrl = URL.createObjectURL(file);
-        const updatedPerson = { ...person, photo_url: previewUrl };
+      // 1. Create preview URL
+      previewUrl = URL.createObjectURL(file);
+      const updatedPerson = { ...person, photo_url: previewUrl };
 
-        // 2. Optimistic update
-        dispatch(updatePersonAsync({
-            token,
-            id,
-            personData: updatedPerson
-        }));
+      // 2. Optimistic update
+      dispatch(updatePersonAsync({
+        token,
+        id,
+        personData: updatedPerson
+      }));
 
-        // 3. Upload to server
-        await employeesApi.uploadPhoto(token, id, file);
+      // 3. Upload to server
+      await employeesApi.uploadPhoto(token, id, file);
 
-        // 4. Refresh data
-        await dispatch(fetchPersonById({ token, id }));
+      // 4. Refresh data
+      await dispatch(fetchPersonById({ token, id }));
 
     } catch (error) {
-        console.error('Photo upload error:', error);
-        // Rollback on error
-        await dispatch(updatePersonAsync({
-            token,
-            id,
-            personData: person
-        }));
-        message.error('Photo upload failed');
+      console.error('Photo upload error:', error);
+      // Rollback on error
+      await dispatch(updatePersonAsync({
+        token,
+        id,
+        personData: person
+      }));
+      message.error('Photo upload failed');
     } finally {
-        // Clean up
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
+      // Clean up
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     }
-};
+  };
 
   const handlePhotoRemove = async () => {
     await employeesApi.deletePhoto(token, id);
     await dispatch(fetchPersonById({ token, id })); // Получаем свежие данные
   };
-  
 
   if (error) {
     return (
@@ -106,7 +108,17 @@ export function PersonnelDetails() {
   }
 
   const handleBack = () => {
-    navigate(`/divisions/${person.division?.id}/personnel`);
+    if (isGlobalView && !person?.division?.id) {
+      // Если в глобальном режиме просмотра - просто назад в истории
+      navigate(`/personnel`);
+    } else {
+      // Иначе - возврат к списку персонала подразделения
+      if (person?.division?.id && !isGlobalView) {
+        navigate(`/divisions/${person.division.id}/personnel`);
+      } else {
+        navigate(`/personnel`);
+      }
+    }
   };
 
   const handleUpdate = async (updatedPerson: Employee) => {
@@ -123,7 +135,14 @@ export function PersonnelDetails() {
   const handleConfirmDelete = async () => {
     if (token && id) {
       await employeesApi.deletePerson(token, id);
-      navigate(`/divisions/${person.division?.id}/personnel`);
+      // При удалении используем ту же логику навигации, что и при возврате
+      if (isGlobalView) {
+        navigate(-1);
+      } else if (person?.division?.id) {
+        navigate(`/divisions/${person.division.id}/personnel`);
+      } else {
+        navigate(-1);
+      }
     }
   };
 

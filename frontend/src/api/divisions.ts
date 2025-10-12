@@ -8,7 +8,7 @@ export const divisionsApi = {
         Authorization: `Bearer ${token}`, // Передача токена в заголовке
       },
     });
-    return data.results;
+    return data;
   },
 
   // Get division by ID

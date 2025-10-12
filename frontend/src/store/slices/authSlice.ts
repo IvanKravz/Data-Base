@@ -8,6 +8,7 @@ interface User {
   department: string;
   division: string;
   subdivision?: string;
+  is_global_view: boolean;
 }
 
 interface AuthState {
@@ -49,8 +50,21 @@ const authSlice = createSlice({
       state.error = null;
       state.loading = false;
     },
+    // ДОБАВЛЯЕМ ДЕЙСТВИЕ ДЛЯ ОБНОВЛЕНИЯ РЕЖИМА ПРОСМОТРА
+    updateGlobalView: (state, action: PayloadAction<boolean>) => {
+      if (state.user) {
+        state.user.is_global_view = action.payload;
+      }
+    },
   },
 });
 
-export const { setUser, setLoading, setError, logout, clearAuthState } = authSlice.actions;
+export const { 
+  setUser, 
+  setLoading, 
+  setError, 
+  logout, 
+  clearAuthState, 
+  updateGlobalView 
+} = authSlice.actions;
 export default authSlice.reducer;

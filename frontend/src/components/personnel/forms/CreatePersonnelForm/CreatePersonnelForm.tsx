@@ -9,11 +9,10 @@ export function CreatePersonnelForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
-  const [error, setError] = useState<string | null>(null); // Добавлено состояние ошибки
+  const [error, setError] = useState<string | null>(null);
 
-  // Начальные данные для нового сотрудника
-  const initialEmployee: Employee = {
-    id: 0,
+  // Убрали id из начальных данных
+  const initialEmployee: Omit<Employee, 'id'> & { id?: number } = {
     full_name: '',
     personal_phone: '',
     work_phone: '',
@@ -44,18 +43,17 @@ export function CreatePersonnelForm() {
     setError(null);
   
     try {
-      const createdEmployee = await employeesApi.createPerson(token, employee);
+      // Убедимся, что id не передается при создании
+      const { id: _, ...employeeWithoutId } = employee;
       
-      // Проверяем что сотрудник создан и id подразделения доступен
+      const createdEmployee = await employeesApi.createPerson(token, employeeWithoutId);
+      
       if (createdEmployee && createdEmployee.id) {
-        // Используем id из созданного сотрудника (createdEmployee.division.id)
-        // или из URL параметров, если division не вернулся
         const divisionId = createdEmployee.division?.id || id;
         
         if (divisionId) {
           navigate(`/divisions/${divisionId}/personnel`);
         } else {
-          // Если divisionId не определен, переходим на общую страницу
           navigate('/divisions');
         }
       } else {
@@ -79,7 +77,6 @@ export function CreatePersonnelForm() {
         Создание нового сотрудника
       </div>
 
-      {/* Отображение ошибки */}
       {error && (
         <div className="form-error-message">
           {error}
@@ -87,7 +84,7 @@ export function CreatePersonnelForm() {
       )}
 
       <EditPersonnelForm
-        person={initialEmployee}
+        person={initialEmployee as Employee}
         onSubmit={handleCreate}
         onCancel={() => navigate(-1)}
         isCreateMode={true}

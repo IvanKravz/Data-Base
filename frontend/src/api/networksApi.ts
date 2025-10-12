@@ -17,7 +17,7 @@ export const networksApi = {
       headers: { Authorization: `Bearer ${token}` },
       params
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   getNetwork: async (token: string, id: string): Promise<CommunicationNetwork> => {
@@ -53,7 +53,7 @@ export const networksApi = {
     const { data } = await api.get(`/networks/network-memberships/?network=${networkId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createNetworkMembership: async (token: string, membershipData: any) => {
@@ -92,7 +92,7 @@ export const networksApi = {
     const { data } = await api.get(`/networks/network-directions/?network=${networkId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createNetworkDirection: async (token: string, directionData: any) => {
@@ -130,7 +130,7 @@ export const networksApi = {
     const { data } = await api.get('/networks/vlans/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createVlan: async (token: string, vlanData: Omit<VLAN, 'id'>) => {
@@ -158,7 +158,7 @@ export const networksApi = {
     const { data } = await api.get('/networks/network-interfaces/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createNetworkInterface: async (token: string, interfaceData: Omit<NetworkInterface, 'id'>) => {
@@ -179,7 +179,7 @@ export const networksApi = {
     const { data } = await api.get('/networks/ip-addresses/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createIPAddress: async (token: string, ipData: Omit<IPAddress, 'id'>) => {
@@ -207,7 +207,7 @@ export const networksApi = {
     const { data } = await api.get('/networks/ip-ranges/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   createIPRange: async (token: string, rangeData: Omit<IPRange, 'id'>) => {
@@ -235,7 +235,7 @@ export const networksApi = {
     const { data } = await api.get('/equipment/', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data) ? data : data || [];
   },
 
   updateRoutingTable: async (token: string, id: string, routeData: Partial<RoutingTable>) => {

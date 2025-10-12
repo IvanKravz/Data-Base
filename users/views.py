@@ -1,111 +1,149 @@
-import os
-from venv import logger
+# views.py
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
-from django.db.models import Q
+from rest_framework import viewsets, status, filters
 from rest_framework.parsers import MultiPartParser
-from rest_framework.decorators import action
-from django.views.decorators.cache import never_cache
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from .models import User, ShaWorkerDetails
-from .serializers import EmployeeDictionariesSerializer, EmployeePhotoSerializer, UserSerializer, TokenObtainPairSerializer
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 
-from rest_framework import viewsets, permissions
 from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
-from .serializers import UserSerializer, EmployeeSerializer, ShaWorkerDetailsSerializer, ShaEquipmentConclusionSerializer
+from .serializers import (
+    EmployeeDictionariesSerializer, UserSerializer, 
+    TokenObtainPairSerializer, EmployeeSerializer, ShaWorkerDetailsSerializer, 
+    ShaEquipmentConclusionSerializer
+)
+from .permissions import RoleBasedPermission, IsAdmin
+from .mixins import RoleBasedFilterMixin, UserAccessMixin
 
-class UserViewSet(viewsets.ModelViewSet):
+
+class BaseViewSet(viewsets.ModelViewSet):
+    """
+    Базовый ViewSet с общей логикой для всех моделей
+    """
+    
+    def check_view_only_restrictions(self):
+        """Проверяет ограничения для пользователей с правами только на просмотр"""
+        from .permissions import RoleBasedPermission
+        if RoleBasedPermission.is_view_only_user(self.request.user):
+            if self.action in ['create', 'update', 'partial_update', 'destroy']:
+                raise PermissionDenied('Ваши роли позволяют только просматривать данные без возможности изменений')
+
+    def create(self, request, *args, **kwargs):
+        self.check_view_only_restrictions()
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self.check_view_only_restrictions()
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self.check_view_only_restrictions()
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self.check_view_only_restrictions()
+        return super().destroy(request, *args, **kwargs)
+
+
+class UserViewSet(UserAccessMixin, BaseViewSet):
+    """
+    ViewSet для управления пользователями
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Админы и суперпользователи видят всех
+        if self.request.user.is_superuser or self.request.user.has_role('admin'):
+            return queryset
+        
+        # Остальные - только себя
+        return queryset.filter(id=self.request.user.id)
+    
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Возвращает информацию о текущем пользователе"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
-class EmployeeViewSet(APIView):
-    permission_classes = [IsAuthenticated]  # или [permissions.IsAdminUser] для ограничения доступа
 
-    def get(self, request, pk=None):
-        if pk:
-            # Получение конкретного сотрудника
-            try:
-                employee = Employee.objects.get(pk=pk)
-                serializer = EmployeeSerializer(employee)
-                return Response(serializer.data)
-            except Employee.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-        else:
-            # Получение списка сотрудников с сортировкой по приоритету
-            employees = Employee.objects.all().order_by('priority', 'full_name')
-            serializer = EmployeeSerializer(employees, many=True)
-            return Response(serializer.data)
+class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
+    """
+    ViewSet для управления сотрудниками
+    """
+    queryset = Employee.objects.all().order_by('priority', 'full_name')
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['priority', 'full_name', 'category', 'position']
+    ordering = ['priority', 'full_name']
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
+    @action(detail=False, methods=['get'])
+    def dictionaries(self, request):
+        """Возвращает справочники для формы сотрудника"""
+        data = {
+            'categories': [{'value': c[0], 'label': c[1]} for c in Employee.get_category_choices()],
+            'subcategories': [{'value': c[0], 'label': c[1]} for c in Employee.get_subcategory_choices()],
+            'officer_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_officer_positions()],
+            'warrant_officer_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_warrant_officer_positions()],
+            'civilian_positions': [{'value': p[0], 'label': p[1]} for p in Employee.get_civilian_positions()],
+            'management_officer_ranks': [{'value': p[0], 'label': p[1]} for p in Employee.get_management_officer_ranks()],
+            'officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_officer_ranks()],
+            'warrant_officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_warrant_officer_ranks()],
+        }
+        serializer = EmployeeDictionariesSerializer(data)
+        return Response(serializer.data)
 
-    def post(self, request):
-        serializer = EmployeeSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
-    def patch(self, request, pk):
-        try:
-            employee = Employee.objects.get(pk=pk)
-        except Employee.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = EmployeeSerializer(
-            employee, 
-            data=request.data, 
-            partial=True,
-            context={'request': request}
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk):
-        try:
-            employee = Employee.objects.get(pk=pk)
-        except Employee.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        serializer = EmployeeSerializer(employee, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        try:
-            employee = Employee.objects.get(pk=pk)
-        except Employee.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        employee.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-class ShaWorkerViewSet(viewsets.ModelViewSet):
+class ShaWorkerViewSet(RoleBasedFilterMixin, BaseViewSet):
+    """
+    ViewSet для управления ШаРаботниками
+    """
     queryset = ShaWorkerDetails.objects.all()
     serializer_class = ShaWorkerDetailsSerializer
-    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
 
-class ShaEquipmentConclusionViewSet(viewsets.ModelViewSet):
+
+class ShaEquipmentConclusionViewSet(RoleBasedFilterMixin, BaseViewSet):
+    """
+    ViewSet для управления заключениями на технику
+    """
     queryset = ShaEquipmentConclusion.objects.all()
     serializer_class = ShaEquipmentConclusionSerializer
-    permission_classes = [IsAuthenticated] #[permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
+
 
 class TokenObtainPairView(BaseTokenObtainPairView):
+    """
+    View для получения JWT токена
+    """
     serializer_class = TokenObtainPairSerializer
     permission_classes = [AllowAny]
 
+
 class TokenRefreshView(BaseTokenRefreshView):
+    """
+    View для обновления JWT токена
+    """
     permission_classes = [AllowAny]
 
+
 class RegisterView(APIView):
+    """
+    View для регистрации новых пользователей
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -127,8 +165,37 @@ class RegisterView(APIView):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+
+class UserProfileView(APIView):
+    """
+    View для получения профиля текущего пользователя
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
+class AvailableModulesView(APIView):
+    """
+    View для получения доступных модулей текущего пользователя
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        permissions_info = request.user.get_permissions_info()
+        return Response({
+            'modules': permissions_info['modules'],
+            'permissions': permissions_info
+        })
+
+
 class EmployeeDictionariesView(APIView):
+    """
+    View для получения справочников сотрудников
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -144,12 +211,24 @@ class EmployeeDictionariesView(APIView):
         }
         serializer = EmployeeDictionariesSerializer(data)
         return Response(serializer.data)
-    
+
+
 class EmployeePhotoView(APIView):
+    """
+    View для управления фотографиями сотрудников
+    """
     parser_classes = [MultiPartParser]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
+    
+    def check_view_only_restrictions(self):
+        """Проверяет ограничения для пользователей с правами только на просмотр"""
+        from .permissions import RoleBasedPermission
+        if RoleBasedPermission.is_view_only_user(self.request.user):
+            raise PermissionDenied('Ваши роли позволяют только просматривать данные без возможности изменений')
     
     def patch(self, request, pk):
+        self.check_view_only_restrictions()
+        
         employee = get_object_or_404(Employee, pk=pk)
         new_photo = request.FILES.get('photo')
         
@@ -160,38 +239,35 @@ class EmployeePhotoView(APIView):
             )
         
         try:
-            # Delete old photo if exists
             if employee.photo:
                 employee.photo.delete(save=False)
             
-            # Save new photo
             employee.photo = new_photo
             employee.save()
             
-            # Return simple response without URL encoding
             return Response({
                 'id': employee.id,
                 'photo_url': employee.photo.url if employee.photo else None
             })
             
         except Exception as e:
-            logger.error(f"Error updating photo: {str(e)}")
             return Response(
                 {'error': 'Failed to update photo'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
     def delete(self, request, pk):
+        self.check_view_only_restrictions()
+        
         employee = get_object_or_404(Employee, pk=pk)
         
         try:
-            if employee.photo or employee.photo_url:
+            if employee.photo:
                 employee.delete_photo()
-                # Возвращаем JSON с id и явным photo_url: null
                 return Response(
                     {
                         'id': employee.id,
-                        'photo_url': None  # Явно указываем null
+                        'photo_url': None
                     },
                     headers={
                         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -205,8 +281,32 @@ class EmployeePhotoView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            logger.error(f"Ошибка удаления фото: {str(e)}")
             return Response(
                 {'error': 'Failed to delete photo'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class SystemInfoView(APIView):
+    """
+    View для получения системной информации
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        return Response({
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'roles': user.get_roles(),
+                'division': user.division.name if user.division else None,
+                'subdivision': user.subdivision.name if user.subdivision else None,
+            },
+            'permissions': user.get_permissions_info(),
+            'system': {
+                'total_employees': Employee.objects.count(),
+                'total_sha_workers': Employee.objects.filter(is_sha_worker=True).count(),
+                'total_users': User.objects.count(),
+            }
+        })

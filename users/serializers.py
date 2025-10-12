@@ -1,3 +1,4 @@
+# serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
@@ -8,7 +9,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -18,11 +18,55 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         return data
 
 class UserSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+    division_info = serializers.SerializerMethodField()
+    
+    # ИСПОЛЬЗУЙТЕ РЕАЛЬНЫЕ ПОЛЯ
+    user_division_id = serializers.PrimaryKeyRelatedField(
+        queryset=Division.objects.all(),
+        source='user_division',
+        required=False,
+        allow_null=True,
+        write_only=True
+    )
+    user_subdivision_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subdivision.objects.all(),
+        source='user_subdivision',
+        required=False,
+        allow_null=True,
+        write_only=True
+    )
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'is_staff', 'is_active', 'date_joined']
+        fields = [
+            'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined',
+            'roles', 'permissions', 'division_info', 'user_division_id', 'user_subdivision_id',
+            'is_global_view'
+        ]
         read_only_fields = ['is_staff', 'is_active', 'date_joined']
+    
+    def get_roles(self, obj):
+        return obj.get_roles()
+    
+    def get_permissions(self, obj):
+        return obj.get_permissions_info()
+    
+    def get_division_info(self, obj):
+        # Используем свойства division и subdivision
+        if obj.division:
+            return {
+                'id': obj.division.id,
+                'name': obj.division.name,
+                'subdivision': {
+                    'id': obj.subdivision.id,
+                    'name': obj.subdivision.name
+                } if obj.subdivision else None
+            }
+        return None
 
+# Существующие сериализаторы для оборудования и ШаРаботников
 class ShaEquipmentConclusionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShaEquipmentConclusion
@@ -30,8 +74,8 @@ class ShaEquipmentConclusionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']   
 
 class ShaWorkerDetailsSerializer(serializers.ModelSerializer):
-    equipment_conclusions = ShaEquipmentConclusionSerializer(many=True, required=False)  # Добавляем поле equipment_conclusions
-    start_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])  # Указываем формат DD-MM-YYYY
+    equipment_conclusions = ShaEquipmentConclusionSerializer(many=True, required=False)
+    start_date = serializers.DateField(format="%d-%m-%Y", input_formats=["%d-%m-%Y", "iso-8601"])
     
     class Meta:
         model = ShaWorkerDetails
@@ -53,44 +97,20 @@ class EmployeeSerializer(serializers.ModelSerializer):
     division = DivisionSerializer(read_only=True)
     subdivision = SubdivisionSerializer(read_only=True)
     sha_details = ShaWorkerDetailsSerializer(required=False, allow_null=True)
-    birth_date = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
-    contract_date = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
-    data_state_secrets = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
-    year_graduation = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
-    date_start_work = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
-    date_end_work = serializers.DateField(
-        format="%d-%m-%Y", 
-        input_formats=["%d-%m-%Y", "iso-8601"],
-        allow_null=True,
-        required=False
-    )
     
-    # Для записи используем PrimaryKeyRelatedField
+    # Поля дат с форматом
+    date_fields = ['birth_date', 'contract_date', 'data_state_secrets', 
+                   'year_graduation', 'date_start_work', 'date_end_work']
+    
+    # Динамическое создание полей дат
+    for field_name in date_fields:
+        vars()[field_name] = serializers.DateField(
+            format="%d-%m-%Y", 
+            input_formats=["%d-%m-%Y", "iso-8601"],
+            allow_null=True,
+            required=False
+        )
+    
     division_id = serializers.PrimaryKeyRelatedField(
         queryset=Division.objects.all(),
         source='division',
@@ -116,35 +136,44 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = '__all__'
+        read_only_fields = ['id']
         extra_kwargs = {
-            'photo': {'write_only': True},# Чтобы само изображение не возвращалось в ответе
+            'photo': {'write_only': True},
             'order_rank': {'required': False, 'allow_blank': True},
             'division': {'required': False},
             'subdivision': {'required': False},
         }
 
     def get_photo_url(self, obj):
-        """Возвращаем только относительный путь или None"""
         if not obj.photo:
             return None
-            
         try:
-            return obj.photo.url  # Только относительный путь
+            return obj.photo.url
         except Exception:
             return None
     
-    def validate_photo(self, value):
-        if value:
-            # Проверка размера файла (например, не более 2MB)
-            if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError("Фото слишком большое. Максимальный размер - 2MB.")
-            # Проверка типа файла
-            if not value.name.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-                raise serializers.ValidationError("Неподдерживаемый формат изображения. Используйте JPG или PNG.")
-        return value
+    def validate(self, data):
+        """Дополнительная валидация на основе ролей пользователя"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user = request.user
+            
+            # Проверяем, имеет ли пользователь только права просмотра
+            from .permissions import RoleBasedPermission
+            if RoleBasedPermission.is_view_only_user(user):
+                if self.instance:  # Если это обновление существующего объекта
+                    raise serializers.ValidationError({
+                        'detail': 'Ваши роли позволяют только просматривать данные без возможности изменений'
+                    })
+                else:  # Если это создание нового объекта
+                    raise serializers.ValidationError({
+                        'detail': 'Ваши роли не позволяют создавать новые записи'
+                    })
+                    
+        return data
 
     def to_internal_value(self, data):
-        # Handle division
+        # Обработка division и subdivision
         if 'division' in data:
             if isinstance(data['division'], dict) and 'id' in data['division']:
                 data['division_id'] = data['division']['id']
@@ -152,7 +181,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 data['division_id'] = None
             data.pop('division', None)
 
-        # Handle subdivision
         if 'subdivision' in data:
             if isinstance(data['subdivision'], dict) and 'id' in data['subdivision']:
                 data['subdivision_id'] = data['subdivision']['id']
@@ -163,50 +191,52 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
     def create(self, validated_data):
+        # Явно удаляем id, если он каким-то образом попал в validated_data
+        validated_data.pop('id', None)
+        
         division = validated_data.pop('division', None)
         subdivision = validated_data.pop('subdivision', None)
         sha_details_data = validated_data.pop('sha_details', None)
         is_sha_worker = validated_data.get('is_sha_worker', False)
         create_user = validated_data.pop('create_user', False)
 
-        employee = Employee.objects.create(
-            division=division,
-            subdivision=subdivision,
-            **validated_data
-        )
-
-        # Создаем пользователя если требуется
-        if create_user:
-            User = get_user_model()
-            username = f"{employee.full_name.split()[0].lower()}{employee.id}"
-            user = User.objects.create_user(
-                username=username,
-                password='defaultpassword',
-                employee=employee
+        try:
+            employee = Employee.objects.create(
+                division=division,
+                subdivision=subdivision,
+                **validated_data
             )
 
-        # Обрабатываем данные ШаРаботника
-        if is_sha_worker and sha_details_data:
-            equipment_conclusions_data = sha_details_data.pop('equipment_conclusions', [])
-            sha_details = ShaWorkerDetails.objects.create(employee=employee, **sha_details_data)
+            if create_user:
+                User = get_user_model()
+                username = f"{employee.full_name.split()[0].lower()}{employee.id}"
+                user = User.objects.create_user(
+                    username=username,
+                    password='defaultpassword',
+                    employee=employee
+                )
+
+            if is_sha_worker and sha_details_data:
+                equipment_conclusions_data = sha_details_data.pop('equipment_conclusions', [])
+                sha_details = ShaWorkerDetails.objects.create(employee=employee, **sha_details_data)
+                
+                equipment_conclusions = [
+                    ShaEquipmentConclusion(sha_worker=sha_details, **ec_data)
+                    for ec_data in equipment_conclusions_data
+                ]
+                ShaEquipmentConclusion.objects.bulk_create(equipment_conclusions)
+        
+            return employee
             
-            # Создаем оборудование через метод set()
-            equipment_conclusions = [
-                ShaEquipmentConclusion(sha_worker=sha_details, **ec_data)
-                for ec_data in equipment_conclusions_data
-            ]
-            ShaEquipmentConclusion.objects.bulk_create(equipment_conclusions)
-    
-        return employee
+        except Exception as e:
+            logger.error(f"Error creating employee: {str(e)}")
+            raise
 
     def update(self, instance, validated_data):
         division_id = validated_data.pop('division_id', None)
         subdivision_id = validated_data.pop('subdivision_id', None)
         
-        # Явно проверяем наличие is_sha_worker в validated_data
         is_sha_worker = validated_data.get('is_sha_worker', instance.is_sha_worker)
-        
-        # Только если сотрудник остается ШаРаботником, обрабатываем sha_details
         sha_details_data = validated_data.pop('sha_details', None) if is_sha_worker else None
         
         if division_id is not None:
@@ -225,7 +255,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
                     defaults=sha_details_data
                 )
                 
-                # Удаляем старые и создаем новые записи оборудования
                 sha_details.equipment_conclusions.all().delete()
                 equipment_conclusions = [
                     ShaEquipmentConclusion(sha_worker=sha_details, **ec_data)
@@ -233,34 +262,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 ]
                 ShaEquipmentConclusion.objects.bulk_create(equipment_conclusions)
         else:
-            # Удаляем данные ШаРаботника если флаг снят
             ShaWorkerDetails.objects.filter(employee=instance).delete()
     
         return instance
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        # Убедимся, что division и subdivision представлены с id и name
-        if representation.get('division') is None:
-            representation['division'] = None
-        if representation.get('subdivision') is None:
-            representation['subdivision'] = None
-        return representation
-    
-    def validate_photo(self, value):
-        if value:
-            # Проверка размера файла (не более 2MB)
-            if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError("Фото слишком большое. Максимальный размер - 2MB.")
-            
-            # Проверка типа файла
-            valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
-            ext = os.path.splitext(value.name)[1].lower()
-            if ext not in valid_extensions:
-                raise serializers.ValidationError("Неподдерживаемый формат изображения. Используйте JPG, PNG или WebP.")
-        return value
-    
-    
+# Остальные сериализаторы
 class EmployeeDictionariesSerializer(serializers.Serializer):
     categories = serializers.ListField(
         child=serializers.DictField(
@@ -309,7 +315,7 @@ class EmployeePhotoSerializer(serializers.ModelSerializer):
     def get_photo_url(self, obj):
         if obj.photo:
             return obj.photo.url
-        return None  # ← Важно: возвращаем None, а не пропущенное поле
+        return None
 
     class Meta:
         model = Employee

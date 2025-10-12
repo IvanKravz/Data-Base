@@ -11,6 +11,7 @@ interface LoginResponse {
     department: string;
     division: string;
     subdivision?: string;
+    is_global_view: boolean; // ДОБАВЛЯЕМ ПОЛЕ
   };
 }
 
@@ -25,7 +26,7 @@ interface RegisterData {
 
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
-    const { data } = await api.post('/users/login/', { username, password });
+    const { data } = await api.post('/users/auth/login/', { username, password });
     // Сохраняем токены и данные пользователя
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
@@ -34,7 +35,7 @@ export const authApi = {
   },
 
   register: async (userData: RegisterData): Promise<LoginResponse> => {
-    const { data } = await api.post('/users/register/', userData);
+    const { data } = await api.post('/users/auth/register/', userData);
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
@@ -57,5 +58,25 @@ export const authApi = {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     sessionStorage.removeItem('appLoaded');
+  },
+
+  // ДОБАВЛЯЕМ МЕТОД ДЛЯ ОБНОВЛЕНИЯ РЕЖИМА ПРОСМОТРА
+  updateGlobalView: async (isGlobalView: boolean): Promise<void> => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+
+    const user = JSON.parse(userStr);
+    user.is_global_view = isGlobalView;
+    localStorage.setItem('user', JSON.stringify(user));
+  },
+
+  // ДОБАВЛЯЕМ МЕТОД ДЛЯ ПОЛУЧЕНИЯ РЕЖИМА ПРОСМОТРА
+  getGlobalView: (): boolean => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return false;
+
+    const user = JSON.parse(userStr);
+    console.log('user',user)
+    return user.is_global_view || false;
   }
 };
