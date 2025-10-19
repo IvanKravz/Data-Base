@@ -5,7 +5,7 @@ import { RootState } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
-import { equipmentApi } from '../../../api';
+import { equipmentApi, authApi } from '../../../api'; // Добавим authApi
 import './style.css';
 import {
   Header,
@@ -24,7 +24,6 @@ import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock'
 import { NetworkInfo } from './sections/NetworkInfo';
 import { AdditionalInfo } from './sections/AdditionalInfo';
 
-
 export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken') || '';
@@ -35,6 +34,9 @@ export function EquipmentDetailsPage() {
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Получаем режим просмотра из authApi
+  const isGlobalView = authApi.getGlobalView();
 
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -54,6 +56,43 @@ export function EquipmentDetailsPage() {
     fetchEquipment();
   }, [id, token]);
 
+  // Обновляем логику возврата в зависимости от режима просмотра
+  const handleBack = () => {
+    if (isGlobalView && !equipment?.division?.id) {
+      // Если в глобальном режиме просмотра - возврат к общему списку техники
+      navigate(`/equipment`);
+    } else {
+      // Иначе - возврат к списку техники подразделения
+      if (equipment?.division?.id && !isGlobalView) {
+        navigate(`/divisions/${equipment.division.id}/equipment`);
+      } else {
+        navigate(-1);
+      }
+    }
+  };
+
+  // Остальной код остается без изменений
+  const handleUpdate = async (updatedEquipment: Partial<Equipment>) => {
+    if (!equipment?.id || !token) return;
+
+    try {
+      setLoading(true);
+      console.log('Обновляемые данные:', updatedEquipment);
+
+      const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
+      const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
+      dispatch(updateEquipment(fullUpdatedData));
+      setEquipment(fullUpdatedData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Ошибка при обновлении техники:', error);
+      setError('Не удалось обновить данные техники');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Остальной код компонента остается без изменений
   if (loading) {
     return <div className="equipment-loading">Загрузка...</div>;
   }
@@ -69,33 +108,6 @@ export function EquipmentDetailsPage() {
       </div>
     );
   }
-
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  const handleUpdate = async (updatedEquipment: Partial<Equipment>) => {
-    if (!equipment?.id || !token) return;
-
-    try {
-      setLoading(true);
-      console.log('Обновляемые данные:', updatedEquipment);
-
-      // Нормализуем данные перед отправкой
-      const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
-
-      // Обновляем локальное состояние с учетом полных объектов
-      const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
-      dispatch(updateEquipment(fullUpdatedData));
-      setEquipment(fullUpdatedData);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Ошибка при обновлении техники:', error);
-      setError('Не удалось обновить данные техники');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (isEditing) {
     return (

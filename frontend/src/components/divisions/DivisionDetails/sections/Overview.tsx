@@ -1,6 +1,5 @@
 // Overview.tsx
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Users, Plug, Building2, ListTodo, RadioTower } from 'lucide-react';
@@ -8,7 +7,7 @@ import { Division } from '../../../../types';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { StatCard } from './StatCard';
-import { SubdivisionsList } from './SubdivisionsList';
+import { SubdivisionsList } from './SubdivisionsList'; // Используем улучшенную версию
 import { employeesApi, tasksApi } from '../../../../api';
 import { setPersonnel } from '../../../../store/slices/personnelSlice';
 import './style.css';
@@ -24,18 +23,20 @@ export function Overview({ division }: OverviewProps) {
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  // Состояния для отслеживания загрузки и количества задач
   const [tasksLoading, setTasksLoading] = useState(true);
   const [incompleteTasksCount, setIncompleteTasksCount] = useState<number | null>(null);
 
-  const params = {
-    division: division.id,
+  const handleSectionClick = (section: string, subdivisionId?: string) => {
+    const path = subdivisionId
+      ? `/divisions/${id}/${section}?subdivision=${subdivisionId}`
+      : `/divisions/${id}/${section}`;
+    navigate(path);
   };
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const data = await employeesApi.getPersonnel(token, params);
+        const data = await employeesApi.getPersonnel(token, { division: division.id });
         dispatch(setPersonnel(data));
       } catch (err) {
         setError('Failed to load personnel');
@@ -46,9 +47,8 @@ export function Overview({ division }: OverviewProps) {
     };
 
     fetchEmployees();
-  }, [token, dispatch]);
+  }, [token, dispatch, division.id]);
 
-  //эффект для загрузки количества незавершенных задач
   useEffect(() => {
     const fetchTasksCount = async () => {
       try {
@@ -56,7 +56,7 @@ export function Overview({ division }: OverviewProps) {
         setIncompleteTasksCount(count);
       } catch (err) {
         console.error('Failed to fetch incomplete tasks count', err);
-        setIncompleteTasksCount(0); // В случае ошибки показываем 0
+        setIncompleteTasksCount(0);
       } finally {
         setTasksLoading(false);
       }
@@ -64,13 +64,6 @@ export function Overview({ division }: OverviewProps) {
 
     fetchTasksCount();
   }, [division.id]);
-
-  const handleSectionClick = (section: string, subdivisionId?: string) => {
-    const path = subdivisionId
-      ? `/divisions/${id}/${section}?subdivision=${subdivisionId}`
-      : `/divisions/${id}/${section}`;
-    navigate(path);
-  };
 
   return (
     <div className="division-overview-container">
@@ -126,10 +119,7 @@ export function Overview({ division }: OverviewProps) {
         />
       </div>
 
-      <SubdivisionsList
-        division={division}
-        handleSectionClick={handleSectionClick}
-      />
+      <SubdivisionsList division={division} />
     </div>
   );
 }

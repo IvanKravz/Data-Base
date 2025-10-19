@@ -1,9 +1,8 @@
 // MapView.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import AddressSearch from './AddressSearch';
 import ObjectMarker from './ObjectMarker';
 import { geocodeAddress, loadGeoJSONData } from './data/addresses';
 import './style.css';
@@ -21,20 +20,20 @@ L.Icon.Default.mergeOptions({
 });
 
 // Компонент для управления положением карты
-const MapController = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
+const MapController = React.memo(({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
   return null;
-};
+});
 
 interface MapViewProps {
   facilities: any[];
   searchTerm?: string;
 }
 
-const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
+const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '' }) => {
   const [foundLocation, setFoundLocation] = useState<[number, number] | null>(null);
   const [objects, setObjects] = useState<any[]>([]);
   const [mapReady, setMapReady] = useState(false);
@@ -47,10 +46,11 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
-  const setPopupRef = (id: string, popup: L.Popup | null) => {
+  const setPopupRef = useCallback((id: string, popup: L.Popup | null) => {
     popupRefs.current[id] = popup;
-  };
+  }, []);
 
+  // Оптимизированная обработка поиска
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
       setSelectedObjectId(null);
@@ -95,6 +95,7 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
     }
   }, [debouncedSearchTerm, objects]);
 
+  // Обработка закрытия попапов
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -123,6 +124,7 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
     };
   }, [objects, selectedObjectId]);
 
+  // Оптимизированная обработка facilities
   useEffect(() => {
     let isMounted = true;
 
@@ -131,17 +133,19 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
         await loadGeoJSONData();
         if (!isMounted) return;
 
-        const mappedObjects = await Promise.all(
-          facilities.map(async (facility) => {
-            const geocoded = facility.address ? geocodeAddress(facility.address) : null;
-            let lat = null;
-            let lng = null;
+        // Используем Promise.all для параллельной обработки
+        const processingPromises = facilities.map(async (facility) => {
+          const geocoded = facility.address ? geocodeAddress(facility.address) : null;
+          let lat = null;
+          let lng = null;
 
-            if (geocoded) {
-              lat = Array.isArray(geocoded.lat) ? geocoded.lat[1] : geocoded.lat;
-              lng = Array.isArray(geocoded.lng) ? geocoded.lng[0] : geocoded.lng;
-            }
+          if (geocoded) {
+            lat = Array.isArray(geocoded.lat) ? geocoded.lat[1] : geocoded.lat;
+            lng = Array.isArray(geocoded.lng) ? geocoded.lng[0] : geocoded.lng;
+          }
 
+          // Возвращаем только если есть координаты
+          if (lat && lng) {
             return {
               id: facility.id,
               name: facility.name,
@@ -155,17 +159,21 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
               type_display: facility.type_display,
               color: facility.is_closed ? 'grey' : 'blue'
             };
-          })
-        ).then(results => results.filter(Boolean));
+          }
+          return null;
+        });
+
+        const results = await Promise.all(processingPromises);
+        const validObjects = results.filter(Boolean);
 
         if (isMounted) {
-          setObjects(mappedObjects);
-
-          if (mappedObjects.length > 0) {
-            const objectWithMinId = mappedObjects.reduce((prev, current) =>
+          setObjects(validObjects);
+          
+          if (validObjects.length > 0) {
+            const objectWithMinId = validObjects.reduce((prev, current) => 
               (prev.id < current.id) ? prev : current
             );
-
+            
             if (objectWithMinId.lat && objectWithMinId.lng) {
               setInitialPosition({
                 center: [objectWithMinId.lat, objectWithMinId.lng],
@@ -177,29 +185,41 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
         }
       } catch (error) {
         console.error('Ошибка обработки объектов:', error);
+        if (isMounted) {
+          setMapReady(true);
+        }
       }
     };
 
-    processFacilities();
+    // Запускаем обработку только если есть facilities
+    if (facilities.length > 0) {
+      processFacilities();
+    } else {
+      setObjects([]);
+      setMapReady(true);
+    }
+
     return () => { isMounted = false; };
   }, [facilities]);
 
-  if (!mapReady) {
-    return <div className="loading-spinner">Загрузка карта...</div>;
-  }
+  // Мемоизированные маркеры
+  const renderMarkers = useMemo(() => {
+    return objects
+      .filter(obj => obj.lat !== null && obj.lng !== null)
+      .map((obj) => (
+        <ObjectMarker
+          key={obj.id}
+          object={obj}
+          isSelected={selectedObjectId === obj.id}
+          searchTerm={searchTerm}
+          setPopupRef={setPopupRef}
+        />
+      ));
+  }, [objects, selectedObjectId, searchTerm, setPopupRef]);
 
-  // Создаем кастомную иконку для найденного объекта
-  const foundIcon = new L.DivIcon({
-    className: 'found-marker',
-    html: `
-      <div class="found-marker-container">
-        <div class="found-marker-pin"></div>
-        <div class="found-marker-pulse"></div>
-      </div>
-    `,
-    iconSize: [30, 42],
-    iconAnchor: [15, 42]
-  });
+  if (!mapReady) {
+    return <div className="loading-spinner">Загрузка карты...</div>;
+  }
 
   if (objects.length === 0 && mapReady) {
     return (
@@ -241,22 +261,11 @@ const MapView: React.FC<MapViewProps> = ({ facilities, searchTerm = '' }) => {
             errorTileUrl="/error-tile.png"
           />
 
-          {objects.map((obj) => (
-            obj.lat !== null && obj.lng !== null && (
-              <ObjectMarker
-                key={obj.id}
-                object={obj}
-                isSelected={selectedObjectId === obj.id}
-                searchTerm={searchTerm}
-                setPopupRef={setPopupRef}
-              />
-            )
-          ))}
-
+          {renderMarkers}
         </MapContainer>
       </div>
     </div>
   );
-};
+});
 
 export default MapView;

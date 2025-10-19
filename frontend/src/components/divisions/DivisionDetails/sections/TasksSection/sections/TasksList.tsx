@@ -1,7 +1,7 @@
 import React from 'react';
 import { TaskItem } from './TaskItem';
-import { Task } from '../../../../../types/tasks';
-import './DivisionTasksSection.css';
+import { Task } from '../../../../../../types/tasks';
+import '../DivisionTasksSection.css';
 
 interface TasksListProps {
   tasks: Task[];

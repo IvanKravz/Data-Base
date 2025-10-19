@@ -1,5 +1,5 @@
+// EquipmentList.tsx
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { Equipment } from '../../../types';
 import { TableView } from './views/TableView';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
@@ -15,13 +15,10 @@ export function EquipmentList({
   onUpdateEquipment,
   onDeleteEquipment,
 }: EquipmentListProps) {
-  const [searchParams] = useSearchParams();
-  const subdivisionId = searchParams.get('subdivision');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
-  const filteredEquipment = subdivisionId
-    ? equipment.filter(item => item.subdivision?.id == subdivisionId)
-    : equipment;
+  // Убираем дополнительную фильтрацию по subdivisionId, так как она уже выполнена в EquipmentSection
+  const filteredEquipment = equipment;
 
   const handleEdit = (e: React.MouseEvent, item: Equipment) => {
     e.stopPropagation();
@@ -51,11 +48,7 @@ export function EquipmentList({
 
       {filteredEquipment.length === 0 && (
         <div className="equipment-list-empty-message">
-          {searchParams.get('search')
-            ? 'Нет техники, соответствующей поиску'
-            : subdivisionId
-              ? 'Нет техники в выбранном подразделении'
-              : 'Нет техники для отображения'}
+          Нет техники для отображения
         </div>
       )}
 

@@ -1,6 +1,5 @@
-// SubdivisionsList.tsx
 import React, { useEffect, useState } from 'react';
-import { Users, Plug, Building2, ListTodo, ChevronRight } from 'lucide-react';
+import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { Division } from '../../../../types';
 import './style.css';
 import { useNavigate } from 'react-router-dom';
@@ -8,13 +7,9 @@ import { tasksApi } from '../../../../api/tasks';
 
 interface SubdivisionsListProps {
   division: Division;
-  handleSectionClick: (section: string, subdivisionId?: string) => void;
 }
 
-export function SubdivisionsList({
-  division,
-  handleSectionClick
-}: SubdivisionsListProps) {
+export function SubdivisionsList({ division }: SubdivisionsListProps) {
   const navigate = useNavigate();
   const subdivisions = division.subdivisions || [];
   const [tasksCounts, setTasksCounts] = useState<Record<string, number>>({});
@@ -43,8 +38,11 @@ export function SubdivisionsList({
     }
   }, [subdivisions]);
 
-  const handleTasksClick = (subdivisionId: string) => {
-    navigate(`/divisions/${division.id}/tasks?subdivision=${subdivisionId}`);
+  const handleSectionClick = (section: string, subdivisionId?: string) => {
+    const path = subdivisionId
+      ? `/divisions/${division.id}/${section}?subdivision=${subdivisionId}`
+      : `/divisions/${division.id}/${section}`;
+    navigate(path);
   };
 
   if (subdivisions.length === 0) {
@@ -103,7 +101,7 @@ export function SubdivisionsList({
 
               <div
                 className="division-metric-item"
-                onClick={() => handleTasksClick(subdivision.id)}
+                onClick={() => handleSectionClick('tasks', subdivision.id)}
               >
                 <div className="division-metric-icon-container">
                   <ListTodo className="division-metric-icon" />

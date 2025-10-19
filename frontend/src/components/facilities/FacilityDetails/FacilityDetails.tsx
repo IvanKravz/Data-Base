@@ -11,7 +11,7 @@ import { DocumentationCard } from './sections/DocumentationCard';
 import { KzInfoCard } from './sections/KzInfoCard';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updateFacility, deleteFacility } from '../../../store/slices/facilitiesSlice';
-import { facilitiesApi } from '../../../api/facilities';
+import { facilitiesApi, authApi } from '../../../api';
 import './FacilityForm.css';
 import { EditFacilityForm } from '../forms/EditFacilityForm/EditFacilityForm';
 import { ClassificationtFacility } from './sections/ClassificationtFacility';
@@ -26,6 +26,9 @@ export function FacilityDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('accessToken');
+
+  // Получаем режим просмотра из authApi
+  const isGlobalView = authApi.getGlobalView();
 
   useEffect(() => {
     const fetchFacility = async () => {
@@ -48,10 +51,22 @@ export function FacilityDetails() {
     fetchFacility();
   }, [id, token]);
 
+  // Обновляем логику возврата в зависимости от режима просмотра
   const handleBack = () => {
-    navigate(-1);
+    if (isGlobalView && !facility?.division?.id) {
+      // Если в глобальном режиме просмотра - возврат к общему списку объектов
+      navigate(`/facilities`);
+    } else {
+      // Иначе - возврат к списку объектов подразделения
+      if (facility?.division?.id && !isGlobalView) {
+        navigate(`/divisions/${facility.division.id}/facilities`);
+      } else {
+        navigate(-1);
+      }
+    }
   };
 
+  // Остальной код остается без изменений
   const handleUpdate = async (updatedData: Partial<Facility>) => {
     try {
       if (!facility?.id || !token) return;

@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     division_info = serializers.SerializerMethodField()
+    module_permissions = serializers.SerializerMethodField() 
     
     # ИСПОЛЬЗУЙТЕ РЕАЛЬНЫЕ ПОЛЯ
     user_division_id = serializers.PrimaryKeyRelatedField(
@@ -43,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined',
             'roles', 'permissions', 'division_info', 'user_division_id', 'user_subdivision_id',
-            'is_global_view'
+            'is_global_view', 'module_permissions' 
         ]
         read_only_fields = ['is_staff', 'is_active', 'date_joined']
     
@@ -52,6 +53,31 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_permissions(self, obj):
         return obj.get_permissions_info()
+    
+    def get_module_permissions(self, obj):
+        """Возвращает права доступа к модулям"""
+        return {
+            'employees': {
+                'can_view': obj.has_module_permission('employees'),
+                'can_edit': obj.can_edit_module('employees')
+            },
+            'equipment': {
+                'can_view': obj.has_module_permission('equipment'),
+                'can_edit': obj.can_edit_module('equipment')
+            },
+            'facilities': {
+                'can_view': obj.has_module_permission('facilities'),
+                'can_edit': obj.can_edit_module('facilities')
+            },
+            'tasks': {
+                'can_view': obj.has_module_permission('tasks'),
+                'can_edit': obj.can_edit_module('tasks')
+            },
+            'networks': {
+                'can_view': obj.has_module_permission('networks'),
+                'can_edit': obj.can_edit_module('networks')
+            }
+        }
     
     def get_division_info(self, obj):
         # Используем свойства division и subdivision

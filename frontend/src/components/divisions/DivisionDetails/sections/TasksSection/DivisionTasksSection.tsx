@@ -3,11 +3,11 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Task, TaskCategory } from '../../../../../types/tasks';
 import { tasksApi } from '../../../../../api/tasks';
 import { divisionsApi } from '../../../../../api/divisions';
-import { TasksHeader } from './TasksHeader';
-import { TasksFilters } from './TasksFilters';
-import { TasksList } from './TasksList';
-import { TasksCalendarView } from './TasksCalendarView';
-import { TasksCalendarSidebar } from './TasksCalendarSidebar';
+import { TasksHeader } from './sections/TasksHeader';
+import { TasksFilters } from './sections/TasksFilters';
+import { TasksList } from './sections/TasksList';
+import { TasksCalendarView } from './sections/TasksCalendarView';
+import { TasksCalendarSidebar } from './sections/TasksCalendarSidebar';
 import { CreateTaskModal } from '../../../../tasks/CreateTaskModal';
 import './DivisionTasksSection.css';
 

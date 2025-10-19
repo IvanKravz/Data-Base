@@ -6,7 +6,7 @@ import './style.css'
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
-  onSetActiveTab: (tab: 'divisions' | 'equipment' | 'personnel' | 'facilities' | 'tasks' | 'storage') => void;
+  onSetActiveTab: (tab: string) => void; // Расширяем тип
   userMenu?: React.ReactNode;
 }
 

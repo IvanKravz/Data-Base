@@ -1,16 +1,11 @@
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import React, { memo, useCallback } from 'react';
 import { Grid, Table } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Facility } from '../../../types';
 import { TableView } from './views/TableView';
 import { GridView } from './views/GridView';
-import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { ExportButton } from '../../common/ExportButton';
 import { exportFacilitiesToExcel } from '../../../utils/exportToExcel';
-import { deleteFacility } from '../../../store/slices/facilitiesSlice';
-import { facilitiesApi } from '../../../api/facilities'; // Добавляем импорт API
 
 interface FacilityListProps {
   viewType: 'grid' | 'table';
@@ -23,7 +18,7 @@ interface FacilityListProps {
   onDeleteInitiated?: (id: string) => void;
 }
 
-export function FacilityList({
+export const FacilityList = memo(function FacilityList({
   viewType,
   onViewChange,
   facilities,
@@ -31,25 +26,24 @@ export function FacilityList({
   onLocateFacility,
   showDifferentFields = false,
   onFacilityDeleted,
-  onDeleteInitiated // Принимаем новый пропс
+  onDeleteInitiated
 }: FacilityListProps) {
-  const [searchParams] = useSearchParams();
-  const subdivisionId = searchParams.get('subdivision');
-
-  // Изменяем обработчики кнопок
-  const handleViewTypeChange = (type: 'grid' | 'table') => {
+  const handleViewTypeChange = useCallback((type: 'grid' | 'table') => {
     onViewChange(type);
-  };
+  }, [onViewChange]);
 
-  const filteredFacilities = subdivisionId
-    ? facilities.filter(facility => facility.subdivision == subdivisionId)
-    : facilities;
+  // Убираем дополнительную фильтрацию по subdivisionId, так как она уже выполнена в FacilitiesSection
+  const filteredFacilities = facilities;
 
-    const handleDelete = (id: string) => {
-      if (onDeleteInitiated) {
-        onDeleteInitiated(id);
-      }
-    };
+  const handleDelete = useCallback((id: string) => {
+    if (onDeleteInitiated) {
+      onDeleteInitiated(id);
+    }
+  }, [onDeleteInitiated]);
+
+  const handleExport = useCallback(() => {
+    exportFacilitiesToExcel(facilities);
+  }, [facilities]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
@@ -79,7 +73,7 @@ export function FacilityList({
               </button>
             </div>
             <ExportButton
-              onClick={() => exportFacilitiesToExcel(facilities)}
+              onClick={handleExport}
               label="Экспорт объектов"
             />
           </div>
@@ -101,7 +95,7 @@ export function FacilityList({
                 facilities={filteredFacilities}
                 onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
-                onLocate={onLocateFacility} // Передаем обработчик
+                onLocate={onLocateFacility}
                 showDifferentFields={showDifferentFields}
               />
             ) : (
@@ -109,7 +103,7 @@ export function FacilityList({
                 facilities={filteredFacilities}
                 onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
-                onLocate={onLocateFacility} // Передаем обработчик
+                onLocate={onLocateFacility}
                 showDifferentFields={showDifferentFields}
               />
             )}
@@ -118,15 +112,10 @@ export function FacilityList({
 
         {filteredFacilities.length === 0 && (
           <div className="facility-list-empty-message">
-            {searchParams.get('search')
-              ? 'Нет объектов, соответствующих поиску'
-              : subdivisionId
-                ? 'Нет объектов в выбранном подразделении'
-                : 'Нет объектов для отображения'}
+            Нет объектов для отображения
           </div>
         )}
       </div>
-
     </div>
   );
-}
+});

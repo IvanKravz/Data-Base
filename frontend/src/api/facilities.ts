@@ -1,6 +1,10 @@
 import { api } from './client';
 import { Facility } from '../types';
 
+// Простой кэш для избежания повторных запросов
+const facilityCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
+
 export const facilitiesApi = {
   // Get all facilities with optional filters
   getFacilities: async (params?: {
@@ -12,6 +16,19 @@ export const facilitiesApi = {
     search?: string;
     is_closed?: boolean;
   }): Promise<Facility[]> => {
+    // Создаем ключ кэша на основе параметров
+    const cacheKey = JSON.stringify(params);
+    
+    // Проверяем кэш
+    if (facilityCache.has(cacheKey)) {
+      const cached = facilityCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.data;
+      } else {
+        facilityCache.delete(cacheKey);
+      }
+    }
+    
     // Обрабатываем случай, когда division - массив
     let divisionParam = params?.division;
     if (Array.isArray(divisionParam) && divisionParam.length === 0) {
@@ -34,6 +51,12 @@ export const facilitiesApi = {
         Authorization: `Bearer ${params.token}`,
       } : undefined
     });
+
+    // Сохраняем в кэш
+    facilityCache.set(cacheKey, {
+      data,
+      timestamp: Date.now()
+    });
   
     return data;
   },
@@ -51,6 +74,8 @@ export const facilitiesApi = {
   // Create new facility
   createFacility: async (facilityData: Omit<Facility, 'id'>) => {
     const { data } = await api.post('/facilities/', facilityData);
+    // Очищаем кэш при создании нового объекта
+    facilityCache.clear();
     return data;
   },
 
@@ -69,6 +94,8 @@ export const facilitiesApi = {
           'Content-Type': 'application/json'
         }
       });
+      // Очищаем кэш при обновлении
+      facilityCache.clear();
       return data;
     } catch (error) {
       console.error('Ошибка при обновлении объекта:', error);
@@ -79,6 +106,8 @@ export const facilitiesApi = {
   // Delete facility
   deleteFacility: async (id: string) => {
     await api.delete(`/facilities/${id}/`);
+    // Очищаем кэш при удалении
+    facilityCache.clear();
   },
 
   // Get facility equipment

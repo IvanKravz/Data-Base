@@ -1,8 +1,8 @@
 // TaskItem.tsx
 import React, { useMemo, useState } from 'react';
 import { Pencil, Trash2, Lock, ChevronDown, ChevronUp } from 'lucide-react';
-import { Task } from '../../../../../types/tasks';
-import './DivisionTasksSection.css';
+import { Task } from '../../../../../../types/tasks';
+import '../DivisionTasksSection.css';
 
 interface TaskItemProps {
   task: Task;

@@ -38,6 +38,21 @@ ROLE_PERMISSIONS = {
         'filters': {},
         'description': 'Просмотр всей информации без возможности изменений'
     },
+
+    'deputy_director': {
+        'name': 'Заместитель руководителя',
+        'models': {
+            'Employee': ['view'],
+            'Equipment': ['view'],
+            'Facility': ['view'],
+            'CommunicationNetwork': ['view'],
+            'Task': ['view'],
+            'Division': ['view'],
+            'Subdivision': ['view'],
+        },
+        'filters': {},
+        'description': 'Просмотр всех данных системы'
+    },
     
     'head_of_department_1': {
         'name': 'Начальник 1 отдела',
@@ -125,19 +140,31 @@ ROLE_PERMISSIONS = {
         'description': 'Специализированный доступ для 2 отделения'
     },
 
-    # Добавим роль, которая работает с любым подразделением
-    'mobile_tech': {
-        'name': 'Мобильный технический специалист',
+    'exploitation_chief': {
+        'name': 'Начальник подразделения эксплуатации',
         'models': {
-            'Equipment': ['view', 'add', 'change'],
-            'Object': ['view'],
+            'Employee': ['view'],
+            'Equipment': ['view'],
+            'Facility': ['view'],
+            'CommunicationNetwork': ['view'],
+            'Task': ['view'],
         },
-        'filters': {
-            # Нет фильтра по division - значит будет использоваться подразделение пользователя
-            'Equipment': {'is_closed': False}
+        'filters': {},
+        'description': 'Просмотр данных своего подразделения'
+    },
+    
+    'exploitation_employee': {
+        'name': 'Сотрудник подразделения эксплуатации',
+        'models': {
+            'Employee': ['view', 'add', 'change', 'delete'],
+            'Equipment': ['view', 'add', 'change', 'delete'],
+            'Facility': ['view', 'add', 'change', 'delete'],
+            'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
+            'Task': ['view', 'add', 'change', 'delete'],
         },
-        'description': 'Доступ к технике в своем подразделении'
-    }
+        'filters': {},
+        'description': 'Полное управление данными своего подразделения'
+    },
 }
 
 def get_group_name(role_name):

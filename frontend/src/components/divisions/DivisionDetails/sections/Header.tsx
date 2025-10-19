@@ -5,18 +5,26 @@ import './style.css'
 
 interface HeaderProps {
   division: Division;
-  activeSection: string;
-  activeSubdivision: string | null;
   onBack: () => void;
+  showBackButton?: boolean; 
+  activeSection?: string; 
+  activeSubdivision?: string | null; 
 }
 
-export function Header({ division, activeSubdivision, onBack }: HeaderProps) {
+export function Header({ 
+  division, 
+  onBack, 
+  showBackButton = true,
+  activeSubdivision 
+}: HeaderProps) {
   return (
     <div className="header-divisions">
       <div className="divisions-title-container">
-        <button type="button" onClick={onBack} className="back-button">
-          <ArrowLeft className="back-button-icon" />
-        </button>
+        {showBackButton && (
+          <button type="button" onClick={onBack} className="back-button">
+            <ArrowLeft className="back-button-icon" />
+          </button>
+        )}
         <div>
           <h1 className="divisions-title">
             {division.name}

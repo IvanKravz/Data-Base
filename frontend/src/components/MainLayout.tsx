@@ -1,6 +1,6 @@
 // MainLayout.tsx
-import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Layout } from './Layout';
 import { MainContent } from './MainContent';
 import { DivisionDetails } from './divisions/DivisionDetails/DivisionDetails';
@@ -25,6 +25,7 @@ import NetworkManagement from './networks/NetworkManagement/NetworkManagement';
 import CreateNetwork from './networks/forms/CreateNetwork/CreateNetwork';
 import EditNetwork from './networks/forms/EditNetwork/EditNetwork';
 import { CreateEquipmentForm } from './equipment/forms/CreateEquipmentForm/CreateEquipmentForm';
+import { getCurrentUser, isExploitationChief } from '../api/utils/permissions';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -35,6 +36,18 @@ export function MainLayout() {
     facilities: 'grid',
     tasks: 'list'
   });
+  const navigate = useNavigate();
+
+  // Автоматический редирект для начальника эксплуатации
+  useEffect(() => {
+    const user = getCurrentUser();
+    const divisionId = user?.division_info?.id;
+    
+    if (isExploitationChief() && divisionId && window.location.pathname === '/') {
+      navigate(`/divisions/${divisionId}`);
+      setActiveTab('divisions');
+    }
+  }, [navigate]);
 
   return (
     <Layout

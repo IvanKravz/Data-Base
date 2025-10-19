@@ -1,7 +1,9 @@
 // Sidebar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../api';
+import { isExploitationChief, getCurrentUser } from '../api/utils/permissions';
 
 interface SidebarProps {
   activeTab: string;
@@ -13,14 +15,44 @@ interface MenuItem {
   icon: React.ElementType;
   label: string;
   path?: string;
+  module?: string;
   children?: MenuItem[];
 }
 
 export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [modulePermissions, setModulePermissions] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userDivision, setUserDivision] = useState<string | null>(null);
+
+  // Загружаем права доступа и данные пользователя при монтировании компонента
+  useEffect(() => {
+    const loadPermissionsAndUser = () => {
+      const permissions = authApi.getModulePermissions();
+      setModulePermissions(permissions);
+      
+      // Получаем данные текущего пользователя из division_info
+      const user = getCurrentUser();
+      if (user && user.division_info) {
+        setUserDivision(user.division_info.id);
+      }
+      
+      setIsLoading(false);
+    };
+
+    const timer = setTimeout(loadPermissionsAndUser, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleTabClick = (item: MenuItem) => {
+    // Специальная логика для начальника эксплуатации - переход сразу в свое подразделение
+    if (item.id === 'divisions' && isExploitationChief() && userDivision) {
+      navigate(`/divisions/${userDivision}`);
+      onSetActiveTab(item.id);
+      return;
+    }
+  
     if (item.children) {
       setExpandedItems(prev =>
         prev.includes(item.id)
@@ -37,15 +69,70 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     }
   };
 
+  // Функция для проверки прав доступа к пункту меню
+  const hasAccessToMenuItem = (item: MenuItem): boolean => {
+    if (isLoading) return true;
+    if (!modulePermissions) return true;
+    
+    const alwaysAccessible = ['divisions', 'cabinet', 'storage'];
+    if (alwaysAccessible.includes(item.id)) return true;
+    
+    if (item.module && modulePermissions[item.module]) {
+      return modulePermissions[item.module].can_view;
+    }
+    
+    if (modulePermissions[item.id]) {
+      return modulePermissions[item.id].can_view;
+    }
+    
+    return false;
+  };
+
+  // Определяем label для пункта "Подразделения" в зависимости от роли
+  const getDivisionsLabel = () => {
+    return isExploitationChief() ? 'Подразделение' : 'Подразделения';
+  };
+
   const menuItems: MenuItem[] = [
-    { id: 'divisions', icon: LayoutGrid, label: 'Подразделения' },
-    { id: 'equipment', icon: Database, label: 'Техника', path: '/equipment' },
-    { id: 'personnel', icon: Users, label: 'Сотрудники', path: '/personnel' },
-    { id: 'facilities', icon: Building2, label: 'Объекты', path: '/facilities' },
-    { id: 'tasks', icon: ListTodo, label: 'Задачи', path: '/tasks' },
+    { 
+      id: 'divisions', 
+      icon: LayoutGrid, 
+      label: getDivisionsLabel()
+    },
+    { 
+      id: 'equipment', 
+      icon: Database, 
+      label: 'Техника', 
+      path: '/equipment',
+      module: 'equipment'
+    },
+    { 
+      id: 'personnel', 
+      icon: Users, 
+      label: 'Сотрудники', 
+      path: '/personnel',
+      module: 'employees'
+    },
+    { 
+      id: 'facilities', 
+      icon: Building2, 
+      label: 'Объекты', 
+      path: '/facilities',
+      module: 'facilities'
+    },
+    { 
+      id: 'tasks', 
+      icon: ListTodo, 
+      label: 'Задачи', 
+      path: '/tasks',
+      module: 'tasks'
+    },
     { id: 'storage', icon: HardDrive, label: 'Хранилище', path: '/storage' },
     { id: 'cabinet', icon: UserCog, label: 'Кабинет', path: '/cabinet' }
   ];
+
+  // Фильтруем меню по правам доступа
+  const filteredMenuItems = menuItems.filter(hasAccessToMenuItem);
 
   const renderMenuItem = (item: MenuItem, level = 0) => {
     const isExpanded = expandedItems.includes(item.id);
@@ -84,7 +171,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
           >
             <div className="submenu-content">
               <div className="submenu-items">
-                {item.children.map((child) => renderMenuItem(child, level + 1))}
+                {item.children?.map((child) => renderMenuItem(child, level + 1))}
               </div>
             </div>
           </div>
@@ -93,9 +180,17 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     );
   };
 
+  if (isLoading) {
+    return (
+      <nav className="navigation-menu">
+        <div className="menu-loading">Загрузка...</div>
+      </nav>
+    );
+  }
+
   return (
     <nav className="navigation-menu">
-      {menuItems.map((item) => renderMenuItem(item))}
+      {filteredMenuItems.map((item) => renderMenuItem(item))}
     </nav>
   );
 }

@@ -4,9 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Overview } from './sections/Overview';
 import { divisionsApi } from '../../../api';
 import { Header } from './sections/Header';
-import MapView from '../../map/MapView';
 import { Skeleton } from '@mui/material';
 import './sections/style.css';
+import { isExploitationChief } from '../../../api/utils/permissions';
 
 export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
@@ -64,7 +64,11 @@ export function DivisionDetails() {
 
   return (
     <div className="division-details-container">
-      <Header division={division} onBack={handleBack} />
+      <Header 
+        division={division} 
+        onBack={handleBack} 
+        showBackButton={!isExploitationChief()} // Показывать кнопку назад только если не начальник эксплуатации
+      />
       
       <Overview division={division} />
       
@@ -74,12 +78,6 @@ export function DivisionDetails() {
           alt="Division background"
           className="division-background-image"
         />
-        
-        {/* {division.facilities_count > 0 && (
-          <div className="division-map-overlay">
-            <MapView divisionId={division.id} />
-          </div>
-        )} */}
       </div>
     </div>
   );

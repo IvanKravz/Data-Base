@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
-import './DivisionTasksSection.css';
+import '../DivisionTasksSection.css';
 
 interface TasksHeaderProps {
   divisionName: string;

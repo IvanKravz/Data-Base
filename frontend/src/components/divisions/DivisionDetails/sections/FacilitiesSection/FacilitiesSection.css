@@ -16,17 +16,23 @@
 
 .facilities-header {
     background: white;
-    padding: 1.2rem 1.5rem;
+    padding: 1.2rem 1.2rem 1.2rem;
     border-radius: 0.5rem;
     position: relative;
     z-index: 2;
-    margin-bottom: 24px;
+    margin-bottom: 2rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+    justify-content: space-between;
     gap: 1rem;
+}
+
+.facilities-title-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
 }
 
 .facilities-title {
@@ -38,10 +44,9 @@
     gap: 0.75rem;
     margin-bottom: 0;
     flex-shrink: 0;
-    margin-left: 1rem;
 }
 
-/* === ПРОФЕССИОНАЛЬНЫЕ ВКЛАДКИ === */
+/* === УПРОЩЕННЫЕ ВКЛАДКИ === */
 .facilities-tabs-container {
     background: white;
     border-radius: 0.5rem;
@@ -57,17 +62,7 @@
     overflow-x: auto;
     padding-bottom: 1px;
     scrollbar-width: thin;
-    /* gap: 0.25rem; */
-}
-
-.facilities-tabs::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1.5px;
-    background: #e5e7eb;
+    border-bottom: 1.5px solid #e5e7eb;
 }
 
 .facilities-tabs::-webkit-scrollbar {
@@ -93,34 +88,18 @@
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
     white-space: nowrap;
     border-radius: 6px 6px 0 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.facilities-tab-button::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1.5px;
-    background-color: transparent;
-    transform: scaleX(0);
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    flex-shrink: 0;
 }
 
 .facilities-tab-button:hover {
     color: #2563eb;
     background-color: rgba(241, 245, 249, 0.5);
-}
-
-.facilities-tab-button:hover::after {
-    background-color: #cbd5e1;
-    transform: scaleX(1);
 }
 
 .facilities-tab-button.active {
@@ -129,22 +108,15 @@
     background-color: rgba(241, 245, 249, 0.3);
 }
 
+/* Индикатор активной вкладки - простая линия */
 .facilities-tab-button.active::after {
-    /* background-color: #2563eb; */
-    transform: scaleX(1);
-}
-
-.facilities-tab-button.active:hover {
-    background-color: rgba(241, 245, 249, 0.5);
-}
-
-.facilities-tab-indicator {
+    content: '';
     position: absolute;
-    bottom: 0;
-    height: 1.5px;
+    bottom: -1.5px;
+    left: 0;
+    right: 0;
+    height: 2px;
     background-color: #2563eb;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 4;
 }
 
 .facilities-tab-icon {

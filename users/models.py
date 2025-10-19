@@ -130,6 +130,63 @@ class User(AbstractUser):
                 roles.append(role)
         return roles
     
+    def has_module_permission(self, module_name):
+        """Проверяет доступ к модулю по имени"""
+        if self.is_superuser or self.has_role('admin'):
+            return True
+            
+        from .permissions_config import ROLE_PERMISSIONS
+        
+        user_roles = self.get_roles()
+        for role in user_roles:
+            if role in ROLE_PERMISSIONS:
+                role_config = ROLE_PERMISSIONS[role]
+                model_mapping = {
+                    'employees': 'Employee',
+                    'equipment': 'Equipment', 
+                    'facilities': 'Facility',
+                    'tasks': 'Task',
+                    'networks': 'CommunicationNetwork'
+                }
+                
+                if module_name in model_mapping:
+                    model_name = model_mapping[module_name]
+                    if model_name in role_config['models']:
+                        return True
+        return False
+    
+    def can_edit_module(self, module_name):
+        """Проверяет права на редактирование в модуле"""
+        if self.is_superuser or self.has_role('admin'):
+            return True
+            
+        from .permissions_config import ROLE_PERMISSIONS
+        from .permissions import RoleBasedPermission
+        
+        # Пользователи только с правами просмотра не могут редактировать
+        if RoleBasedPermission.is_view_only_user(self):
+            return False
+            
+        user_roles = self.get_roles()
+        for role in user_roles:
+            if role in ROLE_PERMISSIONS:
+                role_config = ROLE_PERMISSIONS[role]
+                model_mapping = {
+                    'employees': 'Employee',
+                    'equipment': 'Equipment',
+                    'facilities': 'Facility',
+                    'tasks': 'Task',
+                    'networks': 'CommunicationNetwork'
+                }
+                
+                if module_name in model_mapping:
+                    model_name = model_mapping[module_name]
+                    if model_name in role_config['models']:
+                        permissions = role_config['models'][model_name]
+                        # Проверяем наличие прав на изменение
+                        return any(perm in permissions for perm in ['add', 'change', 'delete'])
+        return False
+    
     def get_permissions_info(self):
         """Возвращает информацию о правах пользователя"""
         from .permissions_config import ROLE_PERMISSIONS
