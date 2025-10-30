@@ -135,10 +135,15 @@ export const MapCountry = () => {
             <div className='hovered-region-name'>
                 {hoveredRegion}
             </div>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}>
             <svg
                 ref={svgRef}
                 version="1.1"
-                width="100%"
+                width="83%"
                 height="100%"
                 viewBox="0 0 809 459"
                 style={{ overflow: 'auto' }}
@@ -2763,7 +2768,7 @@ export const MapCountry = () => {
                     onMouseLeave={handleMouseLeave}
                     onClick={() => handleClick("Запорожская область")}></path>
             </svg>
-
+            </div>
             {isModalOpen && selectedRegion && (
                 <Modal onClose={closeModal}>
                     <h2>{selectedRegion}</h2>

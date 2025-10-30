@@ -1,7 +1,7 @@
 import React from 'react';
-import { TaskCalendar } from '../../../../../tasks/TasksSection/sections/TaskCalendar';
-import { Task } from '../../../../../../types/tasks';
-import '../DivisionTasksSection.css';
+import { TaskCalendar } from './TaskCalendar';
+import { Task } from '../../../types/tasks';
+import './style.css';
 
 interface TasksCalendarViewProps {
   tasks: Task[];

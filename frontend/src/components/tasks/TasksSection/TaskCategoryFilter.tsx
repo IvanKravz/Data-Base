@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { TaskCategory } from '../../../../types/taskCategories';
-import '../style.css';
+import { TaskCategory } from '../../../types/taskCategories';
+import './style.css';
 
 interface Task {
   id: string;

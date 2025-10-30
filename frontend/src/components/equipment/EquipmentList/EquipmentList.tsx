@@ -1,7 +1,6 @@
-// EquipmentList.tsx
 import React, { useState } from 'react';
 import { Equipment } from '../../../types';
-import { TableView } from './views/TableView';
+import { TableView } from './views/TableView'; // Убедитесь, что путь правильный
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 
 interface EquipmentListProps {
@@ -17,7 +16,6 @@ export function EquipmentList({
 }: EquipmentListProps) {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
-  // Убираем дополнительную фильтрацию по subdivisionId, так как она уже выполнена в EquipmentSection
   const filteredEquipment = equipment;
 
   const handleEdit = (e: React.MouseEvent, item: Equipment) => {

@@ -1,9 +1,9 @@
 import React from 'react';
 import { List, Calendar as CalendarIcon } from 'lucide-react';
-import { SearchBar } from '../../../../../common/SearchBar';
-import { TaskCategoryFilter } from '../../../../../tasks/TasksSection/sections/TaskCategoryFilter';
-import { Task } from '../../../../../../types/tasks';
-import '../DivisionTasksSection.css';
+import { SearchBar } from '../../common/SearchBar';
+import { TaskCategoryFilter } from './TaskCategoryFilter';
+import { Task } from '../../../types/tasks';
+import './style.css';
 
 type TaskCategory = 'all' | 'completed' | 'urgent' | 'planned' | 'attention';
 

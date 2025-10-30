@@ -1,5 +1,5 @@
 /* Основные стили таблицы */
- .table-container {
+.table-container {
   overflow-x: auto;
   overflow-y: auto;
   max-height: 80vh;
@@ -17,7 +17,67 @@
   min-width: 1000px;
 }
 
-/* Стили заголовков */
+/* Стили заголовков групп */
+.division-header-row {
+  background-color: #f8f9fa;
+  border-left: 4px solid #3b82f6;
+}
+
+.division-header-row.no-division-header {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.subdivision-header-row {
+  background-color: #f1f5f9;
+  border-left: 4px solid #94a3b8;
+}
+
+.equipment-division-header-cell {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #bfdbfe;
+}
+
+.equipment-subdivision-header-cell {
+  padding: 4px 16px 4px 32px;
+  font-weight: 500;
+  font-size: 1.1em;
+  color: #374151;
+  background-color: #f1f5f9;
+}
+
+.no-division-header .division-header-cell {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Стили строк таблицы */
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.table-row:hover {
+  background-color: #f8fafc;
+}
+
+.no-division-row {
+  background-color: #fffdf6;
+}
+
+.no-division-row:hover {
+  background-color: #fef9e7;
+}
+
+.table-row:not(:last-child) .table-cell {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Стили заголовков столбцов */
 .table-header {
   position: sticky;
   top: 0;
@@ -54,62 +114,6 @@
   flex: 1;
 }
 
-/* Стили сортировки */
-.sort-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  color: #94a3b8;
-}
-
-.sort-icon.inactive {
-  opacity: 0;
-}
-
-.table-header-cell:hover .sort-icon.inactive {
-  opacity: 0.5;
-}
-
-.sort-icon.active {
-  color: #2563eb;
-  opacity: 1 !important;
-}
-
-.sort-icon svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.sort-icon-up {
-  margin-bottom: -0.25rem;
-}
-
-.sort-icon-down {
-  margin-top: -0.25rem;
-}
-
-/* Стили тела таблицы */
-.table-body {
-  background-color: #ffffff;
-}
-
-.table-row {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  position: relative;
-}
-
-.table-row:hover {
-  background-color: #f8fafc;
-}
-
-.table-row:not(:last-child) .table-cell {
-  border-bottom: 1px solid #f1f5f9;
-}
-
 /* Обновляем стили ячеек */
 .table-cell {
   padding: 0.625rem 1rem;
@@ -143,15 +147,9 @@
   gap: 0.75rem;
 }
 
-.edit-button,
 .delete-button {
   padding: 0.375rem;
   border-radius: 6px;
-}
-
-.edit-button:hover {
-  background-color: #dbeafe;
-  color: #2563eb;
 }
 
 .delete-button:hover {
@@ -164,15 +162,7 @@
   height: 1rem;
 }
 
-/* Адаптивные стили */
-@media (max-width: 1200px) {
-
-  .table-cell,
-  .table-header-cell {
-    padding: 0.5rem 0.75rem;
-  }
-}
-
+/* Стили для ячейки с закрепленным сотрудником */
 .table-cell-assigned-to {
   min-width: 160px;
   max-width: 200px;
@@ -185,13 +175,6 @@
   gap: 0.125rem;
 }
 
-/* Для адаптивности */
-@media (max-width: 1200px) {
-  .table-cell-assigned-to {
-    min-width: 160px;
-  }
-}
-
 .position-text {
   text-align: center;
   font-size: 0.6875rem;
@@ -199,6 +182,7 @@
   line-height: 1.2;
 }
 
+/* Сообщение о пустом списке */
 .equipment-list-empty-message {
   text-align: center;
   padding: 20px;
@@ -207,4 +191,16 @@
   margin: 20px 0;
   background-color: #f9f9f9;
   border-radius: 4px;
+}
+
+/* Адаптивные стили */
+@media (max-width: 1200px) {
+  .table-cell,
+  .table-header-cell {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .table-cell-assigned-to {
+    min-width: 160px;
+  }
 }

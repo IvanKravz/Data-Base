@@ -20,7 +20,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { setEquipment, deleteEquipment } from '../../../../../store/slices/equipmentSlice';
 import { RootState } from '../../../../../store/store';
-import { getCurrentUser, isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
+import { getCurrentUser, getPermissions, isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
 const CATEGORY_ICONS = {
   'tko': <Server className="equipment-tab-icon" size={16} />,
@@ -81,8 +81,6 @@ export function EquipmentSection() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [subdivisionName, setSubdivisionName] = useState('');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [fromSidebar, setFromSidebar] = useState(false);
-  const [fromDivisions, setFromDivisions] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedSearchFilters>({
     names: [],
     serialNumbers: [],
@@ -96,7 +94,7 @@ export function EquipmentSection() {
 
   // Проверка прав доступа для кнопки "Добавить технику"
   const canCreateEquipment = useMemo(() => {
-    const permissions = authApi.getModulePermissions();
+    const permissions = getPermissions();
     if (permissions && permissions.equipment) {
       return permissions.equipment.can_edit;
     }
@@ -226,20 +224,15 @@ export function EquipmentSection() {
 
   // Логика фильтрации для отделения
   const filterBySubdivision = (items) => {
-    // Для пользователей эксплуатации в "глобальном" режиме используем их отделение
+    // Для сотрудника эксплуатации не фильтруем по отделению - показываем всю технику подразделения
     if (isExploitationUser && !id) {
-      const userSubdivisionId = stableCurrentUser?.division_info?.subdivision?.id;
-      if (isChief || !userSubdivisionId) return items; // Начальник видит всю технику подразделения
-
-      return items.filter(item =>
-        item.subdivision?.id?.toString() === userSubdivisionId.toString()
-      );
+      return items;
     }
-
+  
     // Для обычных случаев
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-
+  
     return items.filter(item =>
       item.subdivision?.id?.toString() === stableSubdivisionId.toString()
     );
@@ -385,22 +378,21 @@ export function EquipmentSection() {
 
   // Правильное отображение заголовка для всех случаев
   const getHeaderTitle = () => {
+    
     // Для пользователей эксплуатации в "глобальном" режиме (когда нет id)
     if (isExploitationUser && !id) {
+      
       const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
-      if (isChief) {
-        return `Техника связи и информатизации: ${divisionName}`;
-      } else {
-        const subdivisionName = stableCurrentUser?.division_info?.subdivision?.name || '';
-        return `Техника связи и информатизации: ${divisionName}${subdivisionName ? ` / ${subdivisionName}` : ''}`;
-      }
+      // Для всех эксплуатационных пользователей показываем только подразделение
+      return `Техника связи и информатизации: ${divisionName}`;
     }
-
+  
     // Для глобального режима обычных пользователей
     if (isGlobalView) {
+      
       return 'Техника связи и информатизации: Все подразделения';
     }
-
+  
     // Для режима конкретного подразделения
     return `Техника связи и информатизации: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };

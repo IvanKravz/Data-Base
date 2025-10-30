@@ -7,9 +7,10 @@ import { Division } from '../../../../types';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { StatCard } from './StatCard';
-import { SubdivisionsList } from './SubdivisionsList'; // Используем улучшенную версию
+import { SubdivisionsList } from './SubdivisionsList';
 import { employeesApi, tasksApi } from '../../../../api';
 import { setPersonnel } from '../../../../store/slices/personnelSlice';
+import { isExploitationEmployee } from '../../../../api/utils/permissions';
 import './style.css';
 
 interface OverviewProps {
@@ -25,6 +26,9 @@ export function Overview({ division }: OverviewProps) {
   const [loading, setLoading] = useState(true);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [incompleteTasksCount, setIncompleteTasksCount] = useState<number | null>(null);
+
+  // Проверяем, является ли пользователь сотрудником эксплуатации
+  const isExploitationEmp = isExploitationEmployee();
 
   const handleSectionClick = (section: string, subdivisionId?: string) => {
     const path = subdivisionId
@@ -119,7 +123,8 @@ export function Overview({ division }: OverviewProps) {
         />
       </div>
 
-      <SubdivisionsList division={division} />
+      {/* Скрываем SubdivisionsList для сотрудника эксплуатации */}
+      {!isExploitationEmp && <SubdivisionsList division={division} />}
     </div>
   );
 }

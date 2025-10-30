@@ -1,246 +1,7 @@
-/* table-view.css */
-.facility-table-container {
-    overflow-x: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    background-color: white;
-}
-
-.facility-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-     border-bottom: 1px solid #e5e7eb;
-}
-
-.facility-table thead {
-    background-color: #f9fafb;
-    position: sticky;
-    top: 0;
-}
-
-.facility-table-header {
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #4b5563;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.facility-table-header:hover {
-    background-color: #f3f4f6;
-}
-
-.facility-table-header-content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.facility-sort-icon-container {
-    width: 16px;
-    height: 16px;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-
-.facility-table-header:hover .facility-sort-icon-container {
-    opacity: 0.4;
-}
-
-.facility-sort-icon {
-    width: 16px;
-    height: 16px;
-    color: #6b7280;
-}
-
-.facility-sort-icon-small {
-    width: 16px;
-    height: 8px;
-}
-
-.facility-table-row {
-    transition: background-color 0.15s ease;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.facility-table-row:last-child {
-    border-bottom: none;
-}
-
-.facility-table-row:hover {
-    background-color: #f9fafb;
-    cursor: default;
-}
-
-.facility-table-cell {
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.facility-table-cell-primary {
-    font-weight: 500;
-    color: #111827;
-}
-
-.facility-table-cell-actions {
-    text-align: right;
-    padding-right: 16px;
-}
-
-.facility-delete-btn {
-    padding: 6px;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-    color: #dc2626;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.facility-delete-btn:hover {
-    background-color: #fee2e2;
-    transform: scale(1.05);
-}
-
-.facility-delete-btn:focus {
-    outline: 2px solid #fca5a5;
-    outline-offset: 2px;
-}
-
 .facility-filter-label .class-indicator {
     font-size: 0.75rem;
     margin-left: 0.25rem;
     opacity: 0.9;
-}
-
-.facility-list-empty-message {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    font-size: 16px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-}
-
-.facility-grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
-    gap: 1rem;
-    margin-top: 0.5rem;
-    /* padding: 0.5rem; */
-}
-
-.facility-card-grid {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    padding: 1rem;
-    transition: all var(--transition-normal);
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.facility-card-grid:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 10px -2px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-color: rgba(59, 130, 246, 0.5);
-    cursor: pointer;
-    transition: all 0.5s;
-}
-
-.facility-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.facility-card-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.facility-card-delete-btn {
-    color: #ef4444;
-    background: none;
-    border: none;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.facility-card-delete-btn:hover {
-    background-color: #fee2e2;
-    transform: scale(1.1);
-}
-
-.facility-card-content {
-    /* padding: 0.75rem 1rem 1rem; */
-}
-
-.facility-card-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-.facility-card-item:last-child {
-    margin-bottom: 0;
-}
-
-.facility-card-icon {
-    flex-shrink: 0;
-    color: #64748b;
-    margin-top: 0.125rem;
-}
-
-.facility-card-text {
-    word-break: break-word;
-}
-
-.facility-card-badge {
-    top: 0.5rem;
-    color: rgb(171, 126, 23);
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 9999px;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.8;
-    }
 }
 
 /* View Toggle Styles */
@@ -261,44 +22,37 @@
     font-weight: 500;
     transition: all 0.2s;
     cursor: pointer;
+    border: 1px solid transparent;
 }
 
 .view-toggle-btn.active {
     background-color: #3b82f6;
     color: white;
+    border-color: #3b82f6;
 }
 
 .view-toggle-btn:not(.active) {
     background-color: #f1f5f9;
     color: #64748b;
+    border-color: #e2e8f0;
 }
 
 .view-toggle-btn:not(.active):hover {
     background-color: #e2e8f0;
 }
 
-.facility-card-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+/* Common animation classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
 }
 
-.facility-card-locate-btn,
-.facility-locate-btn {
-    padding: 0.25rem;
-    border-radius: 4px;
-    color: #64748b;
-    transition: all 0.2s;
-}
-
-.facility-card-locate-btn:hover,
-.facility-locate-btn:hover {
-    color: #3498db;
-    background-color: #f1f5f9;
-}
-
-.facility-action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

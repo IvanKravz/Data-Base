@@ -9,10 +9,10 @@ interface HeaderProps {
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  canEditEquipment: boolean;
 }
 
-export function Header({ equipment, onBack, onEdit, onDelete }: HeaderProps) {
-  const StatusIcon = getStatusIcon(equipment.status);
+export function Header({ equipment, onBack, onEdit, onDelete, canEditEquipment }: HeaderProps) {
 
   return (
     <div className="equipment-header">
@@ -31,7 +31,7 @@ export function Header({ equipment, onBack, onEdit, onDelete }: HeaderProps) {
           </span>
         </div>
       </div>
-      <div className="equipment-flex equipment-items-center equipment-gap-sm">
+      {canEditEquipment && (<div className="equipment-flex equipment-items-center equipment-gap-sm">
         <button
           onClick={onEdit}
           className="equipment-btn equipment-btn--primary"
@@ -47,6 +47,7 @@ export function Header({ equipment, onBack, onEdit, onDelete }: HeaderProps) {
           Удалить
         </button>
       </div>
+      )}
     </div>
   );
 }

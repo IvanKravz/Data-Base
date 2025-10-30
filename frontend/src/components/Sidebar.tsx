@@ -1,9 +1,9 @@
 // Sidebar.tsx
 import React, { useState, useEffect } from 'react';
-import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight } from 'lucide-react';
+import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight, Network, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api';
-import { isExploitationChief, getCurrentUser } from '../api/utils/permissions';
+import { isExploitationChief, getCurrentUser, isExploitationEmployee } from '../api/utils/permissions';
 
 interface SidebarProps {
   activeTab: string;
@@ -25,18 +25,23 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const [modulePermissions, setModulePermissions] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userDivision, setUserDivision] = useState<string | null>(null);
+  const [showMapItem, setShowMapItem] = useState(false);
+  const [isExploitationEmp, setIsExploitationEmp] = useState(false);
 
-  // Загружаем права доступа и данные пользователя при монтировании компонента
   useEffect(() => {
     const loadPermissionsAndUser = () => {
       const permissions = authApi.getModulePermissions();
       setModulePermissions(permissions);
       
-      // Получаем данные текущего пользователя из division_info
       const user = getCurrentUser();
       if (user && user.division_info) {
         setUserDivision(user.division_info.id);
       }
+
+      // Проверяем, нужно ли показывать пункт "Карта ТОБ"
+      const isEmp = isExploitationEmployee();
+      setShowMapItem(isExploitationChief() || isEmp);
+      setIsExploitationEmp(isEmp);
       
       setIsLoading(false);
     };
@@ -46,8 +51,8 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   }, []);
 
   const handleTabClick = (item: MenuItem) => {
-    // Специальная логика для начальника эксплуатации - переход сразу в свое подразделение
-    if (item.id === 'divisions' && isExploitationChief() && userDivision) {
+    // Для сотрудника эксплуатации и начальника эксплуатации - переход в свое подразделение
+    if (item.id === 'divisions' && (isExploitationChief() || isExploitationEmp) && userDivision) {
       navigate(`/divisions/${userDivision}`);
       onSetActiveTab(item.id);
       return;
@@ -69,13 +74,17 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     }
   };
 
-  // Функция для проверки прав доступа к пункту меню
   const hasAccessToMenuItem = (item: MenuItem): boolean => {
     if (isLoading) return true;
     if (!modulePermissions) return true;
     
-    const alwaysAccessible = ['divisions', 'cabinet', 'storage'];
+    const alwaysAccessible = ['divisions', 'cabinet', 'storage', 'networks'];
     if (alwaysAccessible.includes(item.id)) return true;
+    
+    // Для пункта "Карта ТОБ" проверяем роль
+    if (item.id === 'map') {
+      return showMapItem;
+    }
     
     if (item.module && modulePermissions[item.module]) {
       return modulePermissions[item.module].can_view;
@@ -88,9 +97,12 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     return false;
   };
 
-  // Определяем label для пункта "Подразделения" в зависимости от роли
   const getDivisionsLabel = () => {
-    return isExploitationChief() ? 'Подразделение' : 'Подразделения';
+    // Для сотрудника эксплуатации и начальника эксплуатации - "Подразделение"
+    if (isExploitationChief() || isExploitationEmp) {
+      return 'Подразделение';
+    }
+    return 'Подразделения';
   };
 
   const menuItems: MenuItem[] = [
@@ -100,11 +112,10 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       label: getDivisionsLabel()
     },
     { 
-      id: 'equipment', 
-      icon: Database, 
-      label: 'Техника', 
-      path: '/equipment',
-      module: 'equipment'
+      id: 'map', 
+      icon: Map, 
+      label: 'Карта ТОБ', 
+      path: '/map'
     },
     { 
       id: 'personnel', 
@@ -114,11 +125,24 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       module: 'employees'
     },
     { 
+      id: 'equipment', 
+      icon: Database, 
+      label: 'Техника', 
+      path: '/equipment',
+      module: 'equipment'
+    },
+    { 
       id: 'facilities', 
       icon: Building2, 
       label: 'Объекты', 
       path: '/facilities',
       module: 'facilities'
+    },
+    { 
+      id: 'networks', 
+      icon: Network, 
+      label: 'Сети связи', 
+      path: '/networks'
     },
     { 
       id: 'tasks', 
@@ -128,10 +152,9 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       module: 'tasks'
     },
     { id: 'storage', icon: HardDrive, label: 'Хранилище', path: '/storage' },
-    { id: 'cabinet', icon: UserCog, label: 'Кабинет', path: '/cabinet' }
+    { id: 'cabinet', icon: UserCog, label: 'Кабинет', path: '/cabinet' },
   ];
 
-  // Фильтруем меню по правам доступа
   const filteredMenuItems = menuItems.filter(hasAccessToMenuItem);
 
   const renderMenuItem = (item: MenuItem, level = 0) => {
@@ -163,6 +186,8 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
               <ChevronRight className="h-4 w-4" />
             </div>
           )}
+          {/* Добавляем индикатор активной категории */}
+          {isActive && <div className="menu-item-indicator"></div>}
         </div>
         {hasChildren && (
           <div
@@ -179,14 +204,6 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       </div>
     );
   };
-
-  if (isLoading) {
-    return (
-      <nav className="navigation-menu">
-        <div className="menu-loading">Загрузка...</div>
-      </nav>
-    );
-  }
 
   return (
     <nav className="navigation-menu">

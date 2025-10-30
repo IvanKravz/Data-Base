@@ -156,10 +156,10 @@ ROLE_PERMISSIONS = {
     'exploitation_employee': {
         'name': 'Сотрудник подразделения эксплуатации',
         'models': {
-            'Employee': ['view', 'add', 'change', 'delete'],
-            'Equipment': ['view', 'add', 'change', 'delete'],
+            'Employee': ['view'],
+            'Equipment': ['view', 'change'],
             'Facility': ['view', 'add', 'change', 'delete'],
-            'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
+            'CommunicationNetwork': ['view', 'change'],
             'Task': ['view', 'add', 'change', 'delete'],
         },
         'filters': {},

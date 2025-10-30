@@ -251,5 +251,19 @@ export const networksApi = {
     });
     return data;
   },
+
+  // Метод для получения сетей по подразделению
+  getNetworksByDivision: async (token: string, divisionId: string): Promise<Network[]> => {
+    const { data } = await api.get(`/networks/?division=${divisionId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return Array.isArray(data) ? data : data || [];
+  },
+
+  // Метод для получения информации о подразделении
+  getDivisionInfo: async (divisionId: string): Promise<{ id: string; name: string }> => {
+    const { data } = await api.get(`/divisions/${divisionId}/`);
+    return data;
+  },
 };
 

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ArrowLeft, Pencil, Trash2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '.././style.css'
+import { isExploitationEmployee } from '../../../../api/utils/permissions';
 
 interface HeaderProps {
   title: string;
@@ -9,10 +10,21 @@ interface HeaderProps {
   onBack: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  canEditEmployee: boolean;
 }
 
-export function Header({ title, personId, onBack, onEdit, onDelete }: HeaderProps) {
+export function Header({ 
+  title, 
+  personId, 
+  onBack, 
+  onEdit, 
+  onDelete, 
+  canEditEmployee,
+}: HeaderProps) {
   const navigate = useNavigate();
+  
+  // Проверяем, является ли пользователь сотрудником эксплуатации
+  const isExploitationUser = useMemo(() => isExploitationEmployee(), []);
 
   return (
     <div className="personnel-header">
@@ -28,7 +40,8 @@ export function Header({ title, personId, onBack, onEdit, onDelete }: HeaderProp
         </h1>
       </div>
       <div className="personnel-header-right">
-        {personId && (
+        {/* ДОБАВЛЯЕМ УСЛОВИЕ ОТОБРАЖЕНИЯ */}
+        {personId && !isExploitationUser && (
           <button
             onClick={() => navigate(`/personnel/${personId}/qualitative`)}
             className="action-button action-button-green"
@@ -37,7 +50,7 @@ export function Header({ title, personId, onBack, onEdit, onDelete }: HeaderProp
             <span>Качественная характеристика</span>
           </button>
         )}
-        {onEdit && (
+        {onEdit && canEditEmployee && (
           <button
             onClick={onEdit}
             className="action-button action-button-blue"
@@ -46,7 +59,7 @@ export function Header({ title, personId, onBack, onEdit, onDelete }: HeaderProp
             <span>Редактировать</span>
           </button>
         )}
-        {onDelete && (
+        {onDelete && canEditEmployee && (
           <button
             onClick={onDelete}
             className="action-button action-button-red"

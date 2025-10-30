@@ -21,6 +21,13 @@
     gap: 1rem;
 }
 
+.communication-header-title h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+}
+
 .communication-header-back-button {
     display: flex;
     align-items: center;
@@ -64,6 +71,10 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+
+    .communication-header-title h1 {
+        font-size: 1.25rem;
     }
 
     .communication-header-create-button {

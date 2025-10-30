@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Task, TaskCategory, Step } from '../../../../../../types/tasks';
+import { Task, TaskCategory, Step } from '../../../types/tasks';
 import { format } from 'date-fns';
-import '../DivisionTasksSection.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import './style.css';
 
 interface TasksCalendarSidebarProps {
   tasks: Task[];

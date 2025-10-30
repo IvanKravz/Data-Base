@@ -25,7 +25,8 @@ import NetworkManagement from './networks/NetworkManagement/NetworkManagement';
 import CreateNetwork from './networks/forms/CreateNetwork/CreateNetwork';
 import EditNetwork from './networks/forms/EditNetwork/EditNetwork';
 import { CreateEquipmentForm } from './equipment/forms/CreateEquipmentForm/CreateEquipmentForm';
-import { getCurrentUser, isExploitationChief } from '../api/utils/permissions';
+import { getCurrentUser, isExploitationChief, isExploitationEmployee } from '../api/utils/permissions';
+import { MapCountry } from './divisions/DivisionList/MapCountry';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -38,12 +39,12 @@ export function MainLayout() {
   });
   const navigate = useNavigate();
 
-  // Автоматический редирект для начальника эксплуатации
+  // Автоматический редирект для начальника эксплуатации и сотрудника эксплуатации
   useEffect(() => {
     const user = getCurrentUser();
     const divisionId = user?.division_info?.id;
-    
-    if (isExploitationChief() && divisionId && window.location.pathname === '/') {
+
+    if ((isExploitationChief() || isExploitationEmployee()) && divisionId && window.location.pathname === '/') {
       navigate(`/divisions/${divisionId}`);
       setActiveTab('divisions');
     }
@@ -58,13 +59,13 @@ export function MainLayout() {
       <Routes>
         {/* Main Routes */}
         <Route path="/" element={
-            <MainContent
-              activeTab={activeTab}
-              viewTypes={viewTypes}
-              onSetActiveTab={setActiveTab}
-              onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
-              onSelectDivision={() => { }}
-            />
+          <MainContent
+            activeTab={activeTab}
+            viewTypes={viewTypes}
+            onSetActiveTab={setActiveTab}
+            onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
+            onSelectDivision={() => { }}
+          />
         } />
 
         {/* Global Routes (без привязки к подразделению) */}
@@ -72,6 +73,7 @@ export function MainLayout() {
         <Route path="/equipment" element={<EquipmentSection />} />
         <Route path="/facilities" element={<FacilitiesSection />} />
         <Route path="/tasks" element={<DivisionTasksSection />} />
+        <Route path="/networks" element={<CommunicationNetworks />} /> {/* Добавлен глобальный маршрут */}
 
         {/* Division Routes */}
         <Route path="/divisions/:id" element={<DivisionDetails />} />
@@ -79,7 +81,7 @@ export function MainLayout() {
         <Route path="/divisions/:id/equipment" element={<EquipmentSection />} />
         <Route path="/divisions/:id/facilities" element={<FacilitiesSection />} />
         <Route path="/divisions/:id/facilities/new" element={<AddFacilityPage />} />
-        <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm  />} />
+        <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm />} />
         <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
         <Route path="/divisions/:id/networks" element={<CommunicationNetworks />} />
         <Route path="/divisions/:id/equipment/create" element={<CreateEquipmentForm />} />
@@ -101,11 +103,11 @@ export function MainLayout() {
         <Route path="/divisions/:id/networks/communication-networks/edit/:id" element={<EditNetwork />} />
         <Route path="/divisions/:id/networks/management" element={<NetworkManagement />} />
         <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
-                
+
         {/* Other Routes */}
         <Route path="/storage" element={<StorageSection />} />
         <Route path="/cabinet" element={<CabinetSection />} />
-
+        <Route path="/map" element={<MapCountry />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

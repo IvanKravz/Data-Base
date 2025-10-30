@@ -4,6 +4,11 @@ from django.utils import timezone
 
 class Division(models.Model):
     name = models.CharField(max_length=100)
+    order = models.IntegerField(
+        default=0, 
+        verbose_name='Порядок сортировки',
+        help_text='Чем меньше число, тем выше в списке'
+    )
     staff_planned_total = models.PositiveIntegerField(default=0, verbose_name='Общий штат сотрудников (план)')
     staff_planned_management = models.PositiveIntegerField(default=0, verbose_name='Штат руководства (план)')
     staff_planned_officers = models.PositiveIntegerField(default=0, verbose_name='Штат офицеров (план)')
@@ -43,13 +48,18 @@ class Division(models.Model):
         return self.networkmembership_set.values('network').distinct().count()
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
 
 class Subdivision(models.Model):
     name = models.CharField(max_length=100)
     division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name='subdivisions', null=True)
+    order = models.IntegerField(
+        default=0, 
+        verbose_name='Порядок сортировки',
+        help_text='Чем меньше число, тем выше в списке'
+    )
     staff_planned_total = models.PositiveIntegerField(default=0, verbose_name='Общий штат сотрудников (план)')
     staff_planned_management = models.PositiveIntegerField(default=0, verbose_name='Штат руководства (план)')
     staff_planned_officers = models.PositiveIntegerField(default=0, verbose_name='Штат офицеров (план)')
@@ -87,10 +97,9 @@ class Subdivision(models.Model):
         return f"{self.division.name} - {self.name}"
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
         verbose_name = 'Отделение'
         verbose_name_plural = 'Отделения'
-
 
 class FacilityType(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование типа объекта')

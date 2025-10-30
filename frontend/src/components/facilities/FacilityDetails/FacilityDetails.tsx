@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -15,6 +15,7 @@ import { facilitiesApi, authApi } from '../../../api';
 import './FacilityForm.css';
 import { EditFacilityForm } from '../forms/EditFacilityForm/EditFacilityForm';
 import { ClassificationtFacility } from './sections/ClassificationtFacility';
+import { getPermissions } from '../../../api/utils/permissions'; // Добавляем импорт
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,20 @@ export function FacilityDetails() {
 
   // Получаем режим просмотра из authApi
   const isGlobalView = authApi.getGlobalView();
+
+  // Проверка прав доступа для редактирования объектов
+  const canEditFacility = useMemo(() => {
+    const permissions = getPermissions();
+    // Предполагаем, что права для объектов находятся в permissions.facilities
+    if (permissions && permissions.facilities) {
+      return permissions.facilities.can_edit;
+    }
+    // Если нет специфичных прав для объектов, используем права для сотрудников как fallback
+    if (permissions && permissions.employees) {
+      return permissions.employees.can_edit;
+    }
+    return false;
+  }, []);
 
   useEffect(() => {
     const fetchFacility = async () => {
@@ -185,22 +200,24 @@ export function FacilityDetails() {
           <h1 className="facility-header__title">{facility.name}</h1>
         </div>
 
-        <div className="facility-flex facility-gap-sm">
-          <button
-            onClick={() => setIsEditing(true)}
-            className="facility-btn facility-btn--primary"
-          >
-            <Pencil size={16} />
-            <span>Редактировать</span>
-          </button>
-          <button
-            onClick={handleDelete}
-            className="facility-btn facility-btn--danger"
-          >
-            <Trash2 size={16} />
-            <span>Удалить</span>
-          </button>
-        </div>
+        {canEditFacility && (
+          <div className="facility-flex facility-gap-sm">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="facility-btn facility-btn--primary"
+            >
+              <Pencil size={16} />
+              <span>Редактировать</span>
+            </button>
+            <button
+              onClick={handleDelete}
+              className="facility-btn facility-btn--danger"
+            >
+              <Trash2 size={16} />
+              <span>Удалить</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="facility-grid facility-grid--2cols">

@@ -6,7 +6,7 @@ import { SearchBar } from '../../../common/SearchBar';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { authApi, divisionsApi, employeesApi } from '../../../../api';
 import './style.css'
-import { isExploitationChief, isExploitationEmployee, getCurrentUser } from '../../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../api/utils/permissions';
 
 export function PersonnelSection() {
   const navigate = useNavigate();
@@ -23,6 +23,11 @@ export function PersonnelSection() {
   // Получаем данные текущего пользователя
   const currentUser = getCurrentUser();
 
+  // Стабилизированные значения
+  const stableToken = useMemo(() => token, [token]);
+  const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
+  const stableCurrentUser = useMemo(() => currentUser, [JSON.stringify(currentUser)]);
+
   // Мемоизируем вычисления типов пользователей
   const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
   const isChief = useMemo(() => isExploitationChief(), []);
@@ -32,24 +37,19 @@ export function PersonnelSection() {
 
   // Получаем ID подразделения пользователя
   const userDivisionId = useMemo(() => {
-    if (!currentUser?.division_info) return null;
-    return currentUser.division_info.id;
-  }, [currentUser]);
+    if (!stableCurrentUser?.division_info) return null;
+    return stableCurrentUser.division_info.id;
+  }, [stableCurrentUser]);
 
   // Получаем ID отделения пользователя
   const userSubdivisionId = useMemo(() => {
-    if (!currentUser?.division_info || isChief) return null;
-    return currentUser.division_info.subdivision?.id || null;
-  }, [currentUser, isChief]);
-
-  // Получаем ID отделения из URL параметров
-  const urlSubdivisionId = useMemo(() => {
-    return searchParams.get('subdivision');
-  }, [searchParams]);
+    if (!stableCurrentUser?.division_info || isChief) return null;
+    return stableCurrentUser.division_info.subdivision?.id || null;
+  }, [stableCurrentUser, isChief]);
 
   // Мемоизированная функция загрузки данных
   const fetchData = useCallback(async () => {
-    if (!token) return;
+    if (!stableToken) return;
 
     try {
       setLoading(true);
@@ -57,7 +57,7 @@ export function PersonnelSection() {
 
       if (isGlobalView) {
         // Глобальный режим - загружаем всех сотрудников
-        const allPersonnel = await employeesApi.getPersonnel(token, {});
+        const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
         setPersonnel(allPersonnel);
         authApi.updateGlobalView(true);
       } else if (isExploitationUser) {
@@ -69,11 +69,10 @@ export function PersonnelSection() {
           return;
         }
 
-        const data = await divisionsApi.getDivisionById(userDivisionId, token);
-        setDivision(data);
+        const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
 
-        // Определяем какое отделение использовать: из URL или из данных пользователя
-        const targetSubdivisionId = urlSubdivisionId || userSubdivisionId;
+        const data = await divisionsApi.getDivisionById(userDivisionId, stableToken);
+        setDivision(data);
 
         // Устанавливаем название отделения если есть
         if (targetSubdivisionId) {
@@ -84,7 +83,7 @@ export function PersonnelSection() {
         }
 
         // Загружаем всех сотрудников и фильтруем
-        const allPersonnel = await employeesApi.getPersonnel(token, {});
+        const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
 
         const filteredPersonnel = allPersonnel.filter(person => {
           const matchesDivision = person.division?.id?.toString() === userDivisionId.toString();
@@ -103,24 +102,23 @@ export function PersonnelSection() {
 
         authApi.updateGlobalView(false);
 
-        const data = await divisionsApi.getDivisionById(id, token);
+        const data = await divisionsApi.getDivisionById(id, stableToken);
         setDivision(data);
 
-        // Используем subdivision из URL параметров
-        const subdivisionId = urlSubdivisionId;
-        if (subdivisionId) {
-          const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === subdivisionId.toString());
+        // Устанавливаем название отделения если есть
+        if (stableSubdivisionId) {
+          const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === stableSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
 
-        const allPersonnel = await employeesApi.getPersonnel(token, {});
+        const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
         const filteredPersonnel = allPersonnel.filter(person => {
           const matchesDivision = person.division?.id?.toString() === id.toString();
 
-          if (subdivisionId) {
-            return matchesDivision && person.subdivision?.id?.toString() === subdivisionId.toString();
+          if (stableSubdivisionId) {
+            return matchesDivision && person.subdivision?.id?.toString() === stableSubdivisionId.toString();
           }
 
           return matchesDivision;
@@ -134,58 +132,81 @@ export function PersonnelSection() {
     } finally {
       setLoading(false);
     }
-  }, [token, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, urlSubdivisionId]);
+  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
 
   // Основной эффект загрузки данных
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Логика фильтрации для отделения
+  const filterBySubdivision = useCallback((items: any[]) => {
+    // Для сотрудника эксплуатации не фильтруем по отделению - показываем весь персонал подразделения
+    if (isExploitationUser && !id) {
+      return items;
+    }
+
+    // Для обычных случаев
+    if (isGlobalView) return items;
+    if (!stableSubdivisionId) return items;
+
+    return items.filter(item =>
+      item.subdivision?.id?.toString() === stableSubdivisionId.toString()
+    );
+  }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
+
+  // Фильтруем персонал по отделению
+  const displayedPersonnel = useMemo(() => {
+    return filterBySubdivision(personnel);
+  }, [personnel, filterBySubdivision]);
+
   const onBack = useCallback(() => {
     if (isGlobalView) {
       navigate('/');
     } else {
-      // Если есть subdivision в URL, возвращаемся к подразделению с учетом отделения
-      if (urlSubdivisionId) {
-        navigate(`/divisions/${id}?subdivision=${urlSubdivisionId}`);
+      if (stableSubdivisionId) {
+        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
       } else {
         navigate(`/divisions/${id}`);
       }
     }
-  }, [isGlobalView, navigate, id, urlSubdivisionId]);
+  }, [isGlobalView, navigate, id, stableSubdivisionId]);
 
   const onCreateEmployee = useCallback(() => {
     // При создании сотрудника передаем параметры подразделения и отделения
     const queryParams = new URLSearchParams();
     if (id) queryParams.append('division', id);
-    if (urlSubdivisionId) queryParams.append('subdivision', urlSubdivisionId);
+    if (stableSubdivisionId) queryParams.append('subdivision', stableSubdivisionId);
 
     navigate(`/personnel/create?${queryParams.toString()}`);
-  }, [navigate, id, urlSubdivisionId]);
+  }, [navigate, id, stableSubdivisionId]);
 
-  const getHeaderTitle = useCallback(() => {
+  const getHeaderTitle = () => {
+    if (isExploitationUser && !id) {
+      const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
+      // Для всех эксплуатационных пользователей показываем только подразделение
+      return `Личный состав: ${divisionName}`;
+    }
+
     if (isGlobalView) {
       return 'Личный состав: Все подразделения';
     }
-
-    if (isExploitationUser) {
-      const divisionName = currentUser?.division_info?.name || 'Ваше подразделение';
-      // Для эксплуатационных пользователей учитываем subdivision из URL
-      if (urlSubdivisionId) {
-        return `Личный состав: ${divisionName}${subdivisionName ? ` / ${subdivisionName}` : ''}`;
-      } else if (isChief) {
-        return `Личный состав: ${divisionName}`;
-      } else {
-        const userSubdivisionName = currentUser?.division_info?.subdivision?.name || '';
-        return `Личный состав: ${divisionName}${userSubdivisionName ? ` / ${userSubdivisionName}` : ''}`;
-      }
-    }
-
+  
+    // Для режима конкретного подразделения
     return `Личный состав: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
-  }, [isGlobalView, isExploitationUser, isChief, currentUser, division, subdivisionName, urlSubdivisionId]);
+  };
 
   const handleSearchTermChange = useCallback((term: string) => {
     setSearchTerm(term);
+  }, []);
+
+  // Проверка прав доступа для кнопки "Добавить сотрудника"
+  const canCreateEmployee = useMemo(() => {
+    const permissions = getPermissions();
+    if (permissions && permissions.employees) {
+      return permissions.employees.can_edit;
+    }
+    return false;
   }, []);
 
   if (loading) {
@@ -207,13 +228,14 @@ export function PersonnelSection() {
           )}
           {getHeaderTitle()}
         </h3>
-        <button
+        {canCreateEmployee && (<button
           onClick={onCreateEmployee}
           className="create-employee-button"
         >
           <Plus size={16} />
           <span>Создать сотрудника</span>
         </button>
+        )}
       </div>
 
       <div className="personnel-container">
@@ -230,9 +252,9 @@ export function PersonnelSection() {
           searchTerm={searchTerm}
           division={isExploitationUser ? {
             id: userDivisionId,
-            name: currentUser?.division_info?.name
+            name: stableCurrentUser?.division_info?.name
           } : division}
-          personnel={personnel}
+          personnel={displayedPersonnel}
           loading={loading}
         />
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
@@ -23,6 +23,7 @@ import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
 import { NetworkInfo } from './sections/NetworkInfo';
 import { AdditionalInfo } from './sections/AdditionalInfo';
+import { getPermissions } from '../../../api/utils/permissions';
 
 export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,16 @@ export function EquipmentDetailsPage() {
 
   // Получаем режим просмотра из authApi
   const isGlobalView = authApi.getGlobalView();
+
+  // Проверка прав доступа для кнопки "Редактировать технику"
+  const canEditEquipment = useMemo(() => {
+    const permissions = getPermissions();
+    console.log('permissions', permissions)
+    if (permissions && permissions.equipment) {
+      return permissions.equipment.can_edit;
+    }
+    return false;
+  }, []);
 
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -145,6 +156,7 @@ export function EquipmentDetailsPage() {
         onBack={handleBack}
         onEdit={() => setIsEditing(true)}
         onDelete={() => setShowDeleteModal(true)}
+        canEditEquipment={canEditEquipment}
       />
 
       <div className="equipment-grid equipment-grid--2cols">

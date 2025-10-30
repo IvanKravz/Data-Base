@@ -1,10 +1,10 @@
 import React from 'react';
 import { format, isValid } from 'date-fns';
 import Calendar from 'react-calendar';
-import { Task } from '../../../../types/tasks';
-import { TaskCategory } from '../../../../types/taskCategories';
+import { Task } from '../../../types/tasks';
+import { TaskCategory } from '../../../types/taskCategories';
 import 'react-calendar/dist/Calendar.css';
-import '../style.css';
+import './style.css';
 
 interface TaskCalendarProps {
   tasks: Task[];

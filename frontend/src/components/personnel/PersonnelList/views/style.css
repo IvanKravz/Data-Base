@@ -37,6 +37,37 @@
   background-color: white;
 }
 
+.division-header-row {
+  background-color: #f8f9fa;
+  /* border-left: 4px solid #3b82f6; */
+}
+
+.division-header-row.management-header {
+  background-color: #fff3cd;
+  /* border-left: 4px solid #ffc107; */
+}
+
+.subdivision-header-row {
+  background-color: #f1f5f9;
+  border-left: 4px solid #94a3b8;
+}
+
+.personnel-division-header-cell {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #bfdbfe;
+}
+
+.personnel-subdivision-header-cell {
+  padding: 4px 16px 4px 32px;
+  font-weight: 500;
+  font-size: 1.1em;
+  color: #374151;
+  background-color: #f1f5f9;
+}
+
 /* Строка таблицы */
 .table-row {
   transition: background-color 0.2s;
@@ -45,7 +76,11 @@
 }
 
 .table-row:hover {
-  background-color: #f9fafb;
+  background-color: #f6f7fa;
+}
+
+.management-row:hover {
+  background-color: #fef9e7;
 }
 
 /* Ячейка таблицы */
@@ -54,8 +89,10 @@
   padding: 12px 16px;
   font-size: 0.875rem;
   color: #111827;
-  word-wrap: break-word; /* Перенос текста */
-  max-width: 200px; /* Ограничение ширины для переноса текста */
+  word-wrap: break-word;
+  /* Перенос текста */
+  max-width: 200px;
+  /* Ограничение ширины для переноса текста */
 }
 
 /* Аватар пользователя */
@@ -63,7 +100,7 @@
   min-width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background-color: #f3f4f6;
+  background-color: #f5f7fb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,25 +113,26 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge--red {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .badge--blue {
   background-color: #dbeafe;
-  color: #1d4ed8;
+  color: #2563eb;
 }
 
 .badge--green {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.badge--red {
-  background-color: #fddcdc;
-  color: #ff5e5e;
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
 /* Кнопка удаления */
@@ -111,6 +149,7 @@
 
 /* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
+
   .table-header-cell,
   .table-cell {
     padding: 8px 12px;

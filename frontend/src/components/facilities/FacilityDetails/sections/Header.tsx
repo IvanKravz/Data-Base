@@ -9,9 +9,10 @@ interface HeaderProps {
   onBack: () => void;
   onEdit?: () => void;
   facility?: Facility;
+  canEdit?: boolean; // Добавляем пропс для управления правами
 }
 
-export function Header({ title, onBack, onEdit, facility }: HeaderProps) {
+export function Header({ title, onBack, onEdit, facility, canEdit = false }: HeaderProps) {
   const handleExport = () => {
     if (!facility) return;
 
@@ -72,7 +73,7 @@ export function Header({ title, onBack, onEdit, facility }: HeaderProps) {
             <span>Экспорт</span>
           </button>
         )}
-        {onEdit && (
+        {onEdit && canEdit && (
           <button
             onClick={onEdit}
             className="header-action-button header-action-button-edit"

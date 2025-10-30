@@ -1,7 +1,7 @@
 import React from 'react';
 import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react'; // Добавляем LocateFixed
 import { Facility } from '../../../../types';
-import '../style.css';
+import './style.css';
 
 interface GridViewProps {
   facilities: Facility[];

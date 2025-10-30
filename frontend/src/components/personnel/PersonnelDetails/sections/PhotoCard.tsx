@@ -10,12 +10,14 @@ interface PhotoCardProps {
     onPhotoChange: (file: File) => void;
     onPhotoRemove: () => Promise<void>;
     editable?: boolean;
+    canEditEmployee: boolean;
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = ({
     person,
     onPhotoChange,
     onPhotoRemove,
+    canEditEmployee,
     editable = false
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,16 +27,16 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     // Генерируем URL для фото с временной меткой, чтобы избежать кэширования
     const getPhotoUrl = () => {
         if (!person.photo_url) return null;
-        
+
         // Для Blob URL ничего не меняем
         if (person.photo_url.startsWith('blob:')) {
-          return person.photo_url;
+            return person.photo_url;
         }
-        
+
         // Для обычных URL добавляем временную метку
         const separator = person.photo_url.includes('?') ? '&' : '?';
         return `${config.backendUrl}${person.photo_url}${separator}t=${Date.now()}`;
-      };
+    };
 
     const fullPhotoUrl = getPhotoUrl();
 
@@ -65,25 +67,67 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
 
     const handleRemovePhoto = async () => {
         try {
-          setLoading(true);
-          await onPhotoRemove();
-          message.success('Фото удалено');
+            setLoading(true);
+            await onPhotoRemove();
+            message.success('Фото удалено');
         } catch (error) {
-          message.error('Не удалось удалить фото');
+            message.error('Не удалось удалить фото');
         } finally {
-          setLoading(false);
-          setIsModalVisible(false);
+            setLoading(false);
+            setIsModalVisible(false);
         }
-      };
+    };
 
     const showModal = () => {
-        if (person.photo_url || editable) {
-            setIsModalVisible(true);
-        }
+        setIsModalVisible(true);
     };
 
     const handleCancel = () => {
         setIsModalVisible(false);
+    };
+
+    // Функция для определения отображаемых кнопок в модальном окне
+    const getModalFooter = () => {
+        const footerButtons = [];
+
+        // Кнопка удаления фото (только если есть права и есть фото)
+        if (canEditEmployee && editable && person.photo_url) {
+            footerButtons.push(
+                <Button
+                    key="delete"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={handleRemovePhoto}
+                    loading={loading}
+                    style={{ float: 'left' }}
+                >
+                    Удалить фото
+                </Button>
+            );
+        }
+
+        // Кнопка загрузки/замены фото (только если есть права)
+        if (canEditEmployee && editable) {
+            footerButtons.push(
+                <Button
+                    key="upload"
+                    type="primary"
+                    icon={<UploadOutlined />}
+                    onClick={handleUploadClick}
+                >
+                    {person.photo_url ? 'Заменить фото' : 'Загрузить фото'}
+                </Button>
+            );
+        }
+
+        // Кнопка закрытия (всегда доступна)
+        footerButtons.push(
+            <Button key="back" onClick={handleCancel}>
+                Закрыть
+            </Button>
+        );
+
+        return footerButtons;
     };
 
     return (
@@ -96,12 +140,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
                 />
-                
+
                 {person.photo_url ? (
                     <div
                         className="photo-wrapper"
                         onClick={showModal}
-                        style={{ cursor: 'pointer' }}
+                        style={{ cursor: 'pointer' }} // Всегда pointer при наличии фото
                     >
                         <img
                             src={fullPhotoUrl}
@@ -114,11 +158,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
                                 }
                             }}
                         />
-                        {editable && (
-                            <div className="photo-overlay">
-                                <span>Нажмите для просмотра</span>
-                            </div>
-                        )}
+                        <div className="photo-overlay">
+                            <span>Нажмите для просмотра</span>
+                        </div>
                     </div>
                 ) : (
                     <div className="photo-upload-container">
@@ -126,10 +168,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
                             size={64}
                             icon={<CameraOutlined />}
                             className="empty-photo-avatar"
-                            onClick={editable ? showModal : undefined}
-                            style={{ cursor: editable ? 'pointer' : 'default' }}
+                            onClick={showModal}
+                            style={{ cursor: 'pointer' }} // Всегда pointer для пустого аватара
                         />
-                        {editable && (
+                        {editable && canEditEmployee && (
                             <Button
                                 type="primary"
                                 icon={<CameraOutlined />}
@@ -145,33 +187,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
                     title="Фото сотрудника"
                     open={isModalVisible}
                     onCancel={handleCancel}
-                    footer={[
-                        editable && person.photo_url && (
-                            <Button
-                                key="delete"
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={handleRemovePhoto}
-                                loading={loading}
-                                style={{ float: 'left' }}
-                            >
-                                Удалить фото
-                            </Button>
-                        ),
-                        editable && (
-                            <Button
-                                key="upload"
-                                type="primary"
-                                icon={<UploadOutlined />}
-                                onClick={handleUploadClick}
-                            >
-                                {person.photo_url ? 'Заменить фото' : 'Загрузить фото'}
-                            </Button>
-                        ),
-                        <Button key="back" onClick={handleCancel}>
-                            Закрыть
-                        </Button>,
-                    ]}
+                    footer={getModalFooter()} // Используем функцию для определения кнопок
                 >
                     <div style={{ textAlign: 'center' }}>
                         {person.photo_url ? (

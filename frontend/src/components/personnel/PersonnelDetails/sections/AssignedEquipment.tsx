@@ -63,8 +63,6 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
   ? assignedEquipment.filter(item => item.subdivision?.id == subdivisionId)
   : assignedEquipment;
 
-  console.log('filteredEquipment', filteredEquipment)
-
   return (
     <div className="equipment-container">
       <div className="equipment-header">

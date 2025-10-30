@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Facility } from '../../../../types';
-import { ChevronUp, ChevronDown, Trash2, LocateFixed } from 'lucide-react';
-import '../style.css';
+import { Trash2, LocateFixed } from 'lucide-react';
+import './style.css';
 
 interface TableViewProps {
   facilities: Facility[];
@@ -11,95 +11,100 @@ interface TableViewProps {
   showDifferentFields?: boolean;
 }
 
-type SortField = keyof Facility;
-type SortDirection = 'asc' | 'desc';
-
 export function TableView({ facilities, onFacilityClick, onDelete, onLocate, showDifferentFields = false }: TableViewProps) {
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const hasClosedFacilities = facilities.some(f => f.is_closed);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
+  // Функция для сортировки объектов внутри групп
+  const sortFacilitiesInGroup = (facilitiesList: Facility[]): Facility[] => {
+    return [...facilitiesList].sort((a, b) => {
+      // Сортируем по названию
+      return a.name.localeCompare(b.name);
+    });
   };
 
-  const sortedFacilities = [...facilities].sort((a, b) => {
-    let aValue = a[sortField];
-    let bValue = b[sortField];
-
-    if (sortField === 'type') {
-      aValue = a.type.name;
-      bValue = b.type.name;
+  // Группируем объекты по подразделениям и отделениям
+  const groupedData = facilities.reduce((acc, facility) => {
+    // Объекты без подразделения идут в отдельную группу
+    if (!facility.division) {
+      if (!acc.noDivision) {
+        acc.noDivision = {
+          groupName: 'Объекты без подразделения',
+          groupOrder: -1,
+          facilities: []
+        };
+      }
+      acc.noDivision.facilities.push(facility);
+    } else {
+      const divisionId = facility.division.id;
+      const divisionName = facility.division.name;
+      const divisionOrder = facility.division.order || 9999;
+      
+      const subdivisionId = facility.subdivision?.id || 'no-subdivision';
+      const subdivisionName = facility.subdivision?.name || 'Без отделения';
+      const subdivisionOrder = facility.subdivision?.order || 9999;
+      
+      if (!acc.divisions[divisionId]) {
+        acc.divisions[divisionId] = {
+          divisionName,
+          divisionOrder,
+          subdivisions: {}
+        };
+      }
+      
+      if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
+        acc.divisions[divisionId].subdivisions[subdivisionId] = {
+          subdivisionName,
+          subdivisionOrder,
+          facilities: []
+        };
+      }
+      
+      acc.divisions[divisionId].subdivisions[subdivisionId].facilities.push(facility);
     }
-
-    if (aValue === bValue) return 0;
-    if (aValue === null || aValue === undefined) return 1;
-    if (bValue === null || bValue === undefined) return -1;
-
-    const result = String(aValue).localeCompare(String(bValue));
-    return sortDirection === 'asc' ? result : -result;
+    
+    return acc;
+  }, {
+    noDivision: null as { groupName: string; groupOrder: number; facilities: Facility[] } | null,
+    divisions: {} as Record<string, {
+      divisionName: string;
+      divisionOrder: number;
+      subdivisions: Record<string, {
+        subdivisionName: string;
+        subdivisionOrder: number;
+        facilities: Facility[];
+      }>;
+    }>
   });
 
-  const renderSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return (
-        <div className="facility-sort-icon-container">
-          <ChevronUp className="facility-sort-icon-small" />
-          <ChevronDown className="facility-sort-icon-small" style={{ marginTop: -2 }} />
-        </div>
+  // Сортируем объекты внутри групп
+  if (groupedData.noDivision) {
+    groupedData.noDivision.facilities = sortFacilitiesInGroup(groupedData.noDivision.facilities);
+  }
+
+  // Сортируем подразделения по order
+  const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) => {
+    return groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder;
+  });
+
+  // Для каждого подразделения сортируем отделения по order
+  sortedDivisionIds.forEach(divisionId => {
+    const division = groupedData.divisions[divisionId];
+    const subdivisionIds = Object.keys(division.subdivisions);
+    subdivisionIds.sort((a, b) => {
+      return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
+    });
+    // Сохраняем отсортированный массив отделений в подразделении
+    division.sortedSubdivisionIds = subdivisionIds;
+    
+    // Сортируем объекты внутри каждого отделения
+    subdivisionIds.forEach(subdivisionId => {
+      division.subdivisions[subdivisionId].facilities = sortFacilitiesInGroup(
+        division.subdivisions[subdivisionId].facilities
       );
-    }
-    return sortDirection === 'asc' ? (
-      <ChevronUp className="facility-sort-icon" />
-    ) : (
-      <ChevronDown className="facility-sort-icon" />
-    );
-  };
+    });
+  });
 
-  const renderHeaderCell = (field: SortField, label: string) => (
-    <th
-      onClick={() => handleSort(field)}
-      className="facility-table-header"
-    >
-      <div className="facility-table-header-content">
-        <span>{label}</span>
-        {renderSortIcon(field)}
-      </div>
-    </th>
-  );
-
-  const renderHeader = () => {
-    if (!showDifferentFields) {
-      return (
-        <>
-          {renderHeaderCell('name', 'Наименование')}
-          {renderHeaderCell('type', 'Тип')}
-          {hasClosedFacilities && renderHeaderCell('facility_class', 'Класс')}
-          {renderHeaderCell('address', 'Адрес')}
-          {renderHeaderCell('division_name', 'Подразделение')}
-        </>
-      );
-    }
-
-    return (
-      <>
-        {renderHeaderCell('name', 'Наименование')}
-        {renderHeaderCell('type', 'Тип')}
-        {renderHeaderCell('facility_class', 'Класс')}
-        {renderHeaderCell('communication_posts', 'Посты связи')}
-        {renderHeaderCell('address', 'Адрес')}
-        {renderHeaderCell('division_name', 'Подразделение')}
-        {renderHeaderCell('inn', 'ИНН')}
-      </>
-    );
-  };
-
-  const renderRow = (facility: Facility) => {
+  const renderRowContent = (facility: Facility) => {
     if (!showDifferentFields) {
       return (
         <>
@@ -107,7 +112,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
             {facility.name}
           </td>
           <td className="facility-table-cell">
-            {facility.type.name}
+            {facility.type?.name || '-'}
           </td>
           {hasClosedFacilities && (
             <td className="facility-table-cell">
@@ -118,7 +123,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
             {facility.address}
           </td>
           <td className="facility-table-cell">
-            {facility.division_name} / {facility.subdivision_name}
+            {facility.division_name} {facility.subdivision_name && `/ ${facility.subdivision_name}`}
           </td>
         </>
       );
@@ -130,7 +135,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           {facility.name}
         </td>
         <td className="facility-table-cell">
-          {facility.type.name}
+          {facility.type?.name || '-'}
         </td>
         <td className="facility-table-cell">
           {facility.facility_class ? `${facility.facility_class} класс` : '-'}
@@ -142,13 +147,45 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           {facility.address}
         </td>
         <td className="facility-table-cell">
-          {facility.division_name} / {facility.subdivision_name}
+          {facility.division_name} {facility.subdivision_name && `/ ${facility.subdivision_name}`}
         </td>
         <td className="facility-table-cell">
           {facility.inn || '-'}
         </td>
       </>
     );
+  };
+
+  const renderHeader = () => {
+    if (!showDifferentFields) {
+      return (
+        <>
+          <th className="facility-table-header">Наименование</th>
+          <th className="facility-table-header">Тип</th>
+          {hasClosedFacilities && <th className="facility-table-header">Класс</th>}
+          <th className="facility-table-header">Адрес</th>
+          <th className="facility-table-header">Подразделение</th>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <th className="facility-table-header">Наименование</th>
+        <th className="facility-table-header">Тип</th>
+        <th className="facility-table-header">Класс</th>
+        <th className="facility-table-header">Посты связи</th>
+        <th className="facility-table-header">Адрес</th>
+        <th className="facility-table-header">Подразделение</th>
+        <th className="facility-table-header">ИНН</th>
+      </>
+    );
+  };
+
+  // Рассчитываем количество колонок для colspan
+  const getColspan = () => {
+    if (showDifferentFields) return 8;
+    return hasClosedFacilities ? 6 : 5;
   };
 
   return (
@@ -163,41 +200,122 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           </tr>
         </thead>
         <tbody>
-          {sortedFacilities.map((facility) => (
-            <tr
-              key={facility.id}
-              className="facility-table-row"
-              onClick={() => onFacilityClick(facility)}
-            >
-              {renderRow(facility)}
-              <td className="facility-table-cell facility-table-cell-actions">
-                <div className="facility-action-buttons">
-                  {onLocate && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onLocate(facility);
-                      }}
-                      className="facility-locate-btn"
-                      aria-label="Найти на карте"
-                    >
-                      <LocateFixed className="h-4 w-4" />
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(facility.id);
-                    }}
-                    className="facility-delete-btn"
-                    aria-label="Удалить объект"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+          {/* Сначала отображаем объекты без подразделения */}
+          {groupedData.noDivision && (
+            <React.Fragment>
+              <tr className="division-header-row no-division-header">
+                <td colSpan={getColspan()} className="facility-division-header-cell">
+                  {groupedData.noDivision.groupName}
+                </td>
+              </tr>
+              {groupedData.noDivision.facilities.map((facility) => (
+                <tr
+                  key={facility.id}
+                  className="facility-table-row no-division-row"
+                  onClick={() => onFacilityClick(facility)}
+                >
+                  {renderRowContent(facility)}
+                  <td className="facility-table-cell facility-table-cell-actions">
+                    <div className="facility-action-buttons">
+                      {onLocate && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLocate(facility);
+                          }}
+                          className="facility-locate-btn"
+                          aria-label="Найти на карте"
+                        >
+                          <LocateFixed className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(facility.id);
+                        }}
+                        className="facility-delete-btn"
+                        aria-label="Удалить объект"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </React.Fragment>
+          )}
+
+          {/* Затем отображаем подразделения с отделениями */}
+          {sortedDivisionIds.map(divisionId => {
+            const division = groupedData.divisions[divisionId];
+            
+            return (
+              <React.Fragment key={divisionId}>
+                {/* Заголовок подразделения */}
+                <tr className="division-header-row">
+                  <td colSpan={getColspan()} className="facility-division-header-cell">
+                    {division.divisionName}
+                  </td>
+                </tr>
+                
+                {/* Отделения внутри подразделения */}
+                {division.sortedSubdivisionIds.map(subdivisionId => {
+                  const subdivision = division.subdivisions[subdivisionId];
+                  
+                  return (
+                    <React.Fragment key={subdivisionId}>
+                      {/* Заголовок отделения (если есть объекты) */}
+                      {subdivision.facilities.length > 0 && (
+                        <tr className="subdivision-header-row">
+                          <td colSpan={getColspan()} className="facility-subdivision-header-cell">
+                            {subdivision.subdivisionName}
+                          </td>
+                        </tr>
+                      )}
+                      
+                      {/* Объекты отделения */}
+                      {subdivision.facilities.map((facility) => (
+                        <tr
+                          key={facility.id}
+                          className="facility-table-row"
+                          onClick={() => onFacilityClick(facility)}
+                        >
+                          {renderRowContent(facility)}
+                          <td className="facility-table-cell facility-table-cell-actions">
+                            <div className="facility-action-buttons">
+                              {onLocate && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onLocate(facility);
+                                  }}
+                                  className="facility-locate-btn"
+                                  aria-label="Найти на карте"
+                                >
+                                  <LocateFixed className="h-4 w-4" />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(facility.id);
+                                }}
+                                className="facility-delete-btn"
+                                aria-label="Удалить объект"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

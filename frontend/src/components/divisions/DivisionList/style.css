@@ -149,7 +149,6 @@
   font-size: 1.4rem;
   font-weight: 500;
   color: #4b5563;
-  background-color: white;
 }
 
 .hovered-region-name {
@@ -158,7 +157,6 @@
   font-weight: 500;
   color: #4b5563;
   height: 24px;
-  background-color: white;
 }
 
 /* Стили для поиска */

@@ -1,15 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Task, TaskCategory } from '../../../../../types/tasks';
 import { tasksApi } from '../../../../../api/tasks';
 import { divisionsApi } from '../../../../../api/divisions';
-import { TasksHeader } from './sections/TasksHeader';
-import { TasksFilters } from './sections/TasksFilters';
-import { TasksList } from './sections/TasksList';
-import { TasksCalendarView } from './sections/TasksCalendarView';
-import { TasksCalendarSidebar } from './sections/TasksCalendarSidebar';
+import { TasksHeader } from '../../../../tasks/TasksSection/TasksHeader';
+import { TasksFilters } from '../../../../tasks/TasksSection/TasksFilters';
+import { TasksList } from '../../../../tasks/TasksSection/TasksList';
+import { TasksCalendarView } from '../../../../tasks/TasksSection/TasksCalendarView';
+import { TasksCalendarSidebar } from '../../../../tasks/TasksSection/TasksCalendarSidebar';
 import { CreateTaskModal } from '../../../../tasks/CreateTaskModal';
 import './DivisionTasksSection.css';
+import { isExploitationChief, isExploitationEmployee, getCurrentUser } from '../../../../../api/utils/permissions';
 
 interface CalendarState {
   date: Date;
@@ -30,13 +31,14 @@ export function DivisionTasksSection() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
+
   const userData = JSON.parse(localStorage.getItem('user')) || {};
   const currentUserId = userData.id || userData.user?.id || null;
 
   const [calendarState, setCalendarState] = useState<CalendarState>({
     date: new Date(),
     view: 'month',
-    activeStartDate: new Date() // Инициализируем активную дату
+    activeStartDate: new Date()
   });
 
   const navigate = useNavigate();
@@ -45,58 +47,185 @@ export function DivisionTasksSection() {
   const token = localStorage.getItem('accessToken');
   const subdivisionId = searchParams.get('subdivision');
 
+  // Получаем данные текущего пользователя
+  const currentUser = getCurrentUser();
+
+  // Стабилизированные значения для зависимостей
+  const stableToken = useMemo(() => token, [token]);
+  const stableSubdivisionId = useMemo(() => subdivisionId, [subdivisionId]);
+  const stableCurrentUser = useMemo(() => currentUser, [JSON.stringify(currentUser)]);
+
+  // Определяем тип пользователя
+  const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
+  const isChief = useMemo(() => isExploitationChief(), []);
+
+  // Для эксплуатационных пользователей отключаем глобальный режим
+  const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
+
+  // Обработчик возврата назад
+  const handleBack = useCallback(() => {
+    if (id) {
+      // Если есть subdivision в URL, возвращаемся к подразделению с учетом отделения
+      if (stableSubdivisionId) {
+        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
+      } else {
+        navigate(`/divisions/${id}`);
+      }
+    }
+  }, [navigate, id, stableSubdivisionId]);
+
   // Загрузка задач
   useEffect(() => {
     const loadTasks = async () => {
+      if (!stableToken) return;
+
       try {
         setLoading(true);
-        const params = {
-          division: id,
-          subdivision: subdivisionId || undefined,
-          show_completed: "true",
-          show_only_mine: showOnlyMine
-        };
-    
 
-        const [tasksData, divisionData] = await Promise.all([
-          tasksApi.getTasks(params, token!),
-          divisionsApi.getDivisionById(id!, token!)
-        ]);
+        // Если пользователь эксплуатации и нет id (глобальный режим для обычных пользователей)
+        if (isExploitationUser && !id) {
+          const userDivisionId = stableCurrentUser?.division_info?.id;
 
-        const tasksWithCompletion = tasksData.map(task => ({
-          ...task,
-          is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
-        }));
+          if (userDivisionId) {
+            // Для начальника - все задачи подразделения
+            // Для сотрудника - задачи его отделения
+            const params = isChief ?
+              {
+                division: userDivisionId,
+                show_completed: "true",
+                show_only_mine: showOnlyMine
+              } :
+              {
+                division: userDivisionId,
+                subdivision: stableCurrentUser.division_info.subdivision?.id,
+                show_completed: "true",
+                show_only_mine: showOnlyMine
+              };
 
-        setDivision(divisionData);
+            const [tasksData, div] = await Promise.all([
+              tasksApi.getTasks(params, stableToken),
+              divisionsApi.getDivisionById(userDivisionId, stableToken)
+            ]);
 
-        
-        if (subdivisionId) {
-          const subdivision = divisionData.subdivisions?.find(s => s.id.toString() === subdivisionId.toString());
-          setSubdivisionName(subdivision?.name || '');
+            const tasksWithCompletion = tasksData.map(task => ({
+              ...task,
+              is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
+            }));
+
+            if (!isChief) {
+              const userSubdivision = div.subdivisions?.find(
+                s => s.id.toString() === stableCurrentUser.division_info.subdivision?.id?.toString()
+              );
+              setSubdivisionName(userSubdivision?.name || '');
+            }
+
+            setDivision(div);
+            setTasks(tasksWithCompletion);
+          } else {
+            // Если нет информации о подразделении, загружаем все задачи
+            const tasksData = await tasksApi.getTasks({
+              show_completed: "true",
+              show_only_mine: showOnlyMine
+            }, stableToken);
+
+            const tasksWithCompletion = tasksData.map(task => ({
+              ...task,
+              is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
+            }));
+
+            setTasks(tasksWithCompletion);
+          }
+        } else if (isGlobalView) {
+          // Глобальный режим для обычных пользователей - загружаем все задачи
+          const tasksData = await tasksApi.getTasks({
+            show_completed: "true",
+            show_only_mine: showOnlyMine
+          }, stableToken);
+
+          const tasksWithCompletion = tasksData.map(task => ({
+            ...task,
+            is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
+          }));
+
+          setTasks(tasksWithCompletion);
+        } else {
+          // Режим подразделения (есть id)
+          const params = {
+            division: id,
+            subdivision: stableSubdivisionId || undefined,
+            show_completed: "true",
+            show_only_mine: showOnlyMine
+          };
+
+          const [tasksData, divisionData] = await Promise.all([
+            tasksApi.getTasks(params, stableToken),
+            divisionsApi.getDivisionById(id, stableToken)
+          ]);
+
+          const tasksWithCompletion = tasksData.map(task => ({
+            ...task,
+            is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
+          }));
+
+          setDivision(divisionData);
+
+          if (stableSubdivisionId) {
+            const subdivision = divisionData.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
+            setSubdivisionName(subdivision?.name || '');
+          }
+
+          setTasks(tasksWithCompletion);
         }
-  
-        setTasks(tasksWithCompletion);
-        
-  
       } catch (error) {
         console.error('Не удалось загрузить данные:', error);
       } finally {
         setLoading(false);
       }
     };
-  
+
     loadTasks();
-  }, [id, subdivisionId, token, showCreateModal, showOnlyMine]);
+  }, [id, stableToken, stableSubdivisionId, showOnlyMine, isGlobalView, isExploitationUser, isChief, stableCurrentUser]);
+
+  // Получаем заголовок в зависимости от контекста
+  const getHeaderTitle = useCallback(() => {
+    // Для пользователей эксплуатации в "глобальном" режиме (когда нет id)
+    if (isExploitationUser && !id) {
+      const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
+      // Для всех эксплуатационных пользователей показываем только подразделение
+      return `Задачи: ${divisionName}`;
+    }
+  
+    // Для глобального режима обычных пользователей
+    if (isGlobalView) {
+      return 'Все задачи';
+    }
+  
+    // Для режима конкретного подразделения
+    return `Задачи: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
+  }, [isExploitationUser, id, stableCurrentUser, isGlobalView, division, subdivisionName]);
+
+  // Логика фильтрации для отделения
+  const filterBySubdivision = useCallback((items: Task[]) => {
+    // Для сотрудника эксплуатации не фильтруем по отделению - показываем все задачи подразделения
+    if (isExploitationUser && !id) {
+      return items;
+    }
+
+    // Для обычных случаев
+    if (isGlobalView) return items;
+    if (!stableSubdivisionId) return items;
+
+    return items.filter(item =>
+      item.subdivision?.id?.toString() === stableSubdivisionId.toString()
+    );
+  }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
   // Фильтрация задач
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      // 1. Фильтрация по подразделению
-      const subdivisionMatch = !subdivisionId ||
-        (task.subdivision && task.subdivision.id.toString() === subdivisionId.toString());
+    const subdivisionFilteredTasks = filterBySubdivision(tasks);
 
-      // 2. Фильтрация по поиску
+    return subdivisionFilteredTasks.filter(task => {
+      // 1. Фильтрация по поиску
       const searchMatch = searchTerm === '' ||
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.steps.some(step =>
@@ -104,13 +233,13 @@ export function DivisionTasksSection() {
           (step.comments && step.comments.toLowerCase().includes(searchTerm.toLowerCase()))
         );
 
-      // 3. Фильтрация по категории и завершенности
+      // 2. Фильтрация по категории и завершенности
       const categoryMatch =
-        selectedCategory === 'all' ? !task.is_completed : // ТОЛЬКО НЕЗАВЕРШЕННЫЕ для "Все"
+        selectedCategory === 'all' ? !task.is_completed :
           selectedCategory === 'completed' ? task.is_completed :
             !task.is_completed && task.category === selectedCategory;
 
-      // 4. Фильтрация по датам
+      // 3. Фильтрация по датам
       let dateMatch = true;
       if (startDate || endDate) {
         dateMatch = task.steps.some(step => {
@@ -124,13 +253,14 @@ export function DivisionTasksSection() {
         });
       }
 
-      // 5. Фильтрация по "Свои задачи"
+      // 4. Фильтрация по "Свои задачи"
       const mineMatch = !showOnlyMine ||
         (task.is_private && task.created_by?.id === currentUserId);
 
-      return subdivisionMatch && searchMatch && categoryMatch && dateMatch && mineMatch;
+      return searchMatch && categoryMatch && dateMatch && mineMatch;
     });
-  }, [tasks, selectedCategory, searchTerm, subdivisionId, startDate, endDate, showOnlyMine, currentUserId]);
+  }, [tasks, filterBySubdivision, selectedCategory, searchTerm, startDate, endDate, showOnlyMine, currentUserId]);
+
   // Обработчики действий
   const handleDeleteTask = async (taskId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить задачу?')) {
@@ -150,11 +280,22 @@ export function DivisionTasksSection() {
 
   const handleCreateTask = async (newTask: Omit<Task, 'id'>) => {
     try {
+      // Для эксплуатационных пользователей в глобальном режиме используем их подразделение
+      let divisionId = newTask.division?.id;
+      let subdivisionId = newTask.subdivision?.id;
+
+      if (isExploitationUser && !id) {
+        divisionId = stableCurrentUser?.division_info?.id;
+        if (!isChief) {
+          subdivisionId = stableCurrentUser?.division_info?.subdivision?.id;
+        }
+      }
+
       const createdTask = await tasksApi.createTask({
         title: newTask.title,
         category: newTask.category,
-        division_id: newTask.division.id,
-        subdivision_id: newTask.subdivision?.id ?? null,
+        division_id: divisionId,
+        subdivision_id: subdivisionId ?? null,
         is_private: newTask.is_private,
         steps: newTask.steps.map(step => ({
           name: step.name,
@@ -181,7 +322,7 @@ export function DivisionTasksSection() {
         {
           title: updatedTask.title,
           category: updatedTask.category,
-          division_id: updatedTask.division.id,
+          division_id: updatedTask.division?.id || null,
           subdivision_id: updatedTask.subdivision?.id ?? null,
           is_private: updatedTask.is_private,
           steps: updatedTask.steps.map(step => ({
@@ -194,16 +335,18 @@ export function DivisionTasksSection() {
       );
 
       setTasks(prevTasks => {
-        // Удаляем задачу из текущего списка
         const filteredTasks = prevTasks.filter(task => task.id !== updatedTask.id);
 
-        // Проверяем, должна ли задача остаться в текущем подразделении
-        const shouldKeepTask =
-          response.division.id.toString() === id &&
-          (subdivisionId ? response.subdivision?.id?.toString() === subdivisionId : true);
+        // Если мы в режиме подразделения, проверяем, должна ли задача остаться
+        if (id) {
+          const shouldKeepTask =
+            response.division.id.toString() === id &&
+            (stableSubdivisionId ? response.subdivision?.id?.toString() === stableSubdivisionId : true);
+          return shouldKeepTask ? [...filteredTasks, response] : filteredTasks;
+        }
 
-        // Если задача осталась в текущем подразделении, добавляем обновленную версию
-        return shouldKeepTask ? [...filteredTasks, response] : filteredTasks;
+        // В глобальном режиме просто добавляем обновленную задачу
+        return [...filteredTasks, response];
       });
 
       setShowCreateModal(false);
@@ -211,7 +354,6 @@ export function DivisionTasksSection() {
       console.error('Failed to update task:', error);
     }
   };
-
 
   const toggleTaskStep = async (taskId: string, stepId: string, isCompleted: boolean) => {
     try {
@@ -229,7 +371,7 @@ export function DivisionTasksSection() {
           return {
             ...task,
             steps: updatedSteps,
-            is_completed: allStepsCompleted // Обновляем статус задачи
+            is_completed: allStepsCompleted
           };
         }
         return task;
@@ -239,7 +381,6 @@ export function DivisionTasksSection() {
     }
   };
 
-
   // Функция для обновления состояния календаря
   const updateCalendarState = (newState: Partial<CalendarState>) => {
     setCalendarState(prev => ({ ...prev, ...newState }));
@@ -248,15 +389,32 @@ export function DivisionTasksSection() {
   // Обработчик клика на этапе в сайдбаре
   const handleStepClick = (step: Step) => {
     const startDate = new Date(step.start_date);
-
-    // Переключаемся на вкладку календаря
     setActiveView('calendar');
-
-    // Устанавливаем дату начала этапа
     updateCalendarState({
       date: startDate,
       view: 'month'
     });
+  };
+
+  // Функция для отображения сообщения когда нет задач
+  const renderNoTasksMessage = () => {
+    const hasActiveFilters = searchTerm || selectedCategory !== 'all' || startDate || endDate || showOnlyMine;
+
+    if (hasActiveFilters) {
+      return (
+        <div className="tasks-empty-state">
+          <h3>Задачи не найдены</h3>
+          <p>Попробуйте изменить параметры фильтрации или очистить фильтры</p>
+        </div>
+      );
+    } else {
+      return (
+        <div className="tasks-empty-state">
+          <h3>Задачи отсутствуют</h3>
+          <p>Создайте первую задачу, нажав кнопку "Создать задачу"</p>
+        </div>
+      );
+    }
   };
 
   return (
@@ -265,8 +423,10 @@ export function DivisionTasksSection() {
         <TasksHeader
           subdivisionName={subdivisionName}
           divisionName={division?.name}
-          onBack={() => navigate(`/divisions/${id}`)}
+          onBack={handleBack}
           onCreateTask={() => setShowCreateModal(true)}
+          showBackButton={!!id} // Простая проверка - показывать кнопку назад только если есть id
+          headerTitle={getHeaderTitle()}
         />
 
         <div className="tasks-layout">
@@ -295,27 +455,33 @@ export function DivisionTasksSection() {
               </div>
             ) : (
               <>
-                {activeView === 'list' ? (
-                  <TasksList
-                    tasks={filteredTasks}
-                    onEditTask={handleEditTask}
-                    onDeleteTask={handleDeleteTask}
-                    onToggleStep={toggleTaskStep}
-                  />
+                {filteredTasks.length === 0 ? (
+                  renderNoTasksMessage()
                 ) : (
-                  <div className="calendar-view-container">
-                    <TasksCalendarView
-                      tasks={filteredTasks}
-                      onTaskClick={handleEditTask}
-                      calendarState={calendarState}
-                      onCalendarStateChange={updateCalendarState}
-                    />
-                    <TasksCalendarSidebar
-                      tasks={filteredTasks}
-                      onTaskClick={handleEditTask}
-                      onStepClick={handleStepClick}
-                    />
-                  </div>
+                  <>
+                    {activeView === 'list' ? (
+                      <TasksList
+                        tasks={filteredTasks}
+                        onEditTask={handleEditTask}
+                        onDeleteTask={handleDeleteTask}
+                        onToggleStep={toggleTaskStep}
+                      />
+                    ) : (
+                      <div className="calendar-view-container">
+                        <TasksCalendarView
+                          tasks={filteredTasks}
+                          onTaskClick={handleEditTask}
+                          calendarState={calendarState}
+                          onCalendarStateChange={updateCalendarState}
+                        />
+                        <TasksCalendarSidebar
+                          tasks={filteredTasks}
+                          onTaskClick={handleEditTask}
+                          onStepClick={handleStepClick}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
@@ -325,7 +491,7 @@ export function DivisionTasksSection() {
         {showCreateModal && (
           <CreateTaskModal
             initialTask={selectedTask}
-            divisionId={id!}
+            divisionId={id} // Может быть undefined в глобальном режиме
             onClose={() => {
               setShowCreateModal(false);
               setSelectedTask(null);

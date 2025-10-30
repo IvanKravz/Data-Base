@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
@@ -15,6 +15,7 @@ import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
 import { Employee } from '../../../types';
 import { EditPersonnelForm } from '../forms/EditPersonnelForm';
+import { getPermissions } from '../../../api/utils/permissions';
 
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,15 @@ export function PersonnelDetails() {
 
   // ПОЛУЧАЕМ РЕЖИМ ПРОСМОТРА ИЗ localStorage ЧЕРЕЗ authApi
   const isGlobalView = authApi.getGlobalView();
+
+  // Проверка прав доступа для кнопки "Редактировать сотрудника"
+  const canEditEmployee = useMemo(() => {
+    const permissions = getPermissions();
+    if (permissions && permissions.employees) {
+      return permissions.employees.can_edit;
+    }
+    return false;
+  }, []);
 
   useEffect(() => {
     if (id && token && !person) {
@@ -150,8 +160,12 @@ export function PersonnelDetails() {
     return (
       <div className="space-y-6">
         <Header
-          title="Редактирование сотрудника"
-          onBack={() => setIsEditing(false)}
+          title={person?.full_name || ''}
+          personId={person?.id || ''}
+          onBack={handleBack}
+          onEdit={() => setIsEditing(true)}
+          onDelete={handleDelete}
+          canEditEmployee={canEditEmployee}
         />
         <div className="bg-white rounded-lg shadow p-6">
           <EditPersonnelForm
@@ -172,6 +186,7 @@ export function PersonnelDetails() {
         onBack={handleBack}
         onEdit={() => setIsEditing(true)}
         onDelete={handleDelete}
+        canEditEmployee={canEditEmployee}
       />
 
       <div className="personnel-details-grid">
@@ -181,6 +196,7 @@ export function PersonnelDetails() {
             editable={true}
             onPhotoChange={handlePhotoChange}
             onPhotoRemove={handlePhotoRemove}
+            canEditEmployee={canEditEmployee}
           />
         )}
         <BasicInfo person={person} />

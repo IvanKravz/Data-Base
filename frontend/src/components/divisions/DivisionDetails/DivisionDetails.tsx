@@ -1,4 +1,5 @@
 // DivisionDetails.tsx
+// DivisionDetails.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Overview } from './sections/Overview';
@@ -6,7 +7,7 @@ import { divisionsApi } from '../../../api';
 import { Header } from './sections/Header';
 import { Skeleton } from '@mui/material';
 import './sections/style.css';
-import { isExploitationChief } from '../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee } from '../../../api/utils/permissions';
 
 export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,10 @@ export function DivisionDetails() {
   const [division, setDivision] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Проверяем роли
+  const isExploitationEmp = isExploitationEmployee();
+  const isChief = isExploitationChief();
 
   useEffect(() => {
     const fetchFacility = async () => {
@@ -67,7 +72,8 @@ export function DivisionDetails() {
       <Header 
         division={division} 
         onBack={handleBack} 
-        showBackButton={!isExploitationChief()} // Показывать кнопку назад только если не начальник эксплуатации
+        // Показывать кнопку назад только если не начальник эксплуатации и не сотрудник эксплуатации
+        showBackButton={!isChief && !isExploitationEmp}
       />
       
       <Overview division={division} />

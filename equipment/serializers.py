@@ -6,14 +6,18 @@ from users.serializers import EmployeeSerializer
 from django.apps import apps
 
 class DivisionShortSerializer(serializers.ModelSerializer):
+    order = serializers.IntegerField(read_only=True)
+    
     class Meta:
         model = Division
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'order']
 
 class SubdivisionShortSerializer(serializers.ModelSerializer):
+    order = serializers.IntegerField(read_only=True)
+    
     class Meta:
         model = Subdivision
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'order']
 
 class FacilityShortSerializer(serializers.ModelSerializer):
     class Meta:
