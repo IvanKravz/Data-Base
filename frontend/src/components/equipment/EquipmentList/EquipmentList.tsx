@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import { Equipment } from '../../../types';
-import { TableView } from './views/TableView'; // Убедитесь, что путь правильный
+import { TableView } from './views/TableView';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 
 interface EquipmentListProps {
   equipment: Equipment[];
   onUpdateEquipment: (updatedEquipment: Equipment) => void;
   onDeleteEquipment: (id: string) => void;
+  divisionId?: string; // Добавляем новые пропсы
+  subdivisionId?: string;
+  activeTab?: string;
 }
 
 export function EquipmentList({
   equipment,
-  onUpdateEquipment,
   onDeleteEquipment,
+  divisionId,
+  subdivisionId,
+  activeTab
 }: EquipmentListProps) {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
   const filteredEquipment = equipment;
-
-  const handleEdit = (e: React.MouseEvent, item: Equipment) => {
-    e.stopPropagation();
-    onUpdateEquipment(item);
-  };
 
   const handleDelete = (id: string) => {
     setDeleteModal({ isOpen: true, equipmentId: id });
@@ -40,8 +40,10 @@ export function EquipmentList({
     <>
       <TableView
         equipment={filteredEquipment}
-        onEdit={handleEdit}
         onDelete={handleDelete}
+        divisionId={divisionId}
+        subdivisionId={subdivisionId}
+        activeTab={activeTab}
       />
 
       {filteredEquipment.length === 0 && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../../store/store';
 import { createNetwork } from '../../../../store/slices/networksSlice';
@@ -33,8 +33,12 @@ interface NetworkDirection {
 
 const CreateNetwork: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
+
+    // Удаляем получение id из useParams, используем состояние навигации
+    const divisionId = location.state?.divisionId;
 
     const [newNetwork, setNewNetwork] = useState({
         name: '',
@@ -155,34 +159,34 @@ const CreateNetwork: React.FC = () => {
     const handleRemoveConnection = (index: number) => {
         const connectionToRemove = selectedConnections[index];
         const equipmentIdToRemove = connectionToRemove.equipment.id;
-      
+
         // Проверяем, есть ли направления, использующие это оборудование
         const relatedDirections = selectedDirections.filter(
-          dir => dir.from.equipment.id === equipmentIdToRemove || 
-                 dir.to.equipment.id === equipmentIdToRemove
+            dir => dir.from.equipment.id === equipmentIdToRemove ||
+                dir.to.equipment.id === equipmentIdToRemove
         );
-      
+
         if (relatedDirections.length > 0) {
-          const confirmMessage = `Внимание! Удаление этой связи приведет к удалению ${relatedDirections.length} направлений, которые ее используют. Продолжить?`;
-          
-          if (!window.confirm(confirmMessage)) {
-            return; // Пользователь отменил удаление
-          }
-      
-          // Удаляем связанные направления
-          const newDirections = selectedDirections.filter(
-            dir => dir.from.equipment.id !== equipmentIdToRemove && 
-                   dir.to.equipment.id !== equipmentIdToRemove
-          );
-          setSelectedDirections(newDirections);
+            const confirmMessage = `Внимание! Удаление этой связи приведет к удалению ${relatedDirections.length} направлений, которые ее используют. Продолжить?`;
+
+            if (!window.confirm(confirmMessage)) {
+                return; // Пользователь отменил удаление
+            }
+
+            // Удаляем связанные направления
+            const newDirections = selectedDirections.filter(
+                dir => dir.from.equipment.id !== equipmentIdToRemove &&
+                    dir.to.equipment.id !== equipmentIdToRemove
+            );
+            setSelectedDirections(newDirections);
         }
-      
+
         // Удаляем связь
         const newConnections = [...selectedConnections];
         newConnections.splice(index, 1);
         setSelectedConnections(newConnections);
         setConnectionError(null);
-      };
+    };
 
     const handleAddDirection = (direction: NetworkDirection) => {
         const exists = selectedDirections.some(dir =>
@@ -215,13 +219,13 @@ const CreateNetwork: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Проверка наличия хотя бы одной связи
         if (selectedConnections.length === 0) {
             setError('Необходимо добавить хотя бы одну связь');
             return;
         }
-        
+
         setSaving(true);
         setError(null);
         const token = localStorage.getItem('accessToken');
@@ -284,7 +288,14 @@ const CreateNetwork: React.FC = () => {
                     );
                 }
 
-                navigate(`/divisions/${id}/networks`);
+                if (location.state?.from) {
+                    navigate(location.state.from);
+                } else if (divisionId) {
+                    navigate(`/divisions/${divisionId}/networks`);
+                } else {
+                    navigate('/networks');
+                }
+
             } catch (error) {
                 console.error('Ошибка создания сети:', error);
                 setError('Ошибка при создании сети');
@@ -294,7 +305,14 @@ const CreateNetwork: React.FC = () => {
     };
 
     const handleCancel = () => {
-        navigate(`/divisions/${id}/networks`);
+        // Используем состояние навигации для возврата
+        if (location.state?.from) {
+            navigate(location.state.from);
+        } else if (divisionId) {
+            navigate(`/divisions/${divisionId}/networks`);
+        } else {
+            navigate('/networks');
+        }
     };
 
     return (

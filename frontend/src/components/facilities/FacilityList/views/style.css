@@ -76,7 +76,7 @@
 
 .facility-table-row:hover {
     background-color: #f9fafb;
-    cursor: default;
+    cursor: pointer;
 }
 
 .facility-table-cell {

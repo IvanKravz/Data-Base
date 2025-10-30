@@ -1,5 +1,6 @@
 import React from 'react';
-import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react'; // Добавляем LocateFixed
+import { useNavigate } from 'react-router-dom';
+import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react';
 import { Facility } from '../../../../types';
 import './style.css';
 
@@ -7,14 +8,38 @@ interface GridViewProps {
   facilities: Facility[];
   onFacilityClick: (facility: Facility) => void;
   onDelete: (id: string) => void;
-  onLocate: (facility: Facility) => void; // Добавляем обработчик геолокации
+  onLocate: (facility: Facility) => void;
+  divisionId?: string; // Добавляем новые пропсы
+  subdivisionId?: string;
+  activeTab?: string;
 }
 
-export function GridView({ facilities, onFacilityClick, onDelete, onLocate }: GridViewProps) {
+export function GridView({
+  facilities,
+  onFacilityClick,
+  onDelete,
+  onLocate,
+  divisionId,
+  subdivisionId,
+  activeTab
+}: GridViewProps) {
+  const navigate = useNavigate();
+
+  const handleCardClick = (facility: Facility) => {
+    navigate(`/facilities/${facility.id}`, {
+      state: {
+        from: 'facilities-section',
+        divisionId: divisionId,
+        subdivisionId: subdivisionId,
+        activeTab: activeTab
+      }
+    });
+  };
+
   return (
     <div className="facility-grid-container">
       {facilities.map((facility) => (
-        <div key={facility.id} className="facility-card-grid" onClick={() => onFacilityClick(facility)}>
+        <div key={facility.id} className="facility-card-grid" onClick={() => handleCardClick(facility)}>
           <div className="facility-card-header">
             <h3 className="facility-card-title">
               {facility.name}

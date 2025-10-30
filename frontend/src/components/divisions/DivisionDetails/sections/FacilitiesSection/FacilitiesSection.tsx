@@ -1,6 +1,6 @@
 // FacilitiesSection.tsx
-import React, { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
@@ -37,7 +37,7 @@ export function FacilitiesSection() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
-
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | number>('all');
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
@@ -352,30 +352,34 @@ export function FacilitiesSection() {
   }, [isGlobalView, navigate, id, stableSubdivisionId]);
 
   const handleAddFacility = useCallback(() => {
+    const state = {
+      from: 'facilities-section',
+      divisionId: id,
+      subdivisionId: stableSubdivisionId,
+      activeTab: activeTab
+    };
+
     if (isGlobalView || isExploitationUser) {
-      navigate(`/facilities/new`, {
-        state: {
-          divisionId: isExploitationUser ? userDivisionId : undefined,
-          subdivisionId: isExploitationUser ? (stableSubdivisionId || userSubdivisionId) : undefined
-        }
-      });
+      navigate(`/facilities/new`, { state });
     } else {
-      navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`);
+      navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
     }
-  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
+  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId, activeTab]);
 
   const handleAddPost = useCallback(() => {
+    const state = {
+      from: 'facilities-section',
+      divisionId: id,
+      subdivisionId: stableSubdivisionId,
+      activeTab: activeTab
+    };
+
     if (isGlobalView || isExploitationUser) {
-      navigate(`/communication-posts/new`, {
-        state: {
-          divisionId: isExploitationUser ? userDivisionId : undefined,
-          subdivisionId: isExploitationUser ? (stableSubdivisionId || userSubdivisionId) : undefined
-        }
-      });
+      navigate(`/communication-posts/new`, { state });
     } else {
-      navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`);
+      navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
     }
-  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
+  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId, activeTab]);
 
   const handleLocateFacility = useCallback((facility: Facility) => {
     setMapSearchTerm('');
@@ -444,21 +448,21 @@ export function FacilitiesSection() {
       const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
       return `Объекты: ${divisionName}`;
     }
-  
+
     if (isGlobalView) {
       return 'Объекты: Все подразделения';
     }
-  
+
     // Для начальника эксплуатации показываем и подразделение, и отделение (если есть)
     if (isChief && subdivisionName) {
       return `Объекты: ${division?.name || ''} / ${subdivisionName}`;
     }
-    
+
     // Для сотрудника эксплуатации или начальника без отделения показываем только подразделение
     if (isExploitationUser) {
       return `Объекты: ${division?.name || ''}`;
     }
-    
+
     // Для обычных пользователей
     return `Объекты: ${division?.name || ''}${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
@@ -598,11 +602,14 @@ export function FacilitiesSection() {
                 viewType={viewType}
                 onViewChange={handleViewChange}
                 facilities={displayFacilities}
-                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
+                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)} // Эта функция теперь не используется напрямую, но оставляем для обратной совместимости
                 onLocateFacility={handleLocateFacility}
                 showDifferentFields={true}
                 onFacilityDeleted={handleFacilityDeleted}
                 onDeleteInitiated={handleDeleteInitiated}
+                divisionId={id} // Добавляем пропсы для навигации
+                subdivisionId={stableSubdivisionId}
+                activeTab={activeTab}
               />
             )}
           </div>

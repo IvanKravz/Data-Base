@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
@@ -38,7 +38,8 @@ export function EquipmentDetailsPage() {
 
   // Получаем режим просмотра из authApi
   const isGlobalView = authApi.getGlobalView();
-
+  const location = useLocation();
+  
   // Проверка прав доступа для кнопки "Редактировать технику"
   const canEditEquipment = useMemo(() => {
     const permissions = getPermissions();
@@ -68,17 +69,43 @@ export function EquipmentDetailsPage() {
   }, [id, token]);
 
   // Обновляем логику возврата в зависимости от режима просмотра
+
   const handleBack = () => {
-    if (isGlobalView && !equipment?.division?.id) {
-      // Если в глобальном режиме просмотра - возврат к общему списку техники
-      navigate(`/equipment`);
-    } else {
-      // Иначе - возврат к списку техники подразделения
-      if (equipment?.division?.id && !isGlobalView) {
-        navigate(`/divisions/${equipment.division.id}/equipment`);
-      } else {
-        navigate(-1);
+    const state = location.state;
+    
+    // Если есть состояние из предыдущей страницы
+    if (state?.from === 'equipment-section') {
+      let backUrl = state.divisionId 
+        ? `/divisions/${state.divisionId}/equipment`
+        : `/equipment`;
+      
+      // Добавляем параметры если они есть
+      const params = new URLSearchParams();
+      if (state.subdivisionId) {
+        params.append('subdivision', state.subdivisionId);
       }
+      if (state.activeTab && state.activeTab !== 'all') {
+        params.append('tab', state.activeTab);
+      }
+      
+      const queryString = params.toString();
+      if (queryString) {
+        backUrl += `?${queryString}`;
+      }
+      
+      navigate(backUrl);
+    } 
+    // Стандартная логика
+    else if (isGlobalView) {
+      navigate(`/equipment`);
+    } else if (equipment?.division?.id) {
+      let backUrl = `/divisions/${equipment.division.id}/equipment`;
+      if (equipment.subdivision?.id) {
+        backUrl += `?subdivision=${equipment.subdivision.id}`;
+      }
+      navigate(backUrl);
+    } else {
+      navigate(-1);
     }
   };
 

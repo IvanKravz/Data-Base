@@ -1,3 +1,5 @@
+// EquipmentSection.tsx - обновленный код
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Filter, Plus } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -33,6 +35,12 @@ const CATEGORY_ICONS = {
   'closed': <KeyRound className="equipment-tab-icon" size={16} />
 };
 
+// Интерфейс для объекта interest_organ
+interface InterestOrgan {
+  id: string;
+  name: string;
+}
+
 interface AdvancedSearchFilters {
   names: string[];
   serialNumbers: string[];
@@ -42,6 +50,7 @@ interface AdvancedSearchFilters {
   exploitationDateFrom: string;
   exploitationDateTo: string;
   assignedTo: string[];
+  interestOrgans: InterestOrgan[]; // Добавлено новое поле
 }
 
 export function EquipmentSection() {
@@ -89,7 +98,8 @@ export function EquipmentSection() {
     manufacturingDateTo: '',
     exploitationDateFrom: '',
     exploitationDateTo: '',
-    assignedTo: []
+    assignedTo: [],
+    interestOrgans: [] // Добавлено новое поле
   });
 
   // Проверка прав доступа для кнопки "Добавить технику"
@@ -228,11 +238,11 @@ export function EquipmentSection() {
     if (isExploitationUser && !id) {
       return items;
     }
-  
+
     // Для обычных случаев
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-  
+
     return items.filter(item =>
       item.subdivision?.id?.toString() === stableSubdivisionId.toString()
     );
@@ -268,7 +278,7 @@ export function EquipmentSection() {
     }
   }, [activeTab, openEquipment, closedEquipment]);
 
-  // Остальная логика фильтрации
+  // Остальная логика фильтрации с добавлением interest_organ
   const filteredEquipment = useMemo(() => {
     return statusButtonsEquipment.filter(item => {
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
@@ -278,7 +288,8 @@ export function EquipmentSection() {
         item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.assigned_to?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.subdivision?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.inventory_number?.toLowerCase().includes(searchTerm.toLowerCase());
+        item.inventory_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.interest_organ?.name?.toLowerCase().includes(searchTerm.toLowerCase()); // Добавлен поиск по interest_organ
 
       const matchesAdvancedSearch =
         (advancedFilters.names.length === 0 || advancedFilters.names.some(name =>
@@ -289,6 +300,8 @@ export function EquipmentSection() {
           item.inventory_number?.toLowerCase().includes(inv.toLowerCase()))) &&
         (advancedFilters.assignedTo.length === 0 || advancedFilters.assignedTo.some(assigned =>
           item.assigned_to?.full_name?.toLowerCase().includes(assigned.toLowerCase()))) &&
+        (advancedFilters.interestOrgans.length === 0 || advancedFilters.interestOrgans.some(organ =>
+          item.interest_organ?.id === organ.id)) && // Добавлена фильтрация по interest_organ
         (!advancedFilters.manufacturingDateFrom || item.manufacturing_date >= advancedFilters.manufacturingDateFrom) &&
         (!advancedFilters.manufacturingDateTo || item.manufacturing_date <= advancedFilters.manufacturingDateTo) &&
         (!advancedFilters.exploitationDateFrom || item.exploitation_date >= advancedFilters.exploitationDateFrom) &&
@@ -312,7 +325,7 @@ export function EquipmentSection() {
     }, 10);
   };
 
-  const handleAdvancedFilterChange = (filterType: keyof AdvancedSearchFilters, values: string[]) => {
+  const handleAdvancedFilterChange = (filterType: keyof AdvancedSearchFilters, values: any) => {
     setAdvancedFilters(prev => ({
       ...prev,
       [filterType]: values
@@ -328,7 +341,8 @@ export function EquipmentSection() {
       manufacturingDateTo: '',
       exploitationDateFrom: '',
       exploitationDateTo: '',
-      assignedTo: []
+      assignedTo: [],
+      interestOrgans: [] // Добавлено новое поле
     });
   };
 
@@ -340,7 +354,8 @@ export function EquipmentSection() {
     advancedFilters.manufacturingDateTo !== '' ||
     advancedFilters.exploitationDateFrom !== '' ||
     advancedFilters.exploitationDateTo !== '' ||
-    advancedFilters.assignedTo.length > 0;
+    advancedFilters.assignedTo.length > 0 ||
+    advancedFilters.interestOrgans.length > 0; // Добавлено новое поле
 
   const handleCreateEquipment = () => {
     if (isGlobalView) {
@@ -378,21 +393,21 @@ export function EquipmentSection() {
 
   // Правильное отображение заголовка для всех случаев
   const getHeaderTitle = () => {
-    
+
     // Для пользователей эксплуатации в "глобальном" режиме (когда нет id)
     if (isExploitationUser && !id) {
-      
+
       const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
       // Для всех эксплуатационных пользователей показываем только подразделение
       return `Техника связи и информатизации: ${divisionName}`;
     }
-  
+
     // Для глобального режима обычных пользователей
     if (isGlobalView) {
-      
+
       return 'Техника связи и информатизации: Все подразделения';
     }
-  
+
     // Для режима конкретного подразделения
     return `Техника связи и информатизации: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
@@ -486,7 +501,7 @@ export function EquipmentSection() {
               <SearchBar
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено..."
+                placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено, в чьих интересах..."
               />
               <button
                 className={`advanced-filter-button ${hasActiveAdvancedFilters ? 'active' : ''}`}
@@ -509,7 +524,21 @@ export function EquipmentSection() {
 
           {hasActiveAdvancedFilters && (
             <div className="active-filters">
-              {/* Фильтры остаются без изменений */}
+              {/* Можно добавить отображение активных фильтров для interestOrgans */}
+              {advancedFilters.interestOrgans.length > 0 && (
+                <div className="filter-tags">
+                  {advancedFilters.interestOrgans.map((organ, index) => (
+                    <span key={organ.id} className="filter-tag">
+                      В чьих интересах: {organ.name}
+                      <button onClick={() => {
+                        const newInterestOrgans = [...advancedFilters.interestOrgans];
+                        newInterestOrgans.splice(index, 1);
+                        handleAdvancedFilterChange('interestOrgans', newInterestOrgans);
+                      }}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -525,6 +554,9 @@ export function EquipmentSection() {
             equipment={filteredEquipment}
             onUpdateEquipment={() => { }}
             onDeleteEquipment={handleDeleteEquipment}
+            divisionId={id} // Добавляем пропсы для навигации
+            subdivisionId={stableSubdivisionId}
+            activeTab={activeTab}
           />
         </div>
       </div>

@@ -2,19 +2,16 @@ import React from 'react';
 
 interface DateFieldProps {
   label: string;
-  filterType: string;
   value: string;
-  filters: string;
   onChange: (value: string) => void;
-  onRemoveFilter: () => void;
+  onRemove: () => void;
 }
 
 export function DateField({
   label,
   value,
-  filters,
   onChange,
-  onRemoveFilter
+  onRemove
 }: DateFieldProps) {
   return (
     <div className="search-field">
@@ -24,11 +21,11 @@ export function DateField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      {filters && (
+      {value && (
         <div className="selected-filters">
           <span className="filter-tag">
-            {filters}
-            <button onClick={onRemoveFilter}>×</button>
+            {value}
+            <button onClick={onRemove}>×</button>
           </span>
         </div>
       )}

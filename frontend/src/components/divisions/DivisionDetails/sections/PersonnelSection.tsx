@@ -160,7 +160,7 @@ export function PersonnelSection() {
     return filterBySubdivision(personnel);
   }, [personnel, filterBySubdivision]);
 
-  const onBack = useCallback(() => {
+  const handleBack = useCallback(() => {
     if (isGlobalView) {
       navigate('/');
     } else {
@@ -173,12 +173,13 @@ export function PersonnelSection() {
   }, [isGlobalView, navigate, id, stableSubdivisionId]);
 
   const onCreateEmployee = useCallback(() => {
-    // При создании сотрудника передаем параметры подразделения и отделения
-    const queryParams = new URLSearchParams();
-    if (id) queryParams.append('division', id);
-    if (stableSubdivisionId) queryParams.append('subdivision', stableSubdivisionId);
-
-    navigate(`/personnel/create?${queryParams.toString()}`);
+    const state = {
+      from: 'personnel-section',
+      divisionId: id,
+      subdivisionId: stableSubdivisionId,
+    };
+  
+    navigate(`/personnel/create`, { state });
   }, [navigate, id, stableSubdivisionId]);
 
   const getHeaderTitle = () => {
@@ -191,7 +192,7 @@ export function PersonnelSection() {
     if (isGlobalView) {
       return 'Личный состав: Все подразделения';
     }
-  
+
     // Для режима конкретного подразделения
     return `Личный состав: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
@@ -222,7 +223,7 @@ export function PersonnelSection() {
       <div className="personnel-header-wrapper">
         <h3 className="personnel-header-division">
           {id && (
-            <button onClick={onBack} className="back-button">
+            <button onClick={handleBack} className="back-button">
               <ArrowLeft className="back-button-icon" />
             </button>
           )}
@@ -256,6 +257,8 @@ export function PersonnelSection() {
           } : division}
           personnel={displayedPersonnel}
           loading={loading}
+          divisionId={id} // Добавляем пропсы для навигации
+          subdivisionId={stableSubdivisionId}
         />
       </div>
     </>

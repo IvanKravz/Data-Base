@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Facility } from '../../../types';
 import { BasicInfo } from './sections/BasicInfo';
@@ -19,6 +19,7 @@ import { getPermissions } from '../../../api/utils/permissions'; // Добавл
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -68,16 +69,43 @@ export function FacilityDetails() {
 
   // Обновляем логику возврата в зависимости от режима просмотра
   const handleBack = () => {
-    if (isGlobalView && !facility?.division?.id) {
-      // Если в глобальном режиме просмотра - возврат к общему списку объектов
-      navigate(`/facilities`);
-    } else {
-      // Иначе - возврат к списку объектов подразделения
-      if (facility?.division?.id && !isGlobalView) {
-        navigate(`/divisions/${facility.division.id}/facilities`);
-      } else {
-        navigate(-1);
+    const state = location.state;
+  
+    // Если есть состояние из предыдущей страницы
+    if (state?.from === 'facilities-section') {
+      let backUrl = state.divisionId
+        ? `/divisions/${state.divisionId}/facilities`
+        : `/facilities`;
+  
+      // Добавляем параметры если они есть
+      const params = new URLSearchParams();
+      if (state.subdivisionId) {
+        params.append('subdivision', state.subdivisionId);
       }
+      if (state.activeTab && state.activeTab !== 'all') {
+        params.append('tab', state.activeTab);
+      }
+  
+      const queryString = params.toString();
+      if (queryString) {
+        backUrl += `?${queryString}`;
+      }
+  
+      navigate(backUrl);
+    }
+    // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
+    else if (isGlobalView || !facility?.division?.id) {
+      navigate(`/facilities`);
+    }
+    // Если у объекта есть подразделение и мы не в глобальном режиме
+    else if (facility?.division?.id) {
+      let backUrl = `/divisions/${facility.division.id}/facilities`;
+      if (facility.subdivision?.id) {
+        backUrl += `?subdivision=${facility.subdivision.id}`;
+      }
+      navigate(backUrl);
+    } else {
+      navigate(-1);
     }
   };
 
@@ -126,18 +154,50 @@ export function FacilityDetails() {
   const handleConfirmDelete = async () => {
     try {
       if (!facility?.id) return;
-
+  
       setIsLoading(true);
       await facilitiesApi.deleteFacility(facility.id);
       dispatch(deleteFacility(facility.id));
-      handleBack();
+  
+      // Используем ту же логику что и в handleBack
+      const state = location.state;
+      if (state?.from === 'facilities-section') {
+        let backUrl = state.divisionId
+          ? `/divisions/${state.divisionId}/facilities`
+          : `/facilities`;
+  
+        const params = new URLSearchParams();
+        if (state.subdivisionId) {
+          params.append('subdivision', state.subdivisionId);
+        }
+        if (state.activeTab && state.activeTab !== 'all') {
+          params.append('tab', state.activeTab);
+        }
+  
+        const queryString = params.toString();
+        if (queryString) {
+          backUrl += `?${queryString}`;
+        }
+  
+        navigate(backUrl);
+      } else if (isGlobalView || !facility?.division?.id) {
+        navigate(`/facilities`);
+      } else if (facility?.division?.id) {
+        let backUrl = `/divisions/${facility.division.id}/facilities`;
+        if (facility.subdivision?.id) {
+          backUrl += `?subdivision=${facility.subdivision.id}`;
+        }
+        navigate(backUrl);
+      } else {
+        navigate(-1);
+      }
     } catch (err) {
       console.error('Error deleting facility:', err);
       setError('Не удалось удалить объект');
       setIsLoading(false);
     }
   };
-
+  
   if (isLoading) {
     return (
       <div className="facility-loading">

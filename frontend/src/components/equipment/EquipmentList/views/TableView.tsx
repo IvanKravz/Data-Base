@@ -9,17 +9,24 @@ import './style.css';
 
 interface TableViewProps {
   equipment: Equipment[];
-  onEdit: (e: React.MouseEvent, item: Equipment) => void;
   onDelete: (id: string) => void;
+  divisionId?: string; // Добавляем пропсы
+  subdivisionId?: string;
+  activeTab?: string;
 }
 
-export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
+export function TableView({ 
+  equipment, 
+  onDelete, 
+  divisionId, 
+  subdivisionId, 
+  activeTab 
+}: TableViewProps) {
   const navigate = useNavigate();
 
   // Функция для сортировки техники внутри групп
   const sortEquipmentInGroup = (equipmentList: Equipment[]): Equipment[] => {
     return [...equipmentList].sort((a, b) => {
-      // Сортируем по имени
       return a.name.localeCompare(b.name);
     });
   };
@@ -53,23 +60,19 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
   const formatInterestOrgan = (interestOrgan: any): string => {
     if (!interestOrgan) return '-';
     
-    // Если это объект с полем name
     if (typeof interestOrgan === 'object' && interestOrgan.name) {
       return interestOrgan.name;
     }
     
-    // Если это строка
     if (typeof interestOrgan === 'string') {
       return interestOrgan;
     }
     
-    // Во всех остальных случаях
     return '-';
   };
 
   // Группируем технику по подразделениям и отделениям
   const groupedData = equipment.reduce((acc, item) => {
-    // Техника без подразделения идет в отдельную группу
     if (!item.division) {
       if (!acc.noDivision) {
         acc.noDivision = {
@@ -138,10 +141,9 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
     subdivisionIds.sort((a, b) => {
       return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
     });
-    // Сохраняем отсортированный массив отделений в подразделении
+    
     division.sortedSubdivisionIds = subdivisionIds;
     
-    // Сортируем технику внутри каждого отделения
     subdivisionIds.forEach(subdivisionId => {
       division.subdivisions[subdivisionId].equipment = sortEquipmentInGroup(
         division.subdivisions[subdivisionId].equipment
@@ -150,7 +152,14 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
   });
 
   const handleRowClick = (item: Equipment) => {
-    navigate(`/equipment/${item.id}`);
+    navigate(`/equipment/${item.id}`, {
+      state: {
+        from: 'equipment-section',
+        divisionId: divisionId, // Используем переданные пропсы
+        subdivisionId: subdivisionId,
+        activeTab: activeTab
+      }
+    });
   };
 
   return (
@@ -359,14 +368,14 @@ export function TableView({ equipment, onEdit, onDelete }: TableViewProps) {
                                   }}
                                   className="delete-button"
                                   aria-label="Удалить"
-                                >
-                                  <Trash2 className="action-icon" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                        >
+                          <Trash2 className="action-icon" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
                     </React.Fragment>
                   );
                 })}

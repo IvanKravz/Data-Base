@@ -194,12 +194,12 @@ export function DivisionTasksSection() {
       // Для всех эксплуатационных пользователей показываем только подразделение
       return `Задачи: ${divisionName}`;
     }
-  
+
     // Для глобального режима обычных пользователей
     if (isGlobalView) {
       return 'Все задачи';
     }
-  
+
     // Для режима конкретного подразделения
     return `Задачи: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   }, [isExploitationUser, id, stableCurrentUser, isGlobalView, division, subdivisionName]);
@@ -304,8 +304,25 @@ export function DivisionTasksSection() {
           end_date: step.end_date,
         })),
       });
-      setTasks([...tasks, createdTask]);
+
+      // Добавляем флаг завершенности для новой задачи
+      const taskWithCompletion = {
+        ...createdTask,
+        is_completed: createdTask.steps.length > 0 && createdTask.steps.every(step => step.is_completed)
+      };
+
+      // НЕМЕДЛЕННО добавляем задачу в список
+      setTasks(prevTasks => {
+        const updatedTasks = [...prevTasks, taskWithCompletion];
+
+        // Сортируем задачи по дате создания (новые сверху)
+        return updatedTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      });
+
       setShowCreateModal(false);
+
+      console.log('Задача успешно создана и добавлена в список');
+
     } catch (error) {
       console.error('Failed to create task:', error);
     }
@@ -334,22 +351,23 @@ export function DivisionTasksSection() {
         }
       );
 
+      // Добавляем флаг завершенности для обновленной задачи
+      const taskWithCompletion = {
+        ...response,
+        is_completed: response.steps.length > 0 && response.steps.every(step => step.is_completed)
+      };
+
+      // НЕМЕДЛЕННО обновляем задачу в списке
       setTasks(prevTasks => {
-        const filteredTasks = prevTasks.filter(task => task.id !== updatedTask.id);
-
-        // Если мы в режиме подразделения, проверяем, должна ли задача остаться
-        if (id) {
-          const shouldKeepTask =
-            response.division.id.toString() === id &&
-            (stableSubdivisionId ? response.subdivision?.id?.toString() === stableSubdivisionId : true);
-          return shouldKeepTask ? [...filteredTasks, response] : filteredTasks;
-        }
-
-        // В глобальном режиме просто добавляем обновленную задачу
-        return [...filteredTasks, response];
+        const updatedTasks = prevTasks.map(task =>
+          task.id === updatedTask.id ? taskWithCompletion : task
+        );
+        return updatedTasks;
       });
 
       setShowCreateModal(false);
+      setSelectedTask(null);
+
     } catch (error) {
       console.error('Failed to update task:', error);
     }

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import './NetworksTable.css';
 import { Network } from '../../../types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Добавляем useLocation
 import { Pencil, Filter, X, Search, Trash2 } from 'lucide-react';
 
 interface NetworksTableProps {
@@ -11,8 +11,8 @@ interface NetworksTableProps {
   selectedNetwork: Network | null;
   divisionId?: string;
   divisions?: Array<{ id: string; name: string }>;
-  onDelete?: (networkId: string) => void; // Новый пропс для удаления
-  canEdit?: boolean; // Новый пропс для управления правами
+  onDelete?: (networkId: string) => void;
+  canEdit?: boolean;
 }
 
 const NetworksTable: React.FC<NetworksTableProps> = ({
@@ -25,6 +25,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
   canEdit = false
 }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // Добавляем useLocation
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     division: '',
@@ -36,7 +37,19 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
 
   const handleEdit = (e: React.MouseEvent, networkId: string) => {
     e.stopPropagation();
-    navigate(`/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`);
+
+    // Определяем базовый путь в зависимости от наличия divisionId
+    const basePath = divisionId
+      ? `/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`
+      : `/networks/edit/${networkId}`;
+
+    // Передаем состояние навигации для корректного возврата
+    navigate(basePath, {
+      state: {
+        from: location.pathname + location.search, // Сохраняем текущий путь с параметрами
+        divisionId: divisionId
+      }
+    });
   };
 
   const handleDelete = (e: React.MouseEvent, networkId: string) => {
@@ -110,7 +123,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
 
   return (
     <div className="nt-container">
-      {/* Панель поиска и фильтров */}
+      {/* Панель поиска и фильтров - без изменений */}
       <div className="nt-search-filters-panel">
         <div className="nt-search-container">
           <div className="nt-search-input-wrapper">
@@ -142,7 +155,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
           </div>
         </div>
 
-        {/* Расширенные фильтры */}
+        {/* Расширенные фильтры - без изменений */}
         {showFilters && (
           <div className="nt-filters-content">
             {/* Фильтр по подразделению */}
@@ -213,7 +226,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
         )}
       </div>
 
-      {/* Таблица */}
+      {/* Таблица - без изменений */}
       <div className="nt-wrapper">
         <table className="nt-table">
           <thead>

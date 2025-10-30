@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { Header } from './sections/Header';
@@ -21,6 +21,7 @@ export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -118,15 +119,80 @@ export function PersonnelDetails() {
   }
 
   const handleBack = () => {
-    if (isGlobalView && !person?.division?.id) {
-      // Если в глобальном режиме просмотра - просто назад в истории
+    const state = location.state;
+  
+    // Если есть состояние из предыдущей страницы
+    if (state?.from === 'personnel-list' || state?.from === 'personnel-section') {
+      let backUrl = state.divisionId
+        ? `/divisions/${state.divisionId}/personnel`
+        : `/personnel`;
+  
+      // Добавляем параметры если они есть
+      const params = new URLSearchParams();
+      if (state.subdivisionId) {
+        params.append('subdivision', state.subdivisionId);
+      }
+  
+      const queryString = params.toString();
+      if (queryString) {
+        backUrl += `?${queryString}`;
+      }
+  
+      navigate(backUrl);
+    }
+    // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
+    else if (isGlobalView || !person?.division?.id) {
       navigate(`/personnel`);
+    }
+    // Если у сотрудника есть подразделение и мы не в глобальном режиме
+    else if (person?.division?.id) {
+      let backUrl = `/divisions/${person.division.id}/personnel`;
+      if (person.subdivision?.id) {
+        backUrl += `?subdivision=${person.subdivision.id}`;
+      }
+      navigate(backUrl);
     } else {
-      // Иначе - возврат к списку персонала подразделения
-      if (person?.division?.id && !isGlobalView) {
-        navigate(`/divisions/${person.division.id}/personnel`);
-      } else {
+      navigate(-1);
+    }
+  };
+  
+  // Также обновите handleConfirmDelete для согласованности
+  const handleConfirmDelete = async () => {
+    if (token && id) {
+      await employeesApi.deletePerson(token, id);
+  
+      // Используем ту же логику что и в handleBack
+      const state = location.state;
+      if (state?.from === 'personnel-list' || state?.from === 'personnel-section') {
+        let backUrl = state.divisionId
+          ? `/divisions/${state.divisionId}/personnel`
+          : `/personnel`;
+  
+        const params = new URLSearchParams();
+        if (state.subdivisionId) {
+          params.append('subdivision', state.subdivisionId);
+        }
+  
+        const queryString = params.toString();
+        if (queryString) {
+          backUrl += `?${queryString}`;
+        }
+  
+        navigate(backUrl);
+      }
+      // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
+      else if (isGlobalView || !person?.division?.id) {
         navigate(`/personnel`);
+      }
+      // Если у сотрудника есть подразделение и мы не в глобальном режиме
+      else if (person?.division?.id) {
+        let backUrl = `/divisions/${person.division.id}/personnel`;
+        if (person.subdivision?.id) {
+          backUrl += `?subdivision=${person.subdivision.id}`;
+        }
+        navigate(backUrl);
+      } else {
+        navigate(-1);
       }
     }
   };
@@ -140,20 +206,6 @@ export function PersonnelDetails() {
 
   const handleDelete = () => {
     setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (token && id) {
-      await employeesApi.deletePerson(token, id);
-      // При удалении используем ту же логику навигации, что и при возврате
-      if (isGlobalView) {
-        navigate(-1);
-      } else if (person?.division?.id) {
-        navigate(`/divisions/${person.division.id}/personnel`);
-      } else {
-        navigate(-1);
-      }
-    }
   };
 
   if (isEditing) {

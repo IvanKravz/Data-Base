@@ -16,6 +16,9 @@ interface FacilityListProps {
   showDifferentFields?: boolean;
   onFacilityDeleted?: (deletedId: string) => void;
   onDeleteInitiated?: (id: string) => void;
+  divisionId?: string; // Добавляем новые пропсы
+  subdivisionId?: string;
+  activeTab?: string;
 }
 
 export const FacilityList = memo(function FacilityList({
@@ -26,7 +29,10 @@ export const FacilityList = memo(function FacilityList({
   onLocateFacility,
   showDifferentFields = false,
   onFacilityDeleted,
-  onDeleteInitiated
+  onDeleteInitiated,
+  divisionId,
+  subdivisionId,
+  activeTab
 }: FacilityListProps) {
   const handleViewTypeChange = useCallback((type: 'grid' | 'table') => {
     onViewChange(type);
@@ -93,18 +99,21 @@ export const FacilityList = memo(function FacilityList({
             {viewType === 'table' ? (
               <TableView
                 facilities={filteredFacilities}
-                onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
                 onLocate={onLocateFacility}
                 showDifferentFields={showDifferentFields}
+                divisionId={divisionId} // Передаем новые пропсы
+                subdivisionId={subdivisionId}
+                activeTab={activeTab}
               />
             ) : (
               <GridView
                 facilities={filteredFacilities}
-                onFacilityClick={onSelectFacility}
                 onDelete={handleDelete}
                 onLocate={onLocateFacility}
-                showDifferentFields={showDifferentFields}
+                divisionId={divisionId} // Передаем новые пропсы
+                subdivisionId={subdivisionId}
+                activeTab={activeTab}
               />
             )}
           </motion.div>

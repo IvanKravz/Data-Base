@@ -1,17 +1,29 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Facility } from '../../../../types';
 import { Trash2, LocateFixed } from 'lucide-react';
 import './style.css';
 
 interface TableViewProps {
   facilities: Facility[];
-  onFacilityClick: (facility: Facility) => void;
   onDelete: (id: string) => void;
   onLocate?: (facility: Facility) => void;
   showDifferentFields?: boolean;
+  divisionId?: string; // Добавляем новые пропсы
+  subdivisionId?: string;
+  activeTab?: string;
 }
 
-export function TableView({ facilities, onFacilityClick, onDelete, onLocate, showDifferentFields = false }: TableViewProps) {
+export function TableView({
+  facilities,
+  onDelete,
+  onLocate,
+  showDifferentFields = false,
+  divisionId,
+  subdivisionId,
+  activeTab
+}: TableViewProps) {
+  const navigate = useNavigate();
   const hasClosedFacilities = facilities.some(f => f.is_closed);
 
   // Функция для сортировки объектов внутри групп
@@ -38,11 +50,11 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
       const divisionId = facility.division.id;
       const divisionName = facility.division.name;
       const divisionOrder = facility.division.order || 9999;
-      
+
       const subdivisionId = facility.subdivision?.id || 'no-subdivision';
       const subdivisionName = facility.subdivision?.name || 'Без отделения';
       const subdivisionOrder = facility.subdivision?.order || 9999;
-      
+
       if (!acc.divisions[divisionId]) {
         acc.divisions[divisionId] = {
           divisionName,
@@ -50,7 +62,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           subdivisions: {}
         };
       }
-      
+
       if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
         acc.divisions[divisionId].subdivisions[subdivisionId] = {
           subdivisionName,
@@ -58,10 +70,10 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           facilities: []
         };
       }
-      
+
       acc.divisions[divisionId].subdivisions[subdivisionId].facilities.push(facility);
     }
-    
+
     return acc;
   }, {
     noDivision: null as { groupName: string; groupOrder: number; facilities: Facility[] } | null,
@@ -95,7 +107,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
     });
     // Сохраняем отсортированный массив отделений в подразделении
     division.sortedSubdivisionIds = subdivisionIds;
-    
+
     // Сортируем объекты внутри каждого отделения
     subdivisionIds.forEach(subdivisionId => {
       division.subdivisions[subdivisionId].facilities = sortFacilitiesInGroup(
@@ -103,6 +115,17 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
       );
     });
   });
+
+  const handleRowClick = (facility: Facility) => {
+    navigate(`/facilities/${facility.id}`, {
+      state: {
+        from: 'facilities-section',
+        divisionId: divisionId,
+        subdivisionId: subdivisionId,
+        activeTab: activeTab
+      }
+    });
+  };
 
   const renderRowContent = (facility: Facility) => {
     if (!showDifferentFields) {
@@ -212,7 +235,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
                 <tr
                   key={facility.id}
                   className="facility-table-row no-division-row"
-                  onClick={() => onFacilityClick(facility)}
+                  onClick={() => handleRowClick(facility)}
                 >
                   {renderRowContent(facility)}
                   <td className="facility-table-cell facility-table-cell-actions">
@@ -249,7 +272,7 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
           {/* Затем отображаем подразделения с отделениями */}
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
-            
+
             return (
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
@@ -258,11 +281,11 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
                     {division.divisionName}
                   </td>
                 </tr>
-                
+
                 {/* Отделения внутри подразделения */}
                 {division.sortedSubdivisionIds.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
-                  
+
                   return (
                     <React.Fragment key={subdivisionId}>
                       {/* Заголовок отделения (если есть объекты) */}
@@ -273,13 +296,13 @@ export function TableView({ facilities, onFacilityClick, onDelete, onLocate, sho
                           </td>
                         </tr>
                       )}
-                      
+
                       {/* Объекты отделения */}
                       {subdivision.facilities.map((facility) => (
                         <tr
                           key={facility.id}
                           className="facility-table-row"
-                          onClick={() => onFacilityClick(facility)}
+                          onClick={() => handleRowClick(facility)}
                         >
                           {renderRowContent(facility)}
                           <td className="facility-table-cell facility-table-cell-actions">

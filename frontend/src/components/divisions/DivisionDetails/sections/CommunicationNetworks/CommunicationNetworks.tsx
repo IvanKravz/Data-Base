@@ -1,6 +1,6 @@
 // CommunicationNetworks.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import './CommunicationNetworks.css';
 import { Network } from '../../../../../types';
 import NetworksTable from '../../../../networks/NetworksTable/NetworksTable';
@@ -15,6 +15,7 @@ const CommunicationNetworks: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = localStorage.getItem('accessToken');
   const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
   const [memberships, setMemberships] = useState<any[]>([]);
@@ -161,21 +162,21 @@ const CommunicationNetworks: React.FC = () => {
 
   const handleNavigateToManagement = () => {
     if (isGlobalView) {
-      navigate('/networks/management');
+      navigate('/networks/management', { state: { from: location.pathname, divisionId: targetDivisionId } });
     } else if (isExploitationUser && userDivisionId) {
-      navigate(`/divisions/${userDivisionId}/networks/management`);
+      navigate(`/divisions/${userDivisionId}/networks/management`, { state: { from: location.pathname, divisionId: userDivisionId } });
     } else if (id) {
-      navigate(`/divisions/${id}/networks/management`);
+      navigate(`/divisions/${id}/networks/management`, { state: { from: location.pathname, divisionId: id } });
     }
   };
 
   const handleNavigateToCreate = () => {
     if (isGlobalView) {
-      navigate('/networks/create');
+      navigate('/networks/create', { state: { from: location.pathname, divisionId: targetDivisionId } });
     } else if (isExploitationUser && userDivisionId) {
-      navigate(`/divisions/${userDivisionId}/networks/create`);
+      navigate(`/divisions/${userDivisionId}/networks/create`, { state: { from: location.pathname, divisionId: userDivisionId } });
     } else if (id) {
-      navigate(`/divisions/${id}/networks/create`);
+      navigate(`/divisions/${id}/networks/create`, { state: { from: location.pathname, divisionId: id } });
     }
   };
 
@@ -222,7 +223,7 @@ const CommunicationNetworks: React.FC = () => {
         <Header
           onNavigateToManagement={handleNavigateToManagement}
           onNavigateToCreate={handleNavigateToCreate}
-          divisionId={targetDivisionId}
+          divisionId={id}
           divisionName={divisionName}
           canCreateNetworks={canCreateNetworks}
         />

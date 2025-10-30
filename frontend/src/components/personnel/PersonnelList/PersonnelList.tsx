@@ -21,6 +21,8 @@ interface PersonnelListProps {
   division?: Division;
   personnel?: Employee[];
   loading?: boolean;
+  divisionId?: string; // Добавляем новые пропсы
+  subdivisionId?: string;
 }
 
 interface StaffCounts {
@@ -37,7 +39,9 @@ export function PersonnelList({
   searchTerm = '',
   division,
   personnel: externalPersonnel,
-  loading = false
+  loading = false,
+  divisionId, // Получаем новые пропсы
+  subdivisionId
 }: PersonnelListProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -64,7 +68,7 @@ export function PersonnelList({
   const [internalLoading, setInternalLoading] = useState(true);
 
   const isGlobalView = !division;
-  const subdivisionId = searchParams.get('subdivision');
+  // const subdivisionId = searchParams.get('subdivision');
 
   // Функция для сортировки сотрудников по приоритету
   const sortEmployeesByPriority = (employees: Employee[]): Employee[] => {
@@ -120,7 +124,7 @@ export function PersonnelList({
           setAllPersonnel(sortedData);
           setAllDivisions(divisionsData);
           dispatch(setEmployee(sortedData));
-          
+
           // Рассчитываем глобальную штатную численность
           const counts = calculateGlobalStaffCounts(divisionsData);
           setGlobalStaffCounts(counts);
@@ -129,7 +133,7 @@ export function PersonnelList({
         else if (!division && externalPersonnel) {
           const divisionsData = await divisionsApi.getDivisions(token);
           setAllDivisions(divisionsData);
-          
+
           // Рассчитываем глобальную штатную численность
           const counts = calculateGlobalStaffCounts(divisionsData);
           setGlobalStaffCounts(counts);
@@ -287,7 +291,7 @@ export function PersonnelList({
       dispatch(deletePersonAsync({ token, id: personToDelete }))
         .unwrap()
         .then(() => {
-          setAllPersonnel(prevPersonnel => 
+          setAllPersonnel(prevPersonnel =>
             sortEmployeesByPriority(prevPersonnel.filter(person => person.id !== personToDelete))
           );
           setShowDeleteModal(false);
@@ -301,7 +305,15 @@ export function PersonnelList({
   };
 
   const handlePersonClick = (person: Employee) => {
-    navigate(`/personnel/${person.id}`);
+    navigate(`/personnel/${person.id}`, {
+      state: {
+        from: 'personnel-list',
+        divisionId: divisionId,
+        subdivisionId: subdivisionId,
+        activeFilter: activeFilter, // сохраняем активный фильтр
+        searchTerm: searchTerm // сохраняем поисковый запрос
+      }
+    });
   };
 
   const handleFilterClick = (filter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {

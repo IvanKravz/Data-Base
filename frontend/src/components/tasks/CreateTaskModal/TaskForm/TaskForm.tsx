@@ -81,14 +81,14 @@ export function TaskForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!selectedDivisionId) {
       onError('Необходимо выбрать подразделение');
       return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     try {
       const taskData = {
         title,
@@ -103,8 +103,9 @@ export function TaskForm({
           end_date: step.endDate
         }))
       };
-
+  
       if (initialTask && onUpdate) {
+        // Для редактирования
         await onUpdate({
           ...initialTask,
           title,
@@ -119,14 +120,10 @@ export function TaskForm({
           }))
         });
       } else if (onCreate) {
-        const token = localStorage.getItem('accessToken');
-        if (!token) throw new Error('Authentication token missing');
-
-        const newTask = await tasksApi.createTask(taskData);
-        console.log('newTask', newTask)
-        // onCreate(newTask);
+        // Для создания - передаем данные, а API вызов делается в родительском компоненте
+        await onCreate(taskData as any); // Приводим тип, так как taskData не имеет id
       }
-
+  
       onSuccess();
     } catch (error) {
       console.error('Task save error:', error);

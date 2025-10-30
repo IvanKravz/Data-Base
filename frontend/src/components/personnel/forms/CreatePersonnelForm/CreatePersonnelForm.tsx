@@ -86,7 +86,6 @@ export function CreatePersonnelForm() {
       <EditPersonnelForm
         person={initialEmployee as Employee}
         onSubmit={handleCreate}
-        onCancel={() => navigate(-1)}
         isCreateMode={true}
       />
     </div>

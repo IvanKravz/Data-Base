@@ -22,6 +22,7 @@ export function Header({
   const navigate = useNavigate();
 
   const handleBack = () => {
+    // Используем историю навигации если есть, иначе - запасной вариант
     if (divisionId) {
       navigate(`/divisions/${divisionId}`);
     } else {

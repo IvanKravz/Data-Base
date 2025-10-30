@@ -10,18 +10,17 @@ import { FormActions } from './sections/FormActions';
 import { divisionsApi } from '../../../../api/divisions';
 import { Division } from '../../../../types';
 import { AffiliationCard } from './sections/AffiliationCard';
+import { useNavigate } from 'react-router-dom';
 
 interface EditPersonnelFormProps {
   person: Employee;
   onSubmit: (person: Employee) => void;
-  onCancel: () => void;
   isCreateMode?: boolean; // Добавлен новый пропс
 }
 
-export function EditPersonnelForm({ 
-  person, 
-  onSubmit, 
-  onCancel,
+export function EditPersonnelForm({
+  person,
+  onSubmit,
   isCreateMode = false // Значение по умолчанию
 }: EditPersonnelFormProps) {
   const [formData, setFormData] = useState<Employee>({
@@ -35,7 +34,7 @@ export function EditPersonnelForm({
     } : null
   });
 
-
+  const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +124,7 @@ export function EditPersonnelForm({
     e.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     try {
       const dataToSend = {
         ...formData,
@@ -137,17 +136,21 @@ export function EditPersonnelForm({
         date_start_work: formData.is_sha_worker ? formData.date_start_work : null,
         year_graduation: formData.is_sha_worker ? formData.year_graduation : null
       };
-  
+
       onSubmit(dataToSend as Employee);
     } catch (err) {
-      setError(isCreateMode 
-        ? 'Не удалось создать сотрудника' 
+      setError(isCreateMode
+        ? 'Не удалось создать сотрудника'
         : 'Не удалось обновить данные сотрудника');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  const onCancel = () => {
+    navigate(-1)
+  }
 
   return (
     <form onSubmit={handleSubmit} className="personnel-edit-form">

@@ -348,8 +348,13 @@ const EditNetwork: React.FC = () => {
                     );
                 }
 
-                // Используем divisionId из состояния навигации
-                navigate(-1);
+                if (location.state?.from) {
+                    navigate(location.state.from);
+                } else if (divisionId) {
+                    navigate(`/divisions/${divisionId}/networks`);
+                } else {
+                    navigate('/networks');
+                }
             } catch (error) {
                 console.error('Ошибка обновления сети:', error);
                 setError('Ошибка при обновлении сети. Проверьте, что все направления ссылаются на существующие связи.');
@@ -359,8 +364,13 @@ const EditNetwork: React.FC = () => {
     };
 
     const handleCancel = () => {
-        // Используем divisionId из состояния навигации
-        navigate(-1);
+        if (location.state?.from) {
+            navigate(location.state.from);
+        } else if (divisionId) {
+            navigate(`/divisions/${divisionId}/networks`);
+        } else {
+            navigate('/networks');
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
