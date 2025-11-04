@@ -1,3 +1,3 @@
-export * from './DivisionList';
-export * from './DivisionTabs';
-export * from './DivisionDetails';
+export * from './DivisionList/DivisionList';
+export * from './DivisionTabs/DivisionTabs';
+export * from './DivisionDetails/DivisionDetails';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { updatePerson } from '../../../store/slices/personnelSlice';
@@ -19,6 +19,7 @@ export function QualitativeCharacteristics() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState<Partial<Employee>>({});
@@ -26,6 +27,9 @@ export function QualitativeCharacteristics() {
   const [error, setError] = useState<string | null>(null);
 
   const token = localStorage.getItem('accessToken');
+
+  // Получаем состояние навигации
+  const navigationState = location.state;
 
   // Проверка прав доступа для кнопки "Редактировать сотрудника"
   const canEditEmployee = useMemo(() => {
@@ -92,6 +96,15 @@ export function QualitativeCharacteristics() {
     }
   };
 
+  // Исправляем обработчик возврата
+  const handleBack = () => {
+    // Всегда возвращаемся на страницу сотрудника
+    // Используем явный путь вместо navigate(-1)
+    navigate(`/personnel/${id}`, {
+      state: navigationState?.originalState || null
+    });
+  };
+
   if (loading && !employee) {
     return (
       <div className="qc-loading">
@@ -113,7 +126,7 @@ export function QualitativeCharacteristics() {
     <div className="qc-layout">
       <div className="qc-header">
         <button
-          onClick={() => navigate(`/personnel/${id}`)}
+          onClick={handleBack}
           className="qc-back-btn"
         >
           <ArrowLeft size={20} />

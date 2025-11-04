@@ -38,7 +38,6 @@ export const facilitiesApi = {
     // Формируем параметры запроса
     const queryParams = {
       ...(divisionParam && { division: Array.isArray(divisionParam) ? divisionParam.join(',') : divisionParam }),
-      ...(params?.subdivision && { subdivision: params.subdivision }),
       ...(params?.type && { type: params.type }),
       ...(params?.class && { class: params.class }),
       ...(params?.search && { search: params.search }),
@@ -85,9 +84,11 @@ export const facilitiesApi = {
       // Формируем правильный запрос
       const { data } = await api.patch(`/facilities/${id}/`, {
         ...facilityData,
-        type: facilityData.type_id, // Используем type_id
-        communication_posts: facilityData.communication_post_ids, // Используем массив ID
-        facility_class: facilityData.facility_class
+        type: facilityData.type_id,
+        communication_posts: facilityData.communication_post_ids,
+        facility_class: facilityData.facility_class,
+        division: facilityData.division_id,
+        subdivision: facilityData.subdivision_id
       }, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -144,12 +145,12 @@ export const communicationPostsApi = {
   getCommunicationPosts: async (params?: {
     token?: string;
     division?: string;
-    subdivision?: string;
+    // subdivision?: string;
   }) => {
     const { data } = await api.get('facilities/communication-posts/', {
       params: {
         division: params?.division,
-        subdivision: params?.subdivision
+        // subdivision: params?.subdivision
       },
       headers: params?.token ? {
         Authorization: `Bearer ${params.token}`,

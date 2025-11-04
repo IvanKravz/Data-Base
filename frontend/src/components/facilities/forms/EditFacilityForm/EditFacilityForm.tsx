@@ -12,9 +12,13 @@ import './EditFacilityForm.css';
 
 interface EditFacilityFormProps {
   initialData: Facility;
-  onSubmit: (data: Partial<Facility>) => Promise<void>; // Изменили на Promise<void>
+  onSubmit: (data: Partial<Facility>) => Promise<void>;
   onCancel: () => void;
-  isEditing?: boolean; // Добавили новый пропс
+  isEditing?: boolean;
+  preSelectedDivision?: string;
+  preSelectedSubdivision?: string;
+  divisions?: any[];
+  isLoadingDivisions?: boolean;
 }
 
 export function EditFacilityForm({
@@ -22,6 +26,10 @@ export function EditFacilityForm({
   onSubmit,
   onCancel,
   isEditing = true,
+  preSelectedDivision,
+  preSelectedSubdivision,
+  divisions = [],
+  isLoadingDivisions = false
 }: EditFacilityFormProps) {
   const [formData, setFormData] = useState<Partial<Facility>>({
     ...initialData,
@@ -29,29 +37,62 @@ export function EditFacilityForm({
     city: initialData.city || '',
     street: initialData.street || '',
   });
-  const [divisions, setDivisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [internalDivisions, setInternalDivisions] = useState<any[]>(divisions);
+  const [isInitialized, setIsInitialized] = useState(false);
   const token = localStorage.getItem('accessToken');
 
+  // Вычисляем доступные отделения на основе выбранного подразделения
+  const getAvailableSubdivisions = () => {
+    if (!formData.division?.id) return [];
+    const division = internalDivisions.find((d) => d.id === formData.division?.id);
+    return division?.subdivisions || [];
+  };
+
+  const availableSubdivisions = getAvailableSubdivisions();
+
   useEffect(() => {
-    const fetchData = async () => {
+    const initializeForm = async () => {
       if (!token) return;
 
       setIsLoading(true);
       try {
-        const [divisionsData] = await Promise.all([
-          divisionsApi.getDivisions(token),
-        ]);
+        let divisionsToUse = divisions;
 
-        setDivisions(divisionsData);
-
-        if (initialData.division) {
-          const selectedDivision = divisionsData.find(d => d.id === initialData.division);
-          setFormData(prev => ({
-            ...prev,
-            divisionData: selectedDivision
-          }));
+        // Если divisions не переданы извне, загружаем их самостоятельно
+        if (divisions.length === 0) {
+          divisionsToUse = await divisionsApi.getDivisions(token);
+          setInternalDivisions(divisionsToUse);
+        } else {
+          setInternalDivisions(divisions);
         }
+
+        // Находим актуальное подразделение из загруженного списка
+        let actualDivision = null;
+        if (initialData.division) {
+          const divisionId = typeof initialData.division === 'object'
+            ? initialData.division.id
+            : initialData.division;
+
+          actualDivision = divisionsToUse.find(d =>
+            d.id === divisionId
+          );
+        }
+
+        // Формируем обновленные данные формы
+        const updatedFormData: Partial<Facility> = {
+          ...initialData,
+          comments: initialData.comments || '',
+          city: initialData.city || '',
+          street: initialData.street || '',
+          is_closed: initialData.is_closed,
+          division: actualDivision || initialData.division,
+          // Гарантируем, что subdivision сохраняется
+          subdivision: initialData.subdivision
+        };
+
+        setFormData(updatedFormData);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
       } finally {
@@ -59,13 +100,13 @@ export function EditFacilityForm({
       }
     };
 
-    fetchData();
-  }, [token]);
+    initializeForm();
+  }, [token, divisions, initialData]);
 
   const handleChange = (data: Partial<Facility>) => {
     setFormData(prev => {
       const newData = { ...prev, ...data };
-      
+
       // Если объект становится открытым, сбрасываем класс и документацию
       if (data.is_closed === false) {
         newData.facility_class = null;
@@ -77,7 +118,7 @@ export function EditFacilityForm({
         newData.commissioning_act_number = null;
         newData.opening_permission_number = null;
       }
-      
+
       return newData;
     });
   };
@@ -92,9 +133,11 @@ export function EditFacilityForm({
       // Формируем данные для отправки
       const dataToSend = {
         ...formData,
-        type_id: formData.type?.id || null, // Используем type_id вместо type
+        type_id: formData.type?.id || null,
         communication_post_ids: formData.communication_posts?.map(p => p.id) || [],
-        facility_class: formData.facility_class || null
+        facility_class: formData.facility_class || null,
+        division_id: formData.division?.id || null,
+        subdivision_id: formData.subdivision?.id || null
       };
 
       await onSubmit(dataToSend);
@@ -105,26 +148,40 @@ export function EditFacilityForm({
     }
   };
 
+  // Пока данные загружаются, показываем индикатор загрузки
+  if (!isInitialized && isLoading) {
+    return (
+      <div className="facility-form-edit">
+        <div className="facility-card-edit">
+          <div className="facility-card-content-edit">
+            <p>Загрузка данных...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="facility-form-edit">
       <BasicInformation
         formData={formData}
         onChange={handleChange}
-        isClosedFacility={initialData.is_closed}
-      />
-
-      <Classification
-        formData={formData}
-        onChange={handleChange}
-        divisionId={formData.division}
-        subdivisionId={formData.subdivision}
+        isClosedFacility={formData.is_closed || false}
       />
 
       <Assignment
         formData={formData}
         onChange={handleChange}
-        divisions={divisions}
-        isLoading={isLoading}
+        divisions={internalDivisions}
+        availableSubdivisions={availableSubdivisions}
+        isLoading={isLoadingDivisions || isLoading}
+      />
+
+      <Classification
+        formData={formData}
+        onChange={handleChange}
+        divisionId={formData.division?.id} 
+        subdivisionId={formData.subdivision?.id}
       />
 
       {formData.is_closed && (

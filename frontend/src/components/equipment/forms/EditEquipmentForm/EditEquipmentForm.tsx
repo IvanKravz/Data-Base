@@ -27,8 +27,14 @@ interface Division {
   facilities: {
     id: string;
     name: string;
-    type: 'station' | 'shd';
-    class: string;
+    type: {
+      id: string;          
+      name: string;
+      description?: string;
+    };
+    type_display: string;   
+    facility_class: string;
+    class_display: string;
   }[];
 }
 

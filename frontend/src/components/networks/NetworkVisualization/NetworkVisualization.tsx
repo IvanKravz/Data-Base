@@ -60,7 +60,7 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
         <h3 className="network-visualization-title">Визуализация сети: {network.name}</h3>
 
         <div className="network-visualization-nodes">
-          <Canvas camera={{ position: [40, 50, 30], fov: 45 }}>
+          <Canvas camera={{ position: [50, 60, 80], fov: 30 }}>
             <NetworkScene
               nodes={nodes}
               connections={connections}

@@ -307,7 +307,7 @@ export function PersonnelList({
   const handlePersonClick = (person: Employee) => {
     navigate(`/personnel/${person.id}`, {
       state: {
-        from: 'personnel-list',
+        from: location.pathname + location.search,
         divisionId: divisionId,
         subdivisionId: subdivisionId,
         activeFilter: activeFilter, // сохраняем активный фильтр

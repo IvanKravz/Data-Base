@@ -19,18 +19,18 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
   const [isLoading, setIsLoading] = useState(false);
   const token = localStorage.getItem('accessToken');
 
-  // Определяем типы, которые делают объект закрытым
   const CLOSED_FACILITY_TYPES = ['Станция', 'ШД'];
 
   useEffect(() => {
+    if (!token) return;
+    
     const fetchFacilityTypes = async () => {
-      if (!token) return;
       try {
         setIsLoading(true);
         const { data } = await api.get('/facilities/facility-types/', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setFacilityTypes(data.results || []);
+        setFacilityTypes(data || []);
       } catch (error) {
         console.error('Ошибка загрузки типов объектов:', error);
       } finally {
@@ -41,35 +41,41 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
     fetchFacilityTypes();
   }, [token]);
 
+  // Загружаем посты связи только по divisionId
   useEffect(() => {
     const fetchCommunicationPosts = async () => {
-      if (!token || !divisionId) return;
+      if (!token || !divisionId) {
+        setCommunicationPosts([]);
+        setAvailablePosts([]);
+        return;
+      }
+      
       try {
         setIsLoading(true);
-        const params: any = { division: divisionId };
-        if (subdivisionId) {
-          params.subdivision = subdivisionId;
-        }
-
         const { data } = await api.get('/facilities/communication-posts/', {
-          params,
+          params: { division: divisionId },
           headers: { Authorization: `Bearer ${token}` }
         });
-        const allPosts = data.results || [];
+        ;
+        const allPosts = data || [];
         setCommunicationPosts(allPosts);
 
-        // Filter out posts that are already selected
+        // Фильтруем посты, которые уже выбраны
         const selectedPostIds = formData.communication_posts?.map(p => p.id) || [];
-        setAvailablePosts(allPosts.filter(post => !selectedPostIds.includes(post.id)));
+        const filteredPosts = allPosts.filter(post => !selectedPostIds.includes(post.id));
+        setAvailablePosts(filteredPosts);
+        
       } catch (error) {
         console.error('Ошибка загрузки постов связи:', error);
+        setCommunicationPosts([]);
+        setAvailablePosts([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCommunicationPosts();
-  }, [token, divisionId, subdivisionId, formData.communication_posts]);
+  }, [token, divisionId, formData.communication_posts]);
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = facilityTypes.find(t => t.id.toString() === e.target.value);
@@ -84,7 +90,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
           description: selectedType.description || ''
         },
         is_closed: isClosed,
-        // Если объект становится открытым, сбрасываем класс
         facility_class: isClosed ? formData.facility_class : null
       });
     } else {
@@ -96,7 +101,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
     }
   };
 
-  // Handle adding a new post
   const handleAddPost = () => {
     if (!newPostId) return;
 
@@ -120,7 +124,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
     });
   };
 
-  // Handle removing a post
   const handleRemovePost = (postId: string) => {
     onChange({
       communication_posts: (formData.communication_posts || []).filter(p => p.id.toString() !== postId)
@@ -162,7 +165,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
               Посты связи
             </label>
 
-            {/* Display selected posts */}
             <div className="selected-posts-list">
               {(formData.communication_posts || []).map(post => (
                 <div key={post.id} className="selected-post-item">
@@ -178,7 +180,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
               ))}
             </div>
 
-            {/* Add new post controls */}
             <div className="add-post-controls">
               <div className="facility-form-input-container-edit" style={{ flex: 1 }}>
                 <Wifi className="facility-form-icon-edit" />
@@ -205,7 +206,25 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
                 <Plus size={18} />
               </button>
             </div>
+            
+            {availablePosts.length === 0 && communicationPosts.length > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Все посты связи для этого подразделения уже добавлены
+              </p>
+            )}
+            
+            {communicationPosts.length === 0 && divisionId && (
+              <p className="text-sm text-gray-500 mt-2">
+                Для этого подразделения нет доступных постов связи
+              </p>
+            )}
           </div>
+        )}
+
+        {!divisionId && (
+          <p className="text-sm text-gray-500">
+            Выберите подразделение, чтобы увидеть доступные посты связи
+          </p>
         )}
 
         {formData.is_closed && (

@@ -1,6 +1,8 @@
 from django.apps import AppConfig
 
-
-class NetworkConfig(AppConfig):
+class NetworksConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'networks'
+    
+    def ready(self):
+        import networks.models  # Это подключит сигналы

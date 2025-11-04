@@ -6,7 +6,7 @@ import { divisionsApi } from '../../../api/divisions';
 import { useState, useEffect } from 'react';
 import './style.css';
 import { setDivisions } from '../../../store/slices/facilitiesSlice';
-import { MapCountry } from './MapCountry';
+import { MapCountry } from '../../map/MapCountry/MapCountry';
 
 interface DivisionListProps {
   onSelectDivision: (division: Division) => void;

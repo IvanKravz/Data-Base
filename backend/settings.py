@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'users',
     'storage',
     'networks',
+    'map',
 ]
 
 MIDDLEWARE = [

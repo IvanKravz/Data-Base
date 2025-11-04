@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, Filter, Plus } from 'lucide-react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { EquipmentList } from '../../../../equipment/EquipmentList';
 import { divisionsApi, equipmentApi, authApi } from '../../../../../api';
 import { SearchBar } from '../../../../common/SearchBar';
@@ -55,6 +55,7 @@ interface AdvancedSearchFilters {
 
 export function EquipmentSection() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const subdivisionId = searchParams.get('subdivision');
@@ -84,7 +85,8 @@ export function EquipmentSection() {
   const [division, setDivision] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>('all');
+  // ИЗМЕНЕНИЕ: Восстанавливаем активную вкладку из location.state или используем 'all' по умолчанию
+  const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>(location.state?.activeTab || 'all');
   const [searchTerm, setSearchTerm] = useState('');
   const [categories, setCategories] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -99,7 +101,7 @@ export function EquipmentSection() {
     exploitationDateFrom: '',
     exploitationDateTo: '',
     assignedTo: [],
-    interestOrgans: [] // Добавлено новое поле
+    interestOrgans: []
   });
 
   // Проверка прав доступа для кнопки "Добавить технику"
@@ -111,28 +113,41 @@ export function EquipmentSection() {
     return false;
   }, []);
 
+  // Функция обновления индикатора
+  const updateIndicator = () => {
+    if (!tabsRef.current || !indicatorRef.current) return;
+
+    const activeTabElement = tabsRef.current.querySelector('.equipment-tab-button.active') as HTMLElement;
+    if (!activeTabElement) return;
+
+    const tabRect = activeTabElement.getBoundingClientRect();
+    const containerRect = tabsRef.current.getBoundingClientRect();
+
+    setIndicatorStyle({
+      left: tabRect.left - containerRect.left,
+      width: tabRect.width,
+      opacity: 1
+    });
+  };
+
+  // Обновляем индикатор при изменении активной вкладки
   useEffect(() => {
-    const updateIndicator = () => {
-      if (!tabsRef.current || !indicatorRef.current) return;
-
-      const activeTabElement = tabsRef.current.querySelector('.equipment-tab-button.active') as HTMLElement;
-      if (!activeTabElement) return;
-
-      const tabRect = activeTabElement.getBoundingClientRect();
-      const containerRect = tabsRef.current.getBoundingClientRect();
-
-      setIndicatorStyle({
-        left: tabRect.left - containerRect.left,
-        width: tabRect.width,
-        opacity: 1
-      });
-    };
-
     updateIndicator();
     window.addEventListener('resize', updateIndicator);
 
     return () => window.removeEventListener('resize', updateIndicator);
   }, [activeTab]);
+
+  // ДОБАВЛЕНО: Обновляем индикатор после первоначальной загрузки данных
+  useEffect(() => {
+    if (!loading) {
+      // Небольшая задержка для гарантии, что DOM полностью обновлен
+      const timer = setTimeout(() => {
+        updateIndicator();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   // Исправленный useEffect с стабилизированными зависимостями
   useEffect(() => {
@@ -232,6 +247,7 @@ export function EquipmentSection() {
     };
   }, [id, stableToken, stableSubdivisionId, dispatch, isGlobalView, isExploitationUser, isChief, stableCurrentUser]);
 
+  // Остальной код без изменений...
   // Логика фильтрации для отделения
   const filterBySubdivision = (items) => {
     // Для сотрудника эксплуатации не фильтруем по отделению - показываем всю технику подразделения
@@ -313,6 +329,14 @@ export function EquipmentSection() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    // Обновляем состояние в location, чтобы сохранить при переходе
+    navigate(location.pathname + location.search, {
+      state: {
+        ...location.state,
+        activeTab: tab
+      },
+      replace: true // Заменяем текущую запись в истории
+    });
     setTimeout(() => {
       const activeTabElement = document.querySelector('.equipment-tab-button.active');
       if (activeTabElement) {
@@ -552,9 +576,8 @@ export function EquipmentSection() {
 
           <EquipmentList
             equipment={filteredEquipment}
-            onUpdateEquipment={() => { }}
             onDeleteEquipment={handleDeleteEquipment}
-            divisionId={id} // Добавляем пропсы для навигации
+            divisionId={id}
             subdivisionId={stableSubdivisionId}
             activeTab={activeTab}
           />

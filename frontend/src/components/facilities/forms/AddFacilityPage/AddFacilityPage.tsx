@@ -1,26 +1,50 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { EditFacilityForm } from '..//EditFacilityForm/EditFacilityForm';
-import { facilitiesApi } from '../../../../api';
+import { EditFacilityForm } from '../EditFacilityForm/EditFacilityForm';
+import { facilitiesApi, divisionsApi } from '../../../../api';
 import { useDispatch } from 'react-redux';
 import { addFacility } from '../../../../store/slices/facilitiesSlice';
 import { Facility } from '../../../../types';
-// import '../EditFacilityForm.css';
 
 export function AddFacilityPage() {
     const { id: divisionId } = useParams<{ id: string }>();
+    const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const token = localStorage.getItem('accessToken');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [divisions, setDivisions] = useState<any[]>([]);
+    const [isLoadingDivisions, setIsLoadingDivisions] = useState(true);
+
+    // Получаем subdivisionId из state навигации или из search params
+    const searchParams = new URLSearchParams(location.search);
+    const subdivisionIdFromUrl = searchParams.get('subdivision');
+    const subdivisionIdFromState = location.state?.subdivisionId;
+    const preSelectedSubdivision = subdivisionIdFromState || subdivisionIdFromUrl;
+
+    // Загружаем список подразделений
+    useEffect(() => {
+        const fetchDivisions = async () => {
+            if (!token) return;
+            try {
+                const divisionsData = await divisionsApi.getDivisions(token);
+                setDivisions(divisionsData);
+            } catch (err) {
+                console.error('Ошибка при загрузке подразделений:', err);
+            } finally {
+                setIsLoadingDivisions(false);
+            }
+        };
+        fetchDivisions();
+    }, [token]);
 
     const initialData = {
         name: '',
-        division: divisionId,
-        subdivision: null,
+        division: divisionId || null,
+        subdivision: preSelectedSubdivision || null,
         type: null,
         facility_class: null,
         communication_posts: [],
@@ -48,13 +72,30 @@ export function AddFacilityPage() {
 
             const newFacility = await facilitiesApi.createFacility({
                 ...data,
-                division: divisionId,
+                division: data.division?.id || divisionId,
                 type_id: data.type?.id || null,
                 communication_post_ids: data.communication_posts?.map(p => p.id) || []
             });
 
             dispatch(addFacility(newFacility));
-            navigate(`/divisions/${divisionId}/facilities`);
+
+            // Возвращаемся на предыдущую страницу с сохранением контекста
+            if (location.state?.from === 'facilities-section') {
+                const backState = {
+                    divisionId: location.state.divisionId,
+                    subdivisionId: location.state.subdivisionId,
+                    activeTab: location.state.activeTab
+                };
+                if (divisionId) {
+                    navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+                } else {
+                    navigate('/facilities', { state: backState });
+                }
+            } else if (divisionId) {
+                navigate(`/divisions/${divisionId}/facilities`);
+            } else {
+                navigate('/facilities');
+            }
         } catch (err) {
             console.error('Ошибка при создании объекта:', err);
             setError('Не удалось создать объект');
@@ -64,10 +105,23 @@ export function AddFacilityPage() {
     };
 
     const handleBack = () => {
-        navigate(`/divisions/${divisionId}/facilities`);
+        if (location.state?.from === 'facilities-section') {
+            const backState = {
+                divisionId: location.state.divisionId,
+                subdivisionId: location.state.subdivisionId,
+                activeTab: location.state.activeTab
+            };
+            if (divisionId) {
+                navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+            } else {
+                navigate('/facilities', { state: backState });
+            }
+        } else if (divisionId) {
+            navigate(`/divisions/${divisionId}/facilities`);
+        } else {
+            navigate('/facilities');
+        }
     };
-
-    console.log('initialData', initialData)
 
     return (
         <div className="facility-details-container">
@@ -86,8 +140,11 @@ export function AddFacilityPage() {
                     initialData={initialData}
                     onSubmit={handleSubmit}
                     onCancel={handleBack}
-                    isClosedFacility={false}
-                    isEditing={false} // Указываем, что это режим добавления
+                    isEditing={false}
+                    preSelectedDivision={divisionId}
+                    preSelectedSubdivision={preSelectedSubdivision}
+                    divisions={divisions}
+                    isLoadingDivisions={isLoadingDivisions}
                 />
             </div>
 

@@ -44,14 +44,14 @@ export const useNetworkData = (network: any, memberships: any[], directions: any
 
     // Создаем узлы для подразделений
     const divisions = Array.from(divisionsMap.values());
-    const divisionRadius = 14;
+    const divisionRadius = 15;
     const divisionAngleStep = (2 * Math.PI) / Math.max(1, divisions.length);
     
     divisions.forEach((div, divIndex) => {
       const divisionAngle = divIndex * divisionAngleStep;
       const divX = divisionRadius * Math.cos(divisionAngle);
       const divZ = divisionRadius * Math.sin(divisionAngle);
-      const divY = 20;
+      const divY = 23;
       
       nodes.push({
         id: `division-${div.id}`,
@@ -81,11 +81,11 @@ export const useNetworkData = (network: any, memberships: any[], directions: any
       }
       
       // Позиционируем объекты вокруг их подразделений
-      const facRadius = 9;
-      const facAngle = (facIndex % 8) * (Math.PI / 4);
+      const facRadius = 11;
+      const facAngle = (facIndex % 8) * (Math.PI / 2);
       const facX = divX + facRadius * Math.cos(facAngle);
       const facZ = divZ + facRadius * Math.sin(facAngle);
-      const facY = 14;
+      const facY = 15;
       
       nodes.push({
         id: `facility-${fac.id}`,
@@ -100,7 +100,7 @@ export const useNetworkData = (network: any, memberships: any[], directions: any
       // Создаем соединение между подразделением и объектами
       if (divisionMembership && divisionMembership.division) {
         connections.push({
-          start: [divX, 20, divZ],
+          start: [divX, 23, divZ],
           end: [facX, facY, facZ],
           startId: `division-${divisionMembership.division.id}`,
           endId: `facility-${fac.id}`,

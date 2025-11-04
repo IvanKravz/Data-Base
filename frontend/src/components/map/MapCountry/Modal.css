@@ -1,0 +1,327 @@
+.map-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.map-modal-content {
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid #e8e8e8;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+}
+
+.map-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6c757d;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-weight: 300;
+}
+
+.map-modal-close:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    border-color: #dee2e6;
+}
+
+.map-modal-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+    padding-right: 40px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.map-modal-section-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.map-modal-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.map-modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.map-modal-label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.map-modal-input,
+.map-modal-textarea {
+    padding: 12px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.map-modal-input:focus,
+.map-modal-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.map-modal-input:hover,
+.map-modal-textarea:hover {
+    border-color: #9ca3af;
+}
+
+.map-modal-input:disabled {
+    background-color: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.map-modal-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+.map-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.map-modal-edit-btn,
+.map-modal-save-btn,
+.map-modal-cancel-btn,
+.map-modal-close-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    min-width: 100px;
+    line-height: 1.5;
+}
+
+.map-modal-edit-btn {
+    background-color: #2563eb;
+    color: white;
+}
+
+.map-modal-edit-btn:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.map-modal-save-btn {
+    background-color: #059669;
+    color: white;
+}
+
+.map-modal-save-btn:hover {
+    background-color: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+.map-modal-save-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.map-modal-cancel-btn {
+    background-color: #6b7280;
+    color: white;
+}
+
+.map-modal-cancel-btn:hover {
+    background-color: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
+}
+
+.map-modal-close-btn {
+    background-color: #6b7280;
+    color: white;
+}
+
+.map-modal-close-btn:hover {
+    background-color: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
+}
+
+.map-modal-region-info {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.map-modal-info-section {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.map-modal-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 12px 0;
+    line-height: 1.6;
+    font-size: 1rem;
+    color: #374151;
+    display: flex;
+    align-items: flex-end;
+}
+
+.map-modal-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.map-modal-info-label {
+    color: #1f2937;
+    font-weight: 400;
+    display: inline-block;
+    min-width: 220px;
+    flex-shrink: 0;
+}
+
+.map-modal-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Анимация появления модального окна */
+.map-modal-overlay {
+    animation: mapModalFadeIn 0.2s ease-out;
+}
+
+.map-modal-content {
+    animation: mapModalSlideUp 0.2s ease-out;
+}
+
+@keyframes mapModalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mapModalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стили для скроллбара */
+.map-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.map-modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.map-modal-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.map-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 640px) {
+    .map-modal-content {
+        padding: 24px 20px;
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    .map-modal-actions {
+        flex-direction: column;
+    }
+
+    .map-modal-edit-btn,
+    .map-modal-save-btn,
+    .map-modal-cancel-btn,
+    .map-modal-close-btn {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .map-modal-info-label {
+        min-width: 140px;
+    }
+
+    .map-modal-info-item {
+        flex-direction: column;
+        gap: 4px;
+    }
+}

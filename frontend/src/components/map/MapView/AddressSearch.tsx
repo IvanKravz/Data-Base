@@ -1,6 +1,6 @@
 // AddressSearch.tsx
 import React, { useState, useEffect } from 'react';
-import { geocodeAddress } from './data/addresses';
+import { geocodeAddress } from '../data/addresses';
 import './style.css';
 
 interface AddressSearchProps {

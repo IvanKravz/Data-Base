@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { ArrowLeft, Pencil, Trash2, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import '.././style.css'
 import { isExploitationEmployee } from '../../../../api/utils/permissions';
 
@@ -10,7 +9,9 @@ interface HeaderProps {
   onBack: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onQualitative?: () => void;
   canEditEmployee: boolean;
+  isEditing: boolean;
 }
 
 export function Header({ 
@@ -19,10 +20,10 @@ export function Header({
   onBack, 
   onEdit, 
   onDelete, 
+  onQualitative,
   canEditEmployee,
+  isEditing
 }: HeaderProps) {
-  const navigate = useNavigate();
-  
   // Проверяем, является ли пользователь сотрудником эксплуатации
   const isExploitationUser = useMemo(() => isExploitationEmployee(), []);
 
@@ -39,36 +40,43 @@ export function Header({
           {title}
         </h1>
       </div>
-      <div className="personnel-header-right">
-        {/* ДОБАВЛЯЕМ УСЛОВИЕ ОТОБРАЖЕНИЯ */}
-        {personId && !isExploitationUser && (
-          <button
-            onClick={() => navigate(`/personnel/${personId}/qualitative`)}
-            className="action-button action-button-green"
-          >
-            <FileText className="action-button-icon" />
-            <span>Качественная характеристика</span>
-          </button>
-        )}
-        {onEdit && canEditEmployee && (
-          <button
-            onClick={onEdit}
-            className="action-button action-button-blue"
-          >
-            <Pencil className="action-button-icon" />
-            <span>Редактировать</span>
-          </button>
-        )}
-        {onDelete && canEditEmployee && (
-          <button
-            onClick={onDelete}
-            className="action-button action-button-red"
-          >
-            <Trash2 className="action-button-icon" />
-            <span>Удалить</span>
-          </button>
-        )}
-      </div>
+      
+      {!isEditing && (
+        <div className="personnel-header-right">
+          {/* Кнопка "Качественная характеристика" */}
+          {personId && !isExploitationUser && onQualitative && (
+            <button
+              onClick={onQualitative}
+              className="action-button action-button-green"
+            >
+              <FileText className="action-button-icon" />
+              <span>Качественная характеристика</span>
+            </button>
+          )}
+          
+          {/* Кнопка "Редактировать" */}
+          {onEdit && canEditEmployee && (
+            <button
+              onClick={onEdit}
+              className="action-button action-button-blue"
+            >
+              <Pencil className="action-button-icon" />
+              <span>Редактировать</span>
+            </button>
+          )}
+          
+          {/* Кнопка "Удалить" */}
+          {onDelete && canEditEmployee && (
+            <button
+              onClick={onDelete}
+              className="action-button action-button-red"
+            >
+              <Trash2 className="action-button-icon" />
+              <span>Удалить</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

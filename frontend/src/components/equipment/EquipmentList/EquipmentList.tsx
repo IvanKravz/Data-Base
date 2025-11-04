@@ -5,9 +5,8 @@ import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 
 interface EquipmentListProps {
   equipment: Equipment[];
-  onUpdateEquipment: (updatedEquipment: Equipment) => void;
   onDeleteEquipment: (id: string) => void;
-  divisionId?: string; // Добавляем новые пропсы
+  divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
 }

@@ -1,7 +1,68 @@
 from django.db import models
 from equipment.models import Equipment
-from facilities.models import Division, Facility, Subdivision
+from facilities.models import Division, Facility
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Q
+from django.db.models.signals import pre_save, pre_delete
+from django.dispatch import receiver
+
+
+@receiver(pre_save, sender=Equipment)
+def cleanup_network_memberships_on_equipment_move(sender, instance, **kwargs):
+    """
+    Очищает сетевые связи при перемещении оборудования между подразделениями/объектами
+    """
+    if not instance.pk:
+        return  # Новый объект, нечего проверять
+    
+    try:
+        old_equipment = Equipment.objects.get(pk=instance.pk)
+    except Equipment.DoesNotExist:
+        return
+    
+    # Проверяем, изменилось ли подразделение или объект
+    division_changed = (old_equipment.division_id != instance.division_id)
+    facility_changed = (old_equipment.facility_id != instance.facility_id)
+    
+    if division_changed or facility_changed:
+        # Находим и удаляем членства в сетях для старого местоположения
+        old_memberships = NetworkMembership.objects.filter(
+            equipment=instance,
+            division=old_equipment.division
+        )
+        
+        if old_equipment.facility:
+            old_memberships = old_memberships.filter(facility=old_equipment.facility)
+        
+        # Получаем ID членств для удаления направлений
+        old_membership_ids = list(old_memberships.values_list('id', flat=True))
+        
+        # Удаляем направления, связанные с этими членствами
+        NetworkDirection.objects.filter(
+            Q(from_membership_id__in=old_membership_ids) | 
+            Q(to_membership_id__in=old_membership_ids)
+        ).delete()
+        
+        # Удаляем сами членства
+        old_memberships.delete()
+
+@receiver(pre_delete, sender=Equipment)
+def cleanup_network_memberships_on_equipment_delete(sender, instance, **kwargs):
+    """
+    Очищает сетевые связи при удалении оборудования
+    """
+    # Находим все членства оборудования
+    memberships = NetworkMembership.objects.filter(equipment=instance)
+    membership_ids = list(memberships.values_list('id', flat=True))
+    
+    # Удаляем направления
+    NetworkDirection.objects.filter(
+        Q(from_membership_id__in=membership_ids) | 
+        Q(to_membership_id__in=membership_ids)
+    ).delete()
+    
+    # Удаляем членства
+    memberships.delete()
 
 class CommunicationNetwork(models.Model):
     NETWORK_CLASS_CHOICES = [

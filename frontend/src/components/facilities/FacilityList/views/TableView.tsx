@@ -12,6 +12,8 @@ interface TableViewProps {
   divisionId?: string; // Добавляем новые пропсы
   subdivisionId?: string;
   activeTab?: string;
+  filterType?: string | null;
+  facilityClassFilter?: string | null;
 }
 
 export function TableView({
@@ -21,7 +23,9 @@ export function TableView({
   showDifferentFields = false,
   divisionId,
   subdivisionId,
-  activeTab
+  activeTab,
+  filterType,
+  facilityClassFilter
 }: TableViewProps) {
   const navigate = useNavigate();
   const hasClosedFacilities = facilities.some(f => f.is_closed);
@@ -117,14 +121,42 @@ export function TableView({
   });
 
   const handleRowClick = (facility: Facility) => {
-    navigate(`/facilities/${facility.id}`, {
-      state: {
-        from: 'facilities-section',
-        divisionId: divisionId,
-        subdivisionId: subdivisionId,
-        activeTab: activeTab
-      }
-    });
+    const currentSearchParams = new URLSearchParams(window.location.search);
+
+    const state: any = {
+      from: 'facilities-section',
+      divisionId: divisionId,
+      subdivisionId: subdivisionId,
+      activeTab: activeTab,
+      // ДОБАВЬТЕ ФИЛЬТРЫ В СОСТОЯНИЕ
+      filterType: filterType,
+      facilityClassFilter: facilityClassFilter
+    };
+
+    let facilityUrl = `/facilities/${facility.id}`;
+    const params = new URLSearchParams();
+
+    // Сохраняем текущие параметры URL
+    const typeFilter = currentSearchParams.get('type');
+    const classFilter = currentSearchParams.get('class');
+    const viewFilter = currentSearchParams.get('view');
+
+    if (typeFilter) {
+      params.append('type', typeFilter);
+    }
+    if (classFilter) {
+      params.append('class', classFilter);
+    }
+    if (viewFilter) {
+      params.append('view', viewFilter);
+    }
+
+    const queryString = params.toString();
+    if (queryString) {
+      facilityUrl += `?${queryString}`;
+    }
+
+    navigate(facilityUrl, { state });
   };
 
   const renderRowContent = (facility: Facility) => {

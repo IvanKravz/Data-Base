@@ -31,8 +31,8 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
 
   // Группируем сотрудников по подразделениям и отделениям
   const groupedData = personnel.reduce((acc, person) => {
-    // Сотрудники без подразделения или с категорией "management" идут в руководство
-    const isManagement = !person.division || person.category === 'management';
+    // ИЗМЕНЕНИЕ: Руководство определяется только по категории, независимо от наличия подразделения
+    const isManagement = person.category === 'management';
     
     if (isManagement) {
       if (!acc.management) {
@@ -44,6 +44,12 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
       }
       acc.management.employees.push(person);
     } else {
+      // Для не-руководства проверяем наличие подразделения
+      if (!person.division) {
+        // Если у сотрудника нет подразделения, пропускаем его
+        return acc;
+      }
+      
       const divisionId = person.division.id;
       const divisionName = person.division.name;
       const divisionOrder = person.division.order || 9999;
@@ -129,7 +135,7 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
         </thead>
         <tbody className="table-body">
           {/* Сначала отображаем руководство */}
-          {groupedData.management && (
+          {groupedData.management && groupedData.management.employees.length > 0 && (
             <React.Fragment>
               <tr className="division-header-row management-header">
                 <td colSpan={7} className="personnel-division-header-cell">
@@ -139,10 +145,86 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
               {groupedData.management.employees.map((person) => (
                 <tr
                   key={person.id}
-                  onClick={() => onPersonClick(person)} // Используем переданную функцию
+                  onClick={() => onPersonClick(person)}
                   className="table-row management-row"
                 >
-                  {/* ... содержимое строки без изменений ... */}
+                  <td className="table-cell">
+                    <div className="flex items-center">
+                      <div className="user-avatar">
+                        <span>{person.full_name.charAt(0)}</span>
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {person.full_name.length > 30
+                            ? `${person.full_name.substring(0, 30)}...`
+                            : person.full_name}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {person.category === "management" && (
+                            <div className="badge badge--red">
+                              <CircleUserRound className="h-4 w-4" />
+                              <span>Руководство</span>
+                            </div>
+                          )}
+                          {person.is_material_responsible && (
+                            <div className="badge badge--blue">
+                              <ClipboardList className="h-3 w-3" />
+                              <span>МОЛ</span>
+                            </div>
+                          )}
+                          {person.is_sha_worker && (
+                            <div className="badge badge--green">
+                              <Shield className="h-3 w-3" />
+                              <span>ШР</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <div className="text-sm text-gray-900">
+                      {person.rank || '—'}
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <div className="text-sm text-gray-900">
+                      {person.position.length > 30
+                        ? `${person.position.substring(0, 30)}...`
+                        : person.position}
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <div className="text-sm text-gray-900">
+                      {person.division?.name || '—'}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {person.subdivision?.name || ''}
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <div className="text-sm text-gray-900">
+                      <div>раб. {person.work_phone || '—'}</div>
+                      <div>сот. {person.personal_phone || '—'}</div>
+                    </div>
+                  </td>
+                  <td className="table-cell">
+                    <div className="text-sm text-gray-900">
+                      {person.sha_details && `${person.sha_details.access_level} класс / `}
+                      {person.form_state_secrets || '—'}
+                    </div>
+                  </td>
+                  <td className="table-cell text-right">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(person.id);
+                      }}
+                      className="delete-button"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </React.Fragment>
@@ -180,9 +262,10 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
                       {subdivision.employees.map((person) => (
                         <tr
                           key={person.id}
-                          onClick={() => onPersonClick(person)} // Используем переданную функцию
+                          onClick={() => onPersonClick(person)}
                           className="table-row"
                         >
+                          {/* ... содержимое строки ... */}
                           <td className="table-cell">
                             <div className="flex items-center">
                               <div className="user-avatar">

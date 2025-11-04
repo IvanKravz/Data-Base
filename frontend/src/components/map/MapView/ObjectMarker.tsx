@@ -1,14 +1,14 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Marker, Popup } from 'react-leaflet';
-import { MapObject } from './data/objects';
+import { MapObject } from '../data/objects';
 import L from 'leaflet';
 
 // Импортируем локальные изображения
-import blueIcon from '../../assets/markers/marker-icon-2x-blue.png';
-import redIcon from '../../assets/markers/marker-icon-2x-red.png';
-import grayIcon from '../../assets/markers/marker-icon-2x-grey.png';
-import shadowIcon from '../../assets/markers/marker-shadow.png';
+import blueIcon from '../../../assets/markers/marker-icon-2x-blue.png';
+import redIcon from '../../../assets/markers/marker-icon-2x-red.png';
+import grayIcon from '../../../assets/markers/marker-icon-2x-grey.png';
+import shadowIcon from '../../../assets/markers/marker-shadow.png';
 
 const createCustomIcon = (color = 'blue', isSelected = false, isClosed = false) => {
   let icon;

@@ -126,7 +126,7 @@ class CommunicationPost(models.Model):
     )
     subdivision = models.ForeignKey(
         Subdivision, 
-        on_delete=models.CASCADE, 
+        on_delete=models.SET_NULL,  
         related_name='communication_posts',
         null=True, 
         blank=True,
@@ -136,13 +136,12 @@ class CommunicationPost(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.name}"
-
     class Meta:
-        verbose_name = 'Пост связи'
-        verbose_name_plural = 'Посты связи'
-        ordering = ['name']
+        verbose_name = "Пост связи"
+        verbose_name_plural = "Посты связи"
+    
+    def __str__(self):
+        return self.name
 
 
 class Facility(models.Model):

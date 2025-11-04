@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/facilities/', include('facilities.urls')),
     path('api/tasks/', include('tasks.urls')),
     path('api/networks/', include('networks.urls')),
+    path('api/map/', include('map.urls')),
 ]
 
 if settings.DEBUG:

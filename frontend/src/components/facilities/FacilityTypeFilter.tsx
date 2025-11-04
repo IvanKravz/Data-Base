@@ -1,3 +1,4 @@
+// FacilityTypeFilter.tsx
 import React, { useState } from 'react';
 import { Building2, Factory, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { Facility } from '../../types';
@@ -9,6 +10,7 @@ interface FacilityTypeFilterProps {
   onTypeChange: (type: 'all' | number) => void;
   selectedClass: 'all' | '1' | '2';
   onClassChange: (facilityClass: 'all' | '1' | '2') => void;
+  activeTab?: 'all' | 'open' | 'closed'; // Добавляем пропс activeTab
 }
 
 export function FacilityTypeFilter({
@@ -16,26 +18,38 @@ export function FacilityTypeFilter({
   selectedType,
   onTypeChange,
   selectedClass,
-  onClassChange
+  onClassChange,
+  activeTab = 'all'
 }: FacilityTypeFilterProps) {
   const [showClassFilters, setShowClassFilters] = useState(false);
 
-  const uniqueTypeIds = Array.from(new Set(facilities.map(f => f.type.id)));
+  // Фильтруем facilities по активной вкладке
+  const filteredFacilities = facilities.filter(facility => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'open') return !facility.is_closed;
+    if (activeTab === 'closed') return facility.is_closed;
+    return true;
+  });
+
+  // Для вкладки "Открытые объекты" скрываем фильтр по классам
+  const showClassFilter = activeTab !== 'open';
+
+  const uniqueTypeIds = Array.from(new Set(filteredFacilities.map(f => f.type.id)));
   const facilityTypes = uniqueTypeIds.map(id => {
-    const type = facilities.find(f => f.type.id === id)?.type;
+    const type = filteredFacilities.find(f => f.type.id === id)?.type;
     return type!;
   }).filter(Boolean) as {id: number, name: string, description: string}[];
 
   const isShdSelected = selectedType !== 'all' && 
-    facilities.find(f => f.type.id === selectedType)?.type.name.toLowerCase().includes('шд');
+    filteredFacilities.find(f => f.type.id === selectedType)?.type.name.toLowerCase().includes('шд');
 
   const getTypeCount = (typeId: 'all' | number) => {
-    if (typeId === 'all') return facilities.length;
-    return facilities.filter(f => f.type.id === typeId).length;
+    if (typeId === 'all') return filteredFacilities.length;
+    return filteredFacilities.filter(f => f.type.id === typeId).length;
   };
 
   const getClassCount = (cls: '1' | '2') => {
-    return facilities
+    return filteredFacilities
       .filter(f => selectedType === 'all' || f.type.id === selectedType)
       .filter(f => f.facility_class === cls).length;
   };
@@ -46,11 +60,11 @@ export function FacilityTypeFilter({
     } else {
       onTypeChange(typeId);
       const newTypeIsShd = typeId !== 'all' && 
-        facilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
+        filteredFacilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
       if (!newTypeIsShd) {
         onClassChange('all');
       }
-      setShowClassFilters(false); // Сбрасываем состояние при смене типа
+      setShowClassFilters(false);
     }
   };
 
@@ -97,7 +111,7 @@ export function FacilityTypeFilter({
           </button>
         ))}
 
-        {shdType && (
+        {shdType && showClassFilter && ( // Показываем ШД только если разрешен фильтр по классам
           <div className="shd-filter-wrapper">
             <button
               onClick={() => handleTypeChange(shdType.id)}
@@ -119,7 +133,7 @@ export function FacilityTypeFilter({
                       : getClassCount('2')
                     : getTypeCount(shdType.id)}
                 </span>
-                {selectedType === shdType.id && (
+                {selectedType === shdType.id && showClassFilter && ( // Показываем шеврон только если разрешен фильтр по классам
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
@@ -137,7 +151,7 @@ export function FacilityTypeFilter({
               </div>
             </button>
 
-            {selectedType === shdType.id && showClassFilters && (
+            {selectedType === shdType.id && showClassFilters && showClassFilter && (
               <div className="facility-class-dropdown">
                 <button
                   onClick={() => handleClassChange('all')}

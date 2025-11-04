@@ -15,8 +15,9 @@ interface AssignmentInfoProps {
     facilities: {
       id: string;
       name: string;
-      type: 'station' | 'shd';
+      type_name: 'station' | 'shd';
       class: string;
+      class_display: string;
     }[];
   }[];
   isLoading: boolean;
@@ -62,13 +63,9 @@ export function AssignmentInfo({
     });
   };
 
-  const filteredFacilities = availableFacilities.filter(facility => {
-    // Если не выбрано отделение - показываем все объекты подразделения
-    if (!formData.subdivision?.id) return true;
-
-    // Фильтруем по отделению (если у facility есть subdivisionId)
-    return facility.subdivision === formData.subdivision.id;
-  });
+  // УБИРАЕМ ФИЛЬТРАЦИЮ ОБЪЕКТОВ ПО ОТДЕЛЕНИЮ
+  // Теперь показываем все объекты подразделения независимо от отделения
+  const filteredFacilities = availableFacilities;
 
   // Обработчик изменения отделения
   const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -111,6 +108,8 @@ export function AssignmentInfo({
       } : null
     });
   };
+
+  console.log('availableFacilities', availableFacilities)
 
   return (
     <div className="equipment-card-edit">
@@ -193,7 +192,10 @@ export function AssignmentInfo({
               <option value="">Не привязан к объекту</option>
               {filteredFacilities.map(facility => (
                 <option key={facility.id} value={facility.id}>
-                  {facility.name} ({facility.type === 'station' ? 'Станция' : 'ШД'}, {facility.class} класс)
+                  {facility.name} (
+                  {facility.type_name || 'Не указан'}
+                  {facility.class_display && `, ${facility.class_display || ''}`}
+                  )
                 </option>
               ))}
             </select>

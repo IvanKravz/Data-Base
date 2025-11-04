@@ -1,115 +1,27 @@
-import { useState, useRef } from 'react';
-import Modal from './Modal';
+import React, { useRef } from 'react';
 
-export const MapCountry = () => {
-    const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
+interface RussiaMapProps {
+    onRegionClick: (regionName: string) => void;
+    onRegionMouseEnter: (e: React.MouseEvent<SVGPathElement>) => void;
+    onRegionMouseLeave: (e: React.MouseEvent<SVGPathElement>) => void;
+    onSearchKeyPress: (e: React.KeyboardEvent) => void;
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
+    onSearch: () => void;
+    hoveredRegion: string | null;
+}
+
+export const RussiaMap: React.FC<RussiaMapProps> = ({
+    onRegionClick,
+    onRegionMouseEnter,
+    onRegionMouseLeave,
+    onSearchKeyPress,
+    searchQuery,
+    onSearchChange,
+    onSearch,
+    hoveredRegion,
+}) => {
     const svgRef = useRef<SVGSVGElement>(null);
-
-    const handleMouseEnter = (e: React.MouseEvent<SVGPathElement>) => {
-        const regionName = e.currentTarget.getAttribute('name');
-        setHoveredRegion(regionName);
-
-        // Находим все элементы с таким же именем региона
-        const elements = document.querySelectorAll(`path[name="${regionName}"]`);
-        elements.forEach(el => {
-            el.style.fill = '#4169E1';
-            el.style.transition = '0.4s';
-            el.style.cursor = 'pointer';
-        });
-    };
-
-    const handleMouseLeave = (e: React.MouseEvent<SVGPathElement>) => {
-        const regionName = e.currentTarget.getAttribute('name');
-        setHoveredRegion(null);
-
-        // Находим все элементы с таким же именем региона
-        const elements = document.querySelectorAll(`path[name="${regionName}"]`);
-        elements.forEach(el => {
-            el.style.fill = '#c9dfec';
-            el.style.transition = '0.4s';
-        });
-    };
-
-    const handleClick = (regionName: string) => {
-        setSelectedRegion(regionName);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-    };
-
-    // Функция для поиска и выделения региона
-    const searchRegion = () => {
-        // Сначала сбрасываем все выделения
-        const allPaths = document.querySelectorAll('path.rus_zone');
-        allPaths.forEach(path => {
-            path.style.fill = '#c9dfec';
-        });
-
-        if (!searchQuery.trim()) return;
-
-        // Ищем регион по имени (без учета регистра)
-        const foundElements = document.querySelectorAll(`path[name]`);
-        let found = false;
-
-        foundElements.forEach(element => {
-            const name = element.getAttribute('name');
-            if (name && name.toLowerCase().includes(searchQuery.toLowerCase())) {
-                element.style.fill = '#4169E1';
-                element.style.transition = '0.4s';
-                found = true;
-
-                // Прокручиваем карту к найденному элементу
-                const rect = element.getBoundingClientRect();
-                if (svgRef.current) {
-                    svgRef.current.scrollTo({
-                        left: rect.left - 100,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        });
-
-        if (!found) {
-            alert('Регион не найден');
-        }
-    };
-
-    // Обработка нажатия клавиши Enter в поле поиска
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            searchRegion();
-        }
-    };
-
-    // Пример данных о регионах (можно вынести в отдельный файл)
-    const regionData: Record<string, { capital: string; population: string; area: string }> = {
-        "Республика Саха (Якутия)": {
-            capital: "Якутск",
-            population: "1 млн",
-            area: "3 083 523 км²"
-        },
-        "Красноярский край": {
-            capital: "Красноярск",
-            population: "2.8 млн",
-            area: "2 366 797 км²"
-        },
-        "Хабаровский край": {
-            capital: "Хабаровск",
-            population: "1.3 млн",
-            area: "787 633 км²"
-        },
-        "Архангельская область": {
-            capital: "Архангельск",
-            population: "1.1 млн",
-            area: "589 913 км²"
-        }
-        // Добавьте данные для других регионов
-    };
 
     return (
         <div className='map-region'>
@@ -120,36 +32,35 @@ export const MapCountry = () => {
                         type="text"
                         placeholder="Поиск региона..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        onKeyPress={onSearchKeyPress}
                         className="search-input"
                     />
-                    <button
-                        onClick={searchRegion}
-                        className="search-button"
-                    >
+                    <button onClick={onSearch} className="search-button">
                         Найти
                     </button>
                 </div>
             </div>
+
             <div className='hovered-region-name'>
-                {hoveredRegion}
+                {hoveredRegion && `Регион: ${hoveredRegion}`}
             </div>
+
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
             }}>
-            <svg
-                ref={svgRef}
-                version="1.1"
-                width="83%"
-                height="100%"
-                viewBox="0 0 809 459"
-                style={{ overflow: 'auto' }}
-            >
-                <path fill="#c9dfec" stroke="#606778" name="Республика Адыгея" className="rus_zone"
-                    d="M32.7,366.7L31.900000000000002,365.5L30.500000000000004,364.1L29.800000000000004,364.40000000000003V365.6L30.400000000000006,
+                <svg
+                    ref={svgRef}
+                    version="1.1"
+                    width="83%"
+                    height="100%"
+                    viewBox="0 0 809 459"
+                    style={{ overflow: 'auto' }}
+                >
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Адыгея" className="rus_zone"
+                        d="M32.7,366.7L31.900000000000002,365.5L30.500000000000004,364.1L29.800000000000004,364.40000000000003V365.6L30.400000000000006,
                     366.70000000000005L33.10000000000001,369.50000000000006H34.400000000000006L34.800000000000004,369.00000000000006L36.2,
                     369.90000000000003L36.900000000000006,371.6L36.10000000000001,372.40000000000003L34.70000000000001,372.3L33.90000000000001,
                     373.8H32.70000000000001V375.90000000000003L33.20000000000001,377.1L32.90000000000001,378.1H30L29,377.6L27.9,378.70000000000005L29.799999999999997,
@@ -157,14 +68,14 @@ export const MapCountry = () => {
                     378.40000000000003L35.99999999999999,376.50000000000006L37.099999999999994,375.40000000000003L38.3,374.90000000000003L38.8,376.6L39.5,
                     375.20000000000005V372.40000000000003V370.6L38.6,370L37.800000000000004,369.2L36.7,368.59999999999997L36.300000000000004,
                     367.2L34.7,366.7L34,367L32.7,366.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Адыгея")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Башкортостан" className="rus_zone"
-                    d="M215.4,340.4L213.8,342L212.3,339.8H210.5L207.6,337.7L206,335.4L204.6,336L203,335.4L202,332L199.9,331.6L198.8,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Адыгея")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Башкортостан" className="rus_zone"
+                        d="M215.4,340.4L213.8,342L212.3,339.8H210.5L207.6,337.7L206,335.4L204.6,336L203,335.4L202,332L199.9,331.6L198.8,
                     329.3H196.20000000000002L193.60000000000002,327.2V325.7L192.00000000000003,325.09999999999997L190.70000000000002,326.4L185.8,327.79999999999995L185,
                     328.59999999999997L186.1,330.2V331.9L183.5,333.9H181.6L180.1,334.59999999999997L179.29999999999998,333.79999999999995L177.99999999999997,
                     334.49999999999994L178.39999999999998,336.19999999999993V337.29999999999995L179.2,338.09999999999997L178.2,339.09999999999997L176.6,340.7H175L174.6,
@@ -181,14 +92,14 @@ export const MapCountry = () => {
                     351.09999999999997L199.10000000000002,349.9L198.60000000000002,347.5L201.40000000000003,345.4L203.30000000000004,346L205.40000000000003,
                     347L206.80000000000004,348.4V350.09999999999997L209.40000000000003,351.09999999999997L211.10000000000002,349.4L214.00000000000003,
                     348.7V347.2L215.50000000000003,344.4L216.10000000000002,342.5L215.4,340.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Башкортостан")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Бурятия" className="rus_zone"
-                    d="M518.7,433.8L514.3000000000001,433.2L512.5000000000001,432.09999999999997L506.7000000000001,432.9H503L500,435.9L496.7,436.7L493.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Башкортостан")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Бурятия" className="rus_zone"
+                        d="M518.7,433.8L514.3000000000001,433.2L512.5000000000001,432.09999999999997L506.7000000000001,432.9H503L500,435.9L496.7,436.7L493.5,
                     437.59999999999997L488.9,437.2L485.79999999999995,435.9L483.79999999999995,433.9L481.99999999999994,430L479.69999999999993,
                     427.7L476.3999999999999,426.4H473.19999999999993L469.5999999999999,427.29999999999995L467.0999999999999,
                     424.79999999999995H462.19999999999993L459.29999999999995,422.59999999999997L457.79999999999995,424.09999999999997L457.59999999999997,
@@ -217,14 +128,14 @@ export const MapCountry = () => {
                     416.6L526.4999999999995,416H525.0999999999996L523.6999999999996,417.4V419.79999999999995L524.6999999999996,
                     420.99999999999994L523.0999999999996,421.69999999999993V426.19999999999993L525.2999999999996,425.8999999999999L526.7999999999996,
                     427.3999999999999L522.6999999999996,431.49999999999994L523.1999999999996,433.8999999999999H518.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Бурятия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Алтай" className="rus_zone"
-                    d="M396.3,452.3L393.3,453L391.2,455.1L387.4,455L384.2,456.8L382.59999999999997,458.40000000000003L378.9,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Бурятия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Алтай" className="rus_zone"
+                        d="M396.3,452.3L393.3,453L391.2,455.1L387.4,455L384.2,456.8L382.59999999999997,458.40000000000003L378.9,
                     457.8L377.79999999999995,455.90000000000003L376.4,453.40000000000003L375.7,450.8L373.7,452.8L370.4,454.1L367.4,453.1L364,452V449L361.3,
                     447.4L360.3,445.09999999999997L358.1,443.7L357.6,440.7L360.1,440.5V438.3L359,437.2L357.3,435.5L358.5,434.3L361.2,433.40000000000003L364.5,
                     432.20000000000005H366.7L369.7,429.1V427L371.2,425.5L373.59999999999997,427L374.79999999999995,425.4H376.09999999999997L377.09999999999997,
@@ -232,14 +143,14 @@ export const MapCountry = () => {
                     431.1L383.20000000000005,432.3L385.80000000000007,434.90000000000003H387.80000000000007L389.00000000000006,
                     432.40000000000003H390.30000000000007L390.70000000000005,435.3L391.6,438.1L394.5,441L396.8,443.2L396.2,445L394.09999999999997,
                     445.5L393.09999999999997,446.5L394.99999999999994,448.4V450.5L396.3,452.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Алтай")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Дагестан" className="rus_zone"
-                    d="M77.1,405.7L75.8,407V409.1L77.1,410.40000000000003L77.89999999999999,412.8L77.3,415.2L76.7,417.4L75.2,418.9V419.79999999999995L74,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Алтай")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Дагестан" className="rus_zone"
+                        d="M77.1,405.7L75.8,407V409.1L77.1,410.40000000000003L77.89999999999999,412.8L77.3,415.2L76.7,417.4L75.2,418.9V419.79999999999995L74,
                     421L71.2,425.6V429.1L72,433.40000000000003L71.5,436.70000000000005L71.8,440.80000000000007L68.8,442.20000000000005L66.8,441.30000000000007L63.9,
                     442.30000000000007L61.1,441.70000000000005L60.7,439.30000000000007L59.300000000000004,435.1000000000001L59.00000000000001,
                     432.1000000000001L57.00000000000001,430.7000000000001V429L56.00000000000001,426.3L54.20000000000001,424L55.30000000000001,422.1L57.500000000000014,
@@ -247,35 +158,35 @@ export const MapCountry = () => {
                     415.4L69.7,414.09999999999997L71,413.7L70.8,410.8L68.2,410.6L66.8,408.70000000000005L65,406.70000000000005L65.8,404.70000000000005L64.5,
                     404.1V403H66.1L67,402.2L66.4,401.2L67.4,400.2L69,400.8L70.9,400.2L72.9,398.9L74.60000000000001,400.09999999999997L75.50000000000001,
                     401.4L76.90000000000002,401.9L77.50000000000001,403.5L77.1,405.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Дагестан")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Ингушетия" className="rus_zone"
-                    d="M58.7,411.5L57.5,414.1L56,416.5L54.1,417.9L53.5,415.59999999999997L51.3,415.29999999999995L52.5,413.29999999999995H54.4L54.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Дагестан")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Ингушетия" className="rus_zone"
+                        d="M58.7,411.5L57.5,414.1L56,416.5L54.1,417.9L53.5,415.59999999999997L51.3,415.29999999999995L52.5,413.29999999999995H54.4L54.6,
                     411.99999999999994L54,409.99999999999994L54.6,406.99999999999994L56.300000000000004,406.29999999999995L57.2,407.99999999999994L59.2,
                     409.59999999999997L58.7,411.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Ингушетия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Кабардино-Балкарская Республика" className="rus_zone"
-                    d="M39.7,397.4L41.2,396.79999999999995L42.7,395.29999999999995L43.900000000000006,395.4L45.7,394.7L47.7,395.3L49.6,395.7L50.1,397.2L52.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Ингушетия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Кабардино-Балкарская Республика" className="rus_zone"
+                        d="M39.7,397.4L41.2,396.79999999999995L42.7,395.29999999999995L43.900000000000006,395.4L45.7,394.7L47.7,395.3L49.6,395.7L50.1,397.2L52.4,
                     399.5L54.199999999999996,399.1L55.199999999999996,400.1L56.599999999999994,401.1L56.099999999999994,402.1L55.099999999999994,
                     402.90000000000003V404.40000000000003L54.199999999999996,405.3L51.9,405.40000000000003L51.1,406.20000000000005L50,405.20000000000005H48.2L47,
                     406L45.9,405.8L44.199999999999996,406.40000000000003L42.4,404.8L42.9,402.3L40.699999999999996,400.5L39.7,397.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Кабардино-Балкарская Республика")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Калмыкия" className="rus_zone"
-                    d="M78.7,406.2L81.4,405.4H83.80000000000001L86.00000000000001,402.9L87.80000000000001,402.09999999999997V400.29999999999995L86.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Кабардино-Балкарская Республика")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Калмыкия" className="rus_zone"
+                        d="M78.7,406.2L81.4,405.4H83.80000000000001L86.00000000000001,402.9L87.80000000000001,402.09999999999997V400.29999999999995L86.4,
                     399.29999999999995L84.7,399.29999999999995L84.3,398.29999999999995L88.39999999999999,395.4V394.2L87.6,393.4V391.9L86.69999999999999,
                     390.7L87.69999999999999,389.7L89.1,390.3L89.3,391.3H90.2L90.4,389.7L93.10000000000001,389.9L93.9,387.9L92.60000000000001,
                     386.59999999999997L93.50000000000001,383.4L95.00000000000001,382.59999999999997L95.30000000000001,381.09999999999997L95.60000000000001,
@@ -290,26 +201,26 @@ export const MapCountry = () => {
                     372.40000000000003L59,374L60,375L62.3,374.6L63.699999999999996,375.20000000000005L64,377L65.2,378.4L65.60000000000001,
                     380L66.80000000000001,381.2L67.60000000000001,383.5L66.7,385.2L67.7,387L69,388.3L70,389.6V391.1L71.4,392.5L71.7,394.4L72.8,396V398.9L74.5,
                     400.09999999999997L75.4,401.4L76.80000000000001,401.9L77.4,403.5L77.2,405.7L78.7,406.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Калмыкия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Карачаево-Черкесская Республика" className="rus_zone"
-                    d="M39.7,397.4L37.800000000000004,396.5L35.00000000000001,394.6L34.10000000000001,391.6L32.20000000000001,388.70000000000005L31.60000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Калмыкия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Карачаево-Черкесская Республика" className="rus_zone"
+                        d="M39.7,397.4L37.800000000000004,396.5L35.00000000000001,394.6L34.10000000000001,391.6L32.20000000000001,388.70000000000005L31.60000000000001,
                     386.20000000000005L33.10000000000001,384.70000000000005L34.900000000000006,384.40000000000003L36.2,383.1H37.5L38.2,384.6L39.300000000000004,
                     386.20000000000005H41.800000000000004L43.7,383.80000000000007L45.2,384.30000000000007V386.30000000000007L46.6,387.30000000000007L46.9,
                     388.9000000000001L47.6,389.9000000000001H45.4L44.8,391.0000000000001L45.8,392.0000000000001L46.5,393.10000000000014L45.8,394.70000000000016L44,
                     395.40000000000015L42.8,395.3000000000001L41.3,396.8000000000001L39.7,397.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Карачаево-Черкесская Республика")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Карелия" className="rus_zone"
-                    d="M114.9,194.1V197.79999999999998L116.30000000000001,202.49999999999997L121.10000000000001,216.29999999999998L124.10000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Карачаево-Черкесская Республика")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Карелия" className="rus_zone"
+                        d="M114.9,194.1V197.79999999999998L116.30000000000001,202.49999999999997L121.10000000000001,216.29999999999998L124.10000000000001,
                     217.7L125.9,221.1L127.30000000000001,226.4L130.20000000000002,224.8L132.10000000000002,222.10000000000002L133.50000000000003,
                     222.90000000000003L135.80000000000004,221.60000000000002L137.90000000000003,220.90000000000003L140.00000000000003,
                     221.30000000000004L141.80000000000004,222.10000000000005L143.90000000000003,221.70000000000005L145.50000000000003,
@@ -329,14 +240,14 @@ export const MapCountry = () => {
                     169.2L146.9000000000001,169.29999999999998V173.6L144.60000000000008,174.5V177.8L141.60000000000008,
                     180.20000000000002H138.10000000000008L137.20000000000007,188.60000000000002V191.90000000000003L131.90000000000006,
                     193.80000000000004L114.9,194.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Карелия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Коми" className="rus_zone"
-                    d="M296.1,228H294.6L292.1,230.2L289.90000000000003,230.29999999999998L288.90000000000003,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Карелия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Коми" className="rus_zone"
+                        d="M296.1,228H294.6L292.1,230.2L289.90000000000003,230.29999999999998L288.90000000000003,
                     232.7L285.50000000000006,232.1L284.6000000000001,233.6L283.1000000000001,235.1L281.6000000000001,235.9L278.7000000000001,
                     236.9L276.3000000000001,237.5L273.40000000000015,236L271.90000000000015,236.3L270.20000000000016,234.8L266.8000000000002,
                     233.5L263.4000000000002,231.3L260.9000000000002,230.3L256.8000000000002,228.70000000000002L254.80000000000018,
@@ -390,14 +301,14 @@ export const MapCountry = () => {
                     240.59999999999968L296.90000000000026,239.09999999999968L294.90000000000026,237.09999999999968L297.2000000000003,
                     236.09999999999968V234.4999999999997L294.7000000000003,233.19999999999968L295.10000000000025,230.89999999999966L296.10000000000025,
                     230.39999999999966L296.7000000000003,228.99999999999966L296.1,228"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Коми")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Марий Эл" className="rus_zone"
-                    d="M149.5,296L151.1,294.4L154.5,296.5L155.9,298.7L157.9,300L160.20000000000002,298.7L161.60000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Коми")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Марий Эл" className="rus_zone"
+                        d="M149.5,296L151.1,294.4L154.5,296.5L155.9,298.7L157.9,300L160.20000000000002,298.7L161.60000000000002,
                     300.09999999999997L162.50000000000003,298.49999999999994L164.60000000000002,299.69999999999993L167.40000000000003,
                     300.29999999999995L168.30000000000004,303.29999999999995L170.40000000000003,304.49999999999994V308.49999999999994L171.10000000000002,
                     310.3999999999999L168.90000000000003,311.5999999999999L167.30000000000004,309.9999999999999H164.50000000000003L163.30000000000004,
@@ -405,14 +316,14 @@ export const MapCountry = () => {
                     308.8999999999999L155.60000000000002,306.8999999999999L154.20000000000002,305.49999999999994L153.9,
                     303.19999999999993H149.20000000000002L147.00000000000003,302.0999999999999L145.80000000000004,299.8999999999999L147.10000000000005,
                     298.5999999999999L146.90000000000006,295.7999999999999L149.5,296"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Марий Эл")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Мордовия" className="rus_zone"
-                    d="M121.4,300.2L122.80000000000001,301.59999999999997H125.10000000000001L125.7,303.4L126.9,304.59999999999997V306.99999999999994L128.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Марий Эл")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Мордовия" className="rus_zone"
+                        d="M121.4,300.2L122.80000000000001,301.59999999999997H125.10000000000001L125.7,303.4L126.9,304.59999999999997V306.99999999999994L128.5,
                     308.59999999999997L129.1,310.7L131.2,311.3L132.2,309.8L135.2,309.7L135.79999999999998,309.09999999999997L137.89999999999998,
                     308.99999999999994L137.59999999999997,310.49999999999994L138.49999999999997,311.3999999999999H139.79999999999998L140.49999999999997,
                     312.8999999999999L139.19999999999996,314.7999999999999L139.79999999999995,316.0999999999999L138.69999999999996,
@@ -422,14 +333,14 @@ export const MapCountry = () => {
                     314.4999999999999V312L118.89999999999996,310H117.39999999999996L115.19999999999996,309.1L113.99999999999996,
                     307.90000000000003L112.59999999999995,308.40000000000003L112.39999999999995,306.8L113.79999999999995,305.8L114.89999999999995,
                     304.7V303.7H116.29999999999995L118.29999999999995,301.7L119.79999999999995,301.3L121.4,300.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Мордовия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M638.5,97.5L636.1,99.9V101.7L637.3000000000001,102.9H634.8000000000001L632.5000000000001,104.7L629.3000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Мордовия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M638.5,97.5L636.1,99.9V101.7L637.3000000000001,102.9H634.8000000000001L632.5000000000001,104.7L629.3000000000001,
                     106.10000000000001L625.8000000000001,102.60000000000001L624.1,100.9L620.6,101.10000000000001L616.4,101.7L614,104.60000000000001L611.3,107.30000000000001L608.0999999999999,
                     112.00000000000001V115.70000000000002L605.5999999999999,118.90000000000002L603.1999999999999,121.30000000000003L600.4999999999999,121.40000000000002L598.0999999999999,
                     120.10000000000002L594.6999999999999,122.00000000000003C594.6999999999999,122.00000000000003,595.4999999999999,125.30000000000003,595.0999999999999,
@@ -519,102 +430,102 @@ export const MapCountry = () => {
                     126.19999999999987V123.29999999999987L644.0999999999999,122.19999999999987L643.0999999999999,119.69999999999987L644.5999999999999,117.29999999999987V114.69999999999987L646.3,
                     113.49999999999987V110.99999999999987L647.5,107.99999999999987L650.1,105.99999999999987L648.1,102.69999999999987L645.8000000000001,101.79999999999987L645.2,
                     100.19999999999987L642.7,99.89999999999988L639.7,98.89999999999988L638.5,97.5Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M549.2,100.9L549,100L550.7,100.8L551.6,99.89999999999999L552.8000000000001,98.69999999999999L554.6,96.89999999999999L555.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M549.2,100.9L549,100L550.7,100.8L551.6,99.89999999999999L552.8000000000001,98.69999999999999L554.6,96.89999999999999L555.7,
                     98.19999999999999H556.3000000000001L557.7,96.79999999999998L559,95.19999999999999L561.5,94.1L563.3,95.5L562.3,98.4V100L561.0999999999999,
                     101.2L559.1999999999999,102.10000000000001L557.0999999999999,102.9H554.9999999999999L553.3999999999999,104.5L550.8999999999999,103.6L549.5999999999999,
                     101.8L549.2,100.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M545,103.3H541.3L540.0999999999999,104.5L538.1999999999999,105.8L536.8,104.39999999999999L533.5,105.39999999999999L533.7,107.49999999999999L534.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M545,103.3H541.3L540.0999999999999,104.5L538.1999999999999,105.8L536.8,104.39999999999999L533.5,105.39999999999999L533.7,107.49999999999999L534.6,
                     108.39999999999999L535.9,109.69999999999999L536.8,110.6L535.5,111.6L533.8,110.1L532.9,111L531.6,109.7L528.7,110.3L527.4000000000001,109.6L526.8000000000001,
                     111.1L527.7,112L526,113V115.2L527.4,116.60000000000001L527.1,118.2H528.4L530,119.8L529.5,121.6L531.6,122.6L534.4,122.69999999999999L535.6,123.79999999999998H537.7L540.1,
                     123.09999999999998V121.29999999999998L538.6,119.89999999999998L539.4,119.09999999999998L540.6,120.29999999999998L542.7,116.39999999999998L544.7,114.39999999999998L545.6,
                     115.29999999999998L547.4,113.49999999999999L548,111.79999999999998L545.9,111.09999999999998L544.5,112.49999999999999L542.8,111.19999999999999L540.6999999999999,
                     109.89999999999999L538.5999999999999,108.39999999999999L539.3,106.89999999999999L540.4,105.8L541.3,108.7L542.5999999999999,110L544.8,110.4L546.1999999999999,
                     109.80000000000001H547.4L548.5,108.70000000000002L547.9,106.30000000000001H546L546.5,104.20000000000002V102.70000000000002L545,103.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M546.9,123.6L545.9,124.5L546.6999999999999,126.8L547.9999999999999,128.1L549.0999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M546.9,123.6L545.9,124.5L546.6999999999999,126.8L547.9999999999999,128.1L549.0999999999999,
                     126V124.3L548.3,123.5L546.9,123.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M551.6,125.6L550.3000000000001,126.89999999999999L551.0000000000001,128.7L552.3000000000001,130L551.5000000000001,131.8L552.2000000000002,132.5L553.2000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M551.6,125.6L550.3000000000001,126.89999999999999L551.0000000000001,128.7L552.3000000000001,130L551.5000000000001,131.8L552.2000000000002,132.5L553.2000000000002,
                     130.3L555.8000000000002,129.70000000000002L558.1000000000001,128.8L561.2000000000002,127.00000000000001L559.6000000000001,
                     124.00000000000001H557.4000000000001L554.3000000000001,123.00000000000001L552.9000000000001,124.30000000000001L551.6,125.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M525.8,120.7L524.8,119.7L523,119.60000000000001L524.2,120.80000000000001L524.9000000000001,123.50000000000001H526.4000000000001V122.00000000000001L525.8,120.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M468.3,165.4L466.2,167.5V168.9H468L468.6,170.3L470.1,169.60000000000002L471.8,167.90000000000003V165.10000000000002H469.6L468.3,165.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M543.2,84.5L542.5,85.8L543.2,86.5L544.1,85.8L543.2,84.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
-                    d="M536.8,134.7L534.5999999999999,134.2L533.8999999999999,134.79999999999998L535.1999999999998,135.39999999999998L536.7999999999998,136.7L537.4999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M525.8,120.7L524.8,119.7L523,119.60000000000001L524.2,120.80000000000001L524.9000000000001,123.50000000000001H526.4000000000001V122.00000000000001L525.8,120.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M468.3,165.4L466.2,167.5V168.9H468L468.6,170.3L470.1,169.60000000000002L471.8,167.90000000000003V165.10000000000002H469.6L468.3,165.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M543.2,84.5L542.5,85.8L543.2,86.5L544.1,85.8L543.2,84.5"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Саха (Якутия)" className="rus_zone iakutia"
+                        d="M536.8,134.7L534.5999999999999,134.2L533.8999999999999,134.79999999999998L535.1999999999998,135.39999999999998L536.7999999999998,136.7L537.4999999999999,
                     135.79999999999998L536.8,134.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Саха (Якутия)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Северная Осетия (Алания)" className="rus_zone"
-                    d="M44.2,406.3L44.7,410.40000000000003L46.5,412.20000000000005L49.3,412.6L50.9,414.20000000000005L51.3,415.50000000000006L52.5,413.50000000000006H54.4L54.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Саха (Якутия)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Северная Осетия (Алания)" className="rus_zone"
+                        d="M44.2,406.3L44.7,410.40000000000003L46.5,412.20000000000005L49.3,412.6L50.9,414.20000000000005L51.3,415.50000000000006L52.5,413.50000000000006H54.4L54.6,
                     412.20000000000005L54,410.20000000000005L54.6,407.20000000000005L56.300000000000004,406.50000000000006L58.900000000000006,406.6000000000001L58.400000000000006,
                     404.4000000000001L56.00000000000001,402.2000000000001L55.00000000000001,403.0000000000001V404.5000000000001L54.10000000000001,405.4000000000001L51.80000000000001,
                     405.5000000000001L51.000000000000014,406.3000000000001L49.70000000000002,405.3000000000001H48.100000000000016L47,406L45.9,405.8L44.2,406.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Северная Осетия (Алания)")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Татарстан" className="rus_zone"
-                    d="M184.8,328.7L185.9,330.3V332L183.3,334H181.4L179.9,334.7L179.1,333.9L177.79999999999998,334.59999999999997L178.2,336.29999999999995V337.4L179,338.2L176.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Северная Осетия (Алания)")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Татарстан" className="rus_zone"
+                        d="M184.8,328.7L185.9,330.3V332L183.3,334H181.4L179.9,334.7L179.1,333.9L177.79999999999998,334.59999999999997L178.2,336.29999999999995V337.4L179,338.2L176.4,
                     340.8H175L173.6,343.5L172.1,344.1L170.6,342.70000000000005L172.1,341.20000000000005L170,339.1H167.9L167,337L167.6,335.4L164.5,332.7H162.5L161,334.2L157.7,
                     330.9L157.1,329.29999999999995L155.29999999999998,327.49999999999994L154.6,324.49999999999994L153.6,323.49999999999994L151.7,324.29999999999995L147.89999999999998,
                     320.69999999999993L145.99999999999997,319.79999999999995L143.39999999999998,320.4V318.2L145.89999999999998,317.2L148.09999999999997,318.09999999999997L150.49999999999997,
@@ -622,14 +533,14 @@ export const MapCountry = () => {
                     308.79999999999995L164.69999999999996,309.99999999999994H167.49999999999997L169.09999999999997,311.59999999999997L171.29999999999995,310.4V312.4L171.99999999999994,
                     315.5L174.09999999999994,317.9L176.69999999999993,318.2L177.89999999999992,319.9L180.0999999999999,320.9L180.99999999999991,322.09999999999997L182.49999999999991,
                     322.09999999999997L182.79999999999993,324.4L184.49999999999991,325.7L182.79999999999993,326.7L182.89999999999992,327.8L184.8,328.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Татарстан")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Тыва" className="rus_zone"
-                    d="M457.9,424.1L455.9,426.1L454.29999999999995,429.3L452.59999999999997,431L452.09999999999997,434.3L453.7,436.2V439L455.9,441.2V444.2L452.9,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Татарстан")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Тыва" className="rus_zone"
+                        d="M457.9,424.1L455.9,426.1L454.29999999999995,429.3L452.59999999999997,431L452.09999999999997,434.3L453.7,436.2V439L455.9,441.2V444.2L452.9,
                     446.2L450,449.09999999999997H447.6H443.90000000000003L440.50000000000006,448.2L437.00000000000006,448.8L434.50000000000006,448L430.80000000000007,
                     446.7L428.80000000000007,444.7L426.4000000000001,442.3L423.5000000000001,441.40000000000003L420.10000000000014,442.8L417.90000000000015,440.6L415.20000000000016,
                     439.40000000000003L413.00000000000017,441.6H410.20000000000016L409.3000000000002,444.3H406L401.8,447L399.3,449.5H396.8L396.3,452.2L395.3,
@@ -640,28 +551,28 @@ export const MapCountry = () => {
                     416.8L428.8,412.2L430,411L433.3,411.6L435.7,409.20000000000005L438.5,409.30000000000007L439.6,408.20000000000005L441,408.70000000000005L441.7,407.1H444L445.9,
                     408.5L448.79999999999995,408.9L451.19999999999993,411.2L452.79999999999995,412H455.59999999999997L456.7,410.9L458,412.2L459,413.2L457.5,414.7V416.9L456.1,
                     418.29999999999995L456.6,420.49999999999994L457.8,421.69999999999993L457.9,424.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Тыва")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Удмуртия" className="rus_zone"
-                    d="M175.1,315.1L178.79999999999998,311.40000000000003V307.70000000000005L181.1,305.30000000000007L182.29999999999998,306.50000000000006H184.49999999999997L186.09999999999997,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Тыва")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Удмуртия" className="rus_zone"
+                        d="M175.1,315.1L178.79999999999998,311.40000000000003V307.70000000000005L181.1,305.30000000000007L182.29999999999998,306.50000000000006H184.49999999999997L186.09999999999997,
                     304.90000000000003L186.79999999999995,302.70000000000005L188.19999999999996,300.30000000000007L190.49999999999997,298.6000000000001L193.49999999999997,
                     301.50000000000006L196.09999999999997,301.40000000000003L196.19999999999996,304.00000000000006H198.39999999999995L197.79999999999995,306.80000000000007L197.69999999999996,
                     310.00000000000006L196.09999999999997,312.80000000000007L195.69999999999996,315.9000000000001L194.29999999999995,319.1000000000001L190.19999999999996,
                     321.2000000000001V322.6000000000001L191.79999999999995,325.1000000000001L190.49999999999994,326.4000000000001L185.59999999999994,327.80000000000007L184.79999999999993,
                     328.6000000000001L182.79999999999993,327.9000000000001L182.69999999999993,326.80000000000007L184.39999999999992,325.80000000000007L182.69999999999993,
                     324.50000000000006L182.39999999999992,322.20000000000005L180.89999999999992,322.20000000000005L180,321L177.8,320L176.60000000000002,318.3L174,318L175.1,315.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Удмуртия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Хакасия" className="rus_zone"
-                    d="M390.2,389.3L391.59999999999997,391.7L393.99999999999994,394.3L396.49999999999994,394.8L397.69999999999993,393.6L401.3999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Удмуртия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Хакасия" className="rus_zone"
+                        d="M390.2,389.3L391.59999999999997,391.7L393.99999999999994,394.3L396.49999999999994,394.8L397.69999999999993,393.6L401.3999999999999,
                     394L403.7999999999999,393.2L404.5999999999999,394.8L403.7999999999999,398.2L406.3999999999999,400.8L407.19999999999993,403.8L409.8999999999999,
                     406.5V408.9L410.5999999999999,411L409.7999999999999,413.6L407.6999999999999,415.70000000000005L407.9999999999999,418.30000000000007L405.89999999999986,
                     420.4000000000001L403.59999999999985,421.4000000000001L402.49999999999983,424.2000000000001L401.59999999999985,425.5000000000001L398.89999999999986,
@@ -670,35 +581,35 @@ export const MapCountry = () => {
                     415L392.5,414L391.3,412.4L390,411.09999999999997L392.1,407.99999999999994L392.3,403.99999999999994L393.1,403.19999999999993V401.5999999999999L390.90000000000003,
                     401.19999999999993L389.40000000000003,402.69999999999993L387.6,400.8999999999999L389.90000000000003,399.99999999999994V397.99999999999994L390.50000000000006,
                     395.99999999999994L389.20000000000005,393.49999999999994L388.30000000000007,390.99999999999994L390.2,389.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Хакасия")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Чеченская Республика" className="rus_zone"
-                    d="M66.8,408.9L68.1,410.7L70.69999999999999,410.9L70.89999999999999,413.79999999999995L69.6,414.19999999999993L67.3,415.49999999999994L65.1,418.19999999999993L64.3,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Хакасия")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Чеченская Республика" className="rus_zone"
+                        d="M66.8,408.9L68.1,410.7L70.69999999999999,410.9L70.89999999999999,413.79999999999995L69.6,414.19999999999993L67.3,415.49999999999994L65.1,418.19999999999993L64.3,
                     421.19999999999993L62.199999999999996,419.99999999999994L60.9,420.99999999999994L58.8,420.79999999999995L57.4,421.9L55.199999999999996,422.2L56,420L54.1,
                     418L56,416.6L57.5,414.20000000000005L58.7,411.6L59.2,409.70000000000005L57.2,408.1L56.300000000000004,406.40000000000003L58.900000000000006,406.50000000000006L60.2,
                     406.1000000000001L61,405.1000000000001L61.9,405.00000000000006V405.90000000000003L62.9,406.90000000000003H65L66.8,408.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Чеченская Республика")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Чувашская Республика" className="rus_zone"
-                    d="M140.6,312.8L139.9,311.3L141,309.5L143.3,307.5V304.4L147,302.29999999999995L149.2,303.4H153.89999999999998L154.2,305.7L155.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Чеченская Республика")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Чувашская Республика" className="rus_zone"
+                        d="M140.6,312.8L139.9,311.3L141,309.5L143.3,307.5V304.4L147,302.29999999999995L149.2,303.4H153.89999999999998L154.2,305.7L155.6,
                     307.09999999999997L154.9,309.09999999999997L156.3,311.79999999999995L153.20000000000002,312.59999999999997L150.3,314.29999999999995V317.4L147.9,
                     318.29999999999995L145.70000000000002,317.4L143.20000000000002,318.4L140,316L139.4,314.7L140.6,312.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Чувашская Республика")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Алтайский край" className="rus_zone"
-                    d="M357.6,440.6L355.8,439L353.40000000000003,438L351.8,436.4H348.6L347,438L343.8,438.5L342.5,437.2L339.7,437.7L338.2,436.2L336.8,434.8V432.90000000000003L335.40000000000003,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Чувашская Республика")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Алтайский край" className="rus_zone"
+                        d="M357.6,440.6L355.8,439L353.40000000000003,438L351.8,436.4H348.6L347,438L343.8,438.5L342.5,437.2L339.7,437.7L338.2,436.2L336.8,434.8V432.90000000000003L335.40000000000003,
                     431.3L333.40000000000003,431.90000000000003L332.00000000000006,434.8L329.20000000000005,435.3L327.6,432L326.70000000000005,429.1L326.1,425.8L323.90000000000003,
                     422V419L321.90000000000003,417.1V412.90000000000003L320.40000000000003,407.8L318.20000000000005,405.6L319.70000000000005,404.90000000000003L321.00000000000006,
                     403.40000000000003L322.40000000000003,404.8L326.8,403.1H331L334.7,400.3L338.4,399.1L341,399L344.5,402.5V404.3L345.6,406H347L348.7,408.5L350.4,407.7L351.5,404.8L353.9,
@@ -709,14 +620,14 @@ export const MapCountry = () => {
                     423.99999999999994L375.99999999999994,425.49999999999994H374.69999999999993L373.49999999999994,427.09999999999997L371.09999999999997,425.59999999999997L369.59999999999997,
                     427.09999999999997V428.99999999999994L368.2,430.3999999999999L366.59999999999997,432.0999999999999H364.4L361.09999999999997,433.2999999999999L358.4,
                     434.1999999999999L357.2,435.39999999999986L358.9,437.09999999999985L360,438.1999999999999V440.39999999999986L357.6,440.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Алтайский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Краснодарский край" className="rus_zone"
-                    d="M52.8,365.6L51.8,364.3L50.4,363.7L49,361.5L48,360.5L49.7,359.1L49.300000000000004,357.1L50.7,356.70000000000005L49.7,355.70000000000005L46.300000000000004,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Алтайский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Краснодарский край" className="rus_zone"
+                        d="M52.8,365.6L51.8,364.3L50.4,363.7L49,361.5L48,360.5L49.7,359.1L49.300000000000004,357.1L50.7,356.70000000000005L49.7,355.70000000000005L46.300000000000004,
                     352.1L44.800000000000004,352.90000000000003L43.50000000000001,351.6L43.60000000000001,350.3L44.00000000000001,348.7L42.20000000000001,
                     347.9L41.10000000000001,349L39.60000000000001,347.6L38.20000000000001,346.6L36.70000000000001,346.3L36.20000000000001,347.90000000000003L37.20000000000001,
                     349.8L36.80000000000001,353L34.90000000000001,352.4H33.40000000000001L30.500000000000014,352.5L28.300000000000015,353.4L27.400000000000016,
@@ -734,35 +645,35 @@ export const MapCountry = () => {
                     378.2H32.9L33.199999999999996,377.2L32.699999999999996,376V373.9H33.9L34.699999999999996,372.4L36.099999999999994,372.5L36.89999999999999,
                     371.7L36.19999999999999,370L34.79999999999999,369.1L34.39999999999999,369.6H33L32.1,368.6L31.1,367.6L30.400000000000002,366.90000000000003L29.8,365.8V364.6L30.5,
                     364.3L31.4,365.2L32,365.8L32.8,367L34.4,367.5L35.1,367.2L36.7,367.7L37.1,369.09999999999997L38.2,369.7L39,370.5L39.9,371.1L39.6,372.5L39.6,372.5Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Краснодарский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M417.6,108.5L416.6,109.8L415.70000000000005,111.5L414.90000000000003,111.2L415.50000000000006,109V106.7L413.00000000000006,107.5C413.00000000000006,107.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Краснодарский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M417.6,108.5L416.6,109.8L415.70000000000005,111.5L414.90000000000003,111.2L415.50000000000006,109V106.7L413.00000000000006,107.5C413.00000000000006,107.5,
                     411.50000000000006,107.8,411.20000000000005,108C410.90000000000003,108.1,409.1,108.7,409.1,108.7L408.3,110.4L407.8,111.9L406.8,113.2L407.1,114.7L405.1,116.2L406,
                     117L407.4,116.5L408.59999999999997,118.1L408.7,119.6L409.7,120.89999999999999L412.3,121.1L412.6,122.6L414.40000000000003,121.5L415.3,123L417.8,123.9L420.2,122.7L421.4,
                     121.10000000000001L420.5,119.30000000000001L419,117.20000000000002L420.2,116.40000000000002L420.7,114.40000000000002L420.09999999999997,112.20000000000002L420.29999999999995,
                     110.00000000000001L417.6,108.5Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M384.4,174.7L383,175.39999999999998C383,175.39999999999998,383.6,177.09999999999997,383.6,176.89999999999998C383.6,176.7,384.6,176.39999999999998,384.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M384.4,174.7L383,175.39999999999998C383,175.39999999999998,383.6,177.09999999999997,383.6,176.89999999999998C383.6,176.7,384.6,176.39999999999998,384.6,
                     176.39999999999998L384.4,174.7Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M462.6,227.2L463.3,228.89999999999998L464.3,231.09999999999997L466.5,232.59999999999997L466.7,236.79999999999995L468.9,240.79999999999995V242.49999999999994L469.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M462.6,227.2L463.3,228.89999999999998L464.3,231.09999999999997L466.5,232.59999999999997L466.7,236.79999999999995L468.9,240.79999999999995V242.49999999999994L469.5,
                     245.69999999999993L470.2,250.59999999999994L468.3,251.19999999999993L467,253.29999999999993L465.8,254.49999999999991L466.5,256.5999999999999L467.2,
                     255.89999999999992L469.59999999999997,256.8999999999999V258.99999999999994L470.49999999999994,259.8999999999999L469.59999999999997,
                     260.69999999999993V262.8999999999999L471.79999999999995,264.0999999999999L472.49999999999994,267.5999999999999L475.09999999999997,
@@ -850,135 +761,135 @@ export const MapCountry = () => {
                     204.69999999999996L476.4000000000001,207.09999999999997L474.30000000000007,208.49999999999997L474.4000000000001,211.09999999999997V213.09999999999997L472.5000000000001,
                     213.79999999999995L471.8000000000001,216.29999999999995L473.2000000000001,217.69999999999996V219.79999999999995L472.4000000000001,221.49999999999994L469.80000000000007,
                     220.69999999999993L467.9000000000001,221.29999999999993L465.1000000000001,225.19999999999993L462.4000000000001,226.19999999999993L462.6,227.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M444.1,136.7L443.6,137.39999999999998L444.6,138.09999999999997L445.1,137.29999999999995L444.1,136.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M439.2,126.4L438,127.10000000000001L439.6,127.9L440.70000000000005,128.70000000000002L442.00000000000006,128.4L441.70000000000005,126.9L440.40000000000003,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M444.1,136.7L443.6,137.39999999999998L444.6,138.09999999999997L445.1,137.29999999999995L444.1,136.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M439.2,126.4L438,127.10000000000001L439.6,127.9L440.70000000000005,128.70000000000002L442.00000000000006,128.4L441.70000000000005,126.9L440.40000000000003,
                     127.2L439.2,126.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M427.9,120.8V119.2L428,116.3L427.2,114.7L426,114.8L424.4,116.8L424.5,118.5L423.8,119.7L424.3,122.8L422.90000000000003,124.2L423.00000000000006,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M427.9,120.8V119.2L428,116.3L427.2,114.7L426,114.8L424.4,116.8L424.5,118.5L423.8,119.7L424.3,122.8L422.90000000000003,124.2L423.00000000000006,
                     127.3L422.30000000000007,129.9L421.70000000000005,132.5L422.70000000000005,133.1L424.90000000000003,131.4L426.20000000000005,130.6L429.1,129.1L431.40000000000003,
                     128.9L434.3,126.7L435.7,124.10000000000001L434.8,121.80000000000001L433.8,120.10000000000001L432.40000000000003,120.7L431.00000000000006,118.3L430.00000000000006,
                     117.3L428.70000000000005,118.8L427.9,120.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M415.5,143.7L414.3,145.1L412.8,145.4L414.2,146.4L415.59999999999997,145L415.5,143.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M396.3,143.2L395.7,144.1L396.5,144.79999999999998L397.5,143.29999999999998L396.3,143.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M374.6,164.4L373.3,165.4L374,166.8L375.1,166.60000000000002L374.6,164.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M374.1,179.4L373.90000000000003,180.70000000000002H375.90000000000003L376.90000000000003,181.70000000000002L377.00000000000006,180.00000000000003L375.80000000000007,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M415.5,143.7L414.3,145.1L412.8,145.4L414.2,146.4L415.59999999999997,145L415.5,143.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M396.3,143.2L395.7,144.1L396.5,144.79999999999998L397.5,143.29999999999998L396.3,143.2"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M374.6,164.4L373.3,165.4L374,166.8L375.1,166.60000000000002L374.6,164.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M374.1,179.4L373.90000000000003,180.70000000000002H375.90000000000003L376.90000000000003,181.70000000000002L377.00000000000006,180.00000000000003L375.80000000000007,
                     179.80000000000004L374.1,179.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M367.4,111.3L366.7,112L367.5,112.5L368.8,113.4L369.1,112.2L367.4,111.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M360.4,191.4L359.59999999999997,192.4L360.09999999999997,193.8L360.9,194.8L362,193.5L362.5,192L361.5,191L360.4,191.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M377.1,96.4L376.1,96.60000000000001L375.5,97.2L376.5,98.2L377.8,97.8L378.6,97L377.1,96.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M398.9,94.5L398,95.4L398.7,96.10000000000001L399.4,96.80000000000001L400.9,95.4V94.4L398.9,94.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M408,93.2L407.7,95.10000000000001L406,95.9L403.4,97.60000000000001V100.00000000000001L404.4,101.00000000000001L403,102.40000000000002L402.1,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M367.4,111.3L366.7,112L367.5,112.5L368.8,113.4L369.1,112.2L367.4,111.3"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M360.4,191.4L359.59999999999997,192.4L360.09999999999997,193.8L360.9,194.8L362,193.5L362.5,192L361.5,191L360.4,191.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M377.1,96.4L376.1,96.60000000000001L375.5,97.2L376.5,98.2L377.8,97.8L378.6,97L377.1,96.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M398.9,94.5L398,95.4L398.7,96.10000000000001L399.4,96.80000000000001L400.9,95.4V94.4L398.9,94.5"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M408,93.2L407.7,95.10000000000001L406,95.9L403.4,97.60000000000001V100.00000000000001L404.4,101.00000000000001L403,102.40000000000002L402.1,
                     104.20000000000002L403.3,105.90000000000002L403.8,107.60000000000002L406,109.50000000000003L408,107.60000000000002H409.3L411.3,106.50000000000003L413.7,
                     105.70000000000003L413,103.40000000000003V100.50000000000003L414.4,99.30000000000003L413.2,98.10000000000002L410.8,95.70000000000002L409.90000000000003,
                     93.80000000000001L408,93.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M402.4,109L400.79999999999995,108.8L401.09999999999997,110.89999999999999V112.19999999999999L403.2,112.79999999999998L404.09999999999997,113.69999999999999L405.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M402.4,109L400.79999999999995,108.8L401.09999999999997,110.89999999999999V112.19999999999999L403.2,112.79999999999998L404.09999999999997,113.69999999999999L405.4,
                     112.39999999999999L406.09999999999997,110.49999999999999L404.9,109.49999999999999L402.4,109"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
-                    d="M377,157.7L376.4,158.29999999999998L377.2,158.99999999999997L378.5,158.59999999999997L377,157.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Красноярский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Приморский край" className="rus_zone"
-                    d="M735.3,360.2L736.6999999999999,363.9L737.6999999999999,368L738.4999999999999,371.7L739.2999999999998,376.59999999999997V381.4L738.4999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Красноярский край" className="rus_zone krasnoyarsk"
+                        d="M377,157.7L376.4,158.29999999999998L377.2,158.99999999999997L378.5,158.59999999999997L377,157.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Красноярский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Приморский край" className="rus_zone"
+                        d="M735.3,360.2L736.6999999999999,363.9L737.6999999999999,368L738.4999999999999,371.7L739.2999999999998,376.59999999999997V381.4L738.4999999999999,
                     383.9V388.79999999999995V394.9L737.6999999999999,399.5L738.4999999999999,404.2L738.1999999999999,410.3V413.2L735.6999999999999,417.4L734.0999999999999,
                     420.9L732.1999999999999,424.4H730.5999999999999L727.3999999999999,425.7L724.6999999999998,427.2L722.8999999999999,426.4V424.7L721.8999999999999,
                     423.7L720.8999999999999,425.9V428.2L719.7999999999998,427.09999999999997L718.1999999999998,425.49999999999994V426.79999999999995L717.6999999999998,
@@ -995,14 +906,14 @@ export const MapCountry = () => {
                     365.1L728.9,363.3L729.1999999999999,360.8L728.1999999999999,358.40000000000003L727.1999999999999,358.1L726.4,359.70000000000005L724.3,359.90000000000003L723.6999999999999,
                     358.1L721.4,357.8L721,356.1L723.5,354L724.4,350.5L725.9,350.3L727.6999999999999,351.7L729.0999999999999,353.09999999999997L730.8999999999999,
                     352.99999999999994L731.6999999999998,354.59999999999997L731.0999999999998,355.9L733.2999999999998,357.5L735.3999999999999,355.7L735.3,360.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Приморский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Ставропольский край" className="rus_zone"
-                    d="M56,402.1L56.5,401.1L55.1,400.1L54.1,399.1L52.300000000000004,399.5L50.00000000000001,397.2L49.50000000000001,395.7L47.60000000000001,395.3L45.60000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Приморский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ставропольский край" className="rus_zone"
+                        d="M56,402.1L56.5,401.1L55.1,400.1L54.1,399.1L52.300000000000004,399.5L50.00000000000001,397.2L49.50000000000001,395.7L47.60000000000001,395.3L45.60000000000001,
                     394.7L46.20000000000001,393.3L45.60000000000001,392L44.60000000000001,391L45.20000000000001,389.9H47.40000000000001L46.70000000000001,388.9L46.40000000000001,
                     387.29999999999995L45.000000000000014,386.29999999999995V384.29999999999995L43.500000000000014,383.79999999999995L44.20000000000002,382.4L43.70000000000002,
                     380.59999999999997L45.000000000000014,380.2L47.100000000000016,378.59999999999997L45.90000000000001,377.4L46.90000000000001,375.7L46.100000000000016,
@@ -1013,14 +924,14 @@ export const MapCountry = () => {
                     392.5L71.7,394.4L72.8,396V398.9L70.8,400.2L68.89999999999999,400.8L67.3,400.2L66.3,401.2L66.89999999999999,402.2L65.99999999999999,
                     403H64.39999999999999V404.1L65.69999999999999,404.70000000000005L64.89999999999999,406.70000000000005H62.79999999999999L61.79999999999999,
                     405.70000000000005V405L60.89999999999999,405.1L59.89999999999999,406.40000000000003L58.79999999999999,406.6L58.29999999999999,404.40000000000003L56,402.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ставропольский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Хабаровский край" className="rus_zone habarovsk"
-                    d="M636.4,315.7L635,312.4V309.9L633.3,308.2L634.8,306.7L635.1999999999999,303.4L631.6999999999999,301.9H628.9L628.6,300.2L630.6,299.8L629.6,297.7L630.2,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ставропольский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Хабаровский край" className="rus_zone habarovsk"
+                        d="M636.4,315.7L635,312.4V309.9L633.3,308.2L634.8,306.7L635.1999999999999,303.4L631.6999999999999,301.9H628.9L628.6,300.2L630.6,299.8L629.6,297.7L630.2,
                     293.8L627.8000000000001,293.40000000000003L625.4000000000001,290.90000000000003L627.5000000000001,290.40000000000003L627.7000000000002,287.40000000000003L626.8000000000002,
                     286.50000000000006L626.2000000000002,284.90000000000003L627.0000000000001,282.90000000000003L625.4000000000001,281.3L626.7,279.5L625.6,
                     278.4V275.7L628.2,274.4L629.9000000000001,273.4L632.0000000000001,273.59999999999997L633.7000000000002,271.9L636.0000000000001,271L636.3000000000001,268.8L634.8000000000001,
@@ -1079,22 +990,22 @@ export const MapCountry = () => {
                     316.6000000000001L647.1999999999996,314.9000000000001L648.0999999999996,312.7000000000001L645.7999999999996,311.4000000000001L643.4999999999997,
                     311.80000000000007L641.6999999999997,313.6000000000001L639.6999999999997,313.9000000000001L638.2999999999997,315.7000000000001L636.6999999999997,
                     316.5000000000001L636.4,315.7Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Хабаровский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Хабаровский край" className="rus_zone habarovsk"
-                    d="M674.7,295.9L673.6,297.09999999999997V298.59999999999997V300.2L675.5,299.4L676.5,300.4L677.6,299.29999999999995L678,297.09999999999997L676.8,295.29999999999995L674.7,295.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Хабаровский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Амурская область" className="rus_zone"
-                    d="M675.1,379.6L673.6,381.1L670.7,380.3L668.3000000000001,379.7L664.6,380.2H661.2L659.8000000000001,381.59999999999997L656,383L652.2,382.2L650.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Хабаровский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Хабаровский край" className="rus_zone habarovsk"
+                        d="M674.7,295.9L673.6,297.09999999999997V298.59999999999997V300.2L675.5,299.4L676.5,300.4L677.6,299.29999999999995L678,297.09999999999997L676.8,295.29999999999995L674.7,295.9"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Хабаровский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Амурская область" className="rus_zone"
+                        d="M675.1,379.6L673.6,381.1L670.7,380.3L668.3000000000001,379.7L664.6,380.2H661.2L659.8000000000001,381.59999999999997L656,383L652.2,382.2L650.6,
                     379.09999999999997L648.8000000000001,377.29999999999995C648.8000000000001,377.29999999999995,646.6,375.99999999999994,646.6,375.49999999999994C646.6,374.99999999999994,644.2,
                     373.09999999999997,644.2,373.09999999999997L641.2,372.59999999999997L639.9000000000001,369.59999999999997L637.0000000000001,367.29999999999995L635.0000000000001,
                     365.29999999999995L632.2000000000002,364.49999999999994L631.2000000000002,361.79999999999995L628.7000000000002,360.69999999999993L627.2000000000002,
@@ -1130,30 +1041,30 @@ export const MapCountry = () => {
                     365.59999999999985L676.0999999999997,367.29999999999984L676.2999999999997,369.09999999999985L677.3999999999997,369.39999999999986L678.7999999999997,
                     370.4999999999999L678.8999999999997,373.4999999999999L677.6999999999997,373.9999999999999L678.2999999999997,375.9999999999999L677.6999999999997,
                     377.4999999999999L677.9999999999997,380.2999999999999L675.1,379.6Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Амурская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M167.7,189.4L167.2,190.1L168,191.1L169,190.1L167.7,189.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M348.1,78L347.1,78.3L347.90000000000003,79.3V80.3H349.20000000000005V78.5L348.1,78"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M274.9,191H273.59999999999997L272.2,188.9L271.4,189.4L269,187.1L267.2,185.1L267.9,183L269.7,182.4L270.4,181.3L269.09999999999997,180.3L269.2,177.5L268.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Амурская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M167.7,189.4L167.2,190.1L168,191.1L169,190.1L167.7,189.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M348.1,78L347.1,78.3L347.90000000000003,79.3V80.3H349.20000000000005V78.5L348.1,78"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M274.9,191H273.59999999999997L272.2,188.9L271.4,189.4L269,187.1L267.2,185.1L267.9,183L269.7,182.4L270.4,181.3L269.09999999999997,180.3L269.2,177.5L268.4,
                     177.3L267.59999999999997,175.20000000000002L265.9,175.10000000000002L264.5,173.10000000000002L265,170.60000000000002L266.8,168.10000000000002L269,168.3L269.7,
                     169.10000000000002L270.5,169.40000000000003L270.8,167.90000000000003L273.40000000000003,167.10000000000002L275.50000000000006,164.90000000000003L274.1000000000001,
                     163.40000000000003L275.9000000000001,162.20000000000005L278.0000000000001,163.00000000000006L278.60000000000014,
@@ -1174,190 +1085,190 @@ export const MapCountry = () => {
                     164.2000000000001H289.4L288.29999999999995,165.7000000000001L286.79999999999995,168.2000000000001H284.4L282.4,169.8000000000001V172.00000000000009L280.4,
                     172.8000000000001L279.7,175.1000000000001L278.09999999999997,176.7000000000001V179.6000000000001L277.29999999999995,181.7000000000001L278.29999999999995,
                     184.7000000000001L277.4,187.7000000000001L278.7,189.7000000000001L279.3,191.8000000000001L278.6,192.50000000000009L276.6,193.4000000000001V191.9000000000001L274.9,191"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M347.8,86.1L347.1,87.1L344.6,87.6L343,88.5L344.2,89.1L343.59999999999997,90.39999999999999L344.59999999999997,90.69999999999999H346.7L348.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M347.8,86.1L347.1,87.1L344.6,87.6L343,88.5L344.2,89.1L343.59999999999997,90.39999999999999L344.59999999999997,90.69999999999999H346.7L348.4,
                     88.99999999999999L349.59999999999997,87.79999999999998L349.2,85.89999999999998L347.8,86.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M339.9,84.4L339.4,84.9L340.4,85.9L342.2,85.2V83.7H341.2L339.9,84.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M338.6,87.4L337.20000000000005,85.80000000000001L336.20000000000005,86.80000000000001L335.40000000000003,88.30000000000001V90.20000000000002L337.00000000000006,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M339.9,84.4L339.4,84.9L340.4,85.9L342.2,85.2V83.7H341.2L339.9,84.4"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M338.6,87.4L337.20000000000005,85.80000000000001L336.20000000000005,86.80000000000001L335.40000000000003,88.30000000000001V90.20000000000002L337.00000000000006,
                     90.50000000000001L337.40000000000003,91.60000000000001L339.40000000000003,91.10000000000001L340.70000000000005,89.80000000000001L341.70000000000005,
                     88.80000000000001L342.20000000000005,87.20000000000002H340.80000000000007L338.6,87.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M332.9,94L332.29999999999995,94.6V95.8H333.59999999999997L334.09999999999997,94.3L332.9,94"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M330.3,89.2L329.6,88.5H327.5V89.9L326.4,91L327.09999999999997,91.7L329.4,91.2L330.29999999999995,92.10000000000001L332.29999999999995,91.60000000000001L332.9,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M332.9,94L332.29999999999995,94.6V95.8H333.59999999999997L334.09999999999997,94.3L332.9,94"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M330.3,89.2L329.6,88.5H327.5V89.9L326.4,91L327.09999999999997,91.7L329.4,91.2L330.29999999999995,92.10000000000001L332.29999999999995,91.60000000000001L332.9,
                     90.30000000000001L334.29999999999995,90.80000000000001L333.49999999999994,89.10000000000001L332.19999999999993,87.80000000000001L330.3,89.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M340.8,73.3L340.2,74.39999999999999L341.2,75.39999999999999L342.2,74.39999999999999L340.8,73.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M338.7,75.9H337.2V77.60000000000001L338.8,79.2V80.5L340.2,79.8L339.3,78L338.7,75.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M329.2,80.9H327.9L327.59999999999997,81.2L328.7,82.3L329.2,80.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M330.3,83.1L329.40000000000003,84L330.3,85L331.3,84.9L330.3,83.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M331.2,78.9V80.10000000000001H332.5L332.2,78.7L331.2,78.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M333.1,82V83.1H334.20000000000005L333.30000000000007,82.19999999999999L333.1,82"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M334.1,84.5L334.6,85L335.5,84.1L334.1,84.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M335.5,79.5V80.8L336.6,80.89999999999999V79.49999999999999H335.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M333.8,76.8L334.5,78L335.1,77.4L334.5,76.80000000000001H333.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M321.5,84.8L320.8,85.5L322,86.7L323.4,86.7V84.4L322.4,83.2L321.5,84.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M324.6,83.3L325.1,84.6H326.1V83.5L324.6,83.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M319.3,75.7L318.3,76.7V77.7L317.2,78.8L315.3,77.39999999999999L313.7,78.3V79.39999999999999L311.7,77.99999999999999L310.2,78.59999999999998L310.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M340.8,73.3L340.2,74.39999999999999L341.2,75.39999999999999L342.2,74.39999999999999L340.8,73.3"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M338.7,75.9H337.2V77.60000000000001L338.8,79.2V80.5L340.2,79.8L339.3,78L338.7,75.9"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M329.2,80.9H327.9L327.59999999999997,81.2L328.7,82.3L329.2,80.9"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M330.3,83.1L329.40000000000003,84L330.3,85L331.3,84.9L330.3,83.1"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M331.2,78.9V80.10000000000001H332.5L332.2,78.7L331.2,78.9"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M333.1,82V83.1H334.20000000000005L333.30000000000007,82.19999999999999L333.1,82"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M334.1,84.5L334.6,85L335.5,84.1L334.1,84.5"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M335.5,79.5V80.8L336.6,80.89999999999999V79.49999999999999H335.5"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M333.8,76.8L334.5,78L335.1,77.4L334.5,76.80000000000001H333.8"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M321.5,84.8L320.8,85.5L322,86.7L323.4,86.7V84.4L322.4,83.2L321.5,84.8"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M324.6,83.3L325.1,84.6H326.1V83.5L324.6,83.3"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M319.3,75.7L318.3,76.7V77.7L317.2,78.8L315.3,77.39999999999999L313.7,78.3V79.39999999999999L311.7,77.99999999999999L310.2,78.59999999999998L310.7,
                     80.89999999999998L312.09999999999997,80.39999999999998V81.89999999999998L313.59999999999997,82.29999999999998L314.99999999999994,80.89999999999998L316.8999999999999,
                     80.09999999999998L318.49999999999994,80.59999999999998H320.8999999999999L322.5999999999999,78.89999999999998L320.9999999999999,77.29999999999998L322.0999999999999,
                     76.19999999999999L320.19999999999993,75.1L319.3,75.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M313.9,73.3H311.79999999999995L310.59999999999997,72.1L309.7,73.8L310.8,74.89999999999999L311.2,76.19999999999999L313.7,75.29999999999998L314.59999999999997,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M313.9,73.3H311.79999999999995L310.59999999999997,72.1L309.7,73.8L310.8,74.89999999999999L311.2,76.19999999999999L313.7,75.29999999999998L314.59999999999997,
                     76.19999999999999L316.2,75.49999999999999L316.9,76.19999999999999V74.79999999999998L315.79999999999995,73.69999999999999H314.79999999999995L313.9,73.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M315.8,83.3H315L315.3,84.5L317,84.6L315.8,83.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M316.1,85.8L315.20000000000005,86.7L315.90000000000003,87.4L317.50000000000006,87.80000000000001L316.50000000000006,86.80000000000001L316.1,85.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M323,73.6V74.8H324L325,73.8L323,73.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
-                    d="M206.3,204.1L204.10000000000002,206.29999999999998L202.50000000000003,208.29999999999998V205.49999999999997L204.30000000000004,203.69999999999996L202.10000000000005,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M315.8,83.3H315L315.3,84.5L317,84.6L315.8,83.3"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M316.1,85.8L315.20000000000005,86.7L315.90000000000003,87.4L317.50000000000006,87.80000000000001L316.50000000000006,86.80000000000001L316.1,85.8"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M323,73.6V74.8H324L325,73.8L323,73.6"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Архангельская область" className="rus_zone arhangelsk"
+                        d="M206.3,204.1L204.10000000000002,206.29999999999998L202.50000000000003,208.29999999999998V205.49999999999997L204.30000000000004,203.69999999999996L202.10000000000005,
                     200.39999999999995L200.60000000000005,198.89999999999995H198.30000000000004L194.90000000000003,199.99999999999994L191.90000000000003,198.39999999999995L188.20000000000005,
                     199.79999999999995L184.30000000000004,199.19999999999996L184.20000000000005,203.59999999999997L182.00000000000006,205.39999999999998L182.90000000000006,
                     207.59999999999997L181.80000000000007,208.69999999999996L178.20000000000007,207.59999999999997L176.80000000000007,204.69999999999996L174.60000000000008,
@@ -1394,14 +1305,14 @@ export const MapCountry = () => {
                     217.50000000000003L218.69999999999993,218.30000000000004L216.49999999999994,219.10000000000005L215.29999999999995,218.70000000000005L213.79999999999995,
                     216.90000000000003L212.69999999999996,215.80000000000004L212.19999999999996,213.60000000000005L210.19999999999996,211.60000000000005L209.09999999999997,
                     210.10000000000005L208.39999999999998,207.40000000000006L207.39999999999998,205.30000000000007L206.3,204.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Архангельская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Астраханская область" className="rus_zone"
-                    d="M101.9,369L101,366.4L99.5,364.9L97.7,366.09999999999997L95.10000000000001,365.99999999999994L93.80000000000001,364.69999999999993L90.80000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Архангельская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Астраханская область" className="rus_zone"
+                        d="M101.9,369L101,366.4L99.5,364.9L97.7,366.09999999999997L95.10000000000001,365.99999999999994L93.80000000000001,364.69999999999993L90.80000000000001,
                     365.49999999999994L89.9,367.79999999999995L90.60000000000001,370.29999999999995L92.10000000000001,371.29999999999995L91.30000000000001,375.29999999999995L91.50000000000001,
                     377.69999999999993L92.70000000000002,379.29999999999995L95.50000000000001,379.4L94.80000000000001,382.5L93.30000000000001,383.3L92.4,386.5L93.7,387.8L92.9,389.8L90.2,
                     389.6L90,391.20000000000005H89.1L88.89999999999999,390.20000000000005L87.49999999999999,389.6L86.49999999999999,390.6L87.39999999999999,391.8V393.3L88.19999999999999,
@@ -1412,56 +1323,56 @@ export const MapCountry = () => {
                     395.3999999999999L104.40000000000003,396.7999999999999L105.70000000000003,395.4999999999999V391.9999999999999L105.00000000000003,387.6999999999999L105.60000000000002,
                     384.39999999999986L104.10000000000002,382.89999999999986L101.70000000000002,380.59999999999985L100.10000000000002,379.59999999999985L101.70000000000002,
                     377.99999999999983L102.50000000000001,374.6999999999998L100.70000000000002,372.8999999999998L99.90000000000002,370.3999999999998L101.9,369Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Астраханская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Белгородская область" className="rus_zone"
-                    d="M67.4,326.1L66.60000000000001,323.20000000000005L64.7,322.1L62.7,319.8L63.5,317.1L62.7,313.20000000000005L60.300000000000004,311.40000000000003L57.50000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Астраханская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Белгородская область" className="rus_zone"
+                        d="M67.4,326.1L66.60000000000001,323.20000000000005L64.7,322.1L62.7,319.8L63.5,317.1L62.7,313.20000000000005L60.300000000000004,311.40000000000003L57.50000000000001,
                     309.20000000000005L56.60000000000001,306.30000000000007L54.70000000000001,304.80000000000007L54.10000000000001,303.00000000000006L55.70000000000001,
                     301.1000000000001L58.30000000000001,301.7000000000001H60.500000000000014L61.40000000000001,300.8000000000001L63.20000000000001,
                     302.7000000000001V304.1000000000001L66.70000000000002,304.80000000000007L68.50000000000001,304.4000000000001L71.40000000000002,306.2000000000001L73.30000000000003,
                     308.1000000000001L73.90000000000002,310.00000000000006L74.40000000000002,311.70000000000005L73.30000000000003,312.6L74.90000000000002,314.20000000000005L73.90000000000002,
                     316.1H72.60000000000002V318.6L73.00000000000003,320.5L71.10000000000002,321.5V323.7L69.60000000000002,323.8L70.00000000000003,325.40000000000003L67.80000000000003,
                     326.6L67.4,326.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Белгородская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Брянская область" className="rus_zone"
-                    d="M61.4,268.1L58.9,267.20000000000005L58.1,265.30000000000007L56.7,263.80000000000007L54.800000000000004,263.9000000000001L54.2,266.2000000000001L52.6,268.1000000000001L50.2,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Белгородская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Брянская область" className="rus_zone"
+                        d="M61.4,268.1L58.9,267.20000000000005L58.1,265.30000000000007L56.7,263.80000000000007L54.800000000000004,263.9000000000001L54.2,266.2000000000001L52.6,268.1000000000001L50.2,
                     270.50000000000006L49.1,272.50000000000006L50.2,274.40000000000003L51.5,275.70000000000005L53.2,274.20000000000005L54.300000000000004,275.80000000000007L55.7,
                     277.30000000000007L57.6,277.6000000000001L59,279.00000000000006L60,281.50000000000006L59.7,283.50000000000006L58.800000000000004,286.90000000000003L60.2,287.00000000000006L61.1,
                     285.70000000000005L62.9,285.1L64,285.90000000000003H65.6L67,284.50000000000006L68.3,284.50000000000006L68.6,283.40000000000003L68.19999999999999,282.3L69.39999999999999,
                     281.90000000000003H70.8L71.8,282.90000000000003L72.5,282.20000000000005L72.9,280.6L73.7,279.8L73.4,278L72.2,276.8V275.3L73.2,274.3V272.40000000000003L73.7,270.50000000000006L72.7,
                     269.50000000000006L72.8,268.30000000000007L71.6,266.4000000000001L69.69999999999999,267.4000000000001L68.1,267.30000000000007L66.8,269.4000000000001L65.6,
                     270.6000000000001V268.4000000000001L63.699999999999996,267.4000000000001L61.4,268.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Брянская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Владимирская область" className="rus_zone"
-                    d="M117.2,271.4L118.3,270.29999999999995H120.39999999999999L121.69999999999999,272.4L120.6,274.4V276.2L123.8,277.3L125.7,279.2L129,282.5L127.7,285.8L126.60000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Брянская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Владимирская область" className="rus_zone"
+                        d="M117.2,271.4L118.3,270.29999999999995H120.39999999999999L121.69999999999999,272.4L120.6,274.4V276.2L123.8,277.3L125.7,279.2L129,282.5L127.7,285.8L126.60000000000001,
                     289.8L124.00000000000001,290.2L122.40000000000002,291.8L120.30000000000003,292.2L118.90000000000002,293.59999999999997L117.30000000000003,290.99999999999994L116.00000000000003,
                     290.59999999999997L115.70000000000003,288.9L113.80000000000003,288.29999999999995L114.30000000000003,286.79999999999995L113.10000000000002,
                     285.79999999999995L113.10000000000002,283.99999999999994L113.90000000000002,283.59999999999997L114.30000000000003,282.29999999999995L114.50000000000003,
                     279.9L113.50000000000003,278.9L112.30000000000003,278.4L111.70000000000003,277.2V275.59999999999997L110.50000000000003,275.09999999999997L109.90000000000003,
                     273.4L111.30000000000004,272.29999999999995L111.20000000000005,270.59999999999997L112.20000000000005,269.59999999999997L112.70000000000005,
                     267.99999999999994L114.10000000000005,267.29999999999995L114.30000000000005,268.59999999999997L115.70000000000006,269.7L117.2,271.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Владимирская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Волгоградская область" className="rus_zone"
-                    d="M97.9,329.9L97.7,332.09999999999997L98.5,335.09999999999997L101.3,335.49999999999994L103,336.3999999999999V337.8999999999999L105.6,337.7999999999999L108.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Владимирская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Волгоградская область" className="rus_zone"
+                        d="M97.9,329.9L97.7,332.09999999999997L98.5,335.09999999999997L101.3,335.49999999999994L103,336.3999999999999V337.8999999999999L105.6,337.7999999999999L108.6,
                     340.6999999999999L109,344.1999999999999L106.7,346.39999999999986L108.4,347.9999999999999L109.30000000000001,347.0999999999999L111.10000000000001,
                     347.7999999999999L111.60000000000001,350.3999999999999L112.80000000000001,351.5999999999999H114.60000000000001L115.00000000000001,353.4999999999999L116.50000000000001,
                     354.9999999999999L116.60000000000001,357.4999999999999L115.7,359.4999999999999L114.10000000000001,360.6999999999999H111.60000000000001L109.60000000000001,
@@ -1475,14 +1386,14 @@ export const MapCountry = () => {
                     352.8999999999998L80.9,349.49999999999983L79.80000000000001,344.99999999999983L82.80000000000001,341.99999999999983L83.9,339.29999999999984L82.10000000000001,
                     336.59999999999985L81.9,334.89999999999986L84.9,331.89999999999986L85.80000000000001,328.89999999999986H89.4L91.2,327.29999999999984L93.10000000000001,
                     327.6999999999998L93.50000000000001,329.0999999999998L95.40000000000002,330.1999999999998H97.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Волгоградская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Вологодская область" className="rus_zone"
-                    d="M124.2,249.7V247.2L124.9,245.1L123.10000000000001,244.5L121.10000000000001,244.9L118.50000000000001,243.70000000000002L119.40000000000002,242.8L119.70000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Волгоградская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Вологодская область" className="rus_zone"
+                        d="M124.2,249.7V247.2L124.9,245.1L123.10000000000001,244.5L121.10000000000001,244.9L118.50000000000001,243.70000000000002L119.40000000000002,242.8L119.70000000000002,
                     240.9L118.10000000000002,238.3L116.30000000000003,237.60000000000002L117.60000000000002,234.90000000000003L119.00000000000003,233.50000000000003L121.40000000000003,
                     233.90000000000003L122.20000000000003,232.80000000000004L123.80000000000003,232.40000000000003L125.40000000000002,230.30000000000004L126.10000000000002,
                     228.60000000000005L127.20000000000002,226.40000000000006L130.10000000000002,224.80000000000007L132.00000000000003,222.10000000000008L133.40000000000003,
@@ -1505,14 +1416,14 @@ export const MapCountry = () => {
                     261.3000000000001L145.40000000000006,260.10000000000014L142.30000000000007,260.90000000000015L139.50000000000006,262.10000000000014L136.50000000000006,
                     259.10000000000014V256.40000000000015V254.10000000000014L134.10000000000005,251.70000000000013L132.90000000000006,252.90000000000012L129.70000000000007,
                     250.70000000000013L128.40000000000006,249.40000000000012L126.10000000000007,249.6000000000001L124.2,249.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Вологодская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Воронежская область" className="rus_zone"
-                    d="M67.8,326.5L70,325.3L69.6,323.7L71.1,323.59999999999997V321.4L73,320.4L72.6,318.5V316H73.89999999999999L74.89999999999999,314.1L73.99999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Вологодская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Воронежская область" className="rus_zone"
+                        d="M67.8,326.5L70,325.3L69.6,323.7L71.1,323.59999999999997V321.4L73,320.4L72.6,318.5V316H73.89999999999999L74.89999999999999,314.1L73.99999999999999,
                     313.20000000000005L73.29999999999998,312.50000000000006L74.39999999999998,311.6000000000001L73.89999999999998,309.9000000000001L75.19999999999997,
                     309.30000000000007V307.4000000000001L76.39999999999998,306.2000000000001L78.29999999999998,306.9000000000001L79.79999999999998,305.4000000000001L81.99999999999999,
                     305.80000000000007L82.99999999999999,307.70000000000005L85.29999999999998,308.50000000000006L84.79999999999998,310.80000000000007L86.29999999999998,
@@ -1522,25 +1433,25 @@ export const MapCountry = () => {
                     327.30000000000007L90.99999999999997,326.9000000000001L89.19999999999997,328.5000000000001H85.59999999999998L84.69999999999997,331.5000000000001L81.69999999999997,
                     334.5000000000001H78.39999999999998L77.29999999999998,335.60000000000014H75.49999999999999L74.59999999999998,334.40000000000015H72.39999999999998V333L71.39999999999998,
                     332L69.19999999999997,331V328.3L67.8,326.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Воронежская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Ивановская область" className="rus_zone"
-                    d="M120.4,270.3L122.2,268.5H125.10000000000001L126.30000000000001,269.7L128.9,270.3L130.6,272H132.79999999999998L133.89999999999998,273.1L135.7,271.3L136.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Воронежская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ивановская область" className="rus_zone"
+                        d="M120.4,270.3L122.2,268.5H125.10000000000001L126.30000000000001,269.7L128.9,270.3L130.6,272H132.79999999999998L133.89999999999998,273.1L135.7,271.3L136.7,
                     271.5L137.5,273.8L140.3,275.6H142V278.5L144.4,279.7V282H141.8L140.8,284.6H138.20000000000002L136.4,282.8L135,284.2L134.3,286.9L132.70000000000002,
                     288.5L129.4,288.9L126.60000000000001,289.79999999999995L127.7,285.79999999999995L129,282.49999999999994L125.7,279.19999999999993L123.8,277.29999999999995L120.6,
                     276.19999999999993V274.3999999999999L121.69999999999999,272.3999999999999L120.4,270.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ивановская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Иркутская область" className="rus_zone"
-                    d="M558,320.9L557,318.09999999999997L555.4,317.9V316L553.6999999999999,314.1L552.3,312.70000000000005H550.3V314.6L548.5,316.40000000000003L545.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ивановская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Иркутская область" className="rus_zone"
+                        d="M558,320.9L557,318.09999999999997L555.4,317.9V316L553.6999999999999,314.1L552.3,312.70000000000005H550.3V314.6L548.5,316.40000000000003L545.7,
                     316.00000000000006V314.20000000000005L544.5,313.20000000000005V311L542,310.7L539.2,309.4L536.5,309.7L533.8,309.3L532.3,311.1L531.5,313.6L529.7,
                     315.40000000000003L530.4000000000001,317.90000000000003L529.5000000000001,320.70000000000005L527.1000000000001,323.1V327.5L523.8000000000002,
                     329.8V332.40000000000003L522.4000000000002,330.40000000000003V328.20000000000005L520.7000000000002,326.50000000000006L519.1000000000001,
@@ -1586,37 +1497,37 @@ export const MapCountry = () => {
                     339.40000000000015V337.8000000000001L556.3999999999997,338.7000000000001L552.6999999999997,335.0000000000001L553.6999999999997,332.4000000000001L552.5999999999997,
                     331.30000000000007L553.5999999999997,329.1000000000001L552.6999999999997,328.2000000000001L554.8999999999997,326.0000000000001L556.8999999999997,
                     326.10000000000014L558.0999999999998,327.3000000000001H559.6999999999998L561.2999999999998,326.10000000000014L561.6999999999998,324.70000000000016L558,320.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Иркутская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Калининградская область" className="rus_zone"
-                    d="M21.6,195.1L23.6,195.5L25.3,195L25.900000000000002,193.8L27.400000000000002,194L28.8,195.4L28.900000000000002,197.4L30.1,197.8L30.3,199.3L32.1,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Иркутская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Калининградская область" className="rus_zone"
+                        d="M21.6,195.1L23.6,195.5L25.3,195L25.900000000000002,193.8L27.400000000000002,194L28.8,195.4L28.900000000000002,197.4L30.1,197.8L30.3,199.3L32.1,
                     199.60000000000002L32.5,198.20000000000002L31.5,197.20000000000002L32.3,196.4L32.8,196.9L34.5,198.3V200.5L34.3,202.4L35.3,204L36.3,204.7L36.699999999999996,
                     207.2L35.8,209.1L31.599999999999998,211.2L25.199999999999996,203.6L21.6,195.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Калининградская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Калужская область" className="rus_zone"
-                    d="M73,268.4L71.8,266.5L73.5,266.1L75.3,264.3H77L78.3,265.6L78.7,267.1L80.5,267.3L81.1,266.7L82.1,267L83.8,268.3L85.39999999999999,267.3H87.19999999999999L89.49999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Калининградская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Калужская область" className="rus_zone"
+                        d="M73,268.4L71.8,266.5L73.5,266.1L75.3,264.3H77L78.3,265.6L78.7,267.1L80.5,267.3L81.1,266.7L82.1,267L83.8,268.3L85.39999999999999,267.3H87.19999999999999L89.49999999999999,
                     266.8L91.29999999999998,267.3L92.29999999999998,269.1L93.49999999999999,270.3H95.59999999999998L96.39999999999998,271.8L97.19999999999997,273.2L96.29999999999997,
                     274.5L95.59999999999997,275.8V277.7L93.69999999999996,279L91.89999999999996,277.8L91.19999999999996,278.5V279.9L89.49999999999996,280.2L87.99999999999996,
                     278.7L86.69999999999996,278L84.49999999999996,278.6L83.39999999999996,279.70000000000005L82.29999999999997,279.30000000000007L80.49999999999997,
                     281.70000000000005L77.69999999999997,280.6H75.69999999999997L73.89999999999998,280L73.59999999999998,278.2L72.39999999999998,277V275.5L73.39999999999998,
                     274.5V272.6L73.89999999999998,270.70000000000005L72.89999999999998,269.70000000000005L73,268.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Калужская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M745.7,210.4C745.7,210.4,746.8000000000001,212.9,747.3000000000001,213.4L750.7,215.70000000000002L754.2,217.60000000000002L759.6,219.20000000000002L762.1,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Калужская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M745.7,210.4C745.7,210.4,746.8000000000001,212.9,747.3000000000001,213.4L750.7,215.70000000000002L754.2,217.60000000000002L759.6,219.20000000000002L762.1,
                     219.70000000000002L764.4,221.20000000000002L765.8,223.10000000000002L770.5999999999999,225.60000000000002L774.8,227.40000000000003L779.1999999999999,
                     229.40000000000003L781.4999999999999,231.70000000000005H783.9999999999999L785.7999999999998,233.50000000000006L788.0999999999998,
                     234.70000000000005H791.7999999999998L793.1999999999998,236.60000000000005V234.10000000000005L792.5999999999998,230.70000000000005L791.2999999999998,
@@ -1663,57 +1574,57 @@ export const MapCountry = () => {
                     189.29999999999984L734.0000000000007,191.19999999999985L732.9000000000007,192.29999999999984V193.39999999999984L735.2000000000006,193.89999999999984L737.4000000000007,
                     196.89999999999984L737.8000000000006,199.79999999999984L739.6000000000006,201.59999999999985L739.6000000000006,204.29999999999984L742.1000000000006,
                     206.99999999999983L745.7,210.4Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M743.1,147.2V149.6L742.9,151.79999999999998L744.1999999999999,152.7L745.0999999999999,153.79999999999998L745.1999999999999,155.79999999999998L746.9999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M743.1,147.2V149.6L742.9,151.79999999999998L744.1999999999999,152.7L745.0999999999999,153.79999999999998L745.1999999999999,155.79999999999998L746.9999999999999,
                     156.49999999999997L746.5999999999999,154.49999999999997L745.8,152.99999999999997L746.5999999999999,150.49999999999997V147.39999999999998L744.4999999999999,
                     146.49999999999997L743.1,147.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M785.7,158.7L784.2,159.2L785,160.79999999999998H787.6H790.2L791.8000000000001,159.2L789.7,158.5L787.6,159.4L785.7,158.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M793.3,239.5L792.5999999999999,241.5L791.5999999999999,242.5L792.8,243.7L793.5,245.2L793.3,247.2L793.1999999999999,249.7L794.4,250.89999999999998L795.6999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M785.7,158.7L784.2,159.2L785,160.79999999999998H787.6H790.2L791.8000000000001,159.2L789.7,158.5L787.6,159.4L785.7,158.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M793.3,239.5L792.5999999999999,241.5L791.5999999999999,242.5L792.8,243.7L793.5,245.2L793.3,247.2L793.1999999999999,249.7L794.4,250.89999999999998L795.6999999999999,
                     250.2V247.6L796.9,246.4L796,244.20000000000002L794.5,242.70000000000002L794.6,240.70000000000002L793.3,239.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M798,256.6V258.20000000000005L799.1,258.70000000000005L799.9,257.70000000000005L798,256.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
-                    d="M795,153L793.6,154L794.4,154.8L795.4,153.8L796.4,152.8L795,153"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Камчатский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Кемеровская область" className="rus_zone"
-                    d="M389.7,378.7L389.3,376.7L389.90000000000003,374L387.50000000000006,375L384.80000000000007,377.7L383.4000000000001,376.3L380.6000000000001,377.8L378.30000000000007,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M798,256.6V258.20000000000005L799.1,258.70000000000005L799.9,257.70000000000005L798,256.6"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Камчатский край" className="rus_zone kamch"
+                        d="M795,153L793.6,154L794.4,154.8L795.4,153.8L796.4,152.8L795,153"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Камчатский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Кемеровская область" className="rus_zone"
+                        d="M389.7,378.7L389.3,376.7L389.90000000000003,374L387.50000000000006,375L384.80000000000007,377.7L383.4000000000001,376.3L380.6000000000001,377.8L378.30000000000007,
                     376.8H375.6000000000001L371.30000000000007,380.6H367L364.4,381.90000000000003L364.79999999999995,386.1L365.69999999999993,387.90000000000003L366.3999999999999,
                     391.70000000000005L365.8999999999999,397.1L367.49999999999994,399.5L368.99999999999994,402.4H371.29999999999995L372.9,405.5L374.29999999999995,406.9L374.79999999999995,
                     409.29999999999995L376.79999999999995,410.49999999999994H378.69999999999993L378.79999999999995,412.19999999999993L376.9,413.0999999999999L378,414.9999999999999L378.3,
@@ -1722,14 +1633,14 @@ export const MapCountry = () => {
                     403.2V401.59999999999997L390.90000000000003,401.2L389.40000000000003,402.7L387.6,400.9L389.90000000000003,400.29999999999995V397.99999999999994L390.50000000000006,
                     395.99999999999994L389.20000000000005,393.49999999999994L388.30000000000007,390.99999999999994L390.20000000000005,389.3999999999999L392.50000000000006,
                     387.0999999999999L394.00000000000006,386.4999999999999V383.1999999999999L392.50000000000006,380.2999999999999L390.70000000000005,379.6999999999999L389.7,378.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Кемеровская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Кировская область" className="rus_zone"
-                    d="M154.6,296.5L156.4,293.9L157.9,292.4L160,292L162.7,293.6L166.29999999999998,290L162.99999999999997,286.7L160.29999999999998,284.7L162.29999999999998,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Кемеровская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Кировская область" className="rus_zone"
+                        d="M154.6,296.5L156.4,293.9L157.9,292.4L160,292L162.7,293.6L166.29999999999998,290L162.99999999999997,286.7L160.29999999999998,284.7L162.29999999999998,
                     282.7L165.39999999999998,281.59999999999997L166.7,282.9L168.2,281.29999999999995H171.79999999999998L172.2,275.29999999999995L173.7,273.59999999999997L174.5,
                     272.79999999999995V270.49999999999994L176.3,269.59999999999997L173.5,266.7L174.8,265.5L177.20000000000002,266.6L181.70000000000002,262.1L183.10000000000002,
                     260.90000000000003L184.10000000000002,261.20000000000005L186.50000000000003,264.1L186.10000000000002,265.5L187.20000000000002,266.1L187.4,268L185.8,
@@ -1743,27 +1654,27 @@ export const MapCountry = () => {
                     308.00000000000006V311.70000000000005L176.80000000000004,313.80000000000007L175.20000000000005,315.4000000000001L174,318L171.9,315.6L171.20000000000002,
                     312.5V310.5L170.50000000000003,308.6V304.6L168.40000000000003,303.40000000000003L167.50000000000003,300.40000000000003L164.70000000000002,299.8L162.60000000000002,
                     298.6L161.70000000000002,300.20000000000005L160.3,298.80000000000007L158,300L156,298.7L154.6,296.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Кировская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Костромская область" className="rus_zone"
-                    d="M172.1,275.3L173.6,273.6L170.7,271L169.1,273.4L166.29999999999998,272.7L165.1,273.9L163.4,271.4L158.70000000000002,269L157.8,266.6L155.3,264.1L152,263.5L150.3,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Кировская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Костромская область" className="rus_zone"
+                        d="M172.1,275.3L173.6,273.6L170.7,271L169.1,273.4L166.29999999999998,272.7L165.1,273.9L163.4,271.4L158.70000000000002,269L157.8,266.6L155.3,264.1L152,263.5L150.3,
                     259.9L147.70000000000002,261.09999999999997L144.9,259.9L141.8,260.7L139,261.9V264.09999999999997L135.7,264.2L134.89999999999998,266H133.2L130.79999999999998,
                     268.6H129.2L128.5,270.40000000000003L130.2,272.1H132.39999999999998L133.49999999999997,273.20000000000005L135.29999999999998,271.40000000000003L136.29999999999998,
                     271.6L137.1,273.90000000000003L139.9,275.70000000000005H141.6V278.6L144,279.8V282.1L147,282.8L150.9,281.8L152.3,280.40000000000003H154.5L155.4,282.50000000000006L156.8,
                     283.90000000000003H159.20000000000002L160.10000000000002,284.8L162.10000000000002,282.8L165.20000000000002,281.7L166.50000000000003,283L168.00000000000003,
                     281.4H171.60000000000002L172.1,275.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Костромская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Курганская область" className="rus_zone"
-                    d="M232.2,348.2L235.5,346L237.5,346.9H239.2L241.1,347.7L242.4,347.2L244.1,350.09999999999997L247.1,347.79999999999995H249.79999999999998L250.79999999999998,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Костромская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Курганская область" className="rus_zone"
+                        d="M232.2,348.2L235.5,346L237.5,346.9H239.2L241.1,347.7L242.4,347.2L244.1,350.09999999999997L247.1,347.79999999999995H249.79999999999998L250.79999999999998,
                     349.09999999999997L249.29999999999998,351.7L251.49999999999997,354.8L252.99999999999997,355.3V358.2L254.99999999999997,358.59999999999997L256.5,
                     359.99999999999994H258.7L259.5,361.69999999999993L261.2,361.99999999999994L260.8,364.3999999999999L265.8,367.49999999999994L266.2,371.29999999999995L264.7,
                     373.49999999999994H261.5L258.7,374.29999999999995L256.4,372.99999999999994L253.59999999999997,373.49999999999994H250.19999999999996L246.89999999999995,
@@ -1771,39 +1682,39 @@ export const MapCountry = () => {
                     371.59999999999997L229.79999999999998,371.7L230.49999999999997,369.9L232.39999999999998,368L231.39999999999998,365.5H228.89999999999998L228.59999999999997,
                     364.3L226.99999999999997,364.2L225.49999999999997,362.7L225.99999999999997,361H227.69999999999996L228.89999999999995,359.8L228.19999999999996,
                     357.40000000000003L229.49999999999997,356.1H231.69999999999996L232.89999999999995,354.20000000000005L232.49999999999994,351.00000000000006L232.2,348.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Курганская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Курская область" className="rus_zone"
-                    d="M57,298.3V295.6L55.6,293.1L54.2,290.90000000000003L55.5,289.90000000000003L56.3,288.00000000000006H57.8L58.9,287.00000000000006L60.3,287.1000000000001L61.199999999999996,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Курганская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Курская область" className="rus_zone"
+                        d="M57,298.3V295.6L55.6,293.1L54.2,290.90000000000003L55.5,289.90000000000003L56.3,288.00000000000006H57.8L58.9,287.00000000000006L60.3,287.1000000000001L61.199999999999996,
                     285.80000000000007L62.99999999999999,285.20000000000005L64.1,286.00000000000006H65.69999999999999L66.39999999999999,287.1000000000001L67.69999999999999,
                     287.6000000000001L68.69999999999999,288.4000000000001V290.5000000000001L70.19999999999999,290.9000000000001L70.6,292.1000000000001L71.89999999999999,
                     292.7000000000001L72.3,295.5000000000001L73.7,297.8000000000001L74.10000000000001,300.7000000000001L75.50000000000001,301.0000000000001L76.50000000000001,
                     302.0000000000001V304.2000000000001L78.10000000000001,304.5000000000001L79.9,305.60000000000014L78.4,307.10000000000014L76.5,306.40000000000015L75.3,
                     307.60000000000014V309.5000000000001L74,310.10000000000014L73.4,308.20000000000016L71.5,306.3000000000002L68.6,304.50000000000017L66.8,304.90000000000015L63.3,
                     304.20000000000016V302.8000000000002L61.5,300.9000000000002L60.6,301.8000000000002H58.4L55.8,301.20000000000016L57,298.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Курская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Липецкая область" className="rus_zone"
-                    d="M94,294.4L92.2,294.5L91.60000000000001,295.6H89.7L89,297.1H87.5L86.2,295.3L85.3,294.40000000000003L83.3,295.1L82.6,296.90000000000003L80.1,298.40000000000003L80.8,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Курская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Липецкая область" className="rus_zone"
+                        d="M94,294.4L92.2,294.5L91.60000000000001,295.6H89.7L89,297.1H87.5L86.2,295.3L85.3,294.40000000000003L83.3,295.1L82.6,296.90000000000003L80.1,298.40000000000003L80.8,
                     299.8L79.7,300.90000000000003H78L76.5,302.1V304.3L78.1,304.6L79.89999999999999,305.70000000000005L82.1,306.1L83.1,308L85.39999999999999,308.8L84.89999999999999,
                     311.1L86.39999999999999,312.6L88.3,312.8L90.3,315.5L91.8,314.3H93.2L93.60000000000001,312.3L92.2,310.90000000000003L92.5,309.1L91.7,308.1L92.10000000000001,
                     306.8L93.80000000000001,306.2L95.9,304.09999999999997L98.5,302.2L98,298.8L96.3,297.1L94.7,298.20000000000005L93.9,296.90000000000003L94.5,295.6L94,294.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Липецкая область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Магаданская область" className="rus_zone"
-                    d="M713.7,143L715.3000000000001,144.6V148.7L716.6,151.7L716.9,156.5L716,159.4L715,156.9L712.7,155.8L712.7,159L710.8000000000001,157.1L709.5000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Липецкая область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Магаданская область" className="rus_zone"
+                        d="M713.7,143L715.3000000000001,144.6V148.7L716.6,151.7L716.9,156.5L716,159.4L715,156.9L712.7,155.8L712.7,159L710.8000000000001,157.1L709.5000000000001,
                     155.79999999999998L708.5000000000001,153.6L705.0000000000001,150.29999999999998L706.0000000000001,153.1L705.0000000000001,156.1H701.6000000000001V158.1L700.5000000000001,
                     162.29999999999998L699.1000000000001,163.89999999999998L699.2000000000002,169.49999999999997L701.5000000000001,170.99999999999997L701.1000000000001,
                     174.49999999999997L703.4000000000001,177.99999999999997V181.79999999999998L704.1000000000001,186.79999999999998L706.2000000000002,188.89999999999998V191.2L708.0000000000001,
@@ -1834,14 +1745,14 @@ export const MapCountry = () => {
                     131.99999999999994L700.3000000000002,132.89999999999995L700.4000000000002,134.59999999999994L702.0000000000002,136.19999999999993L703.9000000000002,
                     135.69999999999993H706.1000000000003L706.5000000000002,137.19999999999993H707.9000000000002L708.9000000000002,138.39999999999992L708.1000000000003,
                     141.19999999999993H709.2000000000003L710.1000000000003,139.89999999999992L711.0000000000002,140.79999999999993V142.49999999999991L713.7,143Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Магаданская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Мурманская область" className="rus_zone"
-                    d="M160,158.1L166.1,163.6L165.79999999999998,165.9L165.1,167.8L166.5,169.20000000000002L168.6,168.70000000000002L169.9,169.50000000000003L171.5,169.40000000000003L171.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Магаданская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Мурманская область" className="rus_zone"
+                        d="M160,158.1L166.1,163.6L165.79999999999998,165.9L165.1,167.8L166.5,169.20000000000002L168.6,168.70000000000002L169.9,169.50000000000003L171.5,169.40000000000003L171.5,
                     169.40000000000003L171,166.60000000000002L172.2,165.40000000000003L173,163.20000000000005L174.8,165.00000000000006L173.3,166.50000000000006L172.70000000000002,
                     169.40000000000006L174.50000000000003,170.20000000000007L175.40000000000003,174.90000000000006L177.00000000000003,177.70000000000007L177.90000000000003,
                     180.20000000000007L179.00000000000003,182.90000000000006L181.40000000000003,185.30000000000007V188.70000000000007L183.70000000000005,191.00000000000009L187.40000000000003,
@@ -1854,14 +1765,14 @@ export const MapCountry = () => {
                     138.7000000000001L189.3000000000001,140.2000000000001L187.50000000000009,138.4000000000001H185.3000000000001L181.6000000000001,137.00000000000009L176.3000000000001,
                     139.70000000000007L172.2000000000001,141.70000000000007V148.50000000000009L170.2000000000001,152.00000000000009H163.7000000000001L159.8000000000001,155.9000000000001L160,
                     158.1L160,158.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Мурманская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Нижегородская область" className="rus_zone"
-                    d="M118.9,296.1V293.8L120.30000000000001,292.40000000000003L122.4,292.00000000000006L124,290.40000000000003L126.6,290.00000000000006L129.4,289.1000000000001L132.70000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Мурманская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Нижегородская область" className="rus_zone"
+                        d="M118.9,296.1V293.8L120.30000000000001,292.40000000000003L122.4,292.00000000000006L124,290.40000000000003L126.6,290.00000000000006L129.4,289.1000000000001L132.70000000000002,
                     288.7000000000001L134.3,287.1000000000001L135,284.4000000000001L136.4,283.0000000000001L138.20000000000002,284.8000000000001H140.8L141.8,282.2000000000001H144.4L147.4,
                     282.9000000000001L151.3,281.9000000000001L152.70000000000002,280.5000000000001H154.9L155.8,282.60000000000014L157.20000000000002,284.0000000000001H159.60000000000002L160.50000000000003,
                     284.9000000000001L163.20000000000002,286.9000000000001L166.50000000000003,290.2000000000001L164.50000000000003,292.2000000000001L162.90000000000003,293.8000000000001L160.20000000000005,
@@ -1870,14 +1781,14 @@ export const MapCountry = () => {
                     304.5000000000001V307.60000000000014L141.3,309.60000000000014L140.20000000000002,311.40000000000015H138.9L138,310.50000000000017L138.3,309.00000000000017L136.20000000000002,
                     309.1000000000002L135.60000000000002,309.7000000000002L132.60000000000002,309.80000000000024L131.60000000000002,311.30000000000024L129.50000000000003,
                     310.7000000000002L128.90000000000003,308.6000000000002L127,307V304.6L125.8,303.40000000000003L125.2,301.6H122.9L121.5,300.20000000000005L121,299V297.8L118.9,296.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Нижегородская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Новгородская область" className="rus_zone"
-                    d="M118.4,243.7L119.30000000000001,242.79999999999998L119.60000000000001,240.89999999999998L118.00000000000001,238.29999999999998L116.20000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Нижегородская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Новгородская область" className="rus_zone"
+                        d="M118.4,243.7L119.30000000000001,242.79999999999998L119.60000000000001,240.89999999999998L118.00000000000001,238.29999999999998L116.20000000000002,
                     237.6L116.70000000000002,236.5L117.50000000000001,234.9L116.80000000000001,233L116.50000000000001,231.1L115.50000000000001,230.1L114.00000000000001,229.6L114.80000000000001,
                     228V226.5L113.20000000000002,225.8L113.00000000000001,224.3L111.20000000000002,224.20000000000002L110.10000000000002,225.3L108.70000000000002,
                     223.60000000000002L109.10000000000002,220.3L108.00000000000003,220L106.70000000000003,218.7L105.50000000000003,219.7L104.20000000000003,
@@ -1888,14 +1799,14 @@ export const MapCountry = () => {
                     234.70000000000002L86.60000000000002,235.8H89L90.1,236.9L92,236.8L93.5,237.70000000000002H96.2L97.60000000000001,239.10000000000002L99.4,239.3L100.5,
                     238.20000000000002H102.6L104,236.8H105.7L107.10000000000001,237.5L108.10000000000001,238.5L108.60000000000001,240.3H110.4L111.60000000000001,
                     241.8H113.2L113.5,240.70000000000002L114.6,241.8L116.3,242.60000000000002L118.4,243.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Новгородская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Новосибирская область" className="rus_zone"
-                    d="M318.4,405.7L317,404.3L315.5,401.2L313.9,399.59999999999997L311.7,398.7V396.4H313.5L315,394.4L314.4,392.59999999999997H312.09999999999997L310.2,394.49999999999994L307.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Новгородская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Новосибирская область" className="rus_zone"
+                        d="M318.4,405.7L317,404.3L315.5,401.2L313.9,399.59999999999997L311.7,398.7V396.4H313.5L315,394.4L314.4,392.59999999999997H312.09999999999997L310.2,394.49999999999994L307.5,
                     394.59999999999997L305.5,394.7L306.6,391.7L308,390.3V388.8L306.7,387.5V384.9L306.09999999999997,380.4L307.49999999999994,376.9L309.8999999999999,
                     374.09999999999997L311.49999999999994,373.4L313.29999999999995,374.09999999999997L314.29999999999995,373.09999999999997V371.2L313.9,369.8L315.9,367.8V361.7L318.7,
                     362.4L320.2,363.9H323.3L326.7,364.4L329.59999999999997,365.9L332.99999999999994,367.29999999999995L335.09999999999997,369.4L336.79999999999995,
@@ -1907,14 +1818,14 @@ export const MapCountry = () => {
                     407.4999999999998L348.8,408.2999999999998L347.1,405.7999999999998H345.70000000000005L344.6,404.0999999999998V402.2999999999998L342.3,399.9999999999998L341.1,
                     398.7999999999998L338.5,398.8999999999998L334.8,400.0999999999998L331.1,402.8999999999998H327L324.5,403.8999999999998L322.6,404.5999999999998L321.20000000000005,
                     403.1999999999998L320.30000000000007,404.3999999999998L318.4,405.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Новосибирская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Омская область" className="rus_zone"
-                    d="M305.6,394.7L303.5,396.8L300,397.8L297,399.40000000000003L295.6,397.40000000000003L292.90000000000003,398.70000000000005H290.70000000000005L291.50000000000006,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Новосибирская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Омская область" className="rus_zone"
+                        d="M305.6,394.7L303.5,396.8L300,397.8L297,399.40000000000003L295.6,397.40000000000003L292.90000000000003,398.70000000000005H290.70000000000005L291.50000000000006,
                     395.30000000000007L294.50000000000006,393.9000000000001V392.1000000000001H292L289.7,390.7000000000001L288.3,392.1000000000001L285.8,391.30000000000007L286.6,
                     388.30000000000007L284.8,386.50000000000006L282.3,388.00000000000006L279.5,387.20000000000005L278.8,385.00000000000006L280.40000000000003,
                     383.40000000000003V381.00000000000006L281.00000000000006,379.20000000000005L280.00000000000006,376.00000000000006L278.1000000000001,
@@ -1928,14 +1839,14 @@ export const MapCountry = () => {
                     371.3999999999999V373.2999999999999L313.4,374.2999999999999L311.59999999999997,373.5999999999999L309.99999999999994,374.2999999999999L307.59999999999997,
                     377.0999999999999L306.2,380.5999999999999L306.8,385.0999999999999V387.69999999999993L308.1,388.99999999999994V390.49999999999994L306.70000000000005,391.8999999999999L305.6,
                     394.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Омская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Оренбургская область" className="rus_zone"
-                    d="M202.8,387.3L203.60000000000002,389.1L205.40000000000003,390.90000000000003L206.60000000000002,392.1L207.10000000000002,394.3L208.90000000000003,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Омская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Оренбургская область" className="rus_zone"
+                        d="M202.8,387.3L203.60000000000002,389.1L205.40000000000003,390.90000000000003L206.60000000000002,392.1L207.10000000000002,394.3L208.90000000000003,
                     396.1L207.10000000000002,398.5L205.50000000000003,400.1H202.70000000000002L199.8,400.3L198.3,398.8L197.3,396.7H196L194.6,398.09999999999997H192.4L189.9,
                     395.59999999999997L189.4,394.2L187.5,392.3V389.1L185.9,387.5H183L180.6,388.4L179.7,386.5L177.29999999999998,384.6L175.1,383.5L172.2,384.9L169.5,385.29999999999995L167.3,
                     384.69999999999993L165.8,381.79999999999995L163.60000000000002,379.9L162.10000000000002,382.4H160.50000000000003V380.4L162.00000000000003,378.9L161.00000000000003,
@@ -1952,41 +1863,41 @@ export const MapCountry = () => {
                     381.6999999999999L189.20000000000007,382.6999999999999L190.80000000000007,383.09999999999985L192.40000000000006,381.89999999999986L193.50000000000006,
                     379.39999999999986H195.60000000000005H198.00000000000006L199.50000000000006,378.79999999999984L201.60000000000005,379.6999999999998H202.90000000000006L203.80000000000007,
                     381.29999999999984L203.20000000000007,382.89999999999986L200.80000000000007,384.09999999999985L201.00000000000006,385.6999999999999H202.30000000000007L202.8,387.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Оренбургская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Орловская область" className="rus_zone"
-                    d="M68.4,284.7L67.10000000000001,284.7L65.7,286.09999999999997L66.4,287.2L67.7,287.7L68.7,288.5V290.6L70.2,291L70.60000000000001,292.2L71.9,292.8L72.30000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Оренбургская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Орловская область" className="rus_zone"
+                        d="M68.4,284.7L67.10000000000001,284.7L65.7,286.09999999999997L66.4,287.2L67.7,287.7L68.7,288.5V290.6L70.2,291L70.60000000000001,292.2L71.9,292.8L72.30000000000001,
                     295.6L73.70000000000002,297.90000000000003L74.10000000000002,300.8L75.50000000000003,301.1L76.50000000000003,302.1L78.00000000000003,
                     300.90000000000003H79.60000000000002L80.70000000000002,299.8L80.00000000000001,298.40000000000003L82.50000000000001,296.90000000000003L83.20000000000002,
                     295.1L85.20000000000002,294.40000000000003L84.30000000000001,291.6L85.20000000000002,290.70000000000005L82.90000000000002,289.20000000000005L81.30000000000003,
                     286.00000000000006L80.40000000000002,281.6000000000001L77.60000000000002,280.50000000000006H75.60000000000002L73.80000000000003,279.90000000000003L73.00000000000003,
                     280.70000000000005L72.60000000000002,282.30000000000007L72,283L71,282H69.6L68.39999999999999,282.4L68.8,283.5L68.4,284.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Орловская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Пензенская область" className="rus_zone"
-                    d="M111.5,306.3L112.7,306.90000000000003L112.9,308.50000000000006L114.30000000000001,308.00000000000006L115.50000000000001,309.20000000000005L117.70000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Орловская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Пензенская область" className="rus_zone"
+                        d="M111.5,306.3L112.7,306.90000000000003L112.9,308.50000000000006L114.30000000000001,308.00000000000006L115.50000000000001,309.20000000000005L117.70000000000002,
                     310.1H119.20000000000002L121.20000000000002,312.1V314.5L123.80000000000001,316.8L124.50000000000001,316.1H127.10000000000001L130.3,319.3L132.10000000000002,
                     319.5L133.3,321.4V324.5L132,325.8V327.5L133,328.5L132.5,329.9L131.5,330.29999999999995L130.3,332.49999999999994L128.8,334.69999999999993L127.30000000000001,
                     332.8999999999999L125.4,333.3999999999999H123.80000000000001L121.20000000000002,331.99999999999994L118.30000000000001,330.79999999999995L116.60000000000001,
                     329.59999999999997L116.00000000000001,327.4L113.30000000000001,327.5L111.4,325.7L110,325.2L108.9,324.09999999999997L108.7,322.59999999999997L106.8,
                     321.59999999999997L107.5,320.29999999999995H109.6L109.89999999999999,316.29999999999995L108.89999999999999,314.4L109.39999999999999,311.09999999999997L108.89999999999999,
                     309.09999999999997L111.5,306.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Пензенская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Пермский край" className="rus_zone"
-                    d="M201.2,302.2L198.39999999999998,304L197.79999999999998,306.8L197.7,310L196.1,312.8L195.7,315.90000000000003L194.29999999999998,319.1L190.2,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Пензенская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Пермский край" className="rus_zone"
+                        d="M201.2,302.2L198.39999999999998,304L197.79999999999998,306.8L197.7,310L196.1,312.8L195.7,315.90000000000003L194.29999999999998,319.1L190.2,
                     321.20000000000005V322.6L191.79999999999998,325.1L193.39999999999998,325.70000000000005V327.20000000000005L195.99999999999997,
                     329.30000000000007H198.59999999999997L199.69999999999996,331.6000000000001L201.79999999999995,332.00000000000006L202.79999999999995,335.40000000000003L204.39999999999995,
                     336.00000000000006L205.79999999999995,335.40000000000003L207.49999999999994,333.6L208.49999999999994,332.6V330.40000000000003L209.39999999999995,
@@ -2004,14 +1915,14 @@ export const MapCountry = () => {
                     278.90000000000003L202.70000000000002,280.20000000000005V281.70000000000005L200.8,282.50000000000006L202,283.70000000000005L204.3,284.80000000000007L206,
                     286.50000000000006L207.4,287.70000000000005L207.1,289.90000000000003L205,291.70000000000005L203,292.50000000000006L200.7,294.80000000000007V296.9000000000001L202,
                     298.2000000000001L201.3,300.2000000000001V302.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Пермский край")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Псковская область" className="rus_zone"
-                    d="M75.6,243L77.3,245.1L78.1,242.9H79.89999999999999L80.69999999999999,241.6L81.39999999999999,240.1L81.69999999999999,237.4L82.79999999999998,236.3L82.99999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Пермский край")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Псковская область" className="rus_zone"
+                        d="M75.6,243L77.3,245.1L78.1,242.9H79.89999999999999L80.69999999999999,241.6L81.39999999999999,240.1L81.69999999999999,237.4L82.79999999999998,236.3L82.99999999999999,
                     234.70000000000002L84.99999999999999,233.10000000000002L83.89999999999999,232.00000000000003L84.89999999999999,231.00000000000003L85.99999999999999,
                     230.40000000000003V228.60000000000002L87.09999999999998,228.00000000000003L88.39999999999998,226.70000000000002L90.09999999999998,225.9L90.69999999999997,
                     224.1L89.39999999999998,223.1L88.99999999999997,222.1L89.89999999999998,221.2V219.6L90.89999999999998,218.6L92.99999999999997,218.4L92.49999999999997,
@@ -2020,14 +1931,14 @@ export const MapCountry = () => {
                     210.6L80.69999999999997,212.2L77.49999999999997,212.29999999999998L76,214V216.7L73,218.6L71,219.1L71.6,221.4L70.19999999999999,223.9L67.79999999999998,
                     226.3L67.39999999999998,228.10000000000002L68.49999999999997,230.60000000000002L70.29999999999997,232.40000000000003L69.69999999999997,234.40000000000003L68.89999999999998,
                     236.30000000000004L71.29999999999998,236.90000000000003L73.49999999999999,238.90000000000003V243.20000000000005L75.6,243"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Псковская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Ростовская область" className="rus_zone"
-                    d="M76.4,369.7V367L73.7,364.4L73.10000000000001,362.09999999999997L73.9,359.99999999999994V357.69999999999993L71.10000000000001,355.69999999999993L72.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Псковская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ростовская область" className="rus_zone"
+                        d="M76.4,369.7V367L73.7,364.4L73.10000000000001,362.09999999999997L73.9,359.99999999999994V357.69999999999993L71.10000000000001,355.69999999999993L72.7,
                     354.0999999999999V352.4999999999999L74.8,351.5999999999999L76.5,353.2999999999999L79.1,352.8999999999999L80.89999999999999,349.49999999999994L79.8,
                     344.99999999999994L82.8,341.99999999999994L83.89999999999999,339.29999999999995L82.1,336.59999999999997L81.89999999999999,334.9H78.6L77.5,336H75.7L74.8,
                     334.8H72.6V333L71.6,332L70.6,333.3L69.69999999999999,335.5L64.99999999999999,336.1L65.09999999999998,338.1L63.29999999999998,337.8L61.499999999999986,
@@ -2041,14 +1952,14 @@ export const MapCountry = () => {
                     369.6000000000001V371.30000000000007L63.599999999999994,372.50000000000006L65.19999999999999,372.90000000000003L65.69999999999999,
                     375.1L66.1,376.70000000000005L67.1,377.70000000000005L68.5,378.20000000000005L69.1,377.6L70.6,378L73.3,375.2H76L78.6,373.3L79.8,370.7V368.8L77.89999999999999,
                     369.8L76.4,369.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ростовская область")}>
-                </path>
-                <path fill="#c9dfec" stroke="#606778" name="Рязанская область" className="rus_zone"
-                    d="M98.6,302L98.1,298.6L96.39999999999999,296.90000000000003L94.8,298.00000000000006L94,296.70000000000005L94.6,295.40000000000003L94,294.40000000000003L95.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ростовская область")}>
+                    </path>
+                    <path fill="#c9dfec" stroke="#606778" name="Рязанская область" className="rus_zone"
+                        d="M98.6,302L98.1,298.6L96.39999999999999,296.90000000000003L94.8,298.00000000000006L94,296.70000000000005L94.6,295.40000000000003L94,294.40000000000003L95.4,
                     292.40000000000003L96.7,291.40000000000003V289.90000000000003L97.7,288.20000000000005L99.60000000000001,287.90000000000003L99.9,286.6L101.5,286.3L102,286.8L104.3,
                     286.7L105,286L107,286.4L108.2,286.79999999999995L109.5,286.49999999999994L110.1,285.8999999999999L111.6,285.99999999999994H113.1L114.3,286.99999999999994L113.8,
                     288.49999999999994L115.7,289.09999999999997L116,290.79999999999995L117.3,291.19999999999993L118.89999999999999,293.79999999999995V296.09999999999997L120.1,
@@ -2056,26 +1967,26 @@ export const MapCountry = () => {
                     303.69999999999993H115.19999999999999V304.69999999999993L114.1,305.79999999999995L112.69999999999999,306.79999999999995L111.49999999999999,
                     306.19999999999993L109.99999999999999,304.69999999999993L108.79999999999998,304.79999999999995L107.29999999999998,303.4L105.89999999999998,305L103.59999999999998,
                     304.7L102.79999999999998,302.59999999999997L100.49999999999999,301.9L98.6,302"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Рязанская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Самарская область" className="rus_zone"
-                    d="M167.9,339.2L167,337.09999999999997L167.6,335.49999999999994L164.5,332.79999999999995H162.5L161,334.29999999999995L157.7,330.99999999999994L156,333.69999999999993L153.6,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Рязанская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Самарская область" className="rus_zone"
+                        d="M167.9,339.2L167,337.09999999999997L167.6,335.49999999999994L164.5,332.79999999999995H162.5L161,334.29999999999995L157.7,330.99999999999994L156,333.69999999999993L153.6,
                     334.79999999999995L152.5,335.9L150.6,333.29999999999995L147.9,332.19999999999993L146.70000000000002,333.3999999999999L144.4,330.8999999999999L142.8,
                     332.49999999999994L140.60000000000002,331.99999999999994L138.90000000000003,333.69999999999993V336.5999999999999L140.00000000000003,337.69999999999993L139.60000000000002,
                     339.69999999999993L137.3,339.99999999999994L138.5,342.29999999999995V344.59999999999997L141.1,345.4L141.9,348.79999999999995L144.20000000000002,
                     351.09999999999997L143.70000000000002,353.79999999999995L145.50000000000003,355.59999999999997L146.40000000000003,356.99999999999994H150.90000000000003L152.20000000000005,
                     354.3999999999999L154.60000000000005,352.69999999999993L156.00000000000006,353.0999999999999L156.80000000000007,351.3999999999999L160.30000000000007,
                     350.7999999999999L162.00000000000006,346.7999999999999L164.90000000000006,345.1999999999999L167.10000000000005,342.9999999999999L167.9,339.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Самарская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Саратовская область" className="rus_zone"
-                    d="M128.9,334.7L129.9,336.7L131.5,338.3H135.9L137.4,339.8L138.6,342.1V344.40000000000003L141.2,345.20000000000005L142,348.6L144.3,350.90000000000003L143.8,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Самарская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Саратовская область" className="rus_zone"
+                        d="M128.9,334.7L129.9,336.7L131.5,338.3H135.9L137.4,339.8L138.6,342.1V344.40000000000003L141.2,345.20000000000005L142,348.6L144.3,350.90000000000003L143.8,
                     353.6L145.60000000000002,355.40000000000003L146.50000000000003,356.8L146.40000000000003,358.2L143.30000000000004,357.59999999999997L141.70000000000005,
                     359.2L138.80000000000004,360.2L136.30000000000004,358.8H133.60000000000005L132.30000000000004,360.7H129.60000000000005H126.70000000000005L126.10000000000005,
                     362.09999999999997L124.50000000000006,363.7L124.20000000000006,366.09999999999997L121.10000000000007,365.49999999999994L119.30000000000007,
@@ -2087,13 +1998,13 @@ export const MapCountry = () => {
                     325.5L100.80000000000007,325.4L102.10000000000007,324.09999999999997L104.30000000000007,322.9L106.80000000000007,321.4L108.70000000000007,322.4L108.90000000000008,
                     323.9L110.00000000000007,325L111.40000000000008,325.5L113.30000000000008,327.3L116.00000000000009,327.2L116.60000000000008,329.4L118.30000000000008,
                     330.59999999999997L121.20000000000009,331.79999999999995L123.80000000000008,333.19999999999993H125.40000000000008L127.30000000000008,332.69999999999993L128.9,334.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Саратовская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M705.1,284.6L704.2,284.8L703.5,282.90000000000003V281.3L706.3,282.1L707.6999999999999,282.8L708.4999999999999,284.6L709.9999999999999,286.1L712.6999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Саратовская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M705.1,284.6L704.2,284.8L703.5,282.90000000000003V281.3L706.3,282.1L707.6999999999999,282.8L708.4999999999999,284.6L709.9999999999999,286.1L712.6999999999999,
                     286.6L713.4,288.40000000000003L716.5,290.40000000000003H718.1L719.4,292.3L720.5,295.3L722.2,297L725.4000000000001,300.3L727.5000000000001,300.8L730.4000000000001,
                     301.90000000000003L733.1000000000001,304.3L736.8000000000002,306.40000000000003L739.2000000000002,308.50000000000006L742.4000000000002,310.1000000000001L745.1000000000003,
                     311.7000000000001L746.9000000000002,313.1000000000001L750.0000000000002,314.30000000000007L749.6000000000003,315.70000000000005L748.5000000000002,
@@ -2112,56 +2023,56 @@ export const MapCountry = () => {
                     307.80000000000007L718.1000000000003,306.4000000000001L716.1000000000003,306.2000000000001L713.5000000000002,302.6000000000001V301.00000000000006L710.7000000000003,
                     298.1000000000001L709.2000000000003,295.30000000000007L706.1000000000003,294.30000000000007L706.9000000000002,292.1000000000001V290.50000000000006L709.4000000000002,
                     291.30000000000007L709.8000000000002,289.1000000000001L708.3000000000002,287.6000000000001V286.80000000000007L706.8000000000002,285.30000000000007L705.1,284.6Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M797.8,341.9L798.1999999999999,344.2L798.4,346.4L799.3,346.7V344.9L800,343.5V341.5L797.8,341.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M805.3,343.2V344.2L806.6999999999999,345V343.4L805.3,343.2"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M800.8,334.3L802.0999999999999,334.8L802.4999999999999,333L801.7999999999998,329.5L802.9999999999999,328.3L802.7999999999998,325.8L800.8999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M797.8,341.9L798.1999999999999,344.2L798.4,346.4L799.3,346.7V344.9L800,343.5V341.5L797.8,341.9"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M805.3,343.2V344.2L806.6999999999999,345V343.4L805.3,343.2"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M800.8,334.3L802.0999999999999,334.8L802.4999999999999,333L801.7999999999998,329.5L802.9999999999999,328.3L802.7999999999998,325.8L800.8999999999999,
                     325.3L800.3999999999999,328.2L801.0999999999999,328.9L800.4999999999999,331L800.8,334.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M804.1,319.8L803.6,320.3L804,322.2L804.9,320.9L804.1,319.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M805.4,313.1L805.9,310.3L805.1,308.5L805.5,306.6L807,305.1L807.4,307.1L807.1,309.20000000000005L807.5,311.6L806.7,313.40000000000003L805.4,313.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
-                    d="M806.9,288.7V291.09999999999997V293.09999999999997H808.4L808,291.2V290V288.6L806.9,288.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Сахалинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Свердловская область" className="rus_zone"
-                    d="M249.8,347.8H247.10000000000002L244.10000000000002,350.1L242.40000000000003,347.20000000000005L241.10000000000002,347.70000000000005L239.20000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M804.1,319.8L803.6,320.3L804,322.2L804.9,320.9L804.1,319.8"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M805.4,313.1L805.9,310.3L805.1,308.5L805.5,306.6L807,305.1L807.4,307.1L807.1,309.20000000000005L807.5,311.6L806.7,313.40000000000003L805.4,313.1"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Сахалинская область" className="rus_zone sahalin"
+                        d="M806.9,288.7V291.09999999999997V293.09999999999997H808.4L808,291.2V290V288.6L806.9,288.7"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Сахалинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Свердловская область" className="rus_zone"
+                        d="M249.8,347.8H247.10000000000002L244.10000000000002,350.1L242.40000000000003,347.20000000000005L241.10000000000002,347.70000000000005L239.20000000000002,
                     346.90000000000003H237.50000000000003L235.50000000000003,346.00000000000006L232.20000000000002,348.20000000000005L230.9,346.90000000000003L229.5,345.50000000000006L227.7,
                     344.50000000000006L226.1,346.1000000000001L224.4,344.4000000000001L222.70000000000002,344.2000000000001L222.3,343.2000000000001L220,342.4000000000001L219.3,
                     341.1000000000001L217.20000000000002,339.7000000000001L215.50000000000003,340.4000000000001L213.90000000000003,342.0000000000001L212.40000000000003,
@@ -2180,13 +2091,13 @@ export const MapCountry = () => {
                     327.00000000000017V329.90000000000015L263.29999999999995,331.3000000000001L262.59999999999997,333.7000000000001L263.2,335.4000000000001V337.5000000000001L260.3,
                     339.0000000000001L258.6,338.3000000000001L257.1,339.8000000000001L255.20000000000002,339.3000000000001L253.00000000000003,341.5000000000001L253.50000000000003,
                     344.3000000000001L252.50000000000003,345.3000000000001L253.20000000000002,347.60000000000014L251.60000000000002,348.8000000000001L249.8,347.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Свердловская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Смоленская область" className="rus_zone"
-                    d="M71.1,245.3L70.19999999999999,247.20000000000002L67.69999999999999,248.00000000000003L66.69999999999999,250.80000000000004L65.29999999999998,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Свердловская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Смоленская область" className="rus_zone"
+                        d="M71.1,245.3L70.19999999999999,247.20000000000002L67.69999999999999,248.00000000000003L66.69999999999999,250.80000000000004L65.29999999999998,
                     254.10000000000005L64.49999999999999,257.1L64.59999999999998,259.3L63.29999999999998,260.2L65.19999999999999,262.09999999999997L64.39999999999999,
                     264.9L63.79999999999999,267.4L65.69999999999999,268.4V270.59999999999997L66.89999999999999,269.4L68.19999999999999,267.29999999999995L69.79999999999998,
                     267.4L71.69999999999999,266.4L73.39999999999999,266L75.19999999999999,264.2H77L78.3,265.5L78.7,267L80.5,267.2L81.1,266.59999999999997L82.1,266.9L83.89999999999999,
@@ -2194,24 +2105,24 @@ export const MapCountry = () => {
                     260.59999999999997L94.3,259.29999999999995L92.8,258.09999999999997L91.8,256.2L90.8,255.2V253.89999999999998L88.6,253.29999999999998L86.6,253.89999999999998L84.1,
                     253.29999999999998L82.89999999999999,252.1L80.99999999999999,251L79.59999999999998,249.6L79.09999999999998,247L77.39999999999998,246L77.19999999999997,245.2L75.49999999999997,
                     243.1L73.29999999999997,243.29999999999998L71.1,245.3"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Смоленская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Тамбовская область" className="rus_zone"
-                    d="M97.8,326.4L99.6,325.59999999999997L100.8,325.49999999999994L102.1,324.19999999999993L104.3,322.99999999999994L106.8,321.49999999999994L107.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Смоленская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Тамбовская область" className="rus_zone"
+                        d="M97.8,326.4L99.6,325.59999999999997L100.8,325.49999999999994L102.1,324.19999999999993L104.3,322.99999999999994L106.8,321.49999999999994L107.5,
                     320.19999999999993H109.6L109.89999999999999,316.19999999999993L108.89999999999999,314.29999999999995L109.39999999999999,310.99999999999994L108.89999999999999,308.99999999999994L110.1,
                     307.79999999999995L111.5,306.19999999999993L110,304.69999999999993L108.8,304.79999999999995L107.3,303.4L105.89999999999999,305L103.6,304.7L102.8,302.59999999999997L100.5,
                     301.9L98.7,302L96.10000000000001,303.9L94.00000000000001,306L92.30000000000001,306.6L91.9,307.90000000000003L92.7,308.90000000000003L92.4,310.70000000000005L93.80000000000001,
                     312.1L93.4,314.1H92L90.5,315.3L91.6,316.40000000000003L91,318.3L92.5,319.8L94.9,320.8L95.7,322.40000000000003L97.2,323.90000000000003L97.8,326.4"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Тамбовская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Тверская область" className="rus_zone"
-                    d="M100.3,257.4V259L101,259.1L101.2,260.5H103.10000000000001L104.2,261.2L105.8,262.09999999999997H107.8L109.1,263.4H111.19999999999999L112.89999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Тамбовская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Тверская область" className="rus_zone"
+                        d="M100.3,257.4V259L101,259.1L101.2,260.5H103.10000000000001L104.2,261.2L105.8,262.09999999999997H107.8L109.1,263.4H111.19999999999999L112.89999999999999,
                     264.4L114.49999999999999,264.9L115.99999999999999,263.5L118.49999999999999,261.9L117.59999999999998,259.9V258.7L118.99999999999999,257.3L118.39999999999999,
                     255.10000000000002L119.1,253.50000000000003H120.89999999999999L121.69999999999999,250.90000000000003L124.19999999999999,
                     249.80000000000004V247.30000000000004L124.89999999999999,245.20000000000005L123.1,244.60000000000005L121.1,245.00000000000006L119.6,244.40000000000006L118.5,
@@ -2226,13 +2137,13 @@ export const MapCountry = () => {
                     251.40000000000003L82.90000000000002,252.40000000000003L84.10000000000002,253.60000000000002L86.60000000000002,254.20000000000002L88.60000000000002,
                     253.60000000000002L90.80000000000003,254.20000000000002V255.50000000000003L91.80000000000003,256.5L92.80000000000003,258.4L94.20000000000003,259.5L95.00000000000003,
                     260.9L95.80000000000003,259.9H97.30000000000003L98.30000000000003,258.5L100.3,257.4Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Тверская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Томская область" className="rus_zone"
-                    d="M367.4,329.8L368.79999999999995,332.8L369.79999999999995,335L367.49999999999994,337.3L368.29999999999995,339.8L371.09999999999997,340.7L374.49999999999994,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Тверская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Томская область" className="rus_zone"
+                        d="M367.4,329.8L368.79999999999995,332.8L369.79999999999995,335L367.49999999999994,337.3L368.29999999999995,339.8L371.09999999999997,340.7L374.49999999999994,
                     339.8H378.59999999999997L381.59999999999997,340.6L383.09999999999997,342.90000000000003L385.49999999999994,345.3L386.29999999999995,348.2L389.99999999999994,
                     347.9L391.29999999999995,349.2L389.09999999999997,351.59999999999997L387.09999999999997,353.59999999999997L385.9,356.79999999999995L387.79999999999995,
                     359.79999999999995L388.4,361.79999999999995H390.59999999999997L393.99999999999994,362.9L394.3999999999999,365.79999999999995L391.5999999999999,
@@ -2247,25 +2158,25 @@ export const MapCountry = () => {
                     336.4000000000001L325.19999999999993,332.4000000000001L328.19999999999993,325.80000000000007L332.29999999999995,325.20000000000005L335.29999999999995,
                     326.50000000000006H339.69999999999993L340.79999999999995,328.1000000000001L344.9,328.6000000000001L348.09999999999997,327.4000000000001L350.99999999999994,
                     330.30000000000007L353.3999999999999,329.70000000000005L356.7999999999999,331.40000000000003L357.6999999999999,328.3L362.6999999999999,326.2L367.4,329.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Томская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Тульская область" className="rus_zone"
-                    d="M97.7,288.2L96.7,289.9V291.4L95.4,292.4L94,294.4L92.2,294.5L91.60000000000001,295.6C91.60000000000001,295.6,89.7,295.20000000000005,89.7,295.6S89,297.1,89,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Томская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Тульская область" className="rus_zone"
+                        d="M97.7,288.2L96.7,289.9V291.4L95.4,292.4L94,294.4L92.2,294.5L91.60000000000001,295.6C91.60000000000001,295.6,89.7,295.20000000000005,89.7,295.6S89,297.1,89,
                     297.1H87.5L86.2,295.3L85.3,294.40000000000003L84.39999999999999,291.6L85.3,290.40000000000003L83,289.20000000000005L81.4,286.00000000000006L80.5,281.6000000000001L82.3,
                     279.2000000000001L83.39999999999999,279.6000000000001L84.49999999999999,278.50000000000006L86.69999999999999,277.90000000000003L87.99999999999999,278.6L89.49999999999999,
                     280.1L91.19999999999999,279.8V278.40000000000003L91.89999999999999,277.70000000000005L93.69999999999999,278.90000000000003L95.6,277.6L96.69999999999999,
                     279.40000000000003L98.29999999999998,279.70000000000005V281.1L97.79999999999998,282.70000000000005L98.29999999999998,284.30000000000007L97.69999999999999,
                     286.4000000000001L97.7,288.2Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Тульская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Тюменская область" className="rus_zone"
-                    d="M275.8,375.2L274.7,372.9H271.5L269,371.4L266.2,371.09999999999997L265.8,367.29999999999995L260.8,364.19999999999993L261.2,361.79999999999995L259.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Тульская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Тюменская область" className="rus_zone"
+                        d="M275.8,375.2L274.7,372.9H271.5L269,371.4L266.2,371.09999999999997L265.8,367.29999999999995L260.8,364.19999999999993L261.2,361.79999999999995L259.5,
                     361.49999999999994L258.7,359.79999999999995H256.5L255,358.4L253,358V355.1L251.5,354.6L249.3,351.5L250.8,348.9L252.4,347.7L251.70000000000002,345.4L252.70000000000002,
                     344.4L252.20000000000002,341.59999999999997L254.4,339.4L256.3,339.9L257.8,338.4L259.5,339.09999999999997L262.4,337.59999999999997V335.49999999999994L261.79999999999995,
                     333.79999999999995L262.49999999999994,331.4L264.29999999999995,332.79999999999995H266.99999999999994L268.99999999999994,
@@ -2283,13 +2194,13 @@ export const MapCountry = () => {
                     356.8999999999998L289.5999999999999,357.8999999999998V359.5999999999998L288.69999999999993,360.4999999999998L286.29999999999995,360.89999999999975L284.9,
                     362.2999999999997L283.09999999999997,364.09999999999974V366.2999999999997L282.59999999999997,367.59999999999974L281.29999999999995,368.89999999999975L280.29999999999995,
                     369.09999999999974V370.7999999999997L278.99999999999994,372.09999999999974L278.29999999999995,373.59999999999974V375.09999999999974H275.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Тюменская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ульяновская область" className="rus_zone"
-                    d="M140,316L143.3,318.3V320.5L145.9,319.9L147.8,320.79999999999995L149.70000000000002,322.69999999999993L151.50000000000003,324.29999999999995L153.40000000000003,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Тюменская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ульяновская область" className="rus_zone"
+                        d="M140,316L143.3,318.3V320.5L145.9,319.9L147.8,320.79999999999995L149.70000000000002,322.69999999999993L151.50000000000003,324.29999999999995L153.40000000000003,
                     323.49999999999994L154.40000000000003,324.49999999999994L155.10000000000002,327.49999999999994L156.90000000000003,329.29999999999995L157.50000000000003,
                     330.9L155.80000000000004,333.59999999999997L153.40000000000003,334.7L152.30000000000004,335.8L150.40000000000003,333.2L147.70000000000005,
                     332.09999999999997L146.50000000000006,333.29999999999995L144.20000000000005,330.79999999999995L142.60000000000005,332.4L140.40000000000006,
@@ -2298,13 +2209,13 @@ export const MapCountry = () => {
                     332.59999999999997L131.30000000000004,330.4L132.30000000000004,330L132.80000000000004,328.6L131.80000000000004,327.6V325.90000000000003L133.10000000000005,
                     324.6V321.5L131.90000000000006,319.6L133.90000000000006,318.20000000000005L135.10000000000005,319.50000000000006L138.40000000000006,319.1000000000001L138.80000000000007,
                     317.30000000000007L140,316"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ульяновская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Челябинская область" className="rus_zone"
-                    d="M229.8,371.6L226.60000000000002,371L224.3,371.6L222.3,369.8L219.4,368.3H216.70000000000002L215.8,371.1L216.70000000000002,373L214.9,374.8L216.3,375.7L217.70000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ульяновская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Челябинская область" className="rus_zone"
+                        d="M229.8,371.6L226.60000000000002,371L224.3,371.6L222.3,369.8L219.4,368.3H216.70000000000002L215.8,371.1L216.70000000000002,373L214.9,374.8L216.3,375.7L217.70000000000002,
                     377.09999999999997L219.4,378.79999999999995L217.8,380.4H216L213.8,378.2L210.5,378.3L208.3,379.2L209.20000000000002,382.4L208.3,384.7L206.10000000000002,
                     385.3L203.60000000000002,384.7L202.60000000000002,387.4L202.20000000000002,385.4H200.9L200.70000000000002,383.79999999999995L203.10000000000002,
                     382.59999999999997L203.70000000000002,380.99999999999994L202.8,379.3999999999999H201.5L199.4,378.49999999999994L197.9,379.09999999999997H193.4L194.20000000000002,
@@ -2317,13 +2228,13 @@ export const MapCountry = () => {
                     351.2L232.4,354.4L231.20000000000002,356.29999999999995H229.00000000000003L227.70000000000002,357.59999999999997L228.4,359.99999999999994L227.20000000000002,
                     361.19999999999993H225.50000000000003L225.00000000000003,362.8999999999999L226.50000000000003,364.3999999999999L228.10000000000002,364.49999999999994L228.40000000000003,
                     365.69999999999993H230.90000000000003L231.90000000000003,368.19999999999993L230.00000000000003,370.0999999999999L229.8,371.6"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Челябинская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Забайкальский край" className="rus_zone"
-                    d="M597.7,392.1L598.5,386.70000000000005L599.5,384.50000000000006L598.5,380.40000000000003L596.7,378.6L595.1,377L593.1,378.6L591.7,376.8L592.7,374.3L594.1,370.1L596.1,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Челябинская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Забайкальский край" className="rus_zone"
+                        d="M597.7,392.1L598.5,386.70000000000005L599.5,384.50000000000006L598.5,380.40000000000003L596.7,378.6L595.1,377L593.1,378.6L591.7,376.8L592.7,374.3L594.1,370.1L596.1,
                     368.1L600.1,365.8L598.3000000000001,362.6L597.5000000000001,361H595.3000000000001L594.7,358.3L593.6,356.7L595.5,355.59999999999997V354.7H594.5L592.8,352.9L591.4,
                     352.7L591.6999999999999,349.5L590.9,348L590,345.5L588,344.5L586.5,346.5L585,345.9L584.9,343.7L583.9,342.7L582.4,342.3L580.8,343.90000000000003L580,345.8L577.4,345.1L576.6,
                     343.5L578.1,341.6L577.2,340.1L575.5,340.70000000000005L573.3,340.1L571.8,338.6L571.8,337.1L569.6999999999999,336.5V334.3L567.8,333.7L565.8,331.09999999999997L563,
@@ -2346,13 +2257,13 @@ export const MapCountry = () => {
                     416.5999999999996L580.1000000000001,415.0999999999996L583.5000000000001,415.69999999999965L588.2000000000002,416.0999999999996L592.4000000000002,
                     414.5999999999996L594.9000000000002,412.0999999999996L596.6000000000003,408.0999999999996L599.3000000000003,407.2999999999996V403.7999999999996L598.2000000000003,
                     402.6999999999996L596.3000000000003,398.9999999999996L597.7000000000003,395.4999999999996V392.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Забайкальский край")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ярославская область" className="rus_zone"
-                    d="M121.8,250.8L124.3,249.70000000000002L125.89999999999999,249.4L128.2,249.20000000000002L129.5,250.50000000000003L132.7,252.70000000000002L133.89999999999998,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Забайкальский край")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ярославская область" className="rus_zone"
+                        d="M121.8,250.8L124.3,249.70000000000002L125.89999999999999,249.4L128.2,249.20000000000002L129.5,250.50000000000003L132.7,252.70000000000002L133.89999999999998,
                     251.50000000000003L136.29999999999998,253.90000000000003V258.90000000000003L139.29999999999998,261.90000000000003V264.1L135.99999999999997,
                     264.20000000000005L135.19999999999996,266.00000000000006H133.49999999999997L131.09999999999997,268.6000000000001H129.49999999999997L128.79999999999998,
                     270.4000000000001L126.19999999999999,269.80000000000007L124.99999999999999,268.6000000000001H122.09999999999998L120.29999999999998,
@@ -2360,13 +2271,13 @@ export const MapCountry = () => {
                     267.6000000000001L113.59999999999998,266.00000000000006L114.49999999999999,264.90000000000003L115.99999999999999,263.50000000000006L118.49999999999999,
                     261.90000000000003L117.59999999999998,259.90000000000003V258.70000000000005L118.99999999999999,257.30000000000007L118.39999999999999,255.10000000000008L119.1,
                     253.50000000000009H120.89999999999999L121.8,250.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ярославская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Московская область" className="rus_zone"
-                    d="M112.2,278.6L111.60000000000001,277.40000000000003V275.8L110.4,275.3L109.80000000000001,273.6L111.20000000000002,272.5L111.10000000000002,270.8L112.10000000000002,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ярославская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Московская область" className="rus_zone"
+                        d="M112.2,278.6L111.60000000000001,277.40000000000003V275.8L110.4,275.3L109.80000000000001,273.6L111.20000000000002,272.5L111.10000000000002,270.8L112.10000000000002,
                     269.8L112.60000000000002,268.2L114.00000000000003,267.5C114.00000000000003,267.5,113.50000000000003,266.1,113.60000000000002,265.9S114.50000000000003,264.79999999999995,
                     114.50000000000003,264.79999999999995L112.90000000000003,264.29999999999995L111.20000000000003,263.29999999999995H109.10000000000004L107.80000000000004,
                     261.99999999999994H105.80000000000004L104.20000000000005,261.09999999999997L103.10000000000005,260.4H101.20000000000005L101.00000000000004,259L100.30000000000004,
@@ -2382,22 +2293,22 @@ export const MapCountry = () => {
                     280.09999999999985L113.60000000000002,279.09999999999985L112.2,278.6ZM105.9,272.2L105.10000000000001,273.3L105.4,274.6H103.7L103.2,274.1L102.7,273.6L101.8,274.5L100.5,
                     274.6L101,273.20000000000005V272.1V270.8L101.9,270.90000000000003L102.7,269.70000000000005L102.4,269.00000000000006L103.2,268.30000000000007L104.3,268.00000000000006L104.3,
                     268.80000000000007L104.7,269.6000000000001L104.7,269.80000000000007L105.9,270.30000000000007L106.80000000000001,271.20000000000005L105.9,272.2Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Московская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Москва" className="rus_zone"
-                    d="M104.7,269.9L104.7,269.7L104.3,268.9L104.3,268.09999999999997L103.2,268.4L102.4,269.09999999999997L102.7,269.79999999999995L101.9,270.99999999999994L101,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Московская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Москва" className="rus_zone"
+                        d="M104.7,269.9L104.7,269.7L104.3,268.9L104.3,268.09999999999997L103.2,268.4L102.4,269.09999999999997L102.7,269.79999999999995L101.9,270.99999999999994L101,
                     270.8999999999999V272.19999999999993V273.29999999999995L100.5,274.69999999999993L101.8,274.5999999999999L102.7,273.69999999999993L103.2,274.19999999999993L103.7,
                     274.69999999999993H105.4L105.10000000000001,273.3999999999999L105.9,272.2999999999999L106.9,271.3999999999999L106,270.49999999999994L104.7,269.9"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Москва")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ленинградская область" className="rus_zone"
-                    d="M103.3,194.1H114.89999999999999V197.79999999999998L116.3,202.49999999999997L121.1,216.29999999999998L124.1,217.7L125.89999999999999,221.1L127.3,226.4L125.5,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Москва")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ленинградская область" className="rus_zone"
+                        d="M103.3,194.1H114.89999999999999V197.79999999999998L116.3,202.49999999999997L121.1,216.29999999999998L124.1,217.7L125.89999999999999,221.1L127.3,226.4L125.5,
                     230.3L123.9,232.4L122.30000000000001,232.6L121.50000000000001,234L119.10000000000001,233.6L117.7,235L116.7,231.2L115.7,230.2L114.2,229.7L115,228.1V226.6L113.4,
                     225.9L113.2,224.4L111.4,224.3L110.30000000000001,225.4L108.9,223.70000000000002L109.30000000000001,220.4L108.20000000000002,220.1L106.90000000000002,
                     218.79999999999998L105.70000000000002,219.79999999999998L104.40000000000002,220.1L102.40000000000002,219.29999999999998L100.40000000000002,
@@ -2409,13 +2320,13 @@ export const MapCountry = () => {
                     211.00000000000003H107.20000000000002L108.30000000000001,210.50000000000003V209.50000000000003L108.9,208.80000000000004V207.80000000000004L108.60000000000001,
                     207.40000000000003L107.7,208.40000000000003L107.4,204.70000000000005L105.10000000000001,202.70000000000005V198.40000000000003L107.10000000000001,
                     197.90000000000003L107.7,197.30000000000004L104.9,196.20000000000005L103.3,194.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ленинградская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Санкт-Петербург" className="rus_zone"
-                    d="M104.5,207.8C104.5,207.9,104.5,207.9,104.4,207.9C104.30000000000001,208,104.4,208,104.4,208.1C104.4,208.2,104.30000000000001,208.2,104.30000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ленинградская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Санкт-Петербург" className="rus_zone"
+                        d="M104.5,207.8C104.5,207.9,104.5,207.9,104.4,207.9C104.30000000000001,208,104.4,208,104.4,208.1C104.4,208.2,104.30000000000001,208.2,104.30000000000001,
                     208.29999999999998C104.30000000000001,208.39999999999998,104.30000000000001,208.39999999999998,104.30000000000001,208.49999999999997C104.30000000000001,
                     208.59999999999997,104.30000000000001,208.59999999999997,104.20000000000002,208.59999999999997S104.20000000000002,208.69999999999996,104.10000000000002,
                     208.69999999999996C104.00000000000003,208.79999999999995,104.10000000000002,208.89999999999995,104.00000000000003,208.89999999999995C103.90000000000003,
@@ -2465,26 +2376,26 @@ export const MapCountry = () => {
                     105.19999999999996,207.4,105.09999999999995,207.4C104.99999999999996,207.4,104.99999999999996,207.4,104.89999999999995,207.4C104.79999999999995,207.4,104.69999999999995,
                     207.3,104.69999999999995,207.4C104.59999999999995,207.5,104.59999999999995,207.5,104.49999999999994,207.5C104.39999999999995,207.5,104.39999999999995,207.6,
                     104.39999999999995,207.6C104.29999999999995,207.6,104.29999999999995,207.7,104.29999999999995,207.7H104.19999999999996V207.79999999999998H104.29999999999995"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Санкт-Петербург")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Еврейский автономная область" className="rus_zone"
-                    d="M703.4,368.4L700.4,370L699.6,372.5L697.6,375.8L695.3000000000001,378.7L696.3000000000001,381.9L693.6,384.09999999999997L690.9,385.59999999999997L688.6,386.4L688,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Санкт-Петербург")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Еврейский автономная область" className="rus_zone"
+                        d="M703.4,368.4L700.4,370L699.6,372.5L697.6,375.8L695.3000000000001,378.7L696.3000000000001,381.9L693.6,384.09999999999997L690.9,385.59999999999997L688.6,386.4L688,
                     388.7H685.6L683.2,387.3L681.4000000000001,386.7V383.8L679.4000000000001,382L677.8000000000001,380.4L677.5000000000001,377.59999999999997L678.1000000000001,
                     376.09999999999997L677.5000000000001,374.09999999999997L678.7000000000002,373.59999999999997L680.0000000000001,373.9L681.3000000000001,371.79999999999995L682.5000000000001,
                     370.59999999999997L682.3000000000001,367.9L684.4000000000001,367.59999999999997L686.6000000000001,367.99999999999994L689.5000000000001,366.59999999999997L691.6000000000001,
                     367.59999999999997L694.1000000000001,370.59999999999997L695.7000000000002,368.4C695.7000000000002,368.4,699.0000000000001,367.79999999999995,699.2000000000002,
                     367.59999999999997C699.4000000000002,367.4,700.5000000000001,365.2,700.5000000000001,365.2L703.1000000000001,364.9L705.3000000000002,364L705.1000000000001,
                     366.1L705.9000000000001,366.90000000000003L705.6000000000001,368.40000000000003H703.4L703.4,368.4Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("ЕАО")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Чукотский автономный округ" className="rus_zone CAO"
-                    d="M738.9,84.7V80.10000000000001L738,76.00000000000001L735.8,72.70000000000002L736.8,71.70000000000002L733.8,69.70000000000002L734.5999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("ЕАО")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Чукотский автономный округ" className="rus_zone CAO"
+                        d="M738.9,84.7V80.10000000000001L738,76.00000000000001L735.8,72.70000000000002L736.8,71.70000000000002L733.8,69.70000000000002L734.5999999999999,
                     68.60000000000002H737.3L738.9,65.10000000000002L741.4,64.10000000000002V61.40000000000002L739.6,59.60000000000002L738.6,57.40000000000002L736.6,58.90000000000002L735.2,
                     57.80000000000002L733.6,58.100000000000016L732.3000000000001,59.40000000000001H730L729.4,60.600000000000016H727.1V58.80000000000002L724.3000000000001,
                     58.90000000000002L722.8000000000001,59.20000000000002L720.9000000000001,59.100000000000016L720.1000000000001,60.40000000000001L718.5000000000001,
@@ -2524,22 +2435,22 @@ export const MapCountry = () => {
                     104.19999999999999L723.3999999999997,103.6L724.7999999999997,105L726.8999999999997,103.7L728.1999999999997,100.9L729.4999999999997,97L728.3999999999996,
                     95.3L730.2999999999996,92.39999999999999L731.1999999999996,89.19999999999999L731.7999999999996,85.99999999999999L733.6999999999996,85.39999999999999L735.2999999999996,
                     86.99999999999999L737.4999999999997,86.79999999999998L738.9,84.7Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Чукотский автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Чукотский автономный округ" className="rus_zone CAO"
-                    d="M650,21.1L649,20.700000000000003L648.1,21.6L646.2,22.6L644.6,24.200000000000003L644.7,26.900000000000002L644,27.6L644.3,29.8L645.5999999999999,31.6L646.8999999999999,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Чукотский автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Чукотский автономный округ" className="rus_zone CAO"
+                        d="M650,21.1L649,20.700000000000003L648.1,21.6L646.2,22.6L644.6,24.200000000000003L644.7,26.900000000000002L644,27.6L644.3,29.8L645.5999999999999,31.6L646.8999999999999,
                     34.6L648.8999999999999,35L650.2999999999998,33.6L651.2999999999998,31.700000000000003L650.1999999999998,30.500000000000004L651.8999999999999,
                     28.100000000000005L651.5999999999999,25.500000000000004V22.400000000000002L650,21.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Чукотский автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone nenec"
-                    d="M299.3,218.6L298.3,220.1L297.1,221.29999999999998L296.3,222.1L297.5,223.29999999999998L297.8,224.29999999999998L298.8,224.6V226.6V228.9H297.6L296.1,228.1H294.6L292.1,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Чукотский автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone nenec"
+                        d="M299.3,218.6L298.3,220.1L297.1,221.29999999999998L296.3,222.1L297.5,223.29999999999998L297.8,224.29999999999998L298.8,224.6V226.6V228.9H297.6L296.1,228.1H294.6L292.1,
                     230.29999999999998L289.90000000000003,230.39999999999998L288.90000000000003,232.79999999999998L285.50000000000006,232.2L284.6000000000001,233.7L283.1000000000001,
                     235.2L281.6000000000001,236L278.80000000000007,237L276.4000000000001,237.6L273.5000000000001,236.1L272.0000000000001,236.4L270.3000000000001,234.9L266.90000000000015,
                     233.6L263.50000000000017,231.4L261.00000000000017,230.4L256.90000000000015,228.8L254.90000000000015,226.8L252.40000000000015,226.5L248.40000000000015,
@@ -2565,29 +2476,29 @@ export const MapCountry = () => {
                     215.90000000000012L283.6000000000002,212.90000000000012L283.2000000000002,209.20000000000013L285.5000000000002,208.10000000000014L287.5000000000002,
                     207.50000000000014L289.80000000000024,209.80000000000015L290.80000000000024,208.80000000000015L293.40000000000026,
                     212.00000000000014L296.40000000000026,215.00000000000014L298.80000000000024,217.40000000000015L299.3,218.6Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone"
-                    d="M282.9,197.8L281.09999999999997,198.70000000000002L279.7,199.20000000000002L280,202.20000000000002L280.2,203.8L281.5,204.10000000000002L282,206.50000000000003L284.4,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone"
+                        d="M282.9,197.8L281.09999999999997,198.70000000000002L279.7,199.20000000000002L280,202.20000000000002L280.2,203.8L281.5,204.10000000000002L282,206.50000000000003L284.4,
                     206.70000000000002L285.2,204.70000000000002L284,202.70000000000002L284.1,200.50000000000003L282.9,197.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone"
-                    d="M242.2,187.8L239.7,188.5L238.2,190.5L237.1,192L237.9,194.2L239.70000000000002,194.89999999999998L241.4,195.59999999999997L243,194.49999999999997L245,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ненецкий автономный округ" className="rus_zone"
+                        d="M242.2,187.8L239.7,188.5L238.2,190.5L237.1,192L237.9,194.2L239.70000000000002,194.89999999999998L241.4,195.59999999999997L243,194.49999999999997L245,
                     194.79999999999998L246,192.39999999999998L244.4,190.29999999999998L244.3,188.6L242.2,187.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
-                    d="M295.8,232.2L296,230.79999999999998L297,230.29999999999998L297.6,228.89999999999998H298.8V224.59999999999997L297.8,224.29999999999995L297.5,223.29999999999995L296.3,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
+                        d="M295.8,232.2L296,230.79999999999998L297,230.29999999999998L297.6,228.89999999999998H298.8V224.59999999999997L297.8,224.29999999999995L297.5,223.29999999999995L296.3,
                     222.09999999999997L298.3,220.09999999999997L299.3,218.59999999999997L300.3,220.59999999999997L303.3,223.59999999999997L305.3,226.79999999999995L307.5,
                     229.69999999999996V232.19999999999996L309.3,234.99999999999997L311.8,233.49999999999997V230.79999999999998L314.7,228.1L312.7,227.5L311.3,224.2L311.8,
                     220.7L309.40000000000003,219.1L308.1,216.4L309.3,215.20000000000002L311.8,213.9V211.9L312.40000000000003,208.9L313.50000000000006,207.4V205.5L311.90000000000003,
@@ -2641,35 +2552,35 @@ export const MapCountry = () => {
                     255.60000000000022L272.8000000000004,251.40000000000023L276.1000000000004,251.50000000000023V248.70000000000022L280.20000000000044,246.4000000000002L284.30000000000047,
                     245.5000000000002H288.6000000000005L289.50000000000045,242.7000000000002H291.90000000000043L294.20000000000044,240.40000000000018L297.20000000000044,
                     238.90000000000018L295.20000000000044,236.90000000000018L297.50000000000045,235.90000000000018V234.30000000000018L295.00000000000045,233.00000000000017L295.8,232.2Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ямало-Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
-                    d="M350.4,182.5L349.4,183.4L350.09999999999997,184.4L351.49999999999994,183.5L353.19999999999993,184L352.69999999999993,183L350.4,182.5"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ямало-Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
-                    d="M345.1,187.1L344.5,188.6L345.4,189.4L346.4,188.1L345.1,187.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ямало-Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
-                    d="M332.8,179.7L331.5,180.6L332,181.6L331.1,182.9L331.3,183.70000000000002L333.40000000000003,184.3L335.40000000000003,183.4L336.6,183.5V182.3L334.8,181.8L335.7,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ямало-Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
+                        d="M350.4,182.5L349.4,183.4L350.09999999999997,184.4L351.49999999999994,183.5L353.19999999999993,184L352.69999999999993,183L350.4,182.5"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ямало-Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
+                        d="M345.1,187.1L344.5,188.6L345.4,189.4L346.4,188.1L345.1,187.1"
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ямало-Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ямало-Ненецкий автономный округ" className="rus_zone"
+                        d="M332.8,179.7L331.5,180.6L332,181.6L331.1,182.9L331.3,183.70000000000002L333.40000000000003,184.3L335.40000000000003,183.4L336.6,183.5V182.3L334.8,181.8L335.7,
                     180.8L334.7,179.3L333.4,179.8L332.8,179.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ямало-Ненецкий автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Ханты-Мансийский автономный округ" className="rus_zone"
-                    d="M273.4,251.3L273.09999999999997,255.5L273.59999999999997,258.9L272.59999999999997,262L270.29999999999995,264.3L271.49999999999994,265.5L273.69999999999993,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ямало-Ненецкий автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Ханты-Мансийский автономный округ" className="rus_zone"
+                        d="M273.4,251.3L273.09999999999997,255.5L273.59999999999997,258.9L272.59999999999997,262L270.29999999999995,264.3L271.49999999999994,265.5L273.69999999999993,
                     267.7L276.19999999999993,270.2L279.5999999999999,269.4L282.2999999999999,270.5L284.9999999999999,269.4L287.89999999999986,270.9L290.79999999999984,273.4L288.59999999999985,
                     275.59999999999997L290.49999999999983,277.79999999999995L293.8999999999998,278.4L295.6999999999998,276.59999999999997L297.5999999999998,278.49999999999994L298.9999999999998,
                     277.09999999999997H302.39999999999975L305.39999999999975,280.09999999999997L306.09999999999974,283.49999999999994V285.69999999999993L308.9999999999997,
@@ -2700,36 +2611,36 @@ export const MapCountry = () => {
                     268.5L252.80000000000004,266.2L255.80000000000004,264.3L255.30000000000004,261.5L256.40000000000003,259.3L259.00000000000006,256.7L260.90000000000003,
                     254.79999999999998L262.50000000000006,255.39999999999998V257.4L264.70000000000005,257.09999999999997L267.1,254.69999999999996L269.5,253.49999999999997L270.8,
                     251.99999999999997L273.4,251.3Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Ханты-Мансийский автономный округ")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Донецкая народная республика" className="rus_zone"
-                    d="M52.5,340.8L51.4,341.3L50.8,341.5L50.6,341.6L50.3,341.7L49.2,341.2L47.9,340.7L47.5,340.9L46.5,341.3L45.8,341.7L45.1,342L43.7,343.5L42.9,342.2L42.5,342.7L41.2,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Ханты-Мансийский автономный округ")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Донецкая народная республика" className="rus_zone"
+                        d="M52.5,340.8L51.4,341.3L50.8,341.5L50.6,341.6L50.3,341.7L49.2,341.2L47.9,340.7L47.5,340.9L46.5,341.3L45.8,341.7L45.1,342L43.7,343.5L42.9,342.2L42.5,342.7L41.2,
                     343L42,342.4L40.7,341.3L39.8,341.1L39.2,340.7L38.3,340.4L37.3,340.3L36.3,340L35.2,339.3L35.5,338.8L36.4,338.5L36.6,337.6L36.5,337.1L36.8,336.1L37.9,335.4L38.5,
                     335.7L39.1,336.1L40.1,336.3L40.3,335.3L39.7,335L39.6,334.6L39.9,333.9L39.3,333.2L39.1,332.3L39.3,331.4L39.7,330.8L39.6,330.4L39.9,329.8L40.2,329.2L40.7,329.1L41.5,
                     328.5L41.7,327.9L42.4,328.7L42.6,329.6L43.4,329L44.7,328.2L44.9,327.2L45.1,326.2L45.9,326L46.2,325L46.1,324.5L46.8,323.5L47.7,323.2L47.7,323.7L48.4,324.5L49.9,324.6L50.8,
                     324.4L51.7,324.1L52.1,324.1L52.5,324L54,324.1L54.1,323.7L54.2,323.5L55,324.3L56.6,325.8L57.3,326.5L57.4,332.6L56.1,337.1L55.4,339.7L54.2,340.8"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Донецкая народная республика")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Луганская народная республика" className="rus_zone"
-                    d="M53,339.9L52.3,341L52.8,341.3L53.4,342.2L54.9,342.8L55.1,343.7L57.5,346.3L60.3,343.5L60.5,343.3L60.9,343.1L61.2,343L61.6,342.7L62.2,342.4L61.7,339.6L62,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Донецкая народная республика")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Луганская народная республика" className="rus_zone"
+                        d="M53,339.9L52.3,341L52.8,341.3L53.4,342.2L54.9,342.8L55.1,343.7L57.5,346.3L60.3,343.5L60.5,343.3L60.9,343.1L61.2,343L61.6,342.7L62.2,342.4L61.7,339.6L62,
                     339.2L62.3,338.9L62.7,338.6L63,338.2L63.5,337.8L63.8,337.9L65.3,338.1L65.2,336.1L65.7,336L66.5,335.9L66.9,335.9L67.3,335.8L67.6,335.8L67.9,335.8L68.2,335.7L68.4,
                     335.7L68.7,335.6L69.9,335.5L70.1,335L70.2,334.6L70.5,334L70.6,333.7L70.8,333.3L71,333L71.1,332.8L71.3,332.6L71.5,332.4L71.8,332L69.4,331L69.4,329.8L69.4,328.7L69.4,
                     328.3L68,326.6L67.6,326.1L67.2,325L67.1,324.3L67,324.1L66.9,323.8L66.8,323.6L66.8,323.2L65.5,322.5L64.9,322.1L64.6,321.8L64.1,321.2L63.7,320.7L63.2,320.2L62.9,
                     319.8L62.4,321.1L61.6,321.7L61.3,322.2L60.4,322.4L59,322.6L58.3,323.7L57.6,324.7L57.2,325.3L56.4,325.9L57,326.7L56.3,327.8L55.5,328.4L56.1,329.2L55.7,329.7L55.5,330.7L54.6,
                     330.9L54.1,330.9L53.7,331.5L53.5,332.4L53.6,333.3L53.4,334.3L52.5,334.5L52.5,334.9L52.6,335.4L52.8,336.3L52.3,336.4L53,337.6L52.8,338.6L52.8,339"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Луганская народная республика")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Республика Крым" className="rus_zone"
-                    d="M1.6,328.6H4L5.2,329.40000000000003L6.7,329.6V328.70000000000005L8,328.50000000000006L8.8,329.80000000000007H12.100000000000001L12.200000000000001,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Луганская народная республика")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Крым" className="rus_zone"
+                        d="M1.6,328.6H4L5.2,329.40000000000003L6.7,329.6V328.70000000000005L8,328.50000000000006L8.8,329.80000000000007H12.100000000000001L12.200000000000001,
                     328.70000000000005L13.4,329.00000000000006V331.1000000000001L14.8,332.4000000000001L14,334.4000000000001L15.6,336.0000000000001V338.9000000000001L16,340.0000000000001L15.5,
                     341.3000000000001L14.7,342.40000000000015L15.899999999999999,343.60000000000014L16.4,344.8000000000001L18.4,345.40000000000015L20.5,345.70000000000016L23,
                     349.90000000000015L21.5,350.10000000000014L20.2,351.40000000000015L17.599999999999998,350.50000000000017L15.599999999999998,348.70000000000016L15.199999999999998,
@@ -2737,46 +2648,38 @@ export const MapCountry = () => {
                     345.4000000000002L7.299999999999999,344.2000000000002L4.299999999999999,344.7000000000002L2.0999999999999988,344.30000000000024L1.0999999999999988,
                     342.60000000000025L0.3999999999999988,340.0000000000002L1.999999999999999,339.9000000000002L3.8999999999999986,337.6000000000002L4.399999999999999,335.2000000000002L4.2,
                     334V332.3L3.2,330.7L1.6,329.5L1.6,328.6Z"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Республика Крым")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Херсонская область" className="rus_zone"
-                    d="M17.3,337.4L17.9,336.4L18.2,335.5L18.6,335L19.3,334.3L20.1,334.2L21.9,334.6L23.2,333.9L26,330.6L27.4,325L25.9,322.4L25.2,321.4L24.4,319.8L23.8,319.1L23.6,318.3L23,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Республика Крым")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Херсонская область" className="rus_zone"
+                        d="M17.3,337.4L17.9,336.4L18.2,335.5L18.6,335L19.3,334.3L20.1,334.2L21.9,334.6L23.2,333.9L26,330.6L27.4,325L25.9,322.4L25.2,321.4L24.4,319.8L23.8,319.1L23.6,318.3L23,
                     317.5L21.9,316.9L21.8,316L20.5,316.3L19.7,316.9L18.7,318L17.7,317.8L16.9,318L17,318.9L17.3,319.7L16.4,319.9L16.2,319.1L15.5,319.7L15.1,319.8L14,319.1L13.8,317.9L13.4,
                     318.4L12.7,317.2L11.7,317L11.2,316.6L10.4,316.8L9.7,317.5L9,316.7L8.2,317.4L8.1,318.3L7.8,319.2L6.9,318.9L6.7,318.1L5.8,318.3L6.2,319.6L6.7,320.3L6.9,321.1L5.5,321L5.1,
                     318.9L4.8,317.6L5.5,316.6L4.4,316L4.2,316.9L4.2,319.2L4.5,320.4L5.1,321.1L5.9,322.3L6.2,323.6L7.3,324.6L7.6,325.9L8.2,327.1L8.2,326.1L9.4,326.4L8.4,325.3L7.6,324.1L9.1,
                     324.7L9.8,325.9L10.7,326L11.3,326.8L11.6,327.7L11.5,329L12.8,329.1L13.3,328.9L14.3,328.4L15,329.1L15.2,329.9L15,330.9L15.1,331.7L15.7,332.5L17,332.2L18.2,333.3L17.2,
                     333L16.5,333.7L17.5,333.8L17.2,334.8L17.9,334.2L18.7,333.6L18.8,334L18.1,334.7L17.8,335.6L17,336.2L16.8,336.7L16.8,337.1"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Херсонская область")}></path>
-                <path fill="#c9dfec" stroke="#606778" name="Запорожская область" className="rus_zone"
-                    d="M31.9,339.7L32.4,339.5L33.3,339.3L33.7,339.2L34.6,339L36,338.9L37.4,338.8L42.1,335.3L41,330.5L39.8,329.4L38.7,328.7L38,327.9L38.3,326.9L38.5,325.9L38.8,325.4L38.2,
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Херсонская область")}></path>
+                    <path fill="#c9dfec" stroke="#606778" name="Запорожская область" className="rus_zone"
+                        d="M31.9,339.7L32.4,339.5L33.3,339.3L33.7,339.2L34.6,339L36,338.9L37.4,338.8L42.1,335.3L41,330.5L39.8,329.4L38.7,328.7L38,327.9L38.3,326.9L38.5,325.9L38.8,325.4L38.2,
                     324.6L38,324.1L37.9,323.2L37.4,323.4L36.9,323.1L36.3,322.7L36.2,322.2L35.6,322L35,321.2L33.9,320.4L33.7,319.6L33.3,320.2L33.1,320.7L32.3,321.3L31.9,321.9L31.4,322L31.3,
                     323L30.1,324.2L29.4,324.9L28.4,324.6L28.1,323.7L28.5,323.2L28,322.9L27.3,322.5L26.4,322.3L25.9,322.4L25.5,322.5L25.2,323.1L25.4,323.9L25.9,324.3L25.6,324.8L24.8,325.5L24.5,
                     326L24.3,327L24.4,327.4L24.5,328.3L24.4,329.3L23.5,329.5L22.9,329.2L22,329.4L22.1,329.9L21.9,330.9L21.7,331.9L22.2,332.2L22.4,332.7L22.1,333.6L21.9,334.6L22.4,335L23.3,
                     334.7L22.5,335.4L21.6,335.6L20.7,335.8L20.2,335.5L19.3,335.7L19.4,336.1L20.4,336.4L21.5,336.6L22.3,336.4L23.1,335.7L24.4,335.4L24.8,334.8L25.8,335.5L26.8,335.7L28.1,
                     335.5L28.7,335.7L29.8,336.5L29.9,336.9L29.6,337.4L29.1,337.5L28.7,337.6L27.8,337.9L28,338.8L28.9,338.5L29.8,338.3L30.1,337.8L31,337.5L31.3,337L31.9,337.4L32,337.8L32.1,
                     338.3L32.2,338.7"
-                    strokeWidth="0.2"
-                    strokeLinejoin="round"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={() => handleClick("Запорожская область")}></path>
-            </svg>
+                        strokeWidth="0.2"
+                        strokeLinejoin="round"
+                        onMouseEnter={onRegionMouseEnter}
+                        onMouseLeave={onRegionMouseLeave}
+                        onClick={() => onRegionClick("Запорожская область")}></path>
+                </svg>
             </div>
-            {isModalOpen && selectedRegion && (
-                <Modal onClose={closeModal}>
-                    <h2>{selectedRegion}</h2>
-                    <p>Столица: {regionData[selectedRegion]?.capital || "Нет данных"}</p>
-                    <p>Население: {regionData[selectedRegion]?.population || "Нет данных"}</p>
-                    <p>Площадь: {regionData[selectedRegion]?.area || "Нет данных"}</p>
-                </Modal>
-            )}
         </div>
     );
-}
+};

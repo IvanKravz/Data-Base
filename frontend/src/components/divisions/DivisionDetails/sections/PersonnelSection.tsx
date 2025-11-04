@@ -3,13 +3,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { PersonnelList } from '../../../personnel/PersonnelList/PersonnelList';
 import { SearchBar } from '../../../common/SearchBar';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'; // Добавляем useLocation
 import { authApi, divisionsApi, employeesApi } from '../../../../api';
 import './style.css'
 import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../api/utils/permissions';
 
 export function PersonnelSection() {
   const navigate = useNavigate();
+  const location = useLocation(); // Добавляем useLocation
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [division, setDivision] = useState<any>(null);
@@ -174,13 +175,13 @@ export function PersonnelSection() {
 
   const onCreateEmployee = useCallback(() => {
     const state = {
-      from: 'personnel-section',
+      from: location.pathname + location.search, // Сохраняем текущий путь с параметрами
       divisionId: id,
       subdivisionId: stableSubdivisionId,
     };
   
     navigate(`/personnel/create`, { state });
-  }, [navigate, id, stableSubdivisionId]);
+  }, [navigate, id, stableSubdivisionId, location.pathname, location.search]);
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
@@ -257,7 +258,7 @@ export function PersonnelSection() {
           } : division}
           personnel={displayedPersonnel}
           loading={loading}
-          divisionId={id} // Добавляем пропсы для навигации
+          divisionId={id}
           subdivisionId={stableSubdivisionId}
         />
       </div>

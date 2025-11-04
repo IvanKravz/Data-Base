@@ -126,22 +126,21 @@ class CommunicationPostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         division = self.request.query_params.get('division')
-        subdivision = self.request.query_params.get('subdivision')
+        # subdivision больше не используем для фильтрации
         facility_id = self.request.query_params.get('facility')
 
+        # Применяем фильтрацию по подразделению
         if division:
-            queryset = queryset.filter(division=division)
-        if subdivision:
-            queryset = queryset.filter(subdivision=subdivision)
+            queryset = queryset.filter(division_id=division)
         
+        # Для объекта связи также фильтруем по подразделению
         if facility_id:
             try:
                 facility = Facility.objects.get(id=facility_id)
                 queryset = queryset.filter(division=facility.division)
-                if facility.subdivision:
-                    queryset = queryset.filter(subdivision=facility.subdivision)
             except Facility.DoesNotExist:
                 pass
+        
         return queryset
     
 class FacilityTypeViewSet(viewsets.ModelViewSet):

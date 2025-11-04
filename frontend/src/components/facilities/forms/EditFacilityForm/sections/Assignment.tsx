@@ -7,17 +7,32 @@ interface AssignmentProps {
   formData: Partial<Facility>;
   onChange: (data: Partial<Facility>) => void;
   divisions: any[];
+  availableSubdivisions: any[];
   isLoading: boolean;
 }
 
-export function Assignment({ formData, onChange, divisions, isLoading }: AssignmentProps) {
-  // Находим текущее подразделение по ID из formData.division
-  const currentDivision = divisions.find(d => d.id.toString() === formData.division?.toString());
-  const subdivisions = currentDivision?.subdivisions || [];
+export function Assignment({ 
+  formData, 
+  onChange, 
+  divisions, 
+  availableSubdivisions,
+  isLoading
+}: AssignmentProps) {
 
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const divisionId = e.target.value;
-    const selectedDivision = divisions.find(d => d.id.toString() === divisionId.toString());
+    
+    // Если выбрано пустое значение, сбрасываем подразделение
+    if (!divisionId) {
+      onChange({ 
+        division: undefined,
+        subdivision: undefined,
+        communication_posts: []
+      });
+      return;
+    }
+    
+    const selectedDivision = divisions.find(d => d.id == divisionId);
     
     if (!selectedDivision) {
       console.error('Подразделение не найдено:', divisionId, 'в массиве:', divisions);
@@ -25,17 +40,30 @@ export function Assignment({ formData, onChange, divisions, isLoading }: Assignm
     }
     
     onChange({ 
-      division: divisionId,
+      division: selectedDivision,
       subdivision: undefined,
-      divisionData: selectedDivision,
       communication_posts: []
     });
   };
 
   const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const subdivisionId = e.target.value;
+    
+    // Если выбрано пустое значение, сбрасываем отделение
+    if (!subdivisionId) {
+      onChange({ 
+        subdivision: undefined,
+        communication_posts: []
+      });
+      return;
+    }
+    
+    // Находим полный объект подразделения по ID
+    const selectedSubdivision = availableSubdivisions.find(s => s.id == subdivisionId);
+    
     onChange({ 
-      subdivision: e.target.value,
-      communication_posts: [] // Очищаем выбранные посты связи
+      subdivision: selectedSubdivision || undefined,
+      communication_posts: []
     });
   };
 
@@ -53,10 +81,11 @@ export function Assignment({ formData, onChange, divisions, isLoading }: Assignm
           <div className="facility-form-input-container-edit">
             <Building2 className="facility-form-icon-edit" />
             <select
-              value={formData.division || ''}
+              value={formData.division?.id || ''}
               onChange={handleDivisionChange}
               className="facility-form-select-edit"
               disabled={isLoading}
+              required // Делаем поле обязательным
             >
               <option value="">Выберите подразделение</option>
               {divisions.map(division => (
@@ -68,7 +97,7 @@ export function Assignment({ formData, onChange, divisions, isLoading }: Assignm
           </div>
         </div>
 
-        {currentDivision && subdivisions.length > 0 && (
+        {formData.division && availableSubdivisions.length > 0 && (
           <div className="facility-form-field-edit">
             <label className="facility-form-label-edit">
               Отделение
@@ -76,13 +105,13 @@ export function Assignment({ formData, onChange, divisions, isLoading }: Assignm
             <div className="facility-form-input-container-edit">
               <Building2 className="facility-form-icon-edit" />
               <select
-                value={formData.subdivision || ''}
+                value={formData.subdivision?.id || ''}
                 onChange={handleSubdivisionChange}
                 className="facility-form-select-edit"
                 disabled={isLoading}
               >
                 <option value="">Выберите отделение</option>
-                {subdivisions.map(subdivision => (
+                {availableSubdivisions.map(subdivision => (
                   <option key={subdivision.id} value={subdivision.id}>
                     {subdivision.name}
                   </option>

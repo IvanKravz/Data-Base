@@ -55,7 +55,7 @@ const NetworkScene: React.FC<NetworkSceneProps> = ({
         enableZoom={true}
         enablePan={true}
         enableRotate={true}
-        zoomSpeed={0.6}
+        zoomSpeed={1}
         panSpeed={0.5}
         rotateSpeed={0.8}
       />

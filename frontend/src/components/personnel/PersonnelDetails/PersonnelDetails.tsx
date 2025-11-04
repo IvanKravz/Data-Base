@@ -1,3 +1,4 @@
+// PersonnelDetails.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,7 +10,7 @@ import { ResponsibilityInfo } from './sections/ResponsibilityInfo';
 import { AssignedEquipment } from './sections/AssignedEquipment';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updatePersonAsync, fetchPersonById } from '../../../store/slices/personnelSlice';
-import { employeesApi, authApi } from '../../../api'; // ИМПОРТИРУЕМ authApi
+import { employeesApi, authApi } from '../../../api';
 import { CommentsInfo } from './sections/CommentsInfo';
 import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
@@ -29,10 +30,11 @@ export function PersonnelDetails() {
   const person = personnel.find(p => p.id == id);
   const token = localStorage.getItem('accessToken');
 
-  // ПОЛУЧАЕМ РЕЖИМ ПРОСМОТРА ИЗ localStorage ЧЕРЕЗ authApi
   const isGlobalView = authApi.getGlobalView();
 
-  // Проверка прав доступа для кнопки "Редактировать сотрудника"
+  // Получаем состояние навигации
+  const navigationState = location.state;
+
   const canEditEmployee = useMemo(() => {
     const permissions = getPermissions();
     if (permissions && permissions.employees) {
@@ -53,41 +55,33 @@ export function PersonnelDetails() {
     let previewUrl: string | null = null;
 
     try {
-      // 1. Create preview URL
       previewUrl = URL.createObjectURL(file);
       const updatedPerson = { ...person, photo_url: previewUrl };
 
-      // 2. Optimistic update
       dispatch(updatePersonAsync({
         token,
         id,
         personData: updatedPerson
       }));
 
-      // 3. Upload to server
       await employeesApi.uploadPhoto(token, id, file);
-
-      // 4. Refresh data
       await dispatch(fetchPersonById({ token, id }));
 
     } catch (error) {
       console.error('Photo upload error:', error);
-      // Rollback on error
       await dispatch(updatePersonAsync({
         token,
         id,
         personData: person
       }));
-      message.error('Photo upload failed');
     } finally {
-      // Clean up
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     }
   };
 
   const handlePhotoRemove = async () => {
     await employeesApi.deletePhoto(token, id);
-    await dispatch(fetchPersonById({ token, id })); // Получаем свежие данные
+    await dispatch(fetchPersonById({ token, id }));
   };
 
   if (error) {
@@ -119,78 +113,36 @@ export function PersonnelDetails() {
   }
 
   const handleBack = () => {
-    const state = location.state;
-  
-    // Если есть состояние из предыдущей страницы
-    if (state?.from === 'personnel-list' || state?.from === 'personnel-section') {
-      let backUrl = state.divisionId
-        ? `/divisions/${state.divisionId}/personnel`
-        : `/personnel`;
-  
-      // Добавляем параметры если они есть
-      const params = new URLSearchParams();
-      if (state.subdivisionId) {
-        params.append('subdivision', state.subdivisionId);
-      }
-  
-      const queryString = params.toString();
-      if (queryString) {
-        backUrl += `?${queryString}`;
-      }
-  
-      navigate(backUrl);
-    }
-    // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
-    else if (isGlobalView || !person?.division?.id) {
-      navigate(`/personnel`);
-    }
-    // Если у сотрудника есть подразделение и мы не в глобальном режиме
-    else if (person?.division?.id) {
-      let backUrl = `/divisions/${person.division.id}/personnel`;
-      if (person.subdivision?.id) {
-        backUrl += `?subdivision=${person.subdivision.id}`;
-      }
-      navigate(backUrl);
+    // Используем сохраненное состояние навигации если есть
+    if (navigationState?.from) {
+      navigate(navigationState.from, { 
+        state: {
+          divisionId: navigationState.divisionId,
+          subdivisionId: navigationState.subdivisionId,
+          activeFilter: navigationState.activeFilter,
+          searchTerm: navigationState.searchTerm
+        }
+      });
     } else {
+      // Запасной вариант - возврат по истории
       navigate(-1);
     }
   };
-  
-  // Также обновите handleConfirmDelete для согласованности
+
   const handleConfirmDelete = async () => {
     if (token && id) {
       await employeesApi.deletePerson(token, id);
-  
+
       // Используем ту же логику что и в handleBack
-      const state = location.state;
-      if (state?.from === 'personnel-list' || state?.from === 'personnel-section') {
-        let backUrl = state.divisionId
-          ? `/divisions/${state.divisionId}/personnel`
-          : `/personnel`;
-  
-        const params = new URLSearchParams();
-        if (state.subdivisionId) {
-          params.append('subdivision', state.subdivisionId);
-        }
-  
-        const queryString = params.toString();
-        if (queryString) {
-          backUrl += `?${queryString}`;
-        }
-  
-        navigate(backUrl);
-      }
-      // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
-      else if (isGlobalView || !person?.division?.id) {
-        navigate(`/personnel`);
-      }
-      // Если у сотрудника есть подразделение и мы не в глобальном режиме
-      else if (person?.division?.id) {
-        let backUrl = `/divisions/${person.division.id}/personnel`;
-        if (person.subdivision?.id) {
-          backUrl += `?subdivision=${person.subdivision.id}`;
-        }
-        navigate(backUrl);
+      if (navigationState?.from) {
+        navigate(navigationState.from, { 
+          state: {
+            divisionId: navigationState.divisionId,
+            subdivisionId: navigationState.subdivisionId,
+            activeFilter: navigationState.activeFilter,
+            searchTerm: navigationState.searchTerm
+          }
+        });
       } else {
         navigate(-1);
       }
@@ -208,16 +160,35 @@ export function PersonnelDetails() {
     setShowDeleteModal(true);
   };
 
+  // Функция перехода в режим редактирования
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Функция перехода на страницу качественной характеристики
+  const handleGoToQualitative = () => {
+    navigate(`/personnel/${id}/qualitative`, {
+      state: {
+        // Явно указываем откуда пришли - с этой страницы сотрудника
+        from: `/personnel/${id}`,
+        // Сохраняем оригинальное состояние для возврата в список
+        originalState: navigationState
+      }
+    });
+  };
+
   if (isEditing) {
     return (
       <div className="space-y-6">
         <Header
           title={person?.full_name || ''}
           personId={person?.id || ''}
-          onBack={handleBack}
-          onEdit={() => setIsEditing(true)}
+          onBack={() => setIsEditing(false)}
+          onEdit={handleEdit}
           onDelete={handleDelete}
+          onQualitative={handleGoToQualitative}
           canEditEmployee={canEditEmployee}
+          isEditing={true}
         />
         <div className="bg-white rounded-lg shadow p-6">
           <EditPersonnelForm
@@ -236,9 +207,11 @@ export function PersonnelDetails() {
         title={person?.full_name || ''}
         personId={person?.id || ''}
         onBack={handleBack}
-        onEdit={() => setIsEditing(true)}
+        onEdit={handleEdit}
         onDelete={handleDelete}
+        onQualitative={handleGoToQualitative}
         canEditEmployee={canEditEmployee}
+        isEditing={false}
       />
 
       <div className="personnel-details-grid">

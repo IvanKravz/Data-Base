@@ -19,11 +19,13 @@ class FacilityShortSerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     class_display = serializers.CharField(source='get_facility_class_display', read_only=True)
     is_closed = serializers.BooleanField(read_only=True)
+    # Добавляем название типа объекта
+    type_name = serializers.CharField(source='type.name', read_only=True)  # Добавляем эту строку
 
     class Meta:
         model = Facility
         fields = [
-            'id', 'name', 'type', 'type_display', 'facility_class', 'class_display', 
+            'id', 'name', 'type', 'type_display', 'type_name', 'facility_class', 'class_display', 
             'subdivision', 'is_closed', 'communication_posts', 'inn'
         ]
 
@@ -135,11 +137,12 @@ class FacilityTypeSerializer(serializers.ModelSerializer):
         model = FacilityType
         fields = ['id', 'name', 'description']
 
-
 class CommunicationPostSerializer(serializers.ModelSerializer):
+    division_name = serializers.CharField(source='division.name', read_only=True)
+    
     class Meta:
         model = CommunicationPost
-        fields = ['id', 'name', 'division', 'subdivision', 'description']        
+        fields = ['id', 'name', 'division', 'division_name', 'subdivision', 'description']       
 
 class FacilitySerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()

@@ -39,7 +39,7 @@ export function EquipmentDetailsPage() {
   // Получаем режим просмотра из authApi
   const isGlobalView = authApi.getGlobalView();
   const location = useLocation();
-  
+
   // Проверка прав доступа для кнопки "Редактировать технику"
   const canEditEquipment = useMemo(() => {
     const permissions = getPermissions();
@@ -72,38 +72,48 @@ export function EquipmentDetailsPage() {
 
   const handleBack = () => {
     const state = location.state;
-    
+
     // Если есть состояние из предыдущей страницы
     if (state?.from === 'equipment-section') {
-      let backUrl = state.divisionId 
+      let backUrl = state.divisionId
         ? `/divisions/${state.divisionId}/equipment`
         : `/equipment`;
-      
+
       // Добавляем параметры если они есть
       const params = new URLSearchParams();
       if (state.subdivisionId) {
         params.append('subdivision', state.subdivisionId);
       }
-      if (state.activeTab && state.activeTab !== 'all') {
-        params.append('tab', state.activeTab);
-      }
-      
+
       const queryString = params.toString();
       if (queryString) {
         backUrl += `?${queryString}`;
       }
-      
-      navigate(backUrl);
-    } 
-    // Стандартная логика
+
+      // ВАЖНО: Передаем активную вкладку обратно
+      navigate(backUrl, {
+        state: {
+          activeTab: state.activeTab // Сохраняем активную вкладку
+        }
+      });
+    }
+    // Стандартная логика с сохранением активной вкладки
     else if (isGlobalView) {
-      navigate(`/equipment`);
+      navigate(`/equipment`, {
+        state: {
+          activeTab: location.state?.activeTab || 'all'
+        }
+      });
     } else if (equipment?.division?.id) {
       let backUrl = `/divisions/${equipment.division.id}/equipment`;
       if (equipment.subdivision?.id) {
         backUrl += `?subdivision=${equipment.subdivision.id}`;
       }
-      navigate(backUrl);
+      navigate(backUrl, {
+        state: {
+          activeTab: location.state?.activeTab || 'all'
+        }
+      });
     } else {
       navigate(-1);
     }
@@ -188,11 +198,11 @@ export function EquipmentDetailsPage() {
 
       <div className="equipment-grid equipment-grid--2cols">
         <BasicInfo equipment={equipment} />
-        <DocumentsInfo equipment={equipment} />
+        <AssignmentInfo equipment={equipment} />
         <IdentificationInfo equipment={equipment} />
         <DatesInfo equipment={equipment} />
+        <DocumentsInfo equipment={equipment} />
         <AdditionalInfo equipment={equipment} />
-        <AssignmentInfo equipment={equipment} />
         <CommentsInfo equipment={equipment} />
         <ProductStructureTable equipment={equipment} />
       </div>

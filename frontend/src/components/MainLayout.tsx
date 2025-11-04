@@ -26,7 +26,7 @@ import CreateNetwork from './networks/forms/CreateNetwork/CreateNetwork';
 import EditNetwork from './networks/forms/EditNetwork/EditNetwork';
 import { CreateEquipmentForm } from './equipment/forms/CreateEquipmentForm/CreateEquipmentForm';
 import { getCurrentUser, isExploitationChief, isExploitationEmployee } from '../api/utils/permissions';
-import { MapCountry } from './divisions/DivisionList/MapCountry';
+import { MapCountry } from './map/MapCountry/MapCountry';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');

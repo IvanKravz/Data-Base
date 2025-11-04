@@ -23,7 +23,7 @@ import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationMo
 import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../../api/utils/permissions';
 
 // Ленивая загрузка карты
-const LazyMapView = lazy(() => import('../../../../map/MapView'));
+const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
 
 const TAB_ICONS = {
   'all': <Map className="facilities-tab-icon" size={16} />,
@@ -39,19 +39,55 @@ export function FacilitiesSection() {
   const token = localStorage.getItem('accessToken');
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | number>('all');
-  const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
-  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>('all');
+
+  const [filterType, setFilterType] = useState<'all' | number>(() => {
+    // Сначала проверяем state из location
+    if (location.state?.filterType) {
+      return location.state.filterType;
+    }
+    // Затем проверяем URL параметры
+    const typeFromUrl = searchParams.get('type');
+    return typeFromUrl && typeFromUrl !== 'all' ? parseInt(typeFromUrl) : 'all';
+  });
+
+  const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>(() => {
+    // Сначала проверяем state из location
+    if (location.state?.facilityClassFilter) {
+      return location.state.facilityClassFilter;
+    }
+    // Затем проверяем URL параметры
+    const classFromUrl = searchParams.get('class');
+    return (classFromUrl === '1' || classFromUrl === '2') ? classFromUrl : 'all';
+  });
+
+  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>(() => {
+    // Сначала проверяем state из location
+    if (location.state?.activeTab) {
+      return location.state.activeTab;
+    }
+    // Затем проверяем URL параметры
+    const tabFromUrl = searchParams.get('tab');
+    return (tabFromUrl === 'all' || tabFromUrl === 'open' || tabFromUrl === 'closed' || tabFromUrl === 'posts')
+      ? tabFromUrl
+      : 'all';
+  });
+
+  const [viewType, setViewType] = useState<'table' | 'grid'>(() => {
+    // Сначала проверяем state из location
+    if (location.state?.viewType) {
+      return location.state.viewType;
+    }
+    // Затем проверяем URL параметры
+    const viewFromUrl = searchParams.get('view');
+    return viewFromUrl === 'grid' ? 'grid' : 'table';
+  });
+
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [communicationPosts, setCommunicationPosts] = useState<CommunicationPost[]>([]);
   const [division, setDivision] = useState(null);
   const [subdivisionName, setSubdivisionName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewType, setViewType] = useState<'table' | 'grid'>(() => {
-    const viewFromUrl = searchParams.get('view');
-    return viewFromUrl === 'grid' ? 'grid' : 'table';
-  });
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [mapSearchTerm, setMapSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -253,23 +289,27 @@ export function FacilitiesSection() {
 
   const hasCommunicationPosts = filteredBySubdivisionPosts.length > 0;
 
-  // Фильтрация facilities для списка
-  const filteredFacilities = useMemo(() =>
-    filteredBySubdivisionFacilities.filter(facility => {
-      const matchesType = filterType === 'all' || facility.type.id === filterType;
-      const matchesClass = facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
+  const filteredFacilities = useMemo(() => {
+    let result = filteredBySubdivisionFacilities;
 
-      if (activeTab === 'all') {
-        return matchesType && matchesClass;
-      }
+    // Фильтрация по активной вкладке
+    if (activeTab === 'open') {
+      result = result.filter(f => !f.is_closed);
+    } else if (activeTab === 'closed') {
+      result = result.filter(f => f.is_closed);
+    }
 
-      const isOpenTab = activeTab === 'open';
-      const matchesStatus = isOpenTab ? !facility.is_closed : facility.is_closed;
+    // Фильтрация по типу и классу
+    if (filterType !== 'all') {
+      result = result.filter(f => f.type.id === filterType);
+    }
 
-      return matchesStatus && matchesType && matchesClass;
-    }),
-    [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
-  );
+    if (facilityClassFilter !== 'all') {
+      result = result.filter(f => f.facility_class === facilityClassFilter);
+    }
+
+    return result;
+  }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
 
   // Facilities для отображения с поиском
   const displayFacilities = useMemo(() => {
@@ -319,25 +359,76 @@ export function FacilitiesSection() {
     setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
   }, []);
 
+  // Обработчик смены вкладки - сбрасываем фильтры
   const handleTabChange = useCallback((tab: 'all' | 'open' | 'closed' | 'posts') => {
     setActiveTab(tab);
-    setFilterType('all');
-    setFacilityClassFilter('all');
     setMapSearchTerm('');
-    const newSearchParams = new URLSearchParams(searchParams);
+    
+    // Сбрасываем фильтры только при переключении между вкладками объектов
+    if (tab !== 'posts' && activeTab !== 'posts') {
+      // Если переключаемся между вкладками объектов (all, open, closed), сбрасываем фильтры
+      setFilterType('all');
+      setFacilityClassFilter('all');
+    }
+    // Если переключаемся на posts или с posts - фильтры сохраняются
+  
+    const newSearchParams = new URLSearchParams();
+  
+    // Сохраняем subdivision если есть
+    if (stableSubdivisionId) {
+      newSearchParams.set('subdivision', stableSubdivisionId);
+    }
+  
+    // Устанавливаем новую вкладку
     newSearchParams.set('tab', tab);
+  
+    // Сохраняем фильтры в URL только для вкладок объектов
+    if (tab !== 'posts') {
+      if (filterType !== 'all') {
+        newSearchParams.set('type', filterType.toString());
+      }
+      if (facilityClassFilter !== 'all') {
+        newSearchParams.set('class', facilityClassFilter);
+      }
+    }
+  
+    // Сохраняем viewType если есть
+    if (viewType !== 'table') {
+      newSearchParams.set('view', viewType);
+    }
+  
     navigate({ search: newSearchParams.toString() }, { replace: true });
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, stableSubdivisionId, viewType, filterType, facilityClassFilter, activeTab]);
 
   const handleTypeChange = useCallback((type: 'all' | number) => {
     setFilterType(type);
     setMapSearchTerm('');
-  }, []);
+
+    const newSearchParams = new URLSearchParams(searchParams);
+
+    if (type === 'all') {
+      newSearchParams.delete('type');
+    } else {
+      newSearchParams.set('type', type.toString());
+    }
+
+    navigate({ search: newSearchParams.toString() }, { replace: true });
+  }, [searchParams, navigate]);
 
   const handleClassChange = useCallback((classValue: 'all' | '1' | '2') => {
     setFacilityClassFilter(classValue);
     setMapSearchTerm('');
-  }, []);
+
+    const newSearchParams = new URLSearchParams(searchParams);
+
+    if (classValue === 'all') {
+      newSearchParams.delete('class');
+    } else {
+      newSearchParams.set('class', classValue);
+    }
+
+    navigate({ search: newSearchParams.toString() }, { replace: true });
+  }, [searchParams, navigate]);
 
   const handleBack = useCallback(() => {
     if (isGlobalView) {
@@ -488,6 +579,20 @@ export function FacilitiesSection() {
     return <div className="facilities-error-message">{error}</div>;
   }
 
+  console.log('Current URL params:', {
+    tab: searchParams.get('tab'),
+    type: searchParams.get('type'),
+    class: searchParams.get('class'),
+    view: searchParams.get('view')
+  });
+
+  console.log('Current state:', {
+    activeTab,
+    filterType,
+    facilityClassFilter,
+    viewType
+  });
+
   return (
     <>
       <div className="facilities-container">
@@ -582,13 +687,12 @@ export function FacilitiesSection() {
 
             {(activeTab === 'all' || activeTab === 'open' || activeTab === 'closed') && (
               <FacilityTypeFilter
-                facilities={filteredBySubdivisionFacilities.filter(f =>
-                  (activeTab === 'all' ? true : (activeTab === 'open' ? !f.is_closed : f.is_closed))
-                )}
+                facilities={filteredBySubdivisionFacilities}
                 selectedType={filterType}
                 onTypeChange={handleTypeChange}
                 selectedClass={facilityClassFilter}
                 onClassChange={handleClassChange}
+                activeTab={activeTab}
               />
             )}
 
@@ -610,13 +714,15 @@ export function FacilitiesSection() {
                 divisionId={id} // Добавляем пропсы для навигации
                 subdivisionId={stableSubdivisionId}
                 activeTab={activeTab}
+                filterType={filterType}
+                facilityClassFilter={facilityClassFilter}
               />
             )}
           </div>
         </div>
       </div>
 
-      {showMap && facilities.length > 0 && activeTab !== 'posts' && (
+      {showMap && displayFacilities.length > 0 && activeTab !== 'posts' && (
         <div className="facilities-map-overlay">
           <Suspense fallback={<div className="loading-spinner">Загрузка карты...</div>}>
             <LazyMapView

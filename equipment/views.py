@@ -110,6 +110,27 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
         return queryset
     
+    @action(detail=False, methods=['get'], url_path='facilities-by-division')
+    def get_facilities_by_division(self, request):
+        """Получить объекты по подразделению"""
+        division_id = request.query_params.get('division_id')
+        
+        if not division_id:
+            return Response(
+                {'error': 'division_id is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            facilities = Facility.objects.filter(division_id=division_id)
+            serializer = FacilityShortSerializer(facilities, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=True, methods=['post'])
     def dispose(self, request, pk=None):
         equipment = self.get_object()

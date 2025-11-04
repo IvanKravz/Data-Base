@@ -1,3 +1,6 @@
+// EditPersonnelForm.tsx
+// Исправим обработчик отмены
+
 import React, { useState, useEffect } from 'react';
 import { Employee } from '../../../../types';
 import { BasicInformationCard } from './sections/BasicInformationCard';
@@ -10,18 +13,19 @@ import { FormActions } from './sections/FormActions';
 import { divisionsApi } from '../../../../api/divisions';
 import { Division } from '../../../../types';
 import { AffiliationCard } from './sections/AffiliationCard';
-import { useNavigate } from 'react-router-dom';
 
 interface EditPersonnelFormProps {
   person: Employee;
   onSubmit: (person: Employee) => void;
-  isCreateMode?: boolean; // Добавлен новый пропс
+  onCancel: () => void;
+  isCreateMode?: boolean;
 }
 
 export function EditPersonnelForm({
   person,
   onSubmit,
-  isCreateMode = false // Значение по умолчанию
+  onCancel,
+  isCreateMode = false
 }: EditPersonnelFormProps) {
   const [formData, setFormData] = useState<Employee>({
     ...person,
@@ -34,7 +38,6 @@ export function EditPersonnelForm({
     } : null
   });
 
-  const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,12 +63,11 @@ export function EditPersonnelForm({
     setFormData(prev => ({ ...prev, ...data }));
   };
 
-  // Determine if this is top management
   const isManagement = formData.category === 'management';
   const isTopManagement = isManagement &&
     (formData.position === 'Главный руководитель' ||
       formData.position === 'Заместитель главного руководителя');
-  const showDivisionField = !isManagement || (isManagement && !isTopManagement);
+      const showDivisionField = isCreateMode || !isManagement || (isManagement && !isTopManagement);
 
   const handleShaWorkerChange = (shaWorker: Employee['sha_details']) => {
     setFormData(prev => ({
@@ -128,7 +130,6 @@ export function EditPersonnelForm({
     try {
       const dataToSend = {
         ...formData,
-        // Для не-SHA сотрудников устанавливаем null
         description: formData.description || null,
         sha_details: formData.is_sha_worker ? formData.sha_details : null,
         data_state_secrets: formData.is_sha_worker ? formData.data_state_secrets : null,
@@ -148,26 +149,24 @@ export function EditPersonnelForm({
     }
   };
 
-  const onCancel = () => {
-    navigate(-1)
-  }
-
   return (
     <form onSubmit={handleSubmit} className="personnel-edit-form">
-      {error && <div className="form-error">{error}</div>} {/* Отображение ошибки */}
+      {error && <div className="form-error">{error}</div>}
       <div className="personnel-edit-grid">
         <BasicInformationCard
           formData={formData}
           onChange={handleChange}
           token={token}
         />
-        <AffiliationCard
-          formData={formData}
-          divisions={divisions}
-          onChange={handleChange}
-          isTopManagement={isTopManagement}
-          showDivisionField={showDivisionField}
-        />
+        {(isCreateMode || showDivisionField) && (
+          <AffiliationCard
+            formData={formData}
+            divisions={divisions}
+            onChange={handleChange}
+            isTopManagement={isTopManagement}
+            showDivisionField={showDivisionField}
+          />
+        )}
         <ContactInformationCard
           formData={formData}
           onChange={handleChange}

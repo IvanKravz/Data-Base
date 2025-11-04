@@ -4,14 +4,14 @@ import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ObjectMarker from './ObjectMarker';
-import { geocodeAddress, loadGeoJSONData } from './data/addresses';
+import { geocodeAddress, loadGeoJSONData } from '../data/addresses';
 import './style.css';
 
 // Фикс для иконок маркеров
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useDebounce } from '../../utils/useDebounce';
+import { useDebounce } from '../../../utils/useDebounce';
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -202,6 +202,8 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
     return () => { isMounted = false; };
   }, [facilities]);
 
+  
+
   // Мемоизированные маркеры
   const renderMarkers = useMemo(() => {
     return objects
@@ -221,18 +223,18 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
     return <div className="loading-spinner">Загрузка карты...</div>;
   }
 
-  if (objects.length === 0 && mapReady) {
-    return (
-      <div className="map-page-container">
-        <div className="map-header">
-          <h1 className="map-title">Карта объектов</h1>
-        </div>
-        <div className="no-objects-message">
-          Нет объектов для отображения
-        </div>
-      </div>
-    );
-  }
+  // if (objects.length === 0 && mapReady) {
+  //   return (
+  //     <div className="map-page-container">
+  //       <div className="map-header">
+  //         <h1 className="map-title">Карта объектов</h1>
+  //       </div>
+  //       <div className="no-objects-message">
+  //         Нет объектов для отображения
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="map-page-container">

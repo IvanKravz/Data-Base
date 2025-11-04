@@ -32,7 +32,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     const loadPermissionsAndUser = () => {
       const permissions = authApi.getModulePermissions();
       setModulePermissions(permissions);
-      
+
       const user = getCurrentUser();
       if (user && user.division_info) {
         setUserDivision(user.division_info.id);
@@ -42,7 +42,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       const isEmp = isExploitationEmployee();
       setShowMapItem(isExploitationChief() || isEmp);
       setIsExploitationEmp(isEmp);
-      
+
       setIsLoading(false);
     };
 
@@ -57,7 +57,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       onSetActiveTab(item.id);
       return;
     }
-  
+
     if (item.children) {
       setExpandedItems(prev =>
         prev.includes(item.id)
@@ -77,23 +77,23 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const hasAccessToMenuItem = (item: MenuItem): boolean => {
     if (isLoading) return true;
     if (!modulePermissions) return true;
-    
+
     const alwaysAccessible = ['divisions', 'cabinet', 'storage', 'networks'];
     if (alwaysAccessible.includes(item.id)) return true;
-    
+
     // Для пункта "Карта ТОБ" проверяем роль
     if (item.id === 'map') {
       return showMapItem;
     }
-    
+
     if (item.module && modulePermissions[item.module]) {
       return modulePermissions[item.module].can_view;
     }
-    
+
     if (modulePermissions[item.id]) {
       return modulePermissions[item.id].can_view;
     }
-    
+
     return false;
   };
 
@@ -106,53 +106,63 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   };
 
   const menuItems: MenuItem[] = [
-    { 
-      id: 'divisions', 
-      icon: LayoutGrid, 
+    {
+      id: 'divisions',
+      icon: LayoutGrid,
       label: getDivisionsLabel()
     },
-    { 
-      id: 'map', 
-      icon: Map, 
-      label: 'Карта ТОБ', 
-      path: '/map'
-    },
-    { 
-      id: 'personnel', 
-      icon: Users, 
-      label: 'Сотрудники', 
+    {
+      id: 'personnel',
+      icon: Users,
+      label: 'Сотрудники',
       path: '/personnel',
       module: 'employees'
     },
-    { 
-      id: 'equipment', 
-      icon: Database, 
-      label: 'Техника', 
+    {
+      id: 'equipment',
+      icon: Database,
+      label: 'Техника',
       path: '/equipment',
       module: 'equipment'
     },
-    { 
-      id: 'facilities', 
-      icon: Building2, 
-      label: 'Объекты', 
+    {
+      id: 'facilities',
+      icon: Building2,
+      label: 'Объекты',
       path: '/facilities',
       module: 'facilities'
     },
-    { 
-      id: 'networks', 
-      icon: Network, 
-      label: 'Сети связи', 
+    {
+      id: 'networks',
+      icon: Network,
+      label: 'Сети связи',
       path: '/networks'
     },
-    { 
-      id: 'tasks', 
-      icon: ListTodo, 
-      label: 'Задачи', 
+    {
+      id: 'tasks',
+      icon: ListTodo,
+      label: 'Задачи',
       path: '/tasks',
       module: 'tasks'
     },
-    { id: 'storage', icon: HardDrive, label: 'Хранилище', path: '/storage' },
-    { id: 'cabinet', icon: UserCog, label: 'Кабинет', path: '/cabinet' },
+    {
+      id: 'storage',
+      icon: HardDrive,
+      label: 'Хранилище',
+      path: '/storage'
+    },
+    {
+      id: 'map',
+      icon: Map,
+      label: 'Карта ТОБ',
+      path: '/map'
+    },
+    {
+      id: 'cabinet',
+      icon: UserCog,
+      label: 'Кабинет',
+      path: '/cabinet'
+    },
   ];
 
   const filteredMenuItems = menuItems.filter(hasAccessToMenuItem);
