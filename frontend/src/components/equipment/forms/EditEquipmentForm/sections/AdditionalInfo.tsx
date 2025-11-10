@@ -25,6 +25,12 @@ export function AdditionalInfo({
         onChange(newData);
     };
 
+    // Исправление: Обработчик изменения степени секретности
+    const handleSecretLevelChange = (value: string) => {
+        // Отправляем null вместо пустой строки
+        onChange({ secret_level: value === '' ? null : value });
+    };
+
     return (
         <div className="equipment-card-edit">
             <div className="equipment-card-header">
@@ -32,11 +38,11 @@ export function AdditionalInfo({
                 <h3 className="equipment-card-title">Дополнительная информация</h3>
             </div>
             <div className="equipment-card-content-edit">
-                <div className="form-group">
+                <div className="equipment-form-group">
                     <label className="form-label">Степень секретности</label>
                     <select
                         value={formData.secret_level || ''}
-                        onChange={(e) => onChange({ secret_level: e.target.value })}
+                        onChange={(e) => handleSecretLevelChange(e.target.value)}
                         className="form-select"
                         disabled={isDisposed}
                     >
@@ -48,7 +54,8 @@ export function AdditionalInfo({
                     </select>
                 </div>
 
-                <div className="form-group">
+                {/* Остальной код без изменений */}
+                <div className="equipment-form-group">
                     <label className="form-label">В чьих интересах эксплуатируется</label>
                     <select
                         value={formData.interest_organ?.id || ''}
@@ -69,7 +76,7 @@ export function AdditionalInfo({
                     </select>
                 </div>
 
-                <div className="form-group">
+                <div className="equipment-form-group">
                     <div className="checkbox-container">
                         <label className="checkbox-label">
                             <input
@@ -85,7 +92,7 @@ export function AdditionalInfo({
                 </div>
 
                 {formData.is_free_use && (
-                    <div className="form-group">
+                    <div className="equipment-form-group">
                         <label className="form-label">
                             Номер акта приема-передачи 
                             <span style={{color: 'var(--danger)', marginLeft: '4px'}}>*</span>

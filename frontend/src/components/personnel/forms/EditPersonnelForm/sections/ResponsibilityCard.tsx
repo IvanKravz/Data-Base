@@ -1,6 +1,7 @@
 import React from 'react';
 import { Employee } from '../../../../../types';
 import '.././style.css';
+import { Building2 } from 'lucide-react';
 
 interface ResponsibilityCardProps {
   formData: Employee;
@@ -10,7 +11,10 @@ interface ResponsibilityCardProps {
 export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardProps) {
   return (
     <div className="personnel-card">
-      <h3 className="personnel-card-title">Ответственность</h3>
+      <div className="personnel-card-header-edit">
+        <Building2 size={20} />
+        <h3 className="personnel-card-title">Ответственность</h3>
+      </div>
       <div className="personnel-card-content">
         <div className="personnel-checkbox-group">
           <input

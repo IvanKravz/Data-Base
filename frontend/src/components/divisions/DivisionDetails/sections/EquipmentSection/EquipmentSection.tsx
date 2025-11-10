@@ -177,11 +177,18 @@ export function EquipmentSection() {
 
             if (!isMounted) return;
 
-            if (!isChief) {
+            // ИСПРАВЛЕНИЕ: Правильно устанавливаем subdivisionName
+            if (stableSubdivisionId) {
+              const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
+              setSubdivisionName(subdivision?.name || '');
+            } else if (!isChief && stableCurrentUser.division_info.subdivision) {
+              // Для сотрудника эксплуатации используем его отделение по умолчанию
               const userSubdivision = div.subdivisions?.find(
                 s => s.id.toString() === stableCurrentUser.division_info.subdivision?.id?.toString()
               );
               setSubdivisionName(userSubdivision?.name || '');
+            } else {
+              setSubdivisionName('');
             }
 
             setDivision(div);
@@ -220,9 +227,12 @@ export function EquipmentSection() {
 
           if (!isMounted) return;
 
+          // ИСПРАВЛЕНИЕ: Правильно устанавливаем subdivisionName
           if (stableSubdivisionId) {
             const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
             setSubdivisionName(subdivision?.name || '');
+          } else {
+            setSubdivisionName('');
           }
 
           setDivision(div);
@@ -389,10 +399,25 @@ export function EquipmentSection() {
         }
       });
     } else {
+      // ИСПРАВЛЕНИЕ: Получаем состояние из location для определения контекста
+      const locationState = location.state as {
+        fromSubdivision?: boolean;
+        subdivisionId?: string;
+        subdivisionName?: string;
+      } | undefined;
+
+      // Определяем, создаем ли мы технику из контекста отделения
+      const isFromSubdivision = locationState?.fromSubdivision || false;
+
       navigate(`/divisions/${id}/equipment/create`, {
         state: {
+          divisionId: id,
           subdivisionId: stableSubdivisionId,
-          isClosed: activeTab === 'closed'
+          divisionName: division?.name,
+          subdivisionName: subdivisionName,
+          isClosed: activeTab === 'closed',
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Правильно определяем контекст
+          fromSubdivision: isFromSubdivision
         }
       });
     }
@@ -411,7 +436,16 @@ export function EquipmentSection() {
     if (isGlobalView) {
       navigate('/');
     } else {
-      navigate(`/divisions/${id}`);
+      // ВАЖНО: Разделяем логику для разных случаев
+
+      // Если мы в контексте отделения (есть subdivisionId в URL)
+      if (stableSubdivisionId) {
+        // Возвращаемся на страницу отделения (не подразделения)
+        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
+      } else {
+        // Иначе возвращаемся на страницу подразделения
+        navigate(`/divisions/${id}`);
+      }
     }
   };
 

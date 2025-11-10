@@ -71,9 +71,11 @@ export function MainLayout() {
         {/* Global Routes (без привязки к подразделению) */}
         <Route path="/personnel" element={<PersonnelSection />} />
         <Route path="/equipment" element={<EquipmentSection />} />
+        {/* ДОБАВЛЕНО: Глобальный маршрут для создания техники */}
+        <Route path="/equipment/create" element={<CreateEquipmentForm />} />
         <Route path="/facilities" element={<FacilitiesSection />} />
         <Route path="/tasks" element={<DivisionTasksSection />} />
-        <Route path="/networks" element={<CommunicationNetworks />} /> {/* Добавлен глобальный маршрут */}
+        <Route path="/networks" element={<CommunicationNetworks />} />
 
         {/* Division Routes */}
         <Route path="/divisions/:id" element={<DivisionDetails />} />

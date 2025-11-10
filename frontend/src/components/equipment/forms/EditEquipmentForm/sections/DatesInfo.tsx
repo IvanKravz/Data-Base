@@ -26,8 +26,8 @@ export function DatesInfo({
       </div>
       <div className="equipment-card-content-edit">
 
-        <div className="form-group">
-          <label className="form-label">Дата производства</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Дата производства</label>
           <input
             type="date"
             value={formData.manufacturing_date || ''}
@@ -37,8 +37,8 @@ export function DatesInfo({
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Дата ввода в эксплуатацию</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Дата ввода в эксплуатацию</label>
           <input
             type="date"
             value={formData.exploitation_date || ''}
@@ -50,8 +50,8 @@ export function DatesInfo({
 
 
         <div className="form-row">
-          <div className="form-group">
-            <label className="form-label">Срок службы</label>
+          <div className="equipment-form-group">
+            <label className="equipment-form-label">Срок службы</label>
             <input
               type="text"
               value={serviceLife || ''}

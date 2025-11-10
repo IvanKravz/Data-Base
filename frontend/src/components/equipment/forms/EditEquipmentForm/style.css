@@ -89,6 +89,8 @@ body {
 /* ===== FORM LAYOUT ===== */
 .equipment-form {
   display: grid;
+  background: white;
+  padding: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: var(--space-lg);
   animation: fadeIn 0.3s ease-out;
@@ -109,43 +111,58 @@ body {
 
 /* ===== CARD COMPONENT ===== */
 .equipment-card-edit {
-  background: white;
+  background-color: rgb(252, 252, 252);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
+  border: 2px solid var(--gray-200);
+  padding: 1rem;
   transition: var(--transition);
   display: flex;
-  overflow: hidden;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .equipment-card-edit:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  background-color: rgb(248, 248, 248);
+  transform: none;
+  cursor: default;
 }
 
 .equipment-card-header {
-  padding: 0.8rem 1.5rem;
+  padding: 0.8rem 0 0.8rem 0;
   margin: 0;
-  background-color: var(--gray-50);
-  color: var(--gray-900);
+  color: rgb(32, 88, 193);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  border-bottom: 1px solid var(--gray-200);
+  border-bottom: 0.12rem solid rgb(32, 88, 193);
+  background: transparent;
+}
+
+.equipment-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 0.5rem;
+  color: rgb(32, 88, 193);
 }
 
 .equipment-card-title {
-  font-size: var(--text-lg);
+  font-size: 1.1rem;
   font-weight: 600;
-  color: var(--gray-800);
+  color: rgb(32, 88, 193);
   margin: 0;
 }
 
 .equipment-card-content-edit {
-  padding: 1.5rem;
+  padding: 0.8rem 0 0 0;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: var(--space-md);
 }
 
 .equipment-card-table {
@@ -160,20 +177,42 @@ body {
   flex-direction: column;
 }
 
-/* ===== FORM ELEMENTS ===== */
-.form-group {
+/* Field styles matching personnel form */
+.equipment-field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  padding: 0.2rem;
 }
 
-.form-label {
-  font-size: var(--text-sm);
+.equipment-field:hover {
+  background-color: #f6f9fd;
+  border-radius: 0.5rem;
+}
+
+.equipment-field-label {
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-700);
+}
+
+.equipment-field-value {
+  font-size: 1rem;
+  color: var(--gray-900);
+  font-weight: 400;
+}
+
+/* ===== FORM ELEMENTS ===== */
+.equipment-form-group {
   display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.equipment-form-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--gray-700);
 }
 
 .form-input-container {
@@ -188,10 +227,8 @@ body {
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--gray-300);
-  border-radius: 0.6rem;
-  font-size: var(--text-sm);
-  background-color: white;
-  color: var(--gray-800);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
   transition: var(--transition);
 }
 

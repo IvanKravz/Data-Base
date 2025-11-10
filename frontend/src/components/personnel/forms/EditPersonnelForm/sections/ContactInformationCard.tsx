@@ -2,6 +2,7 @@ import React from 'react';
 import { Employee } from '../../../../../types';
 import { divisions } from '../../../../../data/divisionsData';
 import '.././style.css';
+import { Building2 } from 'lucide-react';
 
 interface ContactInformationCardProps {
   formData: Employee;
@@ -11,7 +12,10 @@ interface ContactInformationCardProps {
 export function ContactInformationCard({ formData, onChange }: ContactInformationCardProps) {
   return (
     <div className="personnel-card">
-      <h3 className="personnel-card-title">Контактная информация</h3>
+      <div className="personnel-card-header-edit">
+        <Building2 size={20} />
+        <h3 className="personnel-card-title">Контактная информация</h3>
+      </div>
       <div className="personnel-card-content">
         <div className="personnel-form-group">
           <label className="personnel-form-label">Личный телефон</label>

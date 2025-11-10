@@ -42,14 +42,8 @@ export const RegionModal: React.FC<RegionModalProps> = ({
   onCancel,
   onInputChange,
 }) => {
-  console.log('RegionModal рендерится:', { isOpen, selectedRegion, editingData });
-
+  
   if (!isOpen || !selectedRegion || !editingData) {
-    console.log('RegionModal не отображается, причина:', {
-      isOpen, 
-      selectedRegion: !!selectedRegion, 
-      editingData: !!editingData
-    });
     return null;
   }
 

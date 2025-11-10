@@ -15,7 +15,7 @@ import { facilitiesApi, authApi, divisionsApi } from '../../../api';
 import './FacilityForm.css';
 import { EditFacilityForm } from '../forms/EditFacilityForm/EditFacilityForm';
 import { ClassificationtFacility } from './sections/ClassificationtFacility';
-import { getPermissions } from '../../../api/utils/permissions'; // Добавляем импорт
+import { getPermissions } from '../../../api/utils/permissions';
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -31,17 +31,13 @@ export function FacilityDetails() {
   const [divisions, setDivisions] = useState<any[]>([]);
   const [isLoadingDivisions, setIsLoadingDivisions] = useState(false);
 
-  // Получаем режим просмотра из authApi
   const isGlobalView = authApi.getGlobalView();
 
-  // Проверка прав доступа для редактирования объектов
   const canEditFacility = useMemo(() => {
     const permissions = getPermissions();
-    // Предполагаем, что права для объектов находятся в permissions.facilities
     if (permissions && permissions.facilities) {
       return permissions.facilities.can_edit;
     }
-    // Если нет специфичных прав для объектов, используем права для сотрудников как fallback
     if (permissions && permissions.employees) {
       return permissions.employees.can_edit;
     }
@@ -88,35 +84,28 @@ export function FacilityDetails() {
     fetchFacility();
   }, [id, token]);
 
-  // Обновляем логику возврата в зависимости от режима просмотра
   const handleBack = () => {
     const state = location.state;
     const currentSearchParams = new URLSearchParams(location.search);
 
-    // Получаем параметры фильтров из текущего URL
     const typeFilter = currentSearchParams.get('type');
     const classFilter = currentSearchParams.get('class');
 
-    // Если есть состояние из предыдущей страницы
     if (state?.from === 'facilities-section') {
       let backUrl = state.divisionId
         ? `/divisions/${state.divisionId}/facilities`
         : `/facilities`;
 
-      // Добавляем параметры если они есть
       const params = new URLSearchParams();
 
-      // Добавляем вкладку из state
       if (state.activeTab && state.activeTab !== 'all') {
         params.append('tab', state.activeTab);
       }
 
-      // Добавляем подразделение из state
       if (state.subdivisionId) {
         params.append('subdivision', state.subdivisionId);
       }
 
-      // ВАЖНО: Используем фильтры из state, а не из текущего URL
       if (state.filterType && state.filterType !== 'all') {
         params.append('type', state.filterType.toString());
       }
@@ -140,12 +129,10 @@ export function FacilityDetails() {
         }
       });
     }
-    // Если перешли из сайдбара (глобальный режим) или нет информации об источнике
     else if (isGlobalView || !facility?.division?.id) {
       let backUrl = `/facilities`;
       const params = new URLSearchParams();
 
-      // Добавляем фильтры из текущего URL
       if (typeFilter) {
         params.append('type', typeFilter);
       }
@@ -160,17 +147,14 @@ export function FacilityDetails() {
 
       navigate(backUrl);
     }
-    // Если у объекта есть подразделение и мы не в глобальном режиме
     else if (facility?.division?.id) {
       let backUrl = `/divisions/${facility.division.id}/facilities`;
       const params = new URLSearchParams();
 
-      // Добавляем подразделение объекта
       if (facility.subdivision?.id) {
         params.append('subdivision', facility.subdivision.id);
       }
 
-      // Добавляем фильтры из текущего URL
       if (typeFilter) {
         params.append('type', typeFilter);
       }
@@ -189,14 +173,12 @@ export function FacilityDetails() {
     }
   };
 
-  // Остальной код остается без изменений
   const handleUpdate = async (updatedData: Partial<Facility>) => {
     try {
       if (!facility?.id || !token) return;
 
       setIsLoading(true);
 
-      // Формируем правильные данные для отправки
       const dataToSend = {
         ...updatedData,
         type: updatedData.type?.id || null,
@@ -204,20 +186,15 @@ export function FacilityDetails() {
         facility_class: updatedData.facility_class || null
       };
 
-      // Отправляем обновление на сервер
       await facilitiesApi.updateFacility(
         facility.id,
         dataToSend,
         token
       );
 
-      // Получаем обновленные данные с сервера
       const updatedFacility = await facilitiesApi.getFacilityById(facility.id, token);
 
-      // Обновляем локальное состояние
       setFacility(updatedFacility);
-
-      // Обновляем Redux хранилище
       dispatch(updateFacility(updatedFacility));
 
       setIsEditing(false);
@@ -225,7 +202,6 @@ export function FacilityDetails() {
       console.error('Error updating facility:', err);
       setError('Не удалось обновить данные объекта');
 
-      // Восстанавливаем предыдущие данные в случае ошибки
       try {
         const currentFacility = await facilitiesApi.getFacilityById(facility.id, token);
         setFacility(currentFacility);
@@ -247,7 +223,6 @@ export function FacilityDetails() {
       await facilitiesApi.deleteFacility(facility.id);
       dispatch(deleteFacility(facility.id));
 
-      // Используем ту же логику что и в handleBack
       const state = location.state;
       if (state?.from === 'facilities-section') {
         let backUrl = state.divisionId
@@ -309,6 +284,7 @@ export function FacilityDetails() {
       </div>
     );
   }
+
   if (isEditing) {
     return (
       <div className="facility-details-container">
@@ -322,7 +298,7 @@ export function FacilityDetails() {
           <h1 className="facility-header__title">Редактирование объекта</h1>
         </div>
 
-        <div className="facility-card-edit facility-card--editing">
+        <div className="facility-page-edit">
           <EditFacilityForm
             initialData={facility}
             onSubmit={handleUpdate}
@@ -338,19 +314,23 @@ export function FacilityDetails() {
 
   return (
     <div className="facility-details-container">
-      <div className="facility-header facility-justify-between">
-        <div className="facility-flex facility-items-center facility-gap-md">
+      <div className="facility-header">
+        <div className="facility-header-main">
           <button
             onClick={handleBack}
             className="facility-btn--icon"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="facility-header__title">{facility.name}</h1>
+          <div className="facility-title-container">
+            <h1 className="facility-header__title" title={facility.name}>
+              {facility.name}
+            </h1>
+          </div>
         </div>
 
         {canEditFacility && (
-          <div className="facility-flex facility-gap-sm">
+          <div className="facility-header-actions">
             <button
               onClick={() => setIsEditing(true)}
               className="facility-btn facility-btn--primary"

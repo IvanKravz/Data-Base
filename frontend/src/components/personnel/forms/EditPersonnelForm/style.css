@@ -47,7 +47,7 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
   /* Transition */
-  --transition: all 0.2s ease-in-out;
+  --transition: all 0.3s ease-in-out;
 }
 
 /* ===== BASE STYLES ===== */
@@ -123,12 +123,11 @@ body {
 
 /* ===== PERSONNEL FORM STYLES ===== */
 .personnel-edit-form {
+  background-color: white;
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
   margin: 0 auto;
-  padding-bottom: 6rem;
-  /* Extra space for fixed footer */
 }
 
 .personnel-edit-grid {
@@ -139,34 +138,46 @@ body {
 
 /* ===== КАРТА СОТРУДНИКА ===== */
 .personnel-card {
-  background-color: white;
+  background-color: rgb(252, 252, 252);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--gray-200);
-  overflow: hidden;
+  border: 2px solid var(--gray-200);
+  padding: 1rem;
   transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .personnel-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  background-color: rgb(248, 248, 248);
 }
 
-.personnel-card:hover .personnel-card-title {
-  background: #e4ecf4;
+/* .personnel-card:hover .personnel-card-title {
+  background: #6ab6fc;
+  transition: var(--transition);
+} */
+
+.personnel-card-header-edit {
+  padding: 0.8rem;
+  margin: 0;
+  color: rgb(32, 88, 193);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 0.12rem solid rgb(32, 88, 193);
 }
 
 .personnel-card-title {
-  padding: var(--space-md);
-  margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--gray-900);
-  background-color: var(--gray-50);
-  border-bottom: 1px solid var(--gray-200);
+  color: var(--gray-800);
+  margin: 0;
 }
 
 .personnel-card-content {
-  padding: var(--space-lg);
+  padding: var(--space-lg) 0 0 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -190,7 +201,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--gray-300);
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
+  font-size: 1rem;
   /* transition: var(--transition); */
 }
 

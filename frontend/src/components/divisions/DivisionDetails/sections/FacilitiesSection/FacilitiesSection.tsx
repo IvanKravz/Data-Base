@@ -435,8 +435,10 @@ export function FacilitiesSection() {
       navigate('/');
     } else {
       if (stableSubdivisionId) {
+        // Возвращаемся на страницу отделения (не объектов)
         navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
       } else {
+        // Возвращаемся на страницу подразделения
         navigate(`/divisions/${id}`);
       }
     }
@@ -447,30 +449,34 @@ export function FacilitiesSection() {
       from: 'facilities-section',
       divisionId: id,
       subdivisionId: stableSubdivisionId,
-      activeTab: activeTab
+      activeTab: activeTab,
+      // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
+      fromSubdivision: !!stableSubdivisionId
     };
-
+  
     if (isGlobalView || isExploitationUser) {
       navigate(`/facilities/new`, { state });
     } else {
       navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
     }
-  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId, activeTab]);
+  }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
   const handleAddPost = useCallback(() => {
     const state = {
       from: 'facilities-section',
       divisionId: id,
       subdivisionId: stableSubdivisionId,
-      activeTab: activeTab
+      activeTab: activeTab,
+      // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
+      fromSubdivision: !!stableSubdivisionId
     };
-
+  
     if (isGlobalView || isExploitationUser) {
       navigate(`/communication-posts/new`, { state });
     } else {
       navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
     }
-  }, [isGlobalView, isExploitationUser, navigate, userDivisionId, userSubdivisionId, id, stableSubdivisionId, activeTab]);
+  }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
   const handleLocateFacility = useCallback((facility: Facility) => {
     setMapSearchTerm('');
@@ -578,20 +584,6 @@ export function FacilitiesSection() {
   if (error) {
     return <div className="facilities-error-message">{error}</div>;
   }
-
-  console.log('Current URL params:', {
-    tab: searchParams.get('tab'),
-    type: searchParams.get('type'),
-    class: searchParams.get('class'),
-    view: searchParams.get('view')
-  });
-
-  console.log('Current state:', {
-    activeTab,
-    filterType,
-    facilityClassFilter,
-    viewType
-  });
 
   return (
     <>

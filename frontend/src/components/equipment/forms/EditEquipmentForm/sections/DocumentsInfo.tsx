@@ -21,8 +21,8 @@ export function DocumentsInfo({
         <h3 className="equipment-card-title">Документы</h3>
       </div>
       <div className="equipment-card-content-edit">
-        <div className="form-group">
-          <label className="form-label">Первичный документ</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Первичный документ</label>
           <input
             type="text"
             value={formData.first_invoice || ''}
@@ -33,8 +33,8 @@ export function DocumentsInfo({
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Накладная на МОЛ</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Накладная на МОЛ</label>
           <input
             type="text"
             value={formData.material_invoice || ''}

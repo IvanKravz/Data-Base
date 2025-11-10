@@ -16,8 +16,8 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
         <h3 className="equipment-card-title">Идентификационные данные</h3>
       </div>
       <div className="equipment-card-content-edit">
-        <div className="form-group">
-          <label className="form-label">Серийный номер
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Серийный номер
           </label>
           <input
             type="text"
@@ -29,8 +29,8 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Инвентарный номер</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Инвентарный номер</label>
           <input
             type="text"
             value={formData.inventory_number || ''}

@@ -175,13 +175,15 @@ export function PersonnelSection() {
 
   const onCreateEmployee = useCallback(() => {
     const state = {
-      from: location.pathname + location.search, // Сохраняем текущий путь с параметрами
+      from: location.pathname + location.search,
       divisionId: id,
       subdivisionId: stableSubdivisionId,
+      divisionName: division?.name,
+      subdivisionName: subdivisionName
     };
-  
+
     navigate(`/personnel/create`, { state });
-  }, [navigate, id, stableSubdivisionId, location.pathname, location.search]);
+  }, [navigate, id, stableSubdivisionId, location.pathname, location.search, division?.name, subdivisionName]);
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {

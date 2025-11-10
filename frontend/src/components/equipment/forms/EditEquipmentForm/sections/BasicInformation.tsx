@@ -42,8 +42,8 @@ export function BasicInformation({
         <h3 className="equipment-card-title">Основная информация</h3>
       </div>
       <div className="equipment-card-content-edit">
-        <div className="form-group">
-          <label className="form-label">Название</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Название</label>
           <div className="form-input-container">
             <input
               type="text"
@@ -57,8 +57,8 @@ export function BasicInformation({
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Категория</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Категория</label>
           <div className="form-input-container">
             <select
               value={getCurrentCategoryValue()}
@@ -79,8 +79,8 @@ export function BasicInformation({
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Модель</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Модель</label>
           <input
             type="text"
             value={formData.type || ''}
@@ -91,8 +91,8 @@ export function BasicInformation({
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Статус</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Статус</label>
           <select
             value={formData.status || 'in-operation'}
             onChange={(e) => onChange({ status: e.target.value as Equipment['status'] })}
@@ -107,8 +107,8 @@ export function BasicInformation({
           </select>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Версия ПО</label>
+        <div className="equipment-form-group">
+          <label className="equipment-form-label">Версия ПО</label>
           <input
             type="text"
             value={formData.ver_software || ''}

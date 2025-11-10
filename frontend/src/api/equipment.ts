@@ -53,7 +53,15 @@ export const equipmentApi = {
 
   createEquipment: async (token: string, data: any) => {
     try {
-      const response = await api.post('/equipment/', data, {
+      // Преобразуем пустые строки в null для полей, которые могут быть null
+      const processedData = {
+        ...data,
+        secret_level: data.secret_level === '' ? null : data.secret_level,
+        free_use_act_number: data.free_use_act_number === '' ? null : data.free_use_act_number,
+        // Добавьте другие поля по необходимости
+      };
+
+      const response = await api.post('/equipment/', processedData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -136,7 +144,7 @@ export const equipmentApi = {
     });
     return data;
   },
-  
+
   getInterestOrgans: async (token: string): Promise<{ id: string; name: string }[]> => {
     try {
       const { data } = await api.get('/equipment/interest-organs/', {

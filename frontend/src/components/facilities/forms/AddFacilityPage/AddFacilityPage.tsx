@@ -25,6 +25,9 @@ export function AddFacilityPage() {
     const subdivisionIdFromState = location.state?.subdivisionId;
     const preSelectedSubdivision = subdivisionIdFromState || subdivisionIdFromUrl;
 
+    // ДОБАВЛЕНО: Получаем флаг fromSubdivision из state
+    const fromSubdivision = location.state?.fromSubdivision || false;
+
     // Загружаем список подразделений
     useEffect(() => {
         const fetchDivisions = async () => {
@@ -79,20 +82,32 @@ export function AddFacilityPage() {
 
             dispatch(addFacility(newFacility));
 
-            // Возвращаемся на предыдущую страницу с сохранением контекста
+            // ВАЖНОЕ ИЗМЕНЕНИЕ: Навигация после создания с учетом subdivisionId
             if (location.state?.from === 'facilities-section') {
                 const backState = {
                     divisionId: location.state.divisionId,
                     subdivisionId: location.state.subdivisionId,
-                    activeTab: location.state.activeTab
+                    activeTab: location.state.activeTab,
+                    fromSubdivision: location.state.fromSubdivision
                 };
+
                 if (divisionId) {
-                    navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+                    // Возвращаемся к списку объектов с учетом контекста отделения
+                    if (fromSubdivision && preSelectedSubdivision) {
+                        navigate(`/divisions/${divisionId}/facilities?subdivision=${preSelectedSubdivision}`, { state: backState });
+                    } else {
+                        navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+                    }
                 } else {
                     navigate('/facilities', { state: backState });
                 }
             } else if (divisionId) {
-                navigate(`/divisions/${divisionId}/facilities`);
+                // Стандартный возврат
+                if (fromSubdivision && preSelectedSubdivision) {
+                    navigate(`/divisions/${divisionId}/facilities?subdivision=${preSelectedSubdivision}`);
+                } else {
+                    navigate(`/divisions/${divisionId}/facilities`);
+                }
             } else {
                 navigate('/facilities');
             }
@@ -104,20 +119,34 @@ export function AddFacilityPage() {
         }
     };
 
+
     const handleBack = () => {
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: Логика возврата с учетом контекста отделения
         if (location.state?.from === 'facilities-section') {
             const backState = {
                 divisionId: location.state.divisionId,
                 subdivisionId: location.state.subdivisionId,
-                activeTab: location.state.activeTab
+                activeTab: location.state.activeTab,
+                fromSubdivision: location.state.fromSubdivision
             };
+
             if (divisionId) {
-                navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+                // Возвращаемся к списку объектов с учетом контекста отделения
+                if (fromSubdivision && preSelectedSubdivision) {
+                    navigate(`/divisions/${divisionId}/facilities?subdivision=${preSelectedSubdivision}`, { state: backState });
+                } else {
+                    navigate(`/divisions/${divisionId}/facilities`, { state: backState });
+                }
             } else {
                 navigate('/facilities', { state: backState });
             }
         } else if (divisionId) {
-            navigate(`/divisions/${divisionId}/facilities`);
+            // Стандартный возврат
+            if (fromSubdivision && preSelectedSubdivision) {
+                navigate(`/divisions/${divisionId}/facilities?subdivision=${preSelectedSubdivision}`);
+            } else {
+                navigate(`/divisions/${divisionId}/facilities`);
+            }
         } else {
             navigate('/facilities');
         }

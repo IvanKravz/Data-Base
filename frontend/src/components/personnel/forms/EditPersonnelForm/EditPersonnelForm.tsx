@@ -19,13 +19,17 @@ interface EditPersonnelFormProps {
   onSubmit: (person: Employee) => void;
   onCancel: () => void;
   isCreateMode?: boolean;
+  fixedDivision?: boolean;
+  fixedSubdivision?: boolean;
 }
 
 export function EditPersonnelForm({
   person,
   onSubmit,
   onCancel,
-  isCreateMode = false
+  isCreateMode = false,
+  fixedDivision = false,
+  fixedSubdivision = false
 }: EditPersonnelFormProps) {
   const [formData, setFormData] = useState<Employee>({
     ...person,
@@ -67,7 +71,7 @@ export function EditPersonnelForm({
   const isTopManagement = isManagement &&
     (formData.position === 'Главный руководитель' ||
       formData.position === 'Заместитель главного руководителя');
-      const showDivisionField = isCreateMode || !isManagement || (isManagement && !isTopManagement);
+  const showDivisionField = isCreateMode || !isManagement || (isManagement && !isTopManagement);
 
   const handleShaWorkerChange = (shaWorker: Employee['sha_details']) => {
     setFormData(prev => ({
@@ -165,6 +169,8 @@ export function EditPersonnelForm({
             onChange={handleChange}
             isTopManagement={isTopManagement}
             showDivisionField={showDivisionField}
+            fixedDivision={fixedDivision}
+            fixedSubdivision={fixedSubdivision}
           />
         )}
         <ContactInformationCard

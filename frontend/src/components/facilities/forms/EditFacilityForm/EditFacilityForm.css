@@ -2,7 +2,7 @@
 .facility-form-edit {
     display: grid;
     gap: var(--space-lg);
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
 }
 
 .facility-edit-header {
@@ -25,7 +25,7 @@
 
 /* Стили карточек */
 .facility-card-edit {
-    background-color: white;
+    background-color: rgb(252, 252, 252);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--gray-200);
@@ -101,7 +101,7 @@
     padding: var(--space-sm) var(--space-md) var(--space-sm) calc(var(--space-md) * 2 + 1rem);
     border: 1px solid var(--gray-300);
     border-radius: var(--radius-md);
-    font-size: var(--text-sm);
+    font-size: 1rem;
     background-color: white;
     color: var(--gray-800);
 }
@@ -121,6 +121,33 @@
     background-size: 1.5em 1.5em;
     padding-right: 2.5rem;
 }
+
+.facility-textarea-container {
+    position: relative;
+  }
+  
+  .facility-form-textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px 8px 40px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  .facility-form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
 
 .facility-form-textarea-edit {
     width: 100%;
@@ -276,6 +303,8 @@
     background-color: var(--primary-hover);
     border-color: var(--primary-hover);
 }
+
+
 
 /* Адаптивные стили */
 @media (min-width: 2000px) {

@@ -21,6 +21,8 @@ interface AssignmentInfoProps {
     }[];
   }[];
   isLoading: boolean;
+  fixedDivision?: boolean;
+  fixedSubdivision?: boolean;
 }
 
 export function AssignmentInfo({
@@ -29,7 +31,9 @@ export function AssignmentInfo({
   availableSubdivisions = [],
   availablePersonnel = [],
   divisions = [],
-  isLoading
+  isLoading,
+  fixedDivision = false,
+  fixedSubdivision = false
 }: AssignmentInfoProps) {
   // Получаем текущее подразделение и доступные объекты
   const currentDivision = divisions.find(d => d.id === formData.division?.id);
@@ -52,25 +56,25 @@ export function AssignmentInfo({
 
   // Обработчик изменения подразделения
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const divisionId = Number(e.target.value);
-    const selectedDivision = divisions.find(d => d.id === divisionId);
+    if (fixedDivision) return;
+    
+    const divisionId = e.target.value;
+    const selectedDivision = divisions.find(d => String(d.id) === String(divisionId));
 
     onChange({
       division: selectedDivision ? { id: selectedDivision.id, name: selectedDivision.name } : null,
-      subdivision: null, // Сбрасываем выбранное отделение
-      assigned_to: null, // Сбрасываем выбранного ответственного
-      facility: null // Сбрасываем выбранный объект
+      subdivision: null,
+      assigned_to: null,
+      facility: null
     });
   };
 
-  // УБИРАЕМ ФИЛЬТРАЦИЮ ОБЪЕКТОВ ПО ОТДЕЛЕНИЮ
-  // Теперь показываем все объекты подразделения независимо от отделения
-  const filteredFacilities = availableFacilities;
-
   // Обработчик изменения отделения
   const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const subdivisionId = Number(e.target.value);
-    const selectedSubdivision = availableSubdivisions.find(s => s.id === subdivisionId);
+    if (fixedSubdivision) return;
+    
+    const subdivisionId = e.target.value;
+    const selectedSubdivision = availableSubdivisions.find(s => String(s.id) === String(subdivisionId));
 
     onChange({
       subdivision: selectedSubdivision ? {
@@ -83,13 +87,13 @@ export function AssignmentInfo({
   // Обработчик изменения объекта
   const handleFacilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const facilityId = e.target.value;
-    const selectedFacility = filteredFacilities.find(f => String(f.id) === String(facilityId));
+    const selectedFacility = availableFacilities.find(f => String(f.id) === String(facilityId));
 
     onChange({
       facility: selectedFacility ? {
         id: selectedFacility.id,
         name: selectedFacility.name,
-        type: selectedFacility.type,
+        type: selectedFacility.type_name,
         class: selectedFacility.class
       } : null
     });
@@ -103,13 +107,11 @@ export function AssignmentInfo({
     onChange({
       assigned_to: selectedPerson ? {
         id: selectedPerson.id,
-        full_name: selectedPerson.full_name,
-        position: selectedPerson.position
+        full_name: selectedPerson.full_name || '',
+        position: selectedPerson.position || ''
       } : null
     });
   };
-
-  console.log('availableFacilities', availableFacilities)
 
   return (
     <div className="equipment-card-edit">
@@ -120,14 +122,13 @@ export function AssignmentInfo({
       <div className="equipment-card-content-edit">
         {/* Поле Подразделение */}
         <div className="form-group">
-          <label className="form-label">Подразделение
-          </label>
+          <label className="equipment-form-label">Подразделение</label>
           <div className="form-input-container">
             <select
-              value={formData.division?.id || ''}
+              value={formData.division?.id ? String(formData.division.id) : ''}
               onChange={handleDivisionChange}
               className="form-select"
-              disabled={isLoading}
+              disabled={isLoading || fixedDivision}
             >
               <option value="">Выберите подразделение</option>
               {divisions.map(division => (
@@ -141,12 +142,12 @@ export function AssignmentInfo({
 
         {/* Поле Отделение */}
         <div className="form-group">
-          <label className="form-label">Отделение</label>
+          <label className="equipment-form-label">Отделение</label>
           <select
-            value={formData.subdivision?.id || ''}
+            value={formData.subdivision?.id ? String(formData.subdivision.id) : ''}
             onChange={handleSubdivisionChange}
             className="form-select"
-            disabled={isLoading || !formData.division}
+            disabled={isLoading || !formData.division || fixedSubdivision}
           >
             <option value="">Выберите отделение</option>
             {availableSubdivisions.map(subdivision => (
@@ -159,8 +160,7 @@ export function AssignmentInfo({
 
         {/* Поле Ответственный */}
         <div className="form-group">
-          <label className="form-label">Ответственный
-          </label>
+          <label className="equipment-form-label">Ответственный</label>
           <div className="form-input-container">
             <select
               value={formData.assigned_to?.id ? String(formData.assigned_to.id) : ''}
@@ -171,7 +171,7 @@ export function AssignmentInfo({
               <option value="">Не назначен</option>
               {filteredPersonnel.map(person => (
                 <option key={person.id} value={person.id}>
-                  {person.full_name} - {person.position}
+                  {person.full_name || 'Неизвестно'} - {person.position || 'Должность не указана'}
                 </option>
               ))}
             </select>
@@ -180,8 +180,7 @@ export function AssignmentInfo({
 
         {/* Поле Объект */}
         <div className="form-group">
-          <label className="form-label">Объект
-          </label>
+          <label className="equipment-form-label">Объект</label>
           <div className="form-input-container">
             <select
               value={formData.facility?.id ? String(formData.facility.id) : ''}
@@ -190,11 +189,11 @@ export function AssignmentInfo({
               disabled={isLoading || !formData.division}
             >
               <option value="">Не привязан к объекту</option>
-              {filteredFacilities.map(facility => (
+              {availableFacilities.map(facility => (
                 <option key={facility.id} value={facility.id}>
                   {facility.name} (
                   {facility.type_name || 'Не указан'}
-                  {facility.class_display && `, ${facility.class_display || ''}`}
+                  {facility.class_display && `, ${facility.class_display}`}
                   )
                 </option>
               ))}

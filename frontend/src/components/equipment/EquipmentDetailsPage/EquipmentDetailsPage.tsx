@@ -43,7 +43,6 @@ export function EquipmentDetailsPage() {
   // Проверка прав доступа для кнопки "Редактировать технику"
   const canEditEquipment = useMemo(() => {
     const permissions = getPermissions();
-    console.log('permissions', permissions)
     if (permissions && permissions.equipment) {
       return permissions.equipment.can_edit;
     }
@@ -195,17 +194,18 @@ export function EquipmentDetailsPage() {
         onDelete={() => setShowDeleteModal(true)}
         canEditEquipment={canEditEquipment}
       />
-
-      <div className="equipment-grid equipment-grid--2cols">
-        <BasicInfo equipment={equipment} />
-        <AssignmentInfo equipment={equipment} />
-        <IdentificationInfo equipment={equipment} />
-        <DatesInfo equipment={equipment} />
-        <DocumentsInfo equipment={equipment} />
-        <AdditionalInfo equipment={equipment} />
-        <CommentsInfo equipment={equipment} />
-        <ProductStructureTable equipment={equipment} />
-      </div>
+      {equipment && (
+        <div className="equipment-grid equipment-grid--2cols">
+          <BasicInfo equipment={equipment} />
+          <AssignmentInfo equipment={equipment} />
+          <IdentificationInfo equipment={equipment} />
+          <DatesInfo equipment={equipment} />
+          <DocumentsInfo equipment={equipment} />
+          <AdditionalInfo equipment={equipment} />
+          <CommentsInfo equipment={equipment} />
+          <ProductStructureTable equipment={equipment} />
+        </div>
+      )}
 
       {equipment.network_memberships.length > 0 && <NetworkInfo equipment={equipment} />}
       {equipment.is_network && (

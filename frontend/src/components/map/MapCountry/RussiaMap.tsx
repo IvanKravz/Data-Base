@@ -43,7 +43,7 @@ export const RussiaMap: React.FC<RussiaMapProps> = ({
             </div>
 
             <div className='hovered-region-name'>
-                {hoveredRegion && `Регион: ${hoveredRegion}`}
+                {hoveredRegion && `${hoveredRegion}`}
             </div>
 
             <div style={{

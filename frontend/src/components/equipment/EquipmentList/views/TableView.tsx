@@ -10,7 +10,7 @@ import './style.css';
 interface TableViewProps {
   equipment: Equipment[];
   onDelete: (id: string) => void;
-  divisionId?: string; // Добавляем пропсы
+  divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
 }
@@ -155,7 +155,7 @@ export function TableView({
     navigate(`/equipment/${item.id}`, {
       state: {
         from: 'equipment-section',
-        divisionId: divisionId, // Используем переданные пропсы
+        divisionId: divisionId,
         subdivisionId: subdivisionId,
         activeTab: activeTab
       }
@@ -178,7 +178,7 @@ export function TableView({
             <th className="table-header-cell">Дата ввода в экспл.</th>
             <th className="table-header-cell">В чьих интересах</th>
             <th className="table-header-cell">Закреплено за</th>
-            <th className="table-header-actions">Действия</th>
+            <th className="table-header-cell">Действия</th>
           </tr>
         </thead>
         <tbody className="table-body">
@@ -198,8 +198,11 @@ export function TableView({
                     onClick={() => handleRowClick(item)}
                     className="table-row no-division-row"
                   >
-                    <td className="table-cell">
-                      <div className="cell-content">{item.name}</div>
+                    {/* Столбец Название с переносами строк */}
+                    <td className="table-cell table-cell-name">
+                      <div className="cell-content-full-width">
+                        {item.name}
+                      </div>
                     </td>
                     <td className="table-cell">
                       <div className="cell-content">{item.type}</div>
@@ -210,14 +213,20 @@ export function TableView({
                     <td className="table-cell">
                       <div className={`cell-content ${getStatusColor(item.status)}`}>
                         <StatusIcon className="status-icon" />
-                        {getStatusLabel(item.status)}
                       </div>
                     </td>
+                    {/* Столбец Подразделение с блоками */}
                     <td className="table-cell">
-                      <div className="cell-content">
-                        {item.division?.name || '-'}
+                      <div className="division-container">
+                        <div className="division-name">
+                          {item.division?.name || '-'}
+                        </div>
+                        {item.subdivision?.name && (
+                          <div className="subdivision-name">
+                            {item.subdivision.name}
+                          </div>
+                        )}
                       </div>
-                      {item.subdivision?.name && `  ${item.subdivision.name}`}
                     </td>
                     <td className="table-cell">
                       <div className="cell-content">{item.serial_number}</div>
@@ -307,8 +316,11 @@ export function TableView({
                             onClick={() => handleRowClick(item)}
                             className="table-row"
                           >
-                            <td className="table-cell">
-                              <div className="cell-content">{item.name}</div>
+                            {/* Столбец Название с переносами строк */}
+                            <td className="table-cell table-cell-name">
+                              <div className="cell-content-full-width">
+                                {item.name}
+                              </div>
                             </td>
                             <td className="table-cell">
                               <div className="cell-content">{item.type}</div>
@@ -319,14 +331,20 @@ export function TableView({
                             <td className="table-cell">
                               <div className={`cell-content ${getStatusColor(item.status)}`}>
                                 <StatusIcon className="status-icon" />
-                                {getStatusLabel(item.status)}
                               </div>
                             </td>
+                            {/* Столбец Подразделение с блоками */}
                             <td className="table-cell">
-                              <div className="cell-content">
-                                {item.division?.name || '-'}
+                              <div className="division-container">
+                                <div className="division-name">
+                                  {item.division?.name || '-'}
+                                </div>
+                                {item.subdivision?.name && (
+                                  <div className="subdivision-name">
+                                    {item.subdivision.name}
+                                  </div>
+                                )}
                               </div>
-                              {item.subdivision?.name && `  ${item.subdivision.name}`}
                             </td>
                             <td className="table-cell">
                               <div className="cell-content">{item.serial_number}</div>
@@ -368,14 +386,14 @@ export function TableView({
                                   }}
                                   className="delete-button"
                                   aria-label="Удалить"
-                        >
-                          <Trash2 className="action-icon" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                                >
+                                  <Trash2 className="action-icon" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </React.Fragment>
                   );
                 })}

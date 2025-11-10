@@ -42,9 +42,36 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
     const path = subdivisionId
       ? `/divisions/${division.id}/${section}?subdivision=${subdivisionId}`
       : `/divisions/${division.id}/${section}`;
-    navigate(path);
+  
+    // ИСПРАВЛЕНИЕ: Находим подразделение по ID для получения имени
+    const targetSubdivision = subdivisionId 
+      ? subdivisions.find(sub => sub.id === subdivisionId)
+      : null;
+
+    navigate(path, {
+      state: {
+        activeTab: 'all',
+        subdivisionId: subdivisionId,
+        divisionId: division.id,
+        subdivisionName: targetSubdivision?.name, // Используем найденное подразделение
+        // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
+        fromSubdivision: !!subdivisionId
+      }
+    });
   };
 
+  // ДОБАВЛЕНО: Обработчик клика по подразделению (не по отделению)
+  const handleDivisionSectionClick = (section: string) => {
+    navigate(`/divisions/${division.id}/${section}`, {
+      state: {
+        activeTab: 'all',
+        divisionId: division.id,
+        divisionName: division.name,
+        fromSubdivision: false // Явно указываем, что НЕ из отделения
+      }
+    });
+  };
+  
   if (subdivisions.length === 0) {
     return null;
   }

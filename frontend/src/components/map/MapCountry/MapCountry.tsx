@@ -27,17 +27,14 @@ export const MapCountry = () => {
 
     // Загрузка данных органов при монтировании компонента
     useEffect(() => {
-        console.log('Компонент MapCountry смонтирован');
         loadOffices();
     }, []);
 
     const loadOffices = async () => {
         try {
-            console.log('Загрузка offices...');
             const token = localStorage.getItem('accessToken');
             if (token) {
                 const data = await officesApi.getOffices(token);
-                console.log('Получены offices:', data);
                 setOffices(data.results || data);
             } else {
                 console.warn('Токен не найден в localStorage');
@@ -49,7 +46,6 @@ export const MapCountry = () => {
 
     const handleMouseEnter = (e: React.MouseEvent<SVGPathElement>) => {
         const regionName = e.currentTarget.getAttribute('name');
-        console.log('Mouse enter:', regionName);
         setHoveredRegion(regionName);
 
         const elements = document.querySelectorAll(`path[name="${regionName}"]`);
@@ -62,7 +58,6 @@ export const MapCountry = () => {
 
     const handleMouseLeave = (e: React.MouseEvent<SVGPathElement>) => {
         const regionName = e.currentTarget.getAttribute('name');
-        console.log('Mouse leave:', regionName);
         setHoveredRegion(null);
 
         const elements = document.querySelectorAll(`path[name="${regionName}"]`);
@@ -73,7 +68,6 @@ export const MapCountry = () => {
     };
 
     const handleClick = async (regionName: string) => {
-        console.log('Клик по региону:', regionName);
         setSelectedRegion(regionName);
         setIsLoading(true);
         
@@ -85,8 +79,6 @@ export const MapCountry = () => {
                 const existingOffice = offices.find(office => 
                     office.region.toLowerCase() === regionName.toLowerCase()
                 );
-                console.log('offices', offices);
-                console.log('Найден существующий офис:', existingOffice);
 
                 if (existingOffice) {
                     // Если офис найден, используем данные из базы и сразу открываем модальное окно
@@ -94,7 +86,6 @@ export const MapCountry = () => {
                     setIsModalOpen(true);
                 } else {
                     // Если офис не найден, показываем сообщение
-                    console.log('Данные для региона не найдены в базе данных');
                     alert(`Данные для региона "${regionName}" не найдены в базе данных`);
                 }
             } else {
@@ -111,7 +102,6 @@ export const MapCountry = () => {
     };
 
     const closeModal = () => {
-        console.log('Закрытие модального окна');
         setIsModalOpen(false);
         setIsEditing(false);
         setEditingData(null);
@@ -119,12 +109,10 @@ export const MapCountry = () => {
     };
 
     const handleEdit = () => {
-        console.log('Редактирование данных');
         setIsEditing(true);
     };
 
     const handleSave = async () => {
-        console.log('Сохранение данных:', editingData);
         if (selectedRegion && editingData) {
             setIsLoading(true);
             try {
@@ -133,19 +121,16 @@ export const MapCountry = () => {
                     let savedOffice;
                     
                     if (editingData.id) {
-                        console.log('Обновление существующего офиса:', editingData.id);
                         savedOffice = await officesApi.updateOffice(editingData.id, editingData, token);
                         setOffices(prev => prev.map(office => 
                             office.id === editingData.id ? savedOffice : office
                         ));
                     } else {
-                        console.log('Создание нового офиса');
                         savedOffice = await officesApi.createOffice(editingData, token);
                         setOffices(prev => [...prev, savedOffice]);
                     }
                     
                     setEditingData(savedOffice);
-                    console.log('Данные сохранены:', savedOffice);
                 } else {
                     console.warn('Токен отсутствует, сохранение невозможно');
                     alert('Необходима авторизация для сохранения данных');
@@ -161,7 +146,6 @@ export const MapCountry = () => {
     };
 
     const handleCancel = () => {
-        console.log('Отмена редактирования');
         setIsEditing(false);
     };
 
@@ -208,13 +192,6 @@ export const MapCountry = () => {
     const handleSearchChange = (query: string) => {
         setSearchQuery(query);
     };
-
-    console.log('Текущее состояние:', {
-        isModalOpen,
-        selectedRegion,
-        editingData,
-        officesCount: offices.length
-    });
 
     return (
         <>

@@ -12,10 +12,16 @@ interface AssignmentInfoProps {
 }
 
 export function AssignmentInfo({ equipment }: AssignmentInfoProps) {
-  // const facilities = useSelector((state: RootState) => state.facilities.facilities);
-  // const facility = equipment.facility 
-  //   ? facilities.find(f => f.id === equipment.facility)
-  //   : null;
+  // Формируем значение для подразделения с проверками на null
+  const getDivisionValue = () => {
+    const divisionName = equipment.division?.name || 'Не указано';
+    const subdivisionName = equipment.subdivision?.name;
+    
+    if (subdivisionName) {
+      return `${divisionName} - ${subdivisionName}`;
+    }
+    return divisionName;
+  };
 
   return (
     <InfoCard title="Принадлежность">
@@ -24,7 +30,7 @@ export function AssignmentInfo({ equipment }: AssignmentInfoProps) {
           icon={Building2}
           iconColor="text-blue-500"
           label="Подразделение"
-          value={`${equipment.division.name}${equipment.subdivision.name ? ` - ${equipment.subdivision.name }` : ''}`}
+          value={getDivisionValue()}
         />
         {equipment.assigned_to && (
           <InfoItem

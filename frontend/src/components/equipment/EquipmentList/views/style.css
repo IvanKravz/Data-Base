@@ -12,7 +12,6 @@
 
 .equipment-table {
   width: 100%;
-  border-collapse: separate;
   border-spacing: 0;
   min-width: 1000px;
 }
@@ -123,10 +122,43 @@
   line-height: 1.25;
 }
 
+/* Новые стили для ячейки с названием */
+.table-cell-name {
+  min-width: 200px;
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
 .cell-content {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.cell-content-full-width {
+  display: block;
+  width: 100%;
+}
+
+/* Новые стили для контейнера подразделения */
+.division-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.division-name {
+  font-weight: 500;
+  color: #111827;
+  font-size: 0.85rem;
+}
+
+.subdivision-name {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
 .status-icon {
@@ -202,5 +234,10 @@
   
   .table-cell-assigned-to {
     min-width: 160px;
+  }
+  
+  .table-cell-name {
+    min-width: 180px;
+    max-width: 250px;
   }
 }

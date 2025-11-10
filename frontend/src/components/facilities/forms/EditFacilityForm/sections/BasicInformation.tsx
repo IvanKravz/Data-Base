@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Building2, MapPin } from 'lucide-react';
 import { Facility } from '../../../../../types';
 import '../EditFacilityForm.css';
@@ -10,6 +10,27 @@ interface BasicInformationProps {
 }
 
 export function BasicInformation({ formData, onChange }: BasicInformationProps) {
+  const nameTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Автоматическое изменение высоты textarea при изменении содержимого
+  useEffect(() => {
+    const textarea = nameTextareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [formData.name]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange({ name: e.target.value });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Предотвращаем перенос строки по Enter
+    }
+  };
+
   return (
     <div className="facility-card-edit">
       <div className="facility-card-header-edit">
@@ -21,15 +42,25 @@ export function BasicInformation({ formData, onChange }: BasicInformationProps) 
           <label className="facility-form-label-edit">
             Название объекта
           </label>
-          <div className="facility-form-input-container-edit">
+          <div className="facility-form-input-container-edit facility-textarea-container">
             <Building2 className="facility-form-icon-edit" />
-            <input
-              type="text"
+            <textarea
+              ref={nameTextareaRef}
               required
               value={formData.name || ''}
-              onChange={(e) => onChange({ name: e.target.value })}
-              className="facility-form-input-edit"
+              onChange={handleNameChange}
+              onKeyDown={handleKeyDown}
+              className="facility-form-textarea facility-form-input-edit"
               placeholder="Введите название объекта"
+              rows={1}
+              style={{
+                resize: 'none',
+                overflow: 'hidden',
+                minHeight: '40px',
+                lineHeight: '1.5',
+                paddingTop: '8px',
+                paddingBottom: '8px'
+              }}
             />
           </div>
         </div>

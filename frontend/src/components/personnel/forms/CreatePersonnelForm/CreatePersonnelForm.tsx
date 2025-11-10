@@ -1,5 +1,6 @@
+// CreatePersonnelForm.tsx
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Добавить useLocation
 import { EditPersonnelForm } from '../EditPersonnelForm';
 import { Employee } from '../../../../types';
 import { employeesApi } from '../../../../api';
@@ -8,8 +9,26 @@ import { ArrowLeft } from 'lucide-react';
 export function CreatePersonnelForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation(); // Добавить для получения state
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
+
+  // Получаем данные из состояния навигации
+  const navigationState = location.state as {
+    divisionId?: string;
+    subdivisionId?: string;
+    divisionName?: string;
+    subdivisionName?: string;
+  } | undefined;
+
+  // Определяем фиксированные значения принадлежности
+  const fixedDivision = navigationState?.divisionId 
+    ? { id: parseInt(navigationState.divisionId), name: navigationState.divisionName || '' }
+    : null;
+
+  const fixedSubdivision = navigationState?.subdivisionId
+    ? { id: parseInt(navigationState.subdivisionId), name: navigationState.subdivisionName || '' }
+    : null;
 
   // Убрали id из начальных данных
   const initialEmployee: Omit<Employee, 'id'> & { id?: number } = {
@@ -24,8 +43,8 @@ export function CreatePersonnelForm() {
     is_material_responsible: false,
     is_sha_worker: false,
     description: null,
-    division: id ? { id: parseInt(id), name: '' } : null,
-    subdivision: null,
+    division: fixedDivision || (id ? { id: parseInt(id), name: '' } : null),
+    subdivision: fixedSubdivision || null,
     sha_details: null,
     // Добавлены поля, которые сервер требует для всех сотрудников
     data_state_secrets: null,
@@ -87,6 +106,8 @@ export function CreatePersonnelForm() {
         person={initialEmployee as Employee}
         onSubmit={handleCreate}
         isCreateMode={true}
+        fixedDivision={!!fixedDivision}
+        fixedSubdivision={!!fixedSubdivision}
       />
     </div>
   );

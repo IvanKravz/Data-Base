@@ -1,6 +1,8 @@
+// AffiliationCard.tsx
 import React from 'react';
 import { Employee, Division } from '../../../../../types';
 import '.././style.css';
+import { Building2 } from 'lucide-react';
 
 interface AffiliationCardProps {
   formData: Employee;
@@ -8,6 +10,8 @@ interface AffiliationCardProps {
   onChange: (data: Partial<Employee>) => void;
   isTopManagement: boolean;
   showDivisionField: boolean;
+  fixedDivision?: boolean; // Новый пропс
+  fixedSubdivision?: boolean; // Новый пропс
 }
 
 export function AffiliationCard({ 
@@ -15,7 +19,9 @@ export function AffiliationCard({
   divisions, 
   onChange, 
   isTopManagement, 
-  showDivisionField 
+  showDivisionField,
+  fixedDivision = false,
+  fixedSubdivision = false 
 }: AffiliationCardProps) {
   const currentDivision = formData.division
     ? divisions.find(d => d.id === formData.division.id)
@@ -25,6 +31,8 @@ export function AffiliationCard({
   const hasSubdivisions = currentSubdivisions.length > 0;
 
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (fixedDivision) return; // Блокируем изменение если фиксировано
+    
     const divisionId = Number(e.target.value);
     const selectedDivision = divisions.find(d => d.id === divisionId);
 
@@ -35,6 +43,8 @@ export function AffiliationCard({
   };
 
   const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (fixedSubdivision) return; // Блокируем изменение если фиксировано
+    
     const subdivisionId = Number(e.target.value);
     const selectedSubdivision = currentSubdivisions.find(s => s.id === subdivisionId);
 
@@ -45,7 +55,10 @@ export function AffiliationCard({
 
   return (
     <div className="personnel-card">
-      <h3 className="personnel-card-title">Принадлежность</h3>
+      <div className="personnel-card-header-edit">
+        <Building2 size={20} />
+        <h3 className="personnel-card-title">Принадлежность</h3>
+      </div>
       <div className="personnel-card-content">
         {showDivisionField && (
           <div className="personnel-form-group">
@@ -54,7 +67,7 @@ export function AffiliationCard({
               value={formData.division?.id || ''}
               onChange={handleDivisionChange}
               className="personnel-form-input"
-              disabled={isTopManagement}
+              disabled={isTopManagement || fixedDivision} // Добавляем fixedDivision
             >
               <option value="">Выберите подразделение</option>
               {divisions.map((division) => (
@@ -73,7 +86,7 @@ export function AffiliationCard({
               value={formData.subdivision?.id || ''}
               onChange={handleSubdivisionChange}
               className="personnel-form-input"
-              disabled={isTopManagement}
+              disabled={isTopManagement || fixedSubdivision}
             >
               <option value="">Выберите отделение</option>
               {currentSubdivisions.map((subdivision) => (

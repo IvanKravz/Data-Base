@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Equipment } from '../../../../types';
@@ -21,8 +21,9 @@ interface Division {
     facilities: {
         id: string;
         name: string;
-        type: 'station' | 'shd';
+        type_name: 'station' | 'shd';
         class: string;
+        class_display: string;
     }[];
 }
 
@@ -34,13 +35,26 @@ interface EquipmentCategory {
 
 export function CreateEquipmentForm() {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const { id } = useParams<{ id: string }>(); // id будет undefined в глобальном режиме
     const location = useLocation();
     const token = localStorage.getItem('accessToken');
 
-    const subdivisionId = location.state?.subdivisionId;
-    const isClosedEquipment = location.state?.isClosed || false;
+    // Получаем данные из состояния навигации
+    const navigationState = location.state as {
+        divisionId?: string;
+        subdivisionId?: string;
+        divisionName?: string;
+        subdivisionName?: string;
+        isClosed?: boolean;
+        fromSubdivision?: boolean;
+    } | undefined;
 
+    const isClosedEquipment = navigationState?.isClosed || false;
+
+    // Определяем, находимся ли мы в глобальном режиме (без id подразделения)
+    const isGlobalMode = !id;
+
+    // Убираем начальную установку formData - будет в useEffect
     const [formData, setFormData] = useState<Partial<Equipment>>({
         status: 'in-operation',
         comments: '',
@@ -51,6 +65,15 @@ export function CreateEquipmentForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<EquipmentCategory[]>([]);
     const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
+
+    // Определяем фиксированные значения отдельно
+    const fixedDivision = navigationState?.divisionId
+        ? { id: navigationState.divisionId, name: navigationState.divisionName || '' }
+        : null;
+
+    const fixedSubdivision = navigationState?.subdivisionId && navigationState.fromSubdivision
+        ? { id: navigationState.subdivisionId, name: navigationState.subdivisionName || '' }
+        : null;
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -68,33 +91,50 @@ export function CreateEquipmentForm() {
                 setCategories(categoriesData);
                 setInterestOrgans(organsData);
 
-                // Установка начального подразделения
-                if (id) {
-                    const division = divisionsData.find(d => d.id === id);
-                    if (division) {
-                        setFormData(prev => ({
-                            ...prev,
-                            division: { id: division.id, name: division.name }
-                        }));
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Определяем divisionId для использования
+                const divisionIdToUse = id || navigationState?.divisionId;
 
+                if (divisionIdToUse) {
+                    // ИСПРАВЛЕНИЕ: Правильно находим подразделение (учитываем, что id могут быть строкой или числом)
+                    const division = divisionsData.find(d =>
+                        String(d.id) === String(divisionIdToUse)
+                    );
+
+                    if (division) {
                         // Загрузка персонала для выбранного подразделения
                         const personnelData = await employeesApi.getPersonnel(token, {
-                            division: id,
+                            division: divisionIdToUse,
                         });
                         setPersonnel(personnelData);
 
-                        // Установка подразделения если передано
-                        if (subdivisionId && division.subdivisions) {
-                            const subdivision = division.subdivisions.find(s => s.id === subdivisionId);
+                        // Создаем обновленные данные формы
+                        const updatedFormData: Partial<Equipment> = {
+                            status: 'in-operation',
+                            comments: '',
+                            product_structures: [],
+                            division: { id: division.id, name: division.name }
+                        };
+
+                        // Установка отделения если передано и мы в контексте отделения
+                        if (navigationState?.subdivisionId && navigationState.fromSubdivision && division.subdivisions) {
+                            // ИСПРАВЛЕНИЕ: Правильно находим отделение
+                            const subdivision = division.subdivisions.find(s =>
+                                String(s.id) === String(navigationState.subdivisionId)
+                            );
                             if (subdivision) {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    subdivision: { id: subdivision.id, name: subdivision.name }
-                                }));
+                                updatedFormData.subdivision = {
+                                    id: subdivision.id,
+                                    name: subdivision.name
+                                };
                             }
                         }
+
+                        setFormData(updatedFormData);
+                    } else {
+                        console.warn('Division not found:', divisionIdToUse);
                     }
                 }
+                // В глобальном режиме не устанавливаем подразделение по умолчанию
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             } finally {
@@ -103,13 +143,14 @@ export function CreateEquipmentForm() {
         };
 
         fetchAllData();
-    }, [token, id, subdivisionId]);
+    }, [token, id]); // Убраны лишние зависимости
 
     const handleChange = async (data: Partial<Equipment>) => {
         const newFormData = { ...formData, ...data };
         setFormData(newFormData);
 
-        if (data.division?.id && data.division.id !== formData.division?.id && token) {
+        // Загружаем персонал только если изменилось подразделение и оно не фиксировано
+        if (data.division?.id && data.division.id !== formData.division?.id && token && !fixedDivision) {
             setIsLoading(true);
             try {
                 const personnelData = await employeesApi.getPersonnel(token, {
@@ -126,6 +167,22 @@ export function CreateEquipmentForm() {
 
     const handleStructureChange = (structures: any[]) => {
         handleChange({ product_structures: structures });
+    };
+
+    // Обработчик отмены для глобального режима
+    const handleCancel = () => {
+        if (id) {
+            // Режим подразделения - возвращаемся к списку техники подразделения
+            // ВАЖНОЕ ИЗМЕНЕНИЕ: Учитываем наличие subdivisionId для возврата в контекст отделения
+            if (navigationState?.subdivisionId) {
+                navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
+            } else {
+                navigate(`/divisions/${id}/equipment`);
+            }
+        } else {
+            // Глобальный режим - возвращаемся к глобальному списку техники
+            navigate('/equipment');
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -148,7 +205,7 @@ export function CreateEquipmentForm() {
                 ...formData,
                 name: formData.name || '',
                 type: formData.type || '',
-                status: formData.status || 'in-operation', // Обязательное поле
+                status: formData.status || 'in-operation',
                 category: formData.category ? {
                     value: formData.category.value || formData.category,
                     name: formData.category.name || formData.category
@@ -159,13 +216,25 @@ export function CreateEquipmentForm() {
                 facility_id: formData.facility ? formData.facility.id : null,
                 assigned_to_id: formData.assigned_to ? formData.assigned_to.id : null,
                 interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
-                product_structures: formData.product_structures || []
+                product_structures: formData.product_structures || [],
+                // Исправление: Преобразуем пустую строку в null для secret_level
+                secret_level: formData.secret_level === '' ? null : formData.secret_level,
             };
             console.log('dataToSend', dataToSend);
 
             await equipmentApi.createEquipment(token, dataToSend);
             await new Promise(resolve => setTimeout(resolve, 100));
-            navigate(`/divisions/${id}/equipment`);
+
+            // ВАЖНОЕ ИЗМЕНЕНИЕ: Навигация после создания с учетом subdivisionId
+            if (id) {
+                if (navigationState?.subdivisionId) {
+                    navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
+                } else {
+                    navigate(`/divisions/${id}/equipment`);
+                }
+            } else {
+                navigate('/equipment');
+            }
         } catch (error: any) {
             console.error('Ошибка создания техники:', error);
             if (error.response?.data) {
@@ -178,7 +247,7 @@ export function CreateEquipmentForm() {
 
     const getCurrentSubdivisions = () => {
         if (!formData.division?.id) return [];
-        const division = divisions.find((d) => d.id === formData.division?.id);
+        const division = divisions.find((d) => String(d.id) === String(formData.division?.id));
         return division?.subdivisions || [];
     };
 
@@ -190,7 +259,7 @@ export function CreateEquipmentForm() {
     return (
         <div className="equipment-form-container">
             <div className="page-header">
-                <button onClick={() => navigate(`/divisions/${id}/equipment`)} className="back-button">
+                <button onClick={handleCancel} className="back-button">
                     <ArrowLeft className="back-button-icon" />
                 </button>
                 <h2>Добавление новой техники</h2>
@@ -235,6 +304,8 @@ export function CreateEquipmentForm() {
                         availablePersonnel={personnel}
                         divisions={divisions}
                         isLoading={isLoading}
+                        fixedDivision={!!fixedDivision}
+                        fixedSubdivision={!!fixedSubdivision}
                     />
 
                     <EditCommentsCard
@@ -250,7 +321,7 @@ export function CreateEquipmentForm() {
                 />
 
                 <FormActions
-                    onCancel={() => navigate(`/divisions/${id}/equipment`)}
+                    onCancel={handleCancel}
                     showDisposeButton={false}
                     isLoading={isLoading}
                 />

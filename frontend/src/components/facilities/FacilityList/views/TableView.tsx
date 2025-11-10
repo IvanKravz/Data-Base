@@ -9,7 +9,7 @@ interface TableViewProps {
   onDelete: (id: string) => void;
   onLocate?: (facility: Facility) => void;
   showDifferentFields?: boolean;
-  divisionId?: string; // Добавляем новые пропсы
+  divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
   filterType?: string | null;
@@ -30,17 +30,13 @@ export function TableView({
   const navigate = useNavigate();
   const hasClosedFacilities = facilities.some(f => f.is_closed);
 
-  // Функция для сортировки объектов внутри групп
   const sortFacilitiesInGroup = (facilitiesList: Facility[]): Facility[] => {
     return [...facilitiesList].sort((a, b) => {
-      // Сортируем по названию
       return a.name.localeCompare(b.name);
     });
   };
 
-  // Группируем объекты по подразделениям и отделениям
   const groupedData = facilities.reduce((acc, facility) => {
-    // Объекты без подразделения идут в отдельную группу
     if (!facility.division) {
       if (!acc.noDivision) {
         acc.noDivision = {
@@ -92,27 +88,22 @@ export function TableView({
     }>
   });
 
-  // Сортируем объекты внутри групп
   if (groupedData.noDivision) {
     groupedData.noDivision.facilities = sortFacilitiesInGroup(groupedData.noDivision.facilities);
   }
 
-  // Сортируем подразделения по order
   const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) => {
     return groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder;
   });
 
-  // Для каждого подразделения сортируем отделения по order
   sortedDivisionIds.forEach(divisionId => {
     const division = groupedData.divisions[divisionId];
     const subdivisionIds = Object.keys(division.subdivisions);
     subdivisionIds.sort((a, b) => {
       return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
     });
-    // Сохраняем отсортированный массив отделений в подразделении
     division.sortedSubdivisionIds = subdivisionIds;
 
-    // Сортируем объекты внутри каждого отделения
     subdivisionIds.forEach(subdivisionId => {
       division.subdivisions[subdivisionId].facilities = sortFacilitiesInGroup(
         division.subdivisions[subdivisionId].facilities
@@ -128,7 +119,6 @@ export function TableView({
       divisionId: divisionId,
       subdivisionId: subdivisionId,
       activeTab: activeTab,
-      // ДОБАВЬТЕ ФИЛЬТРЫ В СОСТОЯНИЕ
       filterType: filterType,
       facilityClassFilter: facilityClassFilter
     };
@@ -136,7 +126,6 @@ export function TableView({
     let facilityUrl = `/facilities/${facility.id}`;
     const params = new URLSearchParams();
 
-    // Сохраняем текущие параметры URL
     const typeFilter = currentSearchParams.get('type');
     const classFilter = currentSearchParams.get('class');
     const viewFilter = currentSearchParams.get('view');
@@ -178,7 +167,16 @@ export function TableView({
             {facility.address}
           </td>
           <td className="facility-table-cell">
-            {facility.division_name} {facility.subdivision_name && `/ ${facility.subdivision_name}`}
+            <div className="facility-division-container">
+              <div className="facility-division-name">
+                {facility.division_name || '-'}
+              </div>
+              {facility.subdivision_name && (
+                <div className="facility-subdivision-name">
+                  {facility.subdivision_name}
+                </div>
+              )}
+            </div>
           </td>
         </>
       );
@@ -202,7 +200,16 @@ export function TableView({
           {facility.address}
         </td>
         <td className="facility-table-cell">
-          {facility.division_name} {facility.subdivision_name && `/ ${facility.subdivision_name}`}
+          <div className="facility-division-container">
+            <div className="facility-division-name">
+              {facility.division_name || '-'}
+            </div>
+            {facility.subdivision_name && (
+              <div className="facility-subdivision-name">
+                {facility.subdivision_name}
+              </div>
+            )}
+          </div>
         </td>
         <td className="facility-table-cell">
           {facility.inn || '-'}
@@ -237,7 +244,6 @@ export function TableView({
     );
   };
 
-  // Рассчитываем количество колонок для colspan
   const getColspan = () => {
     if (showDifferentFields) return 8;
     return hasClosedFacilities ? 6 : 5;
@@ -255,7 +261,6 @@ export function TableView({
           </tr>
         </thead>
         <tbody>
-          {/* Сначала отображаем объекты без подразделения */}
           {groupedData.noDivision && (
             <React.Fragment>
               <tr className="division-header-row no-division-header">
@@ -301,26 +306,22 @@ export function TableView({
             </React.Fragment>
           )}
 
-          {/* Затем отображаем подразделения с отделениями */}
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
 
             return (
               <React.Fragment key={divisionId}>
-                {/* Заголовок подразделения */}
                 <tr className="division-header-row">
                   <td colSpan={getColspan()} className="facility-division-header-cell">
                     {division.divisionName}
                   </td>
                 </tr>
 
-                {/* Отделения внутри подразделения */}
                 {division.sortedSubdivisionIds.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
 
                   return (
                     <React.Fragment key={subdivisionId}>
-                      {/* Заголовок отделения (если есть объекты) */}
                       {subdivision.facilities.length > 0 && (
                         <tr className="subdivision-header-row">
                           <td colSpan={getColspan()} className="facility-subdivision-header-cell">
@@ -329,7 +330,6 @@ export function TableView({
                         </tr>
                       )}
 
-                      {/* Объекты отделения */}
                       {subdivision.facilities.map((facility) => (
                         <tr
                           key={facility.id}

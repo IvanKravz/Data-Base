@@ -1,3 +1,4 @@
+import { Building2 } from 'lucide-react';
 import { Employee } from '../../../../../types';
 import '.././style.css';
 
@@ -21,7 +22,10 @@ export function DatesCard({ formData, onChange }: DatesCardProps) {
 
   return (
     <div className="personnel-card">
-      <h3 className="personnel-card-title">Даты</h3>
+      <div className="personnel-card-header-edit">
+        <Building2 size={20} />
+        <h3 className="personnel-card-title">Даты</h3>
+      </div>
       <div className="personnel-card-content personnel-dates-grid">
         <div className="personnel-form-group">
           <label className="personnel-form-label">Дата рождения</label>

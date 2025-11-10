@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Employee, Division } from '../../../../../types';
 import '.././style.css';
 import { employeesApi } from '../../../../../api';
+import { Building2 } from 'lucide-react';
 
 interface BasicInformationCardProps {
   formData: Employee;
@@ -118,13 +119,13 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
     });
   };
 
-  if (loading) {
-    return <div>Загрузка справочников...</div>;
-  }
 
   return (
     <div className="personnel-card">
-      <h3 className="personnel-card-title">Основная информация</h3>
+      <div className="personnel-card-header-edit">
+        <Building2 size={20} />
+        <h3 className="personnel-card-title">Основная информация</h3>
+      </div>
       <div className="personnel-card-content">
         <div className="personnel-form-group">
           <label className="personnel-form-label">ФИО</label>

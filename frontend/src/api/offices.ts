@@ -8,7 +8,6 @@ export const officesApi = {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('data', data);
     return data;
   },
 
