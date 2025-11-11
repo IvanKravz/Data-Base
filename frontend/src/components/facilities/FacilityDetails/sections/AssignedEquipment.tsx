@@ -20,14 +20,14 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
     const fetchEquipment = async () => {
       try {
         if (!token || !facility.id) return;
-        
+
         setIsLoading(true);
         setError(null);
-        
-        const data = await equipmentApi.getEquipment(token, { 
+
+        const data = await equipmentApi.getEquipment(token, {
           facility: facility.id.toString() // Убедимся, что передаем строку
         });
-        
+
         if (data) {
           setFacilityEquipment(data);
         } else {
@@ -40,22 +40,22 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
         setIsLoading(false);
       }
     };
-  
+
     fetchEquipment();
   }, [facility.id, token]);
 
   const handleUpdateEquipment = async (updatedEquipment: Equipment) => {
     try {
       if (!token) return;
-      
+
       await equipmentApi.updateEquipment(
-        token, 
-        updatedEquipment.id, 
+        token,
+        updatedEquipment.id,
         updatedEquipment
       );
-      
-      setFacilityEquipment(prev => 
-        prev.map(item => 
+
+      setFacilityEquipment(prev =>
+        prev.map(item =>
           item.id === updatedEquipment.id ? updatedEquipment : item
         )
       );
@@ -69,7 +69,7 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
   const handleDeleteEquipment = async (id: string) => {
     try {
       if (!token) return;
-      
+
       await equipmentApi.deleteEquipment(id);
       setFacilityEquipment(prev => prev.filter(item => item.id !== id));
     } catch (err) {
@@ -106,6 +106,8 @@ export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
           onUpdateEquipment={handleUpdateEquipment}
           onDeleteEquipment={handleDeleteEquipment}
           viewType="table"
+          disableRowClick={true}  
+          showActions={false}   
         />
       )}
     </div>

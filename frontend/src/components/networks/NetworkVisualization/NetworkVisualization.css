@@ -1,3 +1,4 @@
+/* NetworkVisualization.css */
 .network-visualization-container {
     margin-top: 24px;
 }
@@ -53,21 +54,25 @@
     margin: 0 0 12px 0;
     color: #63b3ed;
     font-size: 1.1rem;
+    word-break: break-word;
 }
 
 .network-visualization-details-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 12px;
+    display: block;
 }
 
-.network-details-item {
+.network-details-content-column {
     display: flex;
-    border-bottom: 2px solid rgba(250, 250, 250, 0.7) !important;
+    flex-direction: column;
+    gap: 0.3rem;
 }
 
-.network-details-item-button {
-    display: none;
+.network-details-item-panel {
+    display: flex;
+    gap: 1rem;
+    /* flex-direction: column; */
+    /* border-bottom: 1px solid rgba(250, 250, 250, 0.7) !important; */
+    /* padding-bottom: 8px; */
 }
 
 .network-details-label {
@@ -80,32 +85,10 @@
     font-size: 1.1rem;
 }
 
-.network-details-button {
-    background: rgb(99, 179, 237, 0.3);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.network-details-button:hover {
-    background: rgb(66, 153, 225, 0.9);
-}
-
-.network-details-button:active {
-    background: #3182ce;
-}
-
 .network-visualization-details-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
     gap: 12px;
 }
 
@@ -144,7 +127,7 @@
     }
 
     .network-visualization-details-content {
-        grid-template-columns: 1fr;
+        display: block;
     }
 
     .network-visualization-details-header {

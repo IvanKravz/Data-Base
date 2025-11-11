@@ -9,6 +9,8 @@ interface EquipmentListProps {
   divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
+  disableRowClick?: boolean;
+  showActions?: boolean;
 }
 
 export function EquipmentList({
@@ -16,7 +18,9 @@ export function EquipmentList({
   onDeleteEquipment,
   divisionId,
   subdivisionId,
-  activeTab
+  activeTab,
+  disableRowClick = false,
+  showActions = true 
 }: EquipmentListProps) {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
@@ -37,12 +41,14 @@ export function EquipmentList({
 
   return (
     <>
-      <TableView
+<TableView
         equipment={filteredEquipment}
         onDelete={handleDelete}
         divisionId={divisionId}
         subdivisionId={subdivisionId}
         activeTab={activeTab}
+        disableRowClick={disableRowClick}
+        showActions={showActions}
       />
 
       {filteredEquipment.length === 0 && (

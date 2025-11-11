@@ -69,10 +69,9 @@
 
 .facility-header-main {
     display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-md);
+    align-items: center;
+    gap: 0.75rem;
     flex: 1;
-    min-width: 0;
 }
 
 .facility-title-container {

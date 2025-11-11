@@ -159,7 +159,7 @@ export function EquipmentDetailsPage() {
   if (isEditing) {
     return (
       <div className="equipment-details-container">
-        <div className="equipment-edit-header">
+        <div className="page-header">
           <div className="equipment-header-left">
             <button
               onClick={() => setIsEditing(false)}
@@ -167,9 +167,9 @@ export function EquipmentDetailsPage() {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="equipment-edit-header-title">
+            <h2 className="equipment-edit-header-title">
               Редактирование техники
-            </h1>
+            </h2>
           </div>
         </div>
 

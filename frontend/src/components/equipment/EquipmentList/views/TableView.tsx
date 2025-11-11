@@ -13,15 +13,19 @@ interface TableViewProps {
   divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
+  disableRowClick?: boolean;
+  showActions?: boolean;
 }
 
-export function TableView({ 
-  equipment, 
-  onDelete, 
-  divisionId, 
-  subdivisionId, 
-  activeTab 
-}: TableViewProps) {
+export function TableView({
+  equipment,
+  onDelete,
+  divisionId,
+  subdivisionId,
+  activeTab,
+  disableRowClick = false,
+  showActions = true // Значение по умолчанию true
+}: TableViewProps & { disableRowClick?: boolean }) {
   const navigate = useNavigate();
 
   // Функция для сортировки техники внутри групп
@@ -59,15 +63,15 @@ export function TableView({
   // Функция для форматирования поля "В чьих интересах"
   const formatInterestOrgan = (interestOrgan: any): string => {
     if (!interestOrgan) return '-';
-    
+
     if (typeof interestOrgan === 'object' && interestOrgan.name) {
       return interestOrgan.name;
     }
-    
+
     if (typeof interestOrgan === 'string') {
       return interestOrgan;
     }
-    
+
     return '-';
   };
 
@@ -86,11 +90,11 @@ export function TableView({
       const divisionId = item.division.id;
       const divisionName = item.division.name;
       const divisionOrder = item.division.order || 9999;
-      
+
       const subdivisionId = item.subdivision?.id || 'no-subdivision';
       const subdivisionName = item.subdivision?.name || 'Без отделения';
       const subdivisionOrder = item.subdivision?.order || 9999;
-      
+
       if (!acc.divisions[divisionId]) {
         acc.divisions[divisionId] = {
           divisionName,
@@ -98,7 +102,7 @@ export function TableView({
           subdivisions: {}
         };
       }
-      
+
       if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
         acc.divisions[divisionId].subdivisions[subdivisionId] = {
           subdivisionName,
@@ -106,10 +110,10 @@ export function TableView({
           equipment: []
         };
       }
-      
+
       acc.divisions[divisionId].subdivisions[subdivisionId].equipment.push(item);
     }
-    
+
     return acc;
   }, {
     noDivision: null as { groupName: string; groupOrder: number; equipment: Equipment[] } | null,
@@ -141,9 +145,9 @@ export function TableView({
     subdivisionIds.sort((a, b) => {
       return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
     });
-    
+
     division.sortedSubdivisionIds = subdivisionIds;
-    
+
     subdivisionIds.forEach(subdivisionId => {
       division.subdivisions[subdivisionId].equipment = sortEquipmentInGroup(
         division.subdivisions[subdivisionId].equipment
@@ -152,6 +156,9 @@ export function TableView({
   });
 
   const handleRowClick = (item: Equipment) => {
+    // Если disableRowClick true, не выполняем навигацию
+    if (disableRowClick) return;
+
     navigate(`/equipment/${item.id}`, {
       state: {
         from: 'equipment-section',
@@ -167,18 +174,19 @@ export function TableView({
       <table className="equipment-table">
         <thead className="table-header">
           <tr>
-            <th className="table-header-cell">Название</th>
-            <th className="table-header-cell">Модель</th>
-            <th className="table-header-cell">Категория</th>
-            <th className="table-header-cell">Статус</th>
-            <th className="table-header-cell">Подразделение</th>
-            <th className="table-header-cell">Серийный номер</th>
-            <th className="table-header-cell">Инв. номер</th>
-            <th className="table-header-cell">Дата производства</th>
-            <th className="table-header-cell">Дата ввода в экспл.</th>
-            <th className="table-header-cell">В чьих интересах</th>
-            <th className="table-header-cell">Закреплено за</th>
-            <th className="table-header-cell">Действия</th>
+            <th className="table-header-cell-equipment">Название</th>
+            <th className="table-header-cell-equipment">Модель</th>
+            <th className="table-header-cell-equipment">Категория</th>
+            <th className="table-header-cell-equipment">Статус</th>
+            <th className="table-header-cell-equipment">Подразделение</th>
+            <th className="table-header-cell-equipment">Серийный номер</th>
+            <th className="table-header-cell-equipment">Инв. номер</th>
+            <th className="table-header-cell-equipment">Дата производства</th>
+            <th className="table-header-cell-equipment">Дата ввода в экспл.</th>
+            <th className="table-header-cell-equipment">В чьих интересах</th>
+            <th className="table-header-cell-equipment">Закреплено за</th>
+            {/* Условно отображаем заголовок Действия */}
+            {showActions && <th className="table-header-cell-equipment">Действия</th>}
           </tr>
         </thead>
         <tbody className="table-body">
@@ -186,7 +194,7 @@ export function TableView({
           {groupedData.noDivision && (
             <React.Fragment>
               <tr className="division-header-row no-division-header">
-                <td colSpan={12} className="equipment-division-header-cell">
+                <td colSpan={showActions ? 12 : 11} className="equipment-division-header-cell">
                   {groupedData.noDivision.groupName}
                 </td>
               </tr>
@@ -196,27 +204,28 @@ export function TableView({
                   <tr
                     key={item.id}
                     onClick={() => handleRowClick(item)}
-                    className="table-row no-division-row"
+                    className="table-row-equipment no-division-row"
+                    style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}
                   >
                     {/* Столбец Название с переносами строк */}
-                    <td className="table-cell table-cell-name">
+                    <td className="table-cell-equipment table-cell-name">
                       <div className="cell-content-full-width">
                         {item.name}
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{item.type}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{item.category_display}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className={`cell-content ${getStatusColor(item.status)}`}>
                         <StatusIcon className="status-icon" />
                       </div>
                     </td>
                     {/* Столбец Подразделение с блоками */}
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="division-container">
                         <div className="division-name">
                           {item.division?.name || '-'}
@@ -228,22 +237,22 @@ export function TableView({
                         )}
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{item.serial_number}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{item.inventory_number}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{formatDate(item.manufacturing_date)}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{formatDate(item.exploitation_date)}</div>
                     </td>
-                    <td className="table-cell">
+                    <td className="table-cell-equipment">
                       <div className="cell-content">{formatInterestOrgan(item.interest_organ)}</div>
                     </td>
-                    <td className="table-cell table-cell-assigned-to">
+                    <td className="table-cell-equipment table-cell-assigned-to">
                       <div className="cell-content">
                         {item.assigned_to ? (
                           <>
@@ -259,20 +268,23 @@ export function TableView({
                         )}
                       </div>
                     </td>
-                    <td className="table-cell-actions">
-                      <div className="actions-container">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(item.id);
-                          }}
-                          className="delete-button"
-                          aria-label="Удалить"
-                        >
-                          <Trash2 className="action-icon" />
-                        </button>
-                      </div>
-                    </td>
+                    {/* Условно отображаем ячейку с действиями */}
+                    {showActions && (
+                      <td className="table-cell-actions">
+                        <div className="actions-container">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(item.id);
+                            }}
+                            className="delete-button"
+                            aria-label="Удалить"
+                          >
+                            <Trash2 className="action-icon" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -282,31 +294,31 @@ export function TableView({
           {/* Затем отображаем подразделения с отделениями */}
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
-            
+
             return (
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
                 <tr className="division-header-row">
-                  <td colSpan={12} className="equipment-division-header-cell">
+                  <td colSpan={showActions ? 12 : 11} className="equipment-division-header-cell">
                     {division.divisionName}
                   </td>
                 </tr>
-                
+
                 {/* Отделения внутри подразделения */}
                 {division.sortedSubdivisionIds.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
-                  
+
                   return (
                     <React.Fragment key={subdivisionId}>
                       {/* Заголовок отделения (если есть техника) */}
                       {subdivision.equipment.length > 0 && (
                         <tr className="subdivision-header-row">
-                          <td colSpan={12} className="equipment-subdivision-header-cell">
+                          <td colSpan={showActions ? 12 : 11} className="equipment-subdivision-header-cell">
                             {subdivision.subdivisionName}
                           </td>
                         </tr>
                       )}
-                      
+
                       {/* Техника отделения */}
                       {subdivision.equipment.map((item) => {
                         const StatusIcon = getStatusIcon(item.status);
@@ -314,27 +326,28 @@ export function TableView({
                           <tr
                             key={item.id}
                             onClick={() => handleRowClick(item)}
-                            className="table-row"
+                            className="table-row-equipment"
+                            style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}
                           >
                             {/* Столбец Название с переносами строк */}
-                            <td className="table-cell table-cell-name">
+                            <td className="table-cell-equipment table-cell-name">
                               <div className="cell-content-full-width">
                                 {item.name}
                               </div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{item.type}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{item.category_display}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className={`cell-content ${getStatusColor(item.status)}`}>
                                 <StatusIcon className="status-icon" />
                               </div>
                             </td>
                             {/* Столбец Подразделение с блоками */}
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="division-container">
                                 <div className="division-name">
                                   {item.division?.name || '-'}
@@ -346,22 +359,22 @@ export function TableView({
                                 )}
                               </div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{item.serial_number}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{item.inventory_number}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{formatDate(item.manufacturing_date)}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{formatDate(item.exploitation_date)}</div>
                             </td>
-                            <td className="table-cell">
+                            <td className="table-cell-equipment">
                               <div className="cell-content">{formatInterestOrgan(item.interest_organ)}</div>
                             </td>
-                            <td className="table-cell table-cell-assigned-to">
+                            <td className="table-cell-equipment table-cell-assigned-to">
                               <div className="cell-content">
                                 {item.assigned_to ? (
                                   <>
@@ -377,20 +390,23 @@ export function TableView({
                                 )}
                               </div>
                             </td>
-                            <td className="table-cell-actions">
-                              <div className="actions-container">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(item.id);
-                                  }}
-                                  className="delete-button"
-                                  aria-label="Удалить"
-                                >
-                                  <Trash2 className="action-icon" />
-                                </button>
-                              </div>
-                            </td>
+                            {/* Условно отображаем ячейку с действиями */}
+                            {showActions && (
+                              <td className="table-cell-actions">
+                                <div className="actions-container">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onDelete(item.id);
+                                    }}
+                                    className="delete-button"
+                                    aria-label="Удалить"
+                                  >
+                                    <Trash2 className="action-icon" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         );
                       })}

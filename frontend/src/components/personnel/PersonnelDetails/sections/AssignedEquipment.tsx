@@ -65,8 +65,8 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
 
   return (
     <div className="equipment-container">
-      <div className="equipment-header">
-        <h2 className="equipment-title">Закрепленная техника</h2>
+      <div className="equipment-header-assigned">
+        <h2 className="equipment-title-assigned">Закрепленная техника</h2>
         
         <div className="equipment-summary">
           <HardDrive className="equipment-summary-icon" />
@@ -82,7 +82,8 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
         equipment={assignedEquipment}
         onUpdateEquipment={handleUpdateEquipment}
         onDeleteEquipment={handleDeleteEquipment}
-        // viewType="table"
+        disableRowClick={true}
+        showActions={false}
       />
     </div>
   );

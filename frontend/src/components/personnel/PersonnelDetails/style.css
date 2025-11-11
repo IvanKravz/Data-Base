@@ -45,16 +45,16 @@
 }
 
 /* Заголовок и верхняя панель */
-.equipment-header {
+.equipment-header-assigned {
 
-  /* display: flex; */
-  /* align-items: center; */
-  /* justify-content: space-between; */
-  /* margin-bottom: 0.8rem; */
+  display: flex; 
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
 }
 
-.equipment-title {
-  font-size: 1.125rem;
+.equipment-title-assigned {
+  font-size: 1.3rem;
   font-weight: 600;
   color: #111827;
 }
@@ -73,7 +73,7 @@
 }
 
 .equipment-summary-text {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #6b7280;
 }
 
@@ -117,7 +117,6 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  max-width: 15rem;
   height: 2px;
   background: linear-gradient(90deg, #4f46e5, #4669e5);
 }

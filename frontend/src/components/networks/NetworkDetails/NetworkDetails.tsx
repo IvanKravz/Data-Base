@@ -254,7 +254,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
                                   />
                                 </span>
                                 <Building size={18} className="hierarchy-icon" />
-                                {getStringValue(facility.name)}
+                                {getStringValue(facility.type?.name)}
                               </div>
 
                               {isNodeExpanded('facility', facility.id) && (

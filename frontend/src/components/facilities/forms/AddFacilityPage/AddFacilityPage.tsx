@@ -161,7 +161,7 @@ export function AddFacilityPage() {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="facility-header__title">Добавление нового объекта</h1>
+                <h1 className="facilities-title">Добавление нового объекта</h1>
             </div>
 
             <div className="facility-card-edit facility-card--editing">

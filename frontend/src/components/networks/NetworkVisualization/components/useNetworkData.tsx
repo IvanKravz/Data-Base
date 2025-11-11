@@ -1,13 +1,16 @@
+// useNetworkData.tsx
 import { useMemo } from 'react';
 
 export interface Node {
   id: string;
   name: string;
-  type: 'division' | 'facility' | 'equipment';
+  type: 'division' | 'facility' | 'equipment'; 
   position: [number, number, number];
   radius: number;
   color: string;
   originalColor: string;
+  class_display?: string;
+  type_name?: string; // Добавляем новое поле для типа объекта
 }
 
 export interface Connection {
@@ -90,14 +93,16 @@ export const useNetworkData = (network: any, memberships: any[], directions: any
       nodes.push({
         id: `facility-${fac.id}`,
         name: fac.name,
+        class_display: fac.class_display,
         type: 'facility',
         position: [facX, facY, facZ],
         radius: 1.5,
         color: '#90cdf4',
-        originalColor: '#90cdf4'
+        originalColor: '#90cdf4',
+        type_name: fac.type?.name 
       });
       
-      // Создаем соединение между подразделением и объектами
+      // Создаем соединение между подразделениями и объектами
       if (divisionMembership && divisionMembership.division) {
         connections.push({
           start: [divX, 23, divZ],
