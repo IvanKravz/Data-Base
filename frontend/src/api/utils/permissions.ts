@@ -8,14 +8,27 @@ import { authApi } from "../auth";
 // Основные модули системы
 export type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks';
 
+// Типы прав доступа
+export type PermissionType = 'view' | 'add' | 'change' | 'delete';
+
+// Проверка наличия конкретного права
+export const hasPermission = (module: AppModule, permission: PermissionType): boolean => {
+  return authApi.hasPermission(module, permission);
+};
+
 // Проверка возможности просмотра модуля
 export const canView = (module: AppModule): boolean => {
-  return authApi.canViewModule(module);
+  return hasPermission(module, 'view');
 };
 
 // Проверка возможности редактирования в модуле
 export const canEdit = (module: AppModule): boolean => {
-  return authApi.canEditModule(module);
+  return hasPermission(module, 'change');
+};
+
+// Проверка возможности удаления в модуле
+export const canDelete = (module: AppModule): boolean => {
+  return hasPermission(module, 'delete');
 };
 
 // Получение всех прав доступа

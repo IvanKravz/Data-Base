@@ -45,7 +45,7 @@ export function MainLayout() {
     const divisionId = user?.division_info?.id;
 
     if ((isExploitationChief() || isExploitationEmployee()) && divisionId && window.location.pathname === '/') {
-      navigate(`/divisions/${divisionId}`);
+      navigate(`/divisions/${divisionId}`, { replace: true });
       setActiveTab('divisions');
     }
   }, [navigate]);
@@ -110,6 +110,8 @@ export function MainLayout() {
         <Route path="/storage" element={<StorageSection />} />
         <Route path="/cabinet" element={<CabinetSection />} />
         <Route path="/map" element={<MapCountry />} />
+        
+        {/* Fallback route - используем абсолютный путь */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

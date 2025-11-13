@@ -41,6 +41,9 @@ interface ModulePermissions {
   networks: { can_view: boolean; can_edit: boolean };
 }
 
+// Добавляем тип для модулей приложения
+type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks';
+
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
     const { data } = await api.post('/users/auth/login/', { username, password });
@@ -115,6 +118,27 @@ export const authApi = {
     }
     
     return null;
+  },
+  
+  // ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ПРОВЕРКИ КОНКРЕТНЫХ ПРАВ
+  hasPermission: (module: AppModule, permission: string): boolean => {
+    const permissions = authApi.getModulePermissions();
+    if (!permissions) return false;
+    
+    const modulePermissions = permissions[module];
+    if (!modulePermissions) return false;
+    
+    switch (permission) {
+      case 'view':
+        return modulePermissions.can_view;
+      case 'add':
+      case 'change':
+      case 'delete':
+        // В текущей структуре прав can_edit включает все права на модификацию
+        return modulePermissions.can_edit;
+      default:
+        return false;
+    }
   },
   
   // Метод для проверки доступа к модулю

@@ -1,8 +1,11 @@
+// TableView.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Employee } from '../../../../types';
 import { Trash2, Shield, ClipboardList, CircleUserRound } from 'lucide-react';
+import { canEdit } from '../../../../api/utils/permissions';
 import './style.css';
+
 
 interface TableViewProps {
   personnel: Employee[];
@@ -13,6 +16,9 @@ interface TableViewProps {
 
 export function TableView({ personnel, onPersonClick, onDelete, divisionName }: TableViewProps) {
   const navigate = useNavigate(); 
+  
+  // Проверяем права на редактирование сотрудников
+  const hasEditPermission = canEdit('employees');
 
   // Функция для сортировки сотрудников внутри групп
   const sortEmployeesInGroup = (employees: Employee[]): Employee[] => {
@@ -130,7 +136,10 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
             <th className="table-header-cell">Подразделение</th>
             <th className="table-header-cell">Телефон</th>
             <th className="table-header-cell">Класс сети/ Форма ГТ</th>
-            <th className="table-header-cell text-right">Действия</th>
+            {/* Условный рендеринг столбца "Действия" */}
+            {hasEditPermission && (
+              <th className="table-header-cell text-right">Действия</th>
+            )}
           </tr>
         </thead>
         <tbody className="table-body">
@@ -138,7 +147,8 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
           {groupedData.management && groupedData.management.employees.length > 0 && (
             <React.Fragment>
               <tr className="division-header-row management-header">
-                <td colSpan={7} className="personnel-division-header-cell">
+                {/* Используем colSpan в зависимости от наличия прав */}
+                <td colSpan={hasEditPermission ? 7 : 6} className="personnel-division-header-cell">
                   {groupedData.management.groupName}
                 </td>
               </tr>
@@ -214,17 +224,20 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
                       {person.form_state_secrets || '—'}
                     </div>
                   </td>
-                  <td className="table-cell text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(person.id);
-                      }}
-                      className="delete-button"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </td>
+                  {/* Условный рендеринг ячейки с действиями */}
+                  {hasEditPermission && (
+                    <td className="table-cell text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(person.id);
+                        }}
+                        className="delete-button"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </React.Fragment>
@@ -238,7 +251,8 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
                 <tr className="division-header-row">
-                  <td colSpan={7} className="personnel-division-header-cell">
+                  {/* Используем colSpan в зависимости от наличия прав */}
+                  <td colSpan={hasEditPermission ? 7 : 6} className="personnel-division-header-cell">
                     {division.divisionName}
                   </td>
                 </tr>
@@ -252,7 +266,8 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
                       {/* Заголовок отделения (если есть сотрудники) */}
                       {subdivision.employees.length > 0 && (
                         <tr className="subdivision-header-row">
-                          <td colSpan={7} className="personnel-subdivision-header-cell">
+                          {/* Используем colSpan в зависимости от наличия прав */}
+                          <td colSpan={hasEditPermission ? 7 : 6} className="personnel-subdivision-header-cell">
                             {subdivision.subdivisionName}
                           </td>
                         </tr>
@@ -265,7 +280,6 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
                           onClick={() => onPersonClick(person)}
                           className="table-row"
                         >
-                          {/* ... содержимое строки ... */}
                           <td className="table-cell">
                             <div className="flex items-center">
                               <div className="user-avatar">
@@ -332,17 +346,20 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName }: 
                               {person.form_state_secrets || '—'}
                             </div>
                           </td>
-                          <td className="table-cell text-right">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(person.id);
-                              }}
-                              className="delete-button"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </td>
+                          {/* Условный рендеринг ячейки с действиями */}
+                          {hasEditPermission && (
+                            <td className="table-cell text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(person.id);
+                                }}
+                                className="delete-button"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </React.Fragment>

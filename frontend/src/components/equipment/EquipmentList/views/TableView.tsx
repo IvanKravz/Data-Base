@@ -3,8 +3,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Equipment } from '../../../../types';
 import { Trash2 } from 'lucide-react';
-import { getStatusIcon, getStatusLabel, getStatusColor } from '../../../../utils/statusUtils';
+import { getStatusIcon, getStatusColor } from '../../../../utils/statusUtils';
 import { format } from 'date-fns';
+import { canEdit } from '../../../../api/utils/permissions';
 import './style.css';
 
 interface TableViewProps {
@@ -27,6 +28,12 @@ export function TableView({
   showActions = true // Значение по умолчанию true
 }: TableViewProps & { disableRowClick?: boolean }) {
   const navigate = useNavigate();
+  
+  // Проверяем права на редактирование оборудования
+  const hasEditPermission = canEdit('equipment');
+  
+  // Столбец действий отображается только если showActions=true И есть права на редактирование
+  const shouldShowActions = showActions && hasEditPermission;
 
   // Функция для сортировки техники внутри групп
   const sortEquipmentInGroup = (equipmentList: Equipment[]): Equipment[] => {
@@ -186,7 +193,7 @@ export function TableView({
             <th className="table-header-cell-equipment">В чьих интересах</th>
             <th className="table-header-cell-equipment">Закреплено за</th>
             {/* Условно отображаем заголовок Действия */}
-            {showActions && <th className="table-header-cell-equipment">Действия</th>}
+            {shouldShowActions && <th className="table-header-cell-equipment">Действия</th>}
           </tr>
         </thead>
         <tbody className="table-body">
@@ -194,7 +201,7 @@ export function TableView({
           {groupedData.noDivision && (
             <React.Fragment>
               <tr className="division-header-row no-division-header">
-                <td colSpan={showActions ? 12 : 11} className="equipment-division-header-cell">
+                <td colSpan={shouldShowActions ? 12 : 11} className="equipment-division-header-cell">
                   {groupedData.noDivision.groupName}
                 </td>
               </tr>
@@ -269,7 +276,7 @@ export function TableView({
                       </div>
                     </td>
                     {/* Условно отображаем ячейку с действиями */}
-                    {showActions && (
+                    {shouldShowActions && (
                       <td className="table-cell-actions">
                         <div className="actions-container">
                           <button
@@ -299,7 +306,7 @@ export function TableView({
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
                 <tr className="division-header-row">
-                  <td colSpan={showActions ? 12 : 11} className="equipment-division-header-cell">
+                  <td colSpan={shouldShowActions ? 12 : 11} className="equipment-division-header-cell">
                     {division.divisionName}
                   </td>
                 </tr>
@@ -313,7 +320,7 @@ export function TableView({
                       {/* Заголовок отделения (если есть техника) */}
                       {subdivision.equipment.length > 0 && (
                         <tr className="subdivision-header-row">
-                          <td colSpan={showActions ? 12 : 11} className="equipment-subdivision-header-cell">
+                          <td colSpan={shouldShowActions ? 12 : 11} className="equipment-subdivision-header-cell">
                             {subdivision.subdivisionName}
                           </td>
                         </tr>
@@ -391,7 +398,7 @@ export function TableView({
                               </div>
                             </td>
                             {/* Условно отображаем ячейку с действиями */}
-                            {showActions && (
+                            {shouldShowActions && (
                               <td className="table-cell-actions">
                                 <div className="actions-container">
                                   <button

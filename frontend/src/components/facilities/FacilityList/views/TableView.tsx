@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Facility } from '../../../../types';
 import { Trash2, LocateFixed } from 'lucide-react';
+import { hasPermission } from '../../../../api/utils/permissions'; // Используем общую функцию проверки прав
 import './style.css';
 
 interface TableViewProps {
@@ -28,7 +29,16 @@ export function TableView({
   facilityClassFilter
 }: TableViewProps) {
   const navigate = useNavigate();
+  
+  // Проверяем конкретные права
+  const hasViewPermission = hasPermission('facilities', 'view');
+  const hasChangePermission = hasPermission('facilities', 'change');
+  const hasDeletePermission = hasPermission('facilities', 'delete');
+  
   const hasClosedFacilities = facilities.some(f => f.is_closed);
+
+  // Определяем, нужно ли показывать столбец действий
+  const shouldShowActions = hasChangePermission || hasDeletePermission || onLocate;
 
   const sortFacilitiesInGroup = (facilitiesList: Facility[]): Facility[] => {
     return [...facilitiesList].sort((a, b) => {
@@ -219,34 +229,86 @@ export function TableView({
   };
 
   const renderHeader = () => {
+    const headers = [];
+
     if (!showDifferentFields) {
-      return (
-        <>
-          <th className="facility-table-header">Наименование</th>
-          <th className="facility-table-header">Тип</th>
-          {hasClosedFacilities && <th className="facility-table-header">Класс</th>}
-          <th className="facility-table-header">Адрес</th>
-          <th className="facility-table-header">Подразделение</th>
-        </>
+      headers.push(
+        <th key="name" className="facility-table-header">Наименование</th>,
+        <th key="type" className="facility-table-header">Тип</th>
+      );
+      
+      if (hasClosedFacilities) {
+        headers.push(<th key="class" className="facility-table-header">Класс</th>);
+      }
+      
+      headers.push(
+        <th key="address" className="facility-table-header">Адрес</th>,
+        <th key="division" className="facility-table-header">Подразделение</th>
+      );
+    } else {
+      headers.push(
+        <th key="name" className="facility-table-header">Наименование</th>,
+        <th key="type" className="facility-table-header">Тип</th>,
+        <th key="class" className="facility-table-header">Класс</th>,
+        <th key="posts" className="facility-table-header">Посты связи</th>,
+        <th key="address" className="facility-table-header">Адрес</th>,
+        <th key="division" className="facility-table-header">Подразделение</th>,
+        <th key="inn" className="facility-table-header">ИНН</th>
       );
     }
 
-    return (
-      <>
-        <th className="facility-table-header">Наименование</th>
-        <th className="facility-table-header">Тип</th>
-        <th className="facility-table-header">Класс</th>
-        <th className="facility-table-header">Посты связи</th>
-        <th className="facility-table-header">Адрес</th>
-        <th className="facility-table-header">Подразделение</th>
-        <th className="facility-table-header">ИНН</th>
-      </>
-    );
+    // Добавляем столбец "Действия" в renderHeader, если нужно
+    if (shouldShowActions) {
+      headers.push(
+        <th key="actions" className="facility-table-header facility-table-cell-actions">
+          Действия
+        </th>
+      );
+    }
+
+    return headers;
   };
 
   const getColspan = () => {
-    if (showDifferentFields) return 8;
-    return hasClosedFacilities ? 6 : 5;
+    let baseColspan = showDifferentFields ? 7 : (hasClosedFacilities ? 5 : 4);
+    // Добавляем 1 если есть столбец действий
+    return baseColspan + (shouldShowActions ? 1 : 0);
+  };
+
+  const renderActions = (facility: Facility) => {
+    if (!shouldShowActions) return null;
+
+    return (
+      <td className="facility-table-cell facility-table-cell-actions">
+        <div className="facility-action-buttons">
+          {onLocate && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onLocate(facility);
+              }}
+              className="facility-locate-btn"
+              aria-label="Найти на карте"
+            >
+              <LocateFixed className="h-4 w-4" />
+            </button>
+          )}
+          {/* Показываем кнопку удаления только если есть право 'delete' */}
+          {hasDeletePermission && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(facility.id);
+              }}
+              className="facility-delete-btn"
+              aria-label="Удалить объект"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </td>
+    );
   };
 
   return (
@@ -255,9 +317,6 @@ export function TableView({
         <thead>
           <tr>
             {renderHeader()}
-            <th className="facility-table-header facility-table-cell-actions">
-              Действия
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -275,32 +334,7 @@ export function TableView({
                   onClick={() => handleRowClick(facility)}
                 >
                   {renderRowContent(facility)}
-                  <td className="facility-table-cell facility-table-cell-actions">
-                    <div className="facility-action-buttons">
-                      {onLocate && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onLocate(facility);
-                          }}
-                          className="facility-locate-btn"
-                          aria-label="Найти на карте"
-                        >
-                          <LocateFixed className="h-4 w-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(facility.id);
-                        }}
-                        className="facility-delete-btn"
-                        aria-label="Удалить объект"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {renderActions(facility)}
                 </tr>
               ))}
             </React.Fragment>
@@ -337,32 +371,7 @@ export function TableView({
                           onClick={() => handleRowClick(facility)}
                         >
                           {renderRowContent(facility)}
-                          <td className="facility-table-cell facility-table-cell-actions">
-                            <div className="facility-action-buttons">
-                              {onLocate && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onLocate(facility);
-                                  }}
-                                  className="facility-locate-btn"
-                                  aria-label="Найти на карте"
-                                >
-                                  <LocateFixed className="h-4 w-4" />
-                                </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDelete(facility.id);
-                                }}
-                                className="facility-delete-btn"
-                                aria-label="Удалить объект"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
+                          {renderActions(facility)}
                         </tr>
                       ))}
                     </React.Fragment>

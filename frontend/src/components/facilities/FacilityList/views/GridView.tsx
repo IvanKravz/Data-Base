@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react';
 import { Facility } from '../../../../types';
+import { hasPermission } from '../../../../api/utils/permissions'; // Используем общую функцию проверки прав
 import './style.css';
 
 interface GridViewProps {
@@ -28,6 +29,9 @@ export function GridView({
   facilityClassFilter
 }: GridViewProps) {
   const navigate = useNavigate();
+  
+  // Проверяем конкретное право на удаление
+  const hasDeletePermission = hasPermission('facilities', 'delete');
 
   const handleCardClick = (facility: Facility) => {
     const currentSearchParams = new URLSearchParams(window.location.search);
@@ -37,7 +41,6 @@ export function GridView({
       divisionId: divisionId,
       subdivisionId: subdivisionId,
       activeTab: activeTab,
-      // ДОБАВЬТЕ ФИЛЬТРЫ В СОСТОЯНИЕ
       filterType: filterType,
       facilityClassFilter: facilityClassFilter
     };
@@ -45,7 +48,6 @@ export function GridView({
     let facilityUrl = `/facilities/${facility.id}`;
     const params = new URLSearchParams();
 
-    // Сохраняем текущие параметры URL
     const typeFilter = currentSearchParams.get('type');
     const classFilter = currentSearchParams.get('class');
     const viewFilter = currentSearchParams.get('view');
@@ -68,7 +70,6 @@ export function GridView({
     navigate(facilityUrl, { state });
   };
 
-
   return (
     <div className="facility-grid-container">
       {facilities.map((facility) => (
@@ -81,26 +82,31 @@ export function GridView({
               </div>
             </h3>
             <div className="facility-card-actions">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLocate(facility);
-                }}
-                className="facility-card-locate-btn"
-                aria-label="Найти на карте"
-              >
-                <LocateFixed className="h-5 w-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(facility.id);
-                }}
-                className="facility-card-delete-btn"
-                aria-label="Удалить объект"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+              {onLocate && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLocate(facility);
+                  }}
+                  className="facility-card-locate-btn"
+                  aria-label="Найти на карте"
+                >
+                  <LocateFixed className="h-5 w-5" />
+                </button>
+              )}
+              {/* Показываем кнопку удаления только если есть право 'delete' */}
+              {hasDeletePermission && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(facility.id);
+                  }}
+                  className="facility-card-delete-btn"
+                  aria-label="Удалить объект"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
 

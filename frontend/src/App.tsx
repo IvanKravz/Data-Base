@@ -3,7 +3,11 @@ import AppRouter from './AppRouter';
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AppRouter />
     </BrowserRouter>
   );
