@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Filter } from 'lucide-react'; // Добавляем иконку Filter
 import { SearchField } from './sections/SearchField';
 import { DateField } from './sections/DateField';
 import './AdvancedSearchModal.css';
@@ -203,10 +203,14 @@ export function AdvancedSearchModal({
   return (
     <div className="advanced-search-modal-container">
       <div className="advanced-search-modal">
+        {/* Обновленный заголовок с иконкой Filter */}
         <div className="advanced-search-header">
-          <h3>Расширенный поиск</h3>
+          <div className="advanced-search-title">
+            <Filter size={16} />
+            <span>Расширенный поиск</span>
+          </div>
           <button onClick={onClose} className="close-button">
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
         

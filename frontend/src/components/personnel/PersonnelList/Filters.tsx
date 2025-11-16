@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import './style.css'
+// Filters.tsx - обновленный компонент
+import React from 'react';
+import { Filter } from 'lucide-react';
+import './style.css';
 
 interface FiltersProps {
   activeFilter: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha';
@@ -25,56 +26,46 @@ export const Filters = ({
   onOfficerFilterClick,
   getStaffCount,
 }: FiltersProps) => {
-  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
-
-  const toggleFiltersVisibility = () => {
-    setIsFiltersVisible(!isFiltersVisible);
-  };
-
   const renderMainFilter = (
     filterType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha',
     label: string
   ) => {
+    const staffData = getStaffCount(filterType);
+    
     return (
       <button
         className={`filter-button ${activeFilter === filterType ? 'active' : ''}`}
         onClick={() => onFilterClick(filterType)}
       >
-        {label}
+        <div>
+          {label}
+          <div className="filter-stats">
+          {staffData.staffCount} / {staffData.actualCount} 
+          </div>
+        </div>
       </button>
     );
   };
 
   return (
     <div className="filters-wrapper">
-      <button
-        className="filter-toggle-button"
-        onClick={toggleFiltersVisibility}
-      >
-        <Filter size={18} />
-        <span>Фильтр</span>
-        {isFiltersVisible ? (
-          <ChevronUp size={18} className="ml-auto" />
-        ) : (
-          <ChevronDown size={18} className="ml-auto" />
-        )}
-      </button>
 
-      {isFiltersVisible && (
-        <div className="filters-content">
-          <div className="main-filters">
-            {renderMainFilter('all', 'Все')}
-            {renderMainFilter('management', 'Руководство')}
-            {renderMainFilter('officers', 'Офицеры')}
-            {renderMainFilter('warrantOfficers', 'Прапорщики')}
-            {renderMainFilter('civilian', 'Гражданские')}
-            {renderMainFilter('mol', 'МОЛ')}
-            {renderMainFilter('sha', 'ШАработники')}
-          </div>
+      <div className="filters-content">
+        <div className="main-filters">
+          {renderMainFilter('all', 'Все сотрудники')}
+          {renderMainFilter('management', 'Руководство')}
+          {renderMainFilter('officers', 'Офицеры')}
+          {renderMainFilter('warrantOfficers', 'Прапорщики')}
+          {renderMainFilter('civilian', 'Гражданские')}
+          {renderMainFilter('mol', 'МОЛ')}
+          {renderMainFilter('sha', 'ШАработники')}
+        </div>
 
-          {(showShaFilters || showOfficerFilters) && (
-            <div className="additional-filters">
-              {showOfficerFilters && (
+        {(showShaFilters || showOfficerFilters) && (
+          <div className="additional-filters">
+            {showOfficerFilters && (
+              <div className="filter-group">
+                <div className="filter-group-label">Тип отображения офицеров:</div>
                 <div className="officer-filters">
                   <button
                     className={`officer-filter-button ${selectedOfficerFilter === 'with_management' ? 'active' : ''}`}
@@ -89,8 +80,11 @@ export const Filters = ({
                     Без руководства
                   </button>
                 </div>
-              )}
-              {showShaFilters && (
+              </div>
+            )}
+            {showShaFilters && (
+              <div className="filter-group">
+                <div className="filter-group-label">Класс доступа ША:</div>
                 <div className="sha-filters">
                   <button
                     className={`sha-filter-button ${selectedAccessClass === 'all' ? 'active' : ''}`}
@@ -102,20 +96,20 @@ export const Filters = ({
                     className={`sha-filter-button ${selectedAccessClass === '1' ? 'active' : ''}`}
                     onClick={() => onShaFilterClick('1')}
                   >
-                    1 класс
+                    1 класс доступа
                   </button>
                   <button
                     className={`sha-filter-button ${selectedAccessClass === '2' ? 'active' : ''}`}
                     onClick={() => onShaFilterClick('2')}
                   >
-                    2 класс
+                    2 класс доступа
                   </button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

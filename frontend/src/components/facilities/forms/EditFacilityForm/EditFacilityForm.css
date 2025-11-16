@@ -68,6 +68,23 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+    transition: all 0.3s ease-in-out;
+}
+
+.facility-form-field-edit {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .facility-form-label-edit {
@@ -119,13 +136,22 @@
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;
     padding-right: 2.5rem;
+    transition: all 0.3s ease-in-out;
+}
+
+.facility-form-select-edit:disabled {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .facility-textarea-container {
     position: relative;
-  }
-  
-  .facility-form-textarea {
+}
+
+.facility-form-textarea {
     width: 100%;
     min-height: 40px;
     padding: 8px 12px 8px 40px;
@@ -139,14 +165,14 @@
     transition: border-color 0.2s;
     white-space: pre-wrap;
     word-wrap: break-word;
-  }
-  
-  .facility-form-textarea:focus {
+}
+
+.facility-form-textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-  
+}
+
 
 .facility-form-textarea-edit {
     width: 100%;
@@ -301,6 +327,119 @@
 .facility-form-footer-submit-edit:hover {
     background-color: var(--primary-hover);
     border-color: var(--primary-hover);
+}
+
+/* Стили для состояния загрузки */
+.facility-form-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.facility-form-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent);
+    animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Стили для скелетона */
+.skeleton-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-pulse {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Индикатор загрузки для select */
+.loading-select {
+    position: relative;
+    color: #6b7280 !important;
+}
+
+.loading-select::before {
+    content: 'Загрузка...';
+    position: absolute;
+    left: calc(var(--space-md) * 2 + 1rem);
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-style: italic;
+    z-index: 2;
+}
+
+.loading-select select {
+    color: transparent !important;
+}
+
+
+/* Индикатор загрузки с точками */
+.loading-dots {
+    display: inline-block;
+    position: relative;
+}
+
+.loading-dots::after {
+    content: '...';
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+
+    0%,
+    20% {
+        content: '.';
+    }
+
+    40% {
+        content: '..';
+    }
+
+    60%,
+    100% {
+        content: '...';
+    }
+}
+
+/* Улучшенный спиннер */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 

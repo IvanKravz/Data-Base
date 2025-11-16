@@ -1,0 +1,230 @@
+/* PersonnelSection.css */
+.personnel-header-wrapper {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 1.2rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.personnel-header-division {
+  display: flex;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.back-button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.create-employee-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #3891da;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.create-employee-button:hover {
+  background-color: #3182ce;
+  transform: translateY(-1px);
+}
+
+.personnel-container {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.personnel-search-container {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.search-bar-with-filters {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.advanced-filter-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.advanced-filter-button:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+.advanced-filter-button.active {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.filter-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #2563eb;
+}
+
+.active-filters {
+  margin-bottom: 1rem;
+}
+
+.active-filters-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+.filter-tag button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  color: #1e40af;
+  cursor: pointer;
+  font-size: 0.875rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.filter-tag button:hover {
+  background-color: #dbeafe;
+}
+
+/* Стили для состояний загрузки и ошибок */
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.error-message {
+  padding: 2rem;
+  text-align: center;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin: 1rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .personnel-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .personnel-header-division {
+    font-size: 1.5rem;
+  }
+
+  .create-employee-button {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .search-bar-with-filters {
+    flex-direction: column;
+  }
+
+  .advanced-filter-button {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .personnel-header-wrapper {
+    padding: 1rem;
+  }
+
+  .personnel-header-division {
+    font-size: 1.25rem;
+  }
+
+  .personnel-container {
+    padding: 1rem;
+  }
+}

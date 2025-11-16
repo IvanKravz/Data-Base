@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Building2 } from 'lucide-react';
 import { Facility } from '../../../../../types';
 import '../EditFacilityForm.css';
@@ -9,20 +9,26 @@ interface AssignmentProps {
   divisions: any[];
   availableSubdivisions: any[];
   isLoading: boolean;
+  fixedDivision?: boolean;
+  fixedSubdivision?: boolean;
 }
 
 export function Assignment({ 
   formData, 
   onChange, 
   divisions, 
-  availableSubdivisions,
-  isLoading
+  availableSubdivisions = [],
+  isLoading,
+  fixedDivision = false,
+  fixedSubdivision = false
 }: AssignmentProps) {
 
-  const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // ИСПРАВЛЕНИЕ: useCallback для обработчиков
+  const handleDivisionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (fixedDivision) return;
+    
     const divisionId = e.target.value;
     
-    // Если выбрано пустое значение, сбрасываем подразделение
     if (!divisionId) {
       onChange({ 
         division: undefined,
@@ -44,12 +50,13 @@ export function Assignment({
       subdivision: undefined,
       communication_posts: []
     });
-  };
+  }, [fixedDivision, divisions, onChange]);
 
-  const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSubdivisionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (fixedSubdivision) return;
+    
     const subdivisionId = e.target.value;
     
-    // Если выбрано пустое значение, сбрасываем отделение
     if (!subdivisionId) {
       onChange({ 
         subdivision: undefined,
@@ -58,14 +65,13 @@ export function Assignment({
       return;
     }
     
-    // Находим полный объект подразделения по ID
     const selectedSubdivision = availableSubdivisions.find(s => s.id == subdivisionId);
     
     onChange({ 
       subdivision: selectedSubdivision || undefined,
       communication_posts: []
     });
-  };
+  }, [fixedSubdivision, availableSubdivisions, onChange]);
 
   return (
     <div className="facility-card-edit">
@@ -84,8 +90,8 @@ export function Assignment({
               value={formData.division?.id || ''}
               onChange={handleDivisionChange}
               className="facility-form-select-edit"
-              disabled={isLoading}
-              required // Делаем поле обязательным
+              disabled={isLoading || fixedDivision}
+              required
             >
               <option value="">Выберите подразделение</option>
               {divisions.map(division => (
@@ -95,6 +101,11 @@ export function Assignment({
               ))}
             </select>
           </div>
+          {fixedDivision && (
+            <div className="text-xs text-gray-500 mt-1">
+              Подразделение автоматически заполнено из текущего контекста
+            </div>
+          )}
         </div>
 
         {formData.division && availableSubdivisions.length > 0 && (
@@ -108,7 +119,7 @@ export function Assignment({
                 value={formData.subdivision?.id || ''}
                 onChange={handleSubdivisionChange}
                 className="facility-form-select-edit"
-                disabled={isLoading}
+                disabled={isLoading || fixedSubdivision}
               >
                 <option value="">Выберите отделение</option>
                 {availableSubdivisions.map(subdivision => (
@@ -118,6 +129,11 @@ export function Assignment({
                 ))}
               </select>
             </div>
+            {fixedSubdivision && (
+              <div className="text-xs text-gray-500 mt-1">
+                Отделение автоматически заполнено из текущего контекста
+              </div>
+            )}
           </div>
         )}
       </div>

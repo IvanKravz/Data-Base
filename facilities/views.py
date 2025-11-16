@@ -124,9 +124,9 @@ class CommunicationPostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Используем order_by('name') для сортировки по наименованию
+        queryset = CommunicationPost.objects.all().order_by('name')
         division = self.request.query_params.get('division')
-        # subdivision больше не используем для фильтрации
         facility_id = self.request.query_params.get('facility')
 
         # Применяем фильтрацию по подразделению

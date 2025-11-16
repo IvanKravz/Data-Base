@@ -436,7 +436,16 @@
     "address": "625000 г. Тюмень, ул. Советская, д. 40",
     "region": "Тюменская область",
     "phone_operator": "(3452) 46-16-95",
-    "phone_communication": "(3452) 46-16-95",
+    "phone_communication": "",
+    "fax": "",
+    "email": "tyumen@fsb.ru"
+  },
+  {
+    "name": "РУФСБ России по Тюменской области*",
+    "address": "625000 г. Тюмень, ул. Советская, д. 40",
+    "region": "Ханты-Мансийский автономный округ",
+    "phone_operator": "(3452) 46-16-95",
+    "phone_communication": "",
     "fax": "",
     "email": "tyumen@fsb.ru"
   },
@@ -445,7 +454,7 @@
     "address": "432017 г. Ульяновск, ул. Л. Толстого, д. 20",
     "region": "Ульяновская область",
     "phone_operator": "(8422) 42-20-10",
-    "phone_communication": "(8422) 42-20-10",
+    "phone_communication": "",
     "fax": "",
     "email": "ulyanovsk@fsb.ru"
   },
@@ -454,7 +463,7 @@
     "address": "191123 г. Санкт-Петербург, Литейный пр-т., д. 4",
     "region": "Санкт-Петербург",
     "phone_operator": "(812) 438-71-10",
-    "phone_communication": "(812) 438-71-10",
+    "phone_communication": "",
     "fax": "",
     "email": "speterburg@fsb.ru"
   },
@@ -463,7 +472,7 @@
     "address": "679016 г. Биробиджан, ул. Октябрьская, д. 11",
     "region": "Еврейская автономная область",
     "phone_operator": "(42622) 2-22-03",
-    "phone_communication": "(42622) 2-22-03",
+    "phone_communication": "",
     "fax": "",
     "email": "eao@fsb.ru"
   },
@@ -634,7 +643,7 @@
       "address": "167983 Республика Коми, г. Сыктывкар, ул. Кирова, д. 38-а",
       "region": "Республика Коми",
       "phone_operator": "(8212) 21-51-28",
-      "phone_communication": "(8212) 24-75-75",
+      "phone_communication": "",
       "fax": "(8212) 21-51-28",
       "email": "komi@fsb.ru"
     },
@@ -643,7 +652,7 @@
       "address": "362040 РСО-Алания, г. Владикавказ, ул. Мордовцева, д. 6",
       "region": "Республика Северная Осетия-Алания",
       "phone_operator": "(8672) 59-73-11",
-      "phone_communication": "(8672) 59-73-11",
+      "phone_communication": "",
       "fax": "(8672) 53-41-76",
       "email": "sev.osetia-alania@fsb.ru"
     },
@@ -738,13 +747,13 @@
       "email": "khabarovsk@fsb.ru"
     },
     {
-      "name": "УФСБ России по Ханты-Мансийскому автономному округу - Югре",
-      "address": "г. Ханты-Мансийск, ул. Мира, 120",
-      "region": "Ханты-Мансийский автономный округ - Югра",
-      "phone_operator": "(3467) 33-35-35",
-      "phone_communication": "(3467) 33-35-35",
-      "fax": "(3467) 33-35-30",
-      "email": "ufsb86@fsb.ru"
+      "name": "УФСБ России по Свердловской области",
+      "address": "г. Екатеринбург, ул. Вайнера, д. 4",
+      "region": "Свердловская область",
+      "phone_operator": "(343) 358-63-41",
+      "phone_communication": "",
+      "fax": "",
+      "email": "sverdlovsk@fsb.ru"
     },
     {
       "name": "УФСБ России по Херсонской области",

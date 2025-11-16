@@ -363,7 +363,7 @@ export function FacilitiesSection() {
   const handleTabChange = useCallback((tab: 'all' | 'open' | 'closed' | 'posts') => {
     setActiveTab(tab);
     setMapSearchTerm('');
-    
+
     // Сбрасываем фильтры только при переключении между вкладками объектов
     if (tab !== 'posts' && activeTab !== 'posts') {
       // Если переключаемся между вкладками объектов (all, open, closed), сбрасываем фильтры
@@ -371,17 +371,17 @@ export function FacilitiesSection() {
       setFacilityClassFilter('all');
     }
     // Если переключаемся на posts или с posts - фильтры сохраняются
-  
+
     const newSearchParams = new URLSearchParams();
-  
+
     // Сохраняем subdivision если есть
     if (stableSubdivisionId) {
       newSearchParams.set('subdivision', stableSubdivisionId);
     }
-  
+
     // Устанавливаем новую вкладку
     newSearchParams.set('tab', tab);
-  
+
     // Сохраняем фильтры в URL только для вкладок объектов
     if (tab !== 'posts') {
       if (filterType !== 'all') {
@@ -391,12 +391,12 @@ export function FacilitiesSection() {
         newSearchParams.set('class', facilityClassFilter);
       }
     }
-  
+
     // Сохраняем viewType если есть
     if (viewType !== 'table') {
       newSearchParams.set('view', viewType);
     }
-  
+
     navigate({ search: newSearchParams.toString() }, { replace: true });
   }, [searchParams, navigate, stableSubdivisionId, viewType, filterType, facilityClassFilter, activeTab]);
 
@@ -450,12 +450,11 @@ export function FacilitiesSection() {
       divisionId: id,
       subdivisionId: stableSubdivisionId,
       activeTab: activeTab,
-      // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
       fromSubdivision: !!stableSubdivisionId
     };
-  
+
     if (isGlobalView || isExploitationUser) {
-      navigate(`/facilities/new`, { state });
+      navigate(`/facilities/create`, { state });
     } else {
       navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
     }
@@ -470,7 +469,7 @@ export function FacilitiesSection() {
       // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
       fromSubdivision: !!stableSubdivisionId
     };
-  
+
     if (isGlobalView || isExploitationUser) {
       navigate(`/communication-posts/new`, { state });
     } else {

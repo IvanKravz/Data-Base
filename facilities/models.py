@@ -139,6 +139,7 @@ class CommunicationPost(models.Model):
     class Meta:
         verbose_name = "Пост связи"
         verbose_name_plural = "Посты связи"
+        ordering = ['name']
     
     def __str__(self):
         return self.name

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { Facility } from '../../../../types';
 import { BasicInformation } from './sections/BasicInformation';
@@ -7,7 +7,6 @@ import { KzInformation } from './sections/KzInformation';
 import { Classification } from './sections/Classification';
 import { Assignment } from './sections/Assignment';
 import { FormActions } from './sections/FormActions';
-import { divisionsApi, employeesApi } from '../../../../api';
 import './EditFacilityForm.css';
 
 interface EditFacilityFormProps {
@@ -18,7 +17,11 @@ interface EditFacilityFormProps {
   preSelectedDivision?: string;
   preSelectedSubdivision?: string;
   divisions?: any[];
-  isLoadingDivisions?: boolean;
+  facilityTypes?: any[];
+  communicationPosts?: any[];
+  isLoadingData?: boolean;
+  fixedDivision?: boolean;
+  fixedSubdivision?: boolean;
 }
 
 export function EditFacilityForm({
@@ -29,7 +32,11 @@ export function EditFacilityForm({
   preSelectedDivision,
   preSelectedSubdivision,
   divisions = [],
-  isLoadingDivisions = false
+  facilityTypes = [],
+  communicationPosts = [],
+  isLoadingData = false,
+  fixedDivision = false,
+  fixedSubdivision = false
 }: EditFacilityFormProps) {
   const [formData, setFormData] = useState<Partial<Facility>>({
     ...initialData,
@@ -37,73 +44,59 @@ export function EditFacilityForm({
     city: initialData.city || '',
     street: initialData.street || '',
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [internalDivisions, setInternalDivisions] = useState<any[]>(divisions);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const token = localStorage.getItem('accessToken');
 
-  // Вычисляем доступные отделения на основе выбранного подразделения
-  const getAvailableSubdivisions = () => {
+  // ИСПРАВЛЕНИЕ: Убираем внутреннюю загрузку данных, используем переданные пропсы
+  const availableSubdivisions = useMemo(() => {
     if (!formData.division?.id) return [];
-    const division = internalDivisions.find((d) => d.id === formData.division?.id);
+    const division = divisions.find((d) => d.id === formData.division?.id);
     return division?.subdivisions || [];
-  };
+  }, [formData.division?.id, divisions]);
 
-  const availableSubdivisions = getAvailableSubdivisions();
-
+  // ИСПРАВЛЕНИЕ: Правильная инициализация с учетом загрузки данных
   useEffect(() => {
-    const initializeForm = async () => {
-      if (!token) return;
+    // Если данные еще загружаются, ждем
+    if (isLoadingData) return;
+    
+    // Если уже инициализировали, не делаем повторную инициализацию
+    if (isInitialized) return;
 
-      setIsLoading(true);
-      try {
-        let divisionsToUse = divisions;
+    // Устанавливаем данные формы
+    setFormData(prev => ({
+      ...prev,
+      division: initialData.division,
+      subdivision: initialData.subdivision,
+      type: initialData.type,
+      communication_posts: initialData.communication_posts || []
+    }));
 
-        // Если divisions не переданы извне, загружаем их самостоятельно
-        if (divisions.length === 0) {
-          divisionsToUse = await divisionsApi.getDivisions(token);
-          setInternalDivisions(divisionsToUse);
-        } else {
-          setInternalDivisions(divisions);
-        }
+    setIsInitialized(true);
+  }, [initialData, isLoadingData, isInitialized, divisions]);
 
-        // Находим актуальное подразделение из загруженного списка
-        let actualDivision = null;
-        if (initialData.division) {
-          const divisionId = typeof initialData.division === 'object'
-            ? initialData.division.id
-            : initialData.division;
+  // ИСПРАВЛЕНИЕ: Дополнительный эффект для обновления данных при изменении divisions
+  useEffect(() => {
+    if (!isInitialized || isLoadingData) return;
+    
+    // Если divisions загрузились после инициализации, обновляем данные
+    if (divisions.length > 0 && initialData.division) {
+      const divisionObj = divisions.find(d => String(d.id) === String(initialData.division?.id));
+      const subdivisionObj = initialData.subdivision && divisionObj?.subdivisions 
+        ? divisionObj.subdivisions.find(s => String(s.id) === String(initialData.subdivision?.id))
+        : null;
 
-          actualDivision = divisionsToUse.find(d =>
-            d.id === divisionId
-          );
-        }
-
-        // Формируем обновленные данные формы
-        const updatedFormData: Partial<Facility> = {
-          ...initialData,
-          comments: initialData.comments || '',
-          city: initialData.city || '',
-          street: initialData.street || '',
-          is_closed: initialData.is_closed,
-          division: actualDivision || initialData.division,
-          // Гарантируем, что subdivision сохраняется
-          subdivision: initialData.subdivision
-        };
-
-        setFormData(updatedFormData);
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-      } finally {
-        setIsLoading(false);
+      if (divisionObj && divisionObj.id !== formData.division?.id) {
+        setFormData(prev => ({
+          ...prev,
+          division: divisionObj,
+          subdivision: subdivisionObj || prev.subdivision
+        }));
       }
-    };
+    }
+  }, [divisions, initialData, isInitialized, isLoadingData, formData.division?.id]);
 
-    initializeForm();
-  }, [token, divisions, initialData]);
-
-  const handleChange = (data: Partial<Facility>) => {
+  // ИСПРАВЛЕНИЕ: useCallback для обработчиков
+  const handleChange = useCallback((data: Partial<Facility>) => {
     setFormData(prev => {
       const newData = { ...prev, ...data };
 
@@ -121,14 +114,13 @@ export function EditFacilityForm({
 
       return newData;
     });
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
 
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
 
       // Формируем данные для отправки
       const dataToSend = {
@@ -144,12 +136,12 @@ export function EditFacilityForm({
     } catch (error) {
       console.error('Ошибка сохранения:', error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
-  };
+  }, [formData, onSubmit]);
 
   // Пока данные загружаются, показываем индикатор загрузки
-  if (!isInitialized && isLoading) {
+  if (!isInitialized && isLoadingData) {
     return (
       <div className="facility-form-edit">
         <div className="facility-card-edit">
@@ -172,16 +164,21 @@ export function EditFacilityForm({
       <Assignment
         formData={formData}
         onChange={handleChange}
-        divisions={internalDivisions}
+        divisions={divisions}
         availableSubdivisions={availableSubdivisions}
-        isLoading={isLoadingDivisions || isLoading}
+        isLoading={isLoadingData}
+        fixedDivision={fixedDivision}
+        fixedSubdivision={fixedSubdivision}
       />
 
       <Classification
         formData={formData}
         onChange={handleChange}
-        divisionId={formData.division?.id} 
+        divisionId={formData.division?.id}
         subdivisionId={formData.subdivision?.id}
+        facilityTypes={facilityTypes}
+        communicationPosts={communicationPosts} 
+        isLoading={isLoadingData} 
       />
 
       {formData.is_closed && (
@@ -215,7 +212,7 @@ export function EditFacilityForm({
       <FormActions
         onCancel={onCancel}
         isEditing={isEditing}
-        isLoading={isLoading}
+        isLoading={isSubmitting}
       />
     </form>
   );

@@ -139,10 +139,11 @@ class FacilityTypeSerializer(serializers.ModelSerializer):
 
 class CommunicationPostSerializer(serializers.ModelSerializer):
     division_name = serializers.CharField(source='division.name', read_only=True)
+    subdivision_name = serializers.CharField(source='subdivision.name', read_only=True)
     
     class Meta:
         model = CommunicationPost
-        fields = ['id', 'name', 'division', 'division_name', 'subdivision', 'description']       
+        fields = ['id', 'name', 'division', 'division_name', 'subdivision', 'subdivision_name', 'description']       
 
 class FacilitySerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()

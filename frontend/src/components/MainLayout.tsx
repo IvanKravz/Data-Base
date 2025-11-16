@@ -13,7 +13,7 @@ import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/Equipment
 import { ClosedFacilitiesPage } from './facilities/ClosedFacilitiesPage/ClosedFacilitiesPage';
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
-import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection';
+import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection/PersonnelSection';
 import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection/EquipmentSection';
 import { FacilitiesSection } from './divisions/DivisionDetails/sections/FacilitiesSection/FacilitiesSection';
 import { DivisionTasksSection } from './divisions/DivisionDetails/sections/TasksSection/DivisionTasksSection';
@@ -71,11 +71,14 @@ export function MainLayout() {
         {/* Global Routes (без привязки к подразделению) */}
         <Route path="/personnel" element={<PersonnelSection />} />
         <Route path="/equipment" element={<EquipmentSection />} />
-        {/* ДОБАВЛЕНО: Глобальный маршрут для создания техники */}
-        <Route path="/equipment/create" element={<CreateEquipmentForm />} />
         <Route path="/facilities" element={<FacilitiesSection />} />
         <Route path="/tasks" element={<DivisionTasksSection />} />
+
+        {/* Глобальные маршруты для сетей связи */}
         <Route path="/networks" element={<CommunicationNetworks />} />
+        <Route path="/networks/management" element={<NetworkManagement />} />
+        <Route path="/networks/create" element={<CreateNetwork />} />
+        <Route path="/networks/communication-networks/edit/:id" element={<EditNetwork />} />
 
         {/* Division Routes */}
         <Route path="/divisions/:id" element={<DivisionDetails />} />
@@ -86,9 +89,12 @@ export function MainLayout() {
         <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm />} />
         <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
         <Route path="/divisions/:id/networks" element={<CommunicationNetworks />} />
+        <Route path="/divisions/:id/networks/management" element={<NetworkManagement />} />
+        <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
         <Route path="/divisions/:id/equipment/create" element={<CreateEquipmentForm />} />
-
+        
         {/* Equipment Routes */}
+        <Route path="/equipment/create" element={<CreateEquipmentForm />} />
         <Route path="/equipment-disposed" element={<DisposedEquipmentPage />} />
         <Route path="/equipment/:id" element={<EquipmentDetailsPage />} />
 
@@ -98,6 +104,7 @@ export function MainLayout() {
         <Route path="/personnel/:id/qualitative" element={<QualitativeCharacteristics />} />
 
         {/* Facility Routes */}
+        <Route path="/facilities/create" element={<AddFacilityPage />} />
         <Route path="/facilities-closed" element={<ClosedFacilitiesPage />} />
         <Route path="/facilities/:id" element={<FacilityDetails />} />
 
@@ -110,7 +117,7 @@ export function MainLayout() {
         <Route path="/storage" element={<StorageSection />} />
         <Route path="/cabinet" element={<CabinetSection />} />
         <Route path="/map" element={<MapCountry />} />
-        
+
         {/* Fallback route - используем абсолютный путь */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

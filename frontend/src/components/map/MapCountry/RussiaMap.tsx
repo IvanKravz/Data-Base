@@ -513,7 +513,7 @@ export const RussiaMap: React.FC<RussiaMapProps> = ({
                         onMouseLeave={onRegionMouseLeave}
                         onClick={() => onRegionClick("Республика Саха (Якутия)")}>
                     </path>
-                    <path fill="#c9dfec" stroke="#606778" name="Республика Северная Осетия (Алания)" className="rus_zone"
+                    <path fill="#c9dfec" stroke="#606778" name="Республика Северная Осетия-Алания" className="rus_zone"
                         d="M44.2,406.3L44.7,410.40000000000003L46.5,412.20000000000005L49.3,412.6L50.9,414.20000000000005L51.3,415.50000000000006L52.5,413.50000000000006H54.4L54.6,
                     412.20000000000005L54,410.20000000000005L54.6,407.20000000000005L56.300000000000004,406.50000000000006L58.900000000000006,406.6000000000001L58.400000000000006,
                     404.4000000000001L56.00000000000001,402.2000000000001L55.00000000000001,403.0000000000001V404.5000000000001L54.10000000000001,405.4000000000001L51.80000000000001,
@@ -522,7 +522,7 @@ export const RussiaMap: React.FC<RussiaMapProps> = ({
                         strokeLinejoin="round"
                         onMouseEnter={onRegionMouseEnter}
                         onMouseLeave={onRegionMouseLeave}
-                        onClick={() => onRegionClick("Республика Северная Осетия (Алания)")}>
+                        onClick={() => onRegionClick("Республика Северная Осетия-Алания")}>
                     </path>
                     <path fill="#c9dfec" stroke="#606778" name="Республика Татарстан" className="rus_zone"
                         d="M184.8,328.7L185.9,330.3V332L183.3,334H181.4L179.9,334.7L179.1,333.9L177.79999999999998,334.59999999999997L178.2,336.29999999999995V337.4L179,338.2L176.4,

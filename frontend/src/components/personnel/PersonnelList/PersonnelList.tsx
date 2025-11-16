@@ -21,8 +21,16 @@ interface PersonnelListProps {
   division?: Division;
   personnel?: Employee[];
   loading?: boolean;
-  divisionId?: string; // Добавляем новые пропсы
+  divisionId?: string;
   subdivisionId?: string;
+  // ДОБАВЛЯЕМ НОВЫЕ ПРОПСЫ ДЛЯ ФИЛЬТРОВ
+  advancedFilters?: {
+    ranks: string[];
+    positions: string[];
+    divisions: string[];
+    networkClasses: string[];
+    gtForms: string[];
+  };
 }
 
 interface StaffCounts {
@@ -40,8 +48,15 @@ export function PersonnelList({
   division,
   personnel: externalPersonnel,
   loading = false,
-  divisionId, // Получаем новые пропсы
-  subdivisionId
+  divisionId,
+  subdivisionId,
+  advancedFilters = { // ЗАДАЕМ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
+    ranks: [],
+    positions: [],
+    divisions: [],
+    networkClasses: [],
+    gtForms: []
+  }
 }: PersonnelListProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -68,21 +83,18 @@ export function PersonnelList({
   const [internalLoading, setInternalLoading] = useState(true);
 
   const isGlobalView = !division;
-  // const subdivisionId = searchParams.get('subdivision');
 
   // Функция для сортировки сотрудников по приоритету
   const sortEmployeesByPriority = (employees: Employee[]): Employee[] => {
     return [...employees].sort((a, b) => {
-      // Сначала по приоритету (чем меньше число, тем выше приоритет)
       if (a.priority !== b.priority) {
         return a.priority - b.priority;
       }
-      // Если приоритеты равны, сортируем по ФИО
       return a.full_name.localeCompare(b.full_name);
     });
   };
 
-  // Используем externalPersonnel если переСотрудник не найдедан, иначе allPersonnel
+  // Используем externalPersonnel если передан, иначе allPersonnel
   const basePersonnel = useMemo(() => {
     if (externalPersonnel) {
       return sortEmployeesByPriority(externalPersonnel);
@@ -112,33 +124,27 @@ export function PersonnelList({
       try {
         setInternalLoading(true);
 
-        // В глобальном режиме загружаем всех сотрудников и все подразделения
         if (!division && !externalPersonnel) {
           const [personnelData, divisionsData] = await Promise.all([
             employeesApi.getPersonnel(token, {}),
             divisionsApi.getDivisions(token)
           ]);
 
-          // Сортируем сотрудников по приоритету при загрузке
           const sortedData = sortEmployeesByPriority(personnelData);
           setAllPersonnel(sortedData);
           setAllDivisions(divisionsData);
           dispatch(setEmployee(sortedData));
 
-          // Рассчитываем глобальную штатную численность
           const counts = calculateGlobalStaffCounts(divisionsData);
           setGlobalStaffCounts(counts);
         }
-        // Если передан externalPersonnel, но мы в глобальном режиме, все равно загружаем подразделения для штатной численности
         else if (!division && externalPersonnel) {
           const divisionsData = await divisionsApi.getDivisions(token);
           setAllDivisions(divisionsData);
 
-          // Рассчитываем глобальную штатную численность
           const counts = calculateGlobalStaffCounts(divisionsData);
           setGlobalStaffCounts(counts);
         }
-        // Если передан division (режим конкретного подразделения), используем переданные данные
         else {
           setInternalLoading(false);
         }
@@ -156,9 +162,7 @@ export function PersonnelList({
 
   const filteredPersonnel = useMemo(() => {
     const filtered = basePersonnel.filter(person => {
-      // В глобальном режиме не фильтруем по подразделению
-      // В режиме подразделения данные уже отфильтрованы на уровне PersonnelSection
-
+      // Базовые фильтры по категории
       let matchesCategory = true;
       if (activeFilter === 'management') {
         matchesCategory = person.category === 'management';
@@ -183,6 +187,7 @@ export function PersonnelList({
         }
       }
 
+      // Поиск по тексту
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm ||
         person.full_name?.toLowerCase().includes(searchLower) ||
@@ -192,13 +197,61 @@ export function PersonnelList({
         person.rank?.toLowerCase().includes(searchLower) ||
         person.subdivision?.name.toLowerCase().includes(searchLower);
 
-      return matchesCategory && matchesSearch;
+      // ФИЛЬТРЫ ИЗ РАСШИРЕННОГО ПОИСКА
+      
+      // Фильтр по званиям
+      const matchesRank = advancedFilters.ranks.length === 0 || 
+        advancedFilters.ranks.some(rank => 
+          person.rank?.toLowerCase().includes(rank.toLowerCase())
+        );
+
+      // Фильтр по должностям
+      const matchesPosition = advancedFilters.positions.length === 0 || 
+        advancedFilters.positions.some(position => 
+          person.position?.toLowerCase().includes(position.toLowerCase())
+        );
+
+      // Фильтр по подразделениям
+      const matchesDivision = advancedFilters.divisions.length === 0 || 
+        advancedFilters.divisions.some(divisionName => 
+          person.division?.name.toLowerCase().includes(divisionName.toLowerCase())
+        );
+
+      // Фильтр по классам сети
+      const matchesNetworkClass = advancedFilters.networkClasses.length === 0 || 
+        advancedFilters.networkClasses.some(networkClass => {
+          const personAccessLevel = person.sha_details?.access_level?.toString();
+          return personAccessLevel === networkClass;
+        });
+
+      // Фильтр по формам ГТ
+      const matchesGtForm = advancedFilters.gtForms.length === 0 || 
+        advancedFilters.gtForms.some(gtForm => {
+          const personGtForm = person.form_state_secrets;
+          return personGtForm === gtForm;
+        });
+
+      return matchesCategory && 
+             matchesSearch && 
+             matchesRank && 
+             matchesPosition && 
+             matchesDivision && 
+             matchesNetworkClass && 
+             matchesGtForm;
     });
 
     // Сортируем отфильтрованный список
     return sortEmployeesByPriority(filtered);
-  }, [basePersonnel, activeFilter, selectedOfficerFilter, selectedAccessClass, searchTerm]);
+  }, [
+    basePersonnel, 
+    activeFilter, 
+    selectedOfficerFilter, 
+    selectedAccessClass, 
+    searchTerm,
+    advancedFilters // ДОБАВЛЯЕМ В ЗАВИСИМОСТИ
+  ]);
 
+  // Остальной код без изменений...
   const getStaffCount = (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
     // В глобальном режиме показываем общую штатную численность и фактическое количество
     if (isGlobalView) {
@@ -224,18 +277,18 @@ export function PersonnelList({
           actualCount: basePersonnel.filter(person => person.category === 'civilian').length
         },
         mol: {
-          staffCount: 0, // Для МОЛ и ШаРаботников штатная численность не рассчитывается
+          staffCount: 0,
           actualCount: basePersonnel.filter(person => person.is_material_responsible).length
         },
         sha: {
-          staffCount: 0, // Для МОЛ и ШаРаботников штатная численность не рассчитывается
+          staffCount: 0,
           actualCount: basePersonnel.filter(person => person.is_sha_worker).length
         }
       };
       return counts[staffType];
     }
 
-    // Режим подразделения - старая логика
+    // Режим подразделения
     if (!division) return { staffCount: 0, actualCount: 0 };
 
     const filteredPersonnel = subdivisionId
@@ -280,7 +333,6 @@ export function PersonnelList({
     return counts[staffType];
   };
 
-  // Остальной код без изменений...
   const handleDelete = (id: string) => {
     setPersonToDelete(id);
     setShowDeleteModal(true);
@@ -310,8 +362,8 @@ export function PersonnelList({
         from: location.pathname + location.search,
         divisionId: divisionId,
         subdivisionId: subdivisionId,
-        activeFilter: activeFilter, // сохраняем активный фильтр
-        searchTerm: searchTerm // сохраняем поисковый запрос
+        activeFilter: activeFilter,
+        searchTerm: searchTerm
       }
     });
   };
@@ -393,7 +445,7 @@ export function PersonnelList({
 
         {filteredPersonnel.length === 0 && (
           <div className="personnel-list-empty-message">
-            {searchTerm
+            {searchTerm || Object.values(advancedFilters).some(arr => arr.length > 0)
               ? 'Нет сотрудников, соответствующих поиску'
               : selectedCategory !== 'all'
                 ? `Нет ${selectedCategory === 'mol' ? 'материально ответственных лиц' : 'ШаРаботников'}`

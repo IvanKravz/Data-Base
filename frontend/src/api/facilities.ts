@@ -111,6 +111,15 @@ export const facilitiesApi = {
     facilityCache.clear();
   },
 
+  getFacilityTypes: async (token?: string) => {
+    const { data } = await api.get('/facilities/facility-types/', {
+      headers: token ? {
+        Authorization: `Bearer ${token}`,
+      } : undefined
+    });
+    return data;
+  },
+
   // Get facility equipment
   getFacilityEquipment: async (id: string, params?: {
     type?: 'open' | 'closed';
