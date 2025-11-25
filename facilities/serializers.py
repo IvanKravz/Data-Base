@@ -227,6 +227,25 @@ class FacilitySerializer(serializers.ModelSerializer):
         if posts_data is not None:
             instance.communication_posts.set(posts_data)
         return instance
+    
+    def validate_division_id(self, value):
+        """Проверяет, может ли пользователь привязывать объект к этому подразделению"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            user = request.user
+            # Админы и руководители могут привязывать к любым подразделениям
+            if (user.is_superuser or 
+                (hasattr(user, 'has_role') and user.has_role('admin')) or 
+                (hasattr(user, 'has_role') and user.has_role('leader')) or 
+                (hasattr(user, 'has_role') and user.has_role('deputy_director'))):
+                return value
+                
+            # Обычные пользователи могут привязывать только к своему подразделению
+            user_division = getattr(user, 'division', None)
+            if user_division and value != user_division:
+                raise serializers.ValidationError('Вы можете создавать объекты только в своем подразделении')
+                
+        return value
 
 class FacilityStatsSerializer(serializers.Serializer):
     total = serializers.IntegerField()

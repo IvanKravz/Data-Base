@@ -33,7 +33,7 @@
 }
 
 .equipment-division-header-cell {
-  padding: 0.3rem 1rem;
+  padding: 0.3rem 0.5rem;
   font-weight: 600;
   color: #1e40af;
   font-size: 1.2rem;
@@ -41,7 +41,7 @@
 }
 
 .equipment-subdivision-header-cell {
-  padding: 4px 16px 4px 32px;
+  padding: 0.3rem 1rem;
   font-weight: 500;
   font-size: 1.1em;
   color: #374151;
@@ -236,17 +236,44 @@
   border-radius: 4px;
 }
 
+/* Стили для кнопок свертывания/развертывания */
+.collapse-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  color: inherit;
+}
+
+.collapse-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для содержимого заголовков подразделений и отделений */
+.division-header-content,
+.subdivision-header-content {
+  display: flex;
+  align-items: center;
+}
+
 /* Адаптивные стили */
 @media (max-width: 1200px) {
+
   .table-cell,
   .table-header-cell-equipment {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .table-cell-assigned-to {
     min-width: 160px;
   }
-  
+
   .table-cell-name {
     min-width: 180px;
     max-width: 250px;

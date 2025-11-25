@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import NetworkTabs from '../NetworkTabs/NetworkTabs';
 import './NetworkManagement.css';
@@ -7,10 +7,23 @@ import './NetworkManagement.css';
 const NetworkManagement: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = localStorage.getItem('accessToken');
 
   const handleBack = () => {
-    navigate(`/divisions/${id}/networks`);
+    // Получаем divisionId из state навигации
+    const stateDivisionId = location.state?.divisionId;
+    
+    if (stateDivisionId) {
+      // Если есть divisionId в state - переходим к сетям подразделения
+      navigate(`/divisions/${stateDivisionId}/networks`);
+    } else if (id) {
+      // Если есть id в параметрах URL - переходим к сетям подразделения
+      navigate(`/divisions/${id}/networks`);
+    } else {
+      // Глобальный режим - переходим к общему списку сетей
+      navigate('/networks');
+    }
   };
 
   return (

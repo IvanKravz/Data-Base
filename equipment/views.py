@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
+
+from users.permissions import RoleBasedPermission
 from .models import Equipment, EquipmentCategory, InterestOrgan
 from .serializers import (
     ACLSerializer,
@@ -21,11 +23,13 @@ from facilities.models import Facility
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 from django.apps import apps
+from facilities.serializers import FacilityShortSerializer
+from users.permissions_config import ROLE_PERMISSIONS 
 
 class InterestOrganViewSet(viewsets.ModelViewSet):
     queryset = InterestOrgan.objects.all()
     serializer_class = InterestOrganSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]  # ДОБАВИТЬ RoleBasedPermission
     pagination_class = None
 
     def get_queryset(self):
@@ -55,7 +59,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         ip_addresses_count=Count('net_interfaces__ip_addresses')
     )
     serializer_class = EquipmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, RoleBasedPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['facility', 'is_network', 'status']
     pagination_class = None 
@@ -63,13 +67,34 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        user_division = None
-        if not self.request.user.is_staff:
-            user_division = getattr(self.request.user, 'employee', None) and self.request.user.employee.division
+        # Для администраторов и суперпользователей показываем все оборудование
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
         
-        if user_division:
-            queryset = queryset.filter(division=user_division)
+        # Используем RoleBasedPermission для проверки прав
+        permission_checker = RoleBasedPermission()
         
+        # Проверяем, может ли пользователь видеть все подразделения
+        user_roles = permission_checker._get_user_roles(self.request.user)
+        can_see_all = any(
+            role in ['admin', 'leader', 'deputy_director'] or
+            ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
+            for role in user_roles
+        )
+        
+        # Если пользователь не может видеть все подразделения, фильтруем по его подразделению
+        if not can_see_all:
+            user_division = getattr(self.request.user, 'division', None)
+            if not user_division and hasattr(self.request.user, 'employee') and self.request.user.employee:
+                user_division = getattr(self.request.user.employee, 'division', None)
+                
+            if user_division:
+                queryset = queryset.filter(division=user_division)
+            else:
+                # Если у пользователя нет подразделения и он не может видеть все - пустой результат
+                queryset = queryset.none()
+        
+        # Остальная логика фильтрации (поиск, категории и т.д.)
         division = self.request.query_params.get('division', None)
         category = self.request.query_params.get('category', None)
         status = self.request.query_params.get('status', None)
@@ -110,6 +135,11 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
         return queryset
     
+    def has_permission_for_custom_action(self, request, model_name, action):
+        """Проверяет права для кастомных действий"""
+        permission_checker = RoleBasedPermission()
+        return permission_checker._check_permission(request.user, model_name, action)
+
     @action(detail=False, methods=['get'], url_path='facilities-by-division')
     def get_facilities_by_division(self, request):
         """Получить объекты по подразделению"""
@@ -194,8 +224,16 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         serializer = EquipmentStatsSerializer(stats)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'])
     def equipment_categories(self, request):
+        """Получить категории оборудования"""
+        # Проверяем права через RoleBasedPermission для модели EquipmentCategory
+        if not self.has_permission_for_custom_action(request, 'EquipmentCategory', 'list'):
+            return Response(
+                {'detail': 'You do not have permission to perform this action.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         categories = EquipmentCategory.objects.all()
         serializer = EquipmentCategorySerializer(categories, many=True)
         return Response(serializer.data)
@@ -210,6 +248,14 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='assigned_to/(?P<employee_id>[^/.]+)')
     def list_by_employee(self, request, employee_id=None):
+        """Получить оборудование по назначенному сотруднику"""
+        # Проверяем права через RoleBasedPermission для модели Equipment
+        if not self.has_permission_for_custom_action(request, 'Equipment', 'list'):
+            return Response(
+                {'detail': 'You do not have permission to perform this action.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(assigned_to_id=employee_id)
         serializer = self.get_serializer(queryset, many=True)

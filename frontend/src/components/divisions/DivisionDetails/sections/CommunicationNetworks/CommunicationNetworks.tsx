@@ -162,11 +162,26 @@ const CommunicationNetworks: React.FC = () => {
 
   const handleNavigateToManagement = () => {
     if (isGlobalView) {
-      navigate('/networks/management', { state: { from: location.pathname, divisionId: targetDivisionId } });
+      navigate('/networks/management', {
+        state: {
+          from: location.pathname,
+          divisionId: targetDivisionId
+        }
+      });
     } else if (isExploitationUser && userDivisionId) {
-      navigate(`/divisions/${userDivisionId}/networks/management`, { state: { from: location.pathname, divisionId: userDivisionId } });
+      navigate(`/divisions/${userDivisionId}/networks/management`, {
+        state: {
+          from: location.pathname,
+          divisionId: userDivisionId
+        }
+      });
     } else if (id) {
-      navigate(`/divisions/${id}/networks/management`, { state: { from: location.pathname, divisionId: id } });
+      navigate(`/divisions/${id}/networks/management`, {
+        state: {
+          from: location.pathname,
+          divisionId: id
+        }
+      });
     }
   };
 
@@ -206,11 +221,11 @@ const CommunicationNetworks: React.FC = () => {
     if (isGlobalView) {
       return undefined;
     }
-    
+
     if (isExploitationUser) {
       return userDivisionId;
     }
-    
+
     return id;
   }, [isGlobalView, isExploitationUser, userDivisionId, id]);
 

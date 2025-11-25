@@ -40,7 +40,10 @@ export const Filters = ({
         <div>
           {label}
           <div className="filter-stats">
-          {staffData.staffCount} / {staffData.actualCount} 
+            {filterType === 'mol' || filterType === 'sha' 
+              ? staffData.actualCount 
+              : `${staffData.staffCount} / ${staffData.actualCount}`
+            }
           </div>
         </div>
       </button>

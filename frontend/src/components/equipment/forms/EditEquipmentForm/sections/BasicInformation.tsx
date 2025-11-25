@@ -8,13 +8,12 @@ interface BasicInformationProps {
   onChange: (data: Partial<Equipment>) => void;
   isClosedEquipment?: boolean;
   isDisposed?: boolean;
-  equipmentCategories: { value: string; name: string }[];
+  equipmentCategories: { value: string; name: string; is_closed: boolean }[]; // Добавляем is_closed в тип
 }
 
 export function BasicInformation({
   formData,
   onChange,
-  isClosedEquipment = false,
   isDisposed = false,
   equipmentCategories = []
 }: BasicInformationProps) {
@@ -25,10 +24,19 @@ export function BasicInformation({
       cat => cat.value === selectedValue
     );
 
-    // Отправляем полный объект категории
-    onChange({
-      category: selectedCategory || null
-    });
+    if (selectedCategory) {
+      // Передаем полный объект категории И обновляем флаг is_closed оборудования
+      onChange({
+        category: selectedCategory,
+        is_closed: selectedCategory.is_closed // Важно: обновляем флаг оборудования
+      });
+    } else {
+      // Если категория не выбрана, сбрасываем
+      onChange({
+        category: null,
+        is_closed: false
+      });
+    }
   };
 
   const getCurrentCategoryValue = () => {

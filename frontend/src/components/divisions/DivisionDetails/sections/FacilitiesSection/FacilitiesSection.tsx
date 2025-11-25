@@ -466,7 +466,7 @@ export function FacilitiesSection() {
       divisionId: id,
       subdivisionId: stableSubdivisionId,
       activeTab: activeTab,
-      // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
+      // Передаем флаг, что переходим из контекста отделения
       fromSubdivision: !!stableSubdivisionId
     };
 
@@ -691,6 +691,8 @@ export function FacilitiesSection() {
               <CommunicationPostsList
                 posts={filteredBySubdivisionPosts}
                 onPostDeleted={handlePostDeleted}
+                isGlobalView={isGlobalView}
+                searchTerm={debouncedSearchTerm}
               />
             ) : (
               <FacilityList

@@ -13,11 +13,15 @@ ROLE_PERMISSIONS = {
             'Division': ['view', 'add', 'change', 'delete'],
             'Subdivision': ['view', 'add', 'change', 'delete'],
             'Equipment': ['view', 'add', 'change', 'delete'],
-            'Object': ['view', 'add', 'change', 'delete'],
+            'Facility': ['view', 'add', 'change', 'delete'],
             'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
             'Task': ['view', 'add', 'change', 'delete'],
+            'CommunicationPost': ['view', 'add', 'change', 'delete'],
+            'FacilityType': ['view''add', 'change', 'delete'],
+            'EquipmentCategory': ['view', 'add', 'change', 'delete'],
         },
         'filters': {},
+        'can_see_all_divisions': True,
         'description': 'Полный доступ ко всем функциям системы'
     },
     
@@ -31,11 +35,15 @@ ROLE_PERMISSIONS = {
             'Division': ['view'],
             'Subdivision': ['view'],
             'Equipment': ['view'],
-            'Object': ['view'],
+            'Facility': ['view'],
             'CommunicationNetwork': ['view'],
             'Task': ['view'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {},
+        'can_see_all_divisions': True,
         'description': 'Просмотр всей информации без возможности изменений'
     },
 
@@ -49,8 +57,12 @@ ROLE_PERMISSIONS = {
             'Task': ['view'],
             'Division': ['view'],
             'Subdivision': ['view'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {},
+        'can_see_all_divisions': True,
         'description': 'Просмотр всех данных системы'
     },
     
@@ -63,18 +75,23 @@ ROLE_PERMISSIONS = {
             'User': ['view'],
             'Division': ['view'],
             'Subdivision': ['view'],
+            'Facility': ['view'],
             'Equipment': ['view'],
             'Object': ['view'],
             'CommunicationNetwork': ['view'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
             'Task': ['view'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {
-            'Task': {'division_id': 1}
+            'Task': {'division_id': 1},
         },
+        'can_see_all_divisions': True,  # Только свое подразделение
         'description': 'Полный просмотр, управление задачами 1 отдела'
     },
     
-        'head_of_section_1_1': {
+    'head_of_section_1_1': {
         'name': 'Начальник 1 отделения 1 отдела',
         'models': {
             'Employee': ['view'],
@@ -83,12 +100,17 @@ ROLE_PERMISSIONS = {
             'User': ['view'],
             'Division': ['view'],
             'Subdivision': ['view'],
+            'Facility': ['view'],
             'Equipment': ['view'],
             'Object': ['view'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
             'CommunicationNetwork': ['view'],
             'Task': ['view'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {},
+        'can_see_all_divisions': True,  # Только свое подразделение
         'description': 'Просмотр всей информации без возможности изменений'
     },
     
@@ -99,10 +121,10 @@ ROLE_PERMISSIONS = {
             'Task': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            # Явно указываем подразделение в фильтрах роли
             'Employee': {'division_id': 1},
             'Task': {'division_id': 1, 'subdivision_id': 1}
         },
+        'can_see_all_divisions': True,  # Только свое подразделение
         'description': 'Управление сотрудниками 1 отдела, задачи 1 отделения'
     },
     
@@ -113,23 +135,25 @@ ROLE_PERMISSIONS = {
             'Object': ['view'],
             'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
             'Task': ['view', 'add', 'change', 'delete'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {
-            # Фильтры роли имеют приоритет над подразделением пользователя
             'Equipment': {'division_id': 1, 'is_closed': False},
             'Task': {'division_id': 1, 'subdivision_id': 1}
         },
+        'can_see_all_divisions': True,  # Только свое подразделение
         'description': 'Управление техникой и сетями связи 1 отдела'
     },
     
     'employee_section_1_2': {
         'name': 'Сотрудник 2 отделения 1 отдела',
         'models': {
-            'Employee': ['view', 'change'],  # только шаработники
-            'Equipment': ['view', 'change'],  # только закрытая
-            'Object': ['view', 'change'],     # только закрытые
+            'Employee': ['view', 'change'],
+            'Equipment': ['view', 'change'],
+            'Object': ['view', 'change'],
             'CommunicationNetwork': ['view'],
             'Task': ['view', 'add', 'change', 'delete'],
+            'EquipmentCategory': ['view'],
         },
         'filters': {
             'Employee': {'is_sha_worker': True},
@@ -137,32 +161,45 @@ ROLE_PERMISSIONS = {
             'Object': {'is_closed': True},
             'Task': {'division_id': 1, 'subdivision_id': 2}
         },
+        'can_see_all_divisions': True,  # Только свое подразделение
         'description': 'Специализированный доступ для 2 отделения'
     },
 
     'exploitation_chief': {
-        'name': 'Начальник подразделения эксплуатации',
-        'models': {
-            'Employee': ['view'],
-            'Equipment': ['view'],
-            'Facility': ['view'],
-            'CommunicationNetwork': ['view'],
-            'Task': ['view'],
-        },
-        'filters': {},
-        'description': 'Просмотр данных своего подразделения'
+    'name': 'Начальник подразделения эксплуатации',
+    'models': {
+        'Division': ['view'], 
+        'Employee': ['view'],
+        'Equipment': ['view'],
+        'Facility': ['view'],
+        'CommunicationNetwork': ['view'],
+        'Task': ['view'],
+        'CommunicationPost': ['view'],
+        'FacilityType': ['view'],
+        'EquipmentCategory': ['view'],  # ДОБАВЛЕНО
+        'InterestOrgan': ['view'],      # ДОБАВЛЕНО, если нужно
     },
-    
+    'filters': {},
+    'can_see_all_divisions': False,
+    'description': 'Просмотр данных своего подразделения'
+},
+
     'exploitation_employee': {
         'name': 'Сотрудник подразделения эксплуатации',
         'models': {
+            'Division': ['view'],
             'Employee': ['view'],
             'Equipment': ['view', 'change'],
             'Facility': ['view', 'add', 'change', 'delete'],
             'CommunicationNetwork': ['view', 'change'],
             'Task': ['view', 'add', 'change', 'delete'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
+            'EquipmentCategory': ['view'],  # ДОБАВЛЕНО
+            'InterestOrgan': ['view'],      # ДОБАВЛЕНО, если нужно
         },
         'filters': {},
+        'can_see_all_divisions': False,
         'description': 'Полное управление данными своего подразделения'
     },
 }

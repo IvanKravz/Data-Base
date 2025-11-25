@@ -29,14 +29,14 @@ class RoleBasedPermission(permissions.BasePermission):
                 return False
                 
         # Если дошли сюда, значит все роли пользователя в view_only_roles
-        return bool(user_roles)  # если есть хотя бы одна view_only роль, то True
-    
+        return bool(user_roles)
+
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
             
         # Суперпользователи и администраторы имеют все права
-        if request.user.is_superuser or request.user.has_role('admin'):
+        if request.user.is_superuser or self._user_has_role(request.user, 'admin'):
             return True
             
         # Получаем модель и действие
@@ -51,7 +51,7 @@ class RoleBasedPermission(permissions.BasePermission):
     
     def has_object_permission(self, request, view, obj):
         # Суперпользователи и администраторы имеют все права к объектам
-        if request.user.is_superuser or request.user.has_role('admin'):
+        if request.user.is_superuser or self._user_has_role(request.user, 'admin'):
             return True
             
         # Дополнительные проверки на уровне объекта
@@ -91,16 +91,35 @@ class RoleBasedPermission(permissions.BasePermission):
 
     def _check_division_access(self, user, obj):
         """Проверяет доступ к объекту на основе подразделения"""
+        from .permissions_config import ROLE_PERMISSIONS
+        
+        user_roles = self._get_user_roles(user)
+        
+        # Проверяем, есть ли у пользователя роль, которая может видеть все подразделения
+        for role in user_roles:
+            if role in ROLE_PERMISSIONS and ROLE_PERMISSIONS[role].get('can_see_all_divisions', False):
+                return True
+        
         # Для пользователей с правами только на просмотр - разрешаем доступ ко всем подразделениям
         if self.is_view_only_user(user):
             return True
+        
+        # Получаем подразделение пользователя
+        user_division = getattr(user, 'division', None)
+        if not user_division and hasattr(user, 'employee') and user.employee:
+            user_division = getattr(user.employee, 'division', None)
+        
+        # Если у пользователя нет подразделения - запрещаем доступ
+        if not user_division:
+            return False
             
-        # Используем свойство division, которое возвращает актуальное подразделение
-        user_division = user.division
-        if user_division and obj.division:
-            return user_division.id == obj.division.id
-        return True
-    
+        # Проверяем подразделение объекта
+        obj_division = getattr(obj, 'division', None)
+        if not obj_division:
+            return False
+            
+        return user_division.id == obj_division.id
+        
     def _get_user_roles(self, user):
         """Получает роли пользователя"""
         from .permissions_config import get_role_from_group
@@ -112,9 +131,14 @@ class RoleBasedPermission(permissions.BasePermission):
                 roles.append(role)
         return roles
     
+    def _user_has_role(self, user, role_name):
+        """Проверяет, есть ли у пользователя конкретная роль"""
+        user_roles = self._get_user_roles(user)
+        return role_name in user_roles
+    
     def _get_model_name(self, view):
         """Получает имя модели из view"""
-        if hasattr(view, 'queryset'):
+        if hasattr(view, 'queryset') and view.queryset is not None:
             return view.queryset.model.__name__
         elif hasattr(view, 'model'):
             return view.model.__name__
@@ -123,10 +147,14 @@ class RoleBasedPermission(permissions.BasePermission):
     def _get_action(self, view):
         """Получает действие из view"""
         if hasattr(view, 'action'):
+            # Для кастомных действий определяем тип операции на основе методов
+            if view.action in ['equipment_categories', 'list_by_employee', 'stats', 'network_config', 'shd_equipment']:
+                return 'view'  # Все эти действия - GET запросы для просмотра
             return view.action
-        method = getattr(view, 'request', None)
-        if method:
-            return method.method.lower()
+        
+        # Для APIView без action
+        if hasattr(view, 'request'):
+            return view.request.method.lower()
         return 'view'
     
     def _map_action_to_permission(self, action):
@@ -145,7 +173,9 @@ class RoleBasedPermission(permissions.BasePermission):
 class IsAdmin(permissions.BasePermission):
     """Только для администраторов"""
     def has_permission(self, request, view):
+        from .permissions import RoleBasedPermission
+        perm_checker = RoleBasedPermission()
         return request.user.is_authenticated and (
             request.user.is_superuser or 
-            request.user.has_role('admin')
+            perm_checker._user_has_role(request.user, 'admin')
         )

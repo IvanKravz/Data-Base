@@ -312,14 +312,15 @@ export function CreateEquipmentForm() {
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
                     />
+
                 </div>
-
-                <ProductStructureEditor
-                    productStructures={formData.product_structures || []}
-                    onChange={handleStructureChange}
-                    isDisposed={false}
-                />
-
+                <div className="equipment-form-structure">
+                    <ProductStructureEditor
+                        productStructures={formData.product_structures || []}
+                        onChange={handleStructureChange}
+                        isDisposed={false}
+                    />
+                </div>
                 <FormActions
                     onCancel={handleCancel}
                     showDisposeButton={false}

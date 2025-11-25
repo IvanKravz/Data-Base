@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 
+from users.permissions_config import ROLE_PERMISSIONS
+
 from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
 from .serializers import (
     EmployeeDictionariesSerializer, UserSerializer, 
@@ -85,6 +87,49 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     ordering_fields = ['priority', 'full_name', 'category', 'position']
     ordering = ['priority', 'full_name']
     
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        
+        # Для администраторов и суперпользователей показываем всех сотрудников
+        if user.is_staff or user.is_superuser:
+            return queryset
+        
+        # Проверяем наличие ролей напрямую
+        has_roles = user.groups.filter(name__startswith='role_').exists()
+        
+        if has_roles:
+            # Если есть роли - применяем фильтрацию через миксин
+            # Используем RoleBasedPermission для проверки видимости всех подразделений
+            permission_checker = RoleBasedPermission()
+            user_roles = permission_checker._get_user_roles(user)
+            
+            # Проверяем, может ли пользователь видеть все подразделения
+            can_see_all = any(
+                role in ['admin', 'leader', 'deputy_director'] or
+                ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
+                for role in user_roles
+            )
+            
+            if not can_see_all:
+                user_division = getattr(user, 'division', None)
+                if not user_division and hasattr(user, 'employee') and user.employee:
+                    user_division = getattr(user.employee, 'division', None)
+                
+                if user_division:
+                    queryset = queryset.filter(division=user_division)
+                else:
+                    queryset = queryset.none()
+        else:
+            # Если нет ролей - применяем фильтрацию по подразделению
+            user_division = getattr(user, 'employee', None) and user.employee.division
+            if user_division:
+                queryset = queryset.filter(division=user_division)
+            else:
+                queryset = queryset.none()
+        
+        return queryset
+    
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
@@ -105,8 +150,8 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
         }
         serializer = EmployeeDictionariesSerializer(data)
         return Response(serializer.data)
-
-
+    
+    
 class ShaWorkerViewSet(RoleBasedFilterMixin, BaseViewSet):
     """
     ViewSet для управления ШаРаботниками
@@ -310,3 +355,33 @@ class SystemInfoView(APIView):
                 'total_users': User.objects.count(),
             }
         })
+    
+from django.http import JsonResponse
+
+def error_400(request, exception=None):
+    return JsonResponse({
+        'error': 'BAD_REQUEST',
+        'message': 'Неверный запрос',
+        'status_code': 400
+    }, status=400)
+
+def error_403(request, exception=None):
+    return JsonResponse({
+        'error': 'FORBIDDEN',
+        'message': 'Доступ запрещен', 
+        'status_code': 403
+    }, status=403)
+
+def error_404(request, exception=None):
+    return JsonResponse({
+        'error': 'NOT_FOUND',
+        'message': 'Ресурс не найден',
+        'status_code': 404
+    }, status=404)
+
+def error_500(request):
+    return JsonResponse({
+        'error': 'SERVER_ERROR', 
+        'message': 'Внутренняя ошибка сервера',
+        'status_code': 500
+    }, status=500)

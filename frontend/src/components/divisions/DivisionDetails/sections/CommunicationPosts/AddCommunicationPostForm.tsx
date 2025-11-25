@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { X, Check, ChevronDown } from 'lucide-react';
+import { X, Check, ChevronDown, Lock } from 'lucide-react';
 import { communicationPostsApi, divisionsApi } from '../../../../../api';
 import './CommunicationPosts.css';
 
@@ -11,7 +11,6 @@ export function AddCommunicationPostForm() {
   const token = localStorage.getItem('accessToken');
 
   const [name, setName] = useState('');
-
   const [division, setDivision] = useState('');
   const [subdivisionId, setSubdivisionId] = useState('');
   const [description, setDescription] = useState('');
@@ -21,6 +20,9 @@ export function AddCommunicationPostForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubdivisionsOpen, setIsSubdivisionsOpen] = useState(false);
+
+  // Определяем режим: из подразделения или глобальный
+  const isFromDivision = Boolean(divisionId);
 
   const fetchDivisions = async () => {
     try {
@@ -42,18 +44,28 @@ export function AddCommunicationPostForm() {
 
   useEffect(() => {
     const loadData = async () => {
-      await fetchDivisions();
-      if (divisionId) {
-        setDivision(divisionId);
-        await fetchSubdivisions(divisionId);
-        const urlSubdivisionId = searchParams.get('subdivision');
-        if (urlSubdivisionId) {
-          setSubdivisionId(urlSubdivisionId);
+      if (isFromDivision && divisionId) {
+        // Режим из подразделения: загружаем только нужное подразделение
+        try {
+          const divisionData = await divisionsApi.getDivisionById(divisionId, token);
+          setDivisions([divisionData]); // Устанавливаем только текущее подразделение
+          setDivision(divisionId);
+          setSubdivisions(divisionData.subdivisions || []);
+          
+          const urlSubdivisionId = searchParams.get('subdivision');
+          if (urlSubdivisionId) {
+            setSubdivisionId(urlSubdivisionId);
+          }
+        } catch (err) {
+          console.error('Ошибка при загрузке подразделения:', err);
         }
+      } else {
+        // Глобальный режим: загружаем все подразделения
+        await fetchDivisions();
       }
     };
     loadData();
-  }, [divisionId, searchParams]);
+  }, [divisionId, searchParams, isFromDivision, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,36 +124,50 @@ export function AddCommunicationPostForm() {
             <label className="add-post-form-label">
               Подразделение *
             </label>
-            <div className="add-post-select-container">
-              <div
-                className="add-post-select-display"
-                onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
-              >
-                <span>{divisions.find(d => d.id == division)?.name || 'Выберите подразделение'}</span>
-                <ChevronDown
-                  className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
-                />
-              </div>
-
-              {isDivisionsOpen && (
-                <div className="add-post-select-options">
-                  {divisions.map((divisionItem) => (
-                    <div
-                      key={divisionItem.id}
-                      className="add-post-select-option"
-                      onClick={() => {
-                        setDivision(divisionItem.id);
-                        fetchSubdivisions(divisionItem.id); // Загружаем отделения для выбранного подразделения
-                        setSubdivisionId(''); // Сбрасываем выбранное отделение
-                        setIsDivisionsOpen(false);
-                      }}
-                    >
-                      {divisionItem.name}
-                    </div>
-                  ))}
+            {isFromDivision ? (
+              // Режим из подразделения: фиксированное значение
+              <div className="add-post-select-container">
+                <div className="add-post-select-display add-post-select-disabled">
+                  <span>{divisions.find(d => d.id == division)?.name || 'Загрузка...'}</span>
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
-              )}
-            </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Подразделение выбрано автоматически из текущего контекста
+                </div>
+              </div>
+            ) : (
+              // Глобальный режим: выбор из списка
+              <div className="add-post-select-container">
+                <div
+                  className="add-post-select-display"
+                  onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
+                >
+                  <span>{divisions.find(d => d.id == division)?.name || 'Выберите подразделение'}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
+                  />
+                </div>
+
+                {isDivisionsOpen && (
+                  <div className="add-post-select-options">
+                    {divisions.map((divisionItem) => (
+                      <div
+                        key={divisionItem.id}
+                        className="add-post-select-option"
+                        onClick={() => {
+                          setDivision(divisionItem.id);
+                          fetchSubdivisions(divisionItem.id);
+                          setSubdivisionId('');
+                          setIsDivisionsOpen(false);
+                        }}
+                      >
+                        {divisionItem.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {subdivisions.length > 0 && (

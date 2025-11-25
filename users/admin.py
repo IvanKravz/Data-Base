@@ -82,7 +82,7 @@ class CustomGroupAdmin(GroupAdmin):
 
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'user_account', 'division', 'subdivision', 'rank', 'position', 'category', 'priority', 'photo_preview')
+    list_display = ('id', 'full_name', 'user_account', 'division', 'subdivision', 'rank', 'position', 'category', 'priority', 'photo_preview')
     list_filter = ('category', 'division', 'subdivision', 'is_sha_worker', 'is_material_responsible')
     search_fields = ('full_name', 'position', 'rank')
     ordering = ('priority', 'full_name')

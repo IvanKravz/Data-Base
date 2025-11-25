@@ -4,7 +4,7 @@ from .permissions_config import ROLE_PERMISSIONS
 
 class RoleBasedFilterMixin:
     """
-    Миксин для фильтрации данных на основе ролей (ВЫСШИЙ ПРИОРИТЕТ) и подразделения (низший приоритет)
+    Миксин для фильтрации данных на основе ролей
     """
 
     def get_queryset(self):
@@ -14,19 +14,19 @@ class RoleBasedFilterMixin:
             return queryset.none()
             
         # Суперпользователи и администраторы видят все данные без фильтров
-        if self.request.user.is_superuser or self.request.user.has_role('admin'):
+        if self.request.user.is_superuser or self._user_has_role('admin'):
             return queryset
             
         model_name = self.queryset.model.__name__
         
-        # ПРИОРИТЕТ 1: Если пользователь имеет роли - используем ТОЛЬКО фильтры ролей
+        # ПРИОРИТЕТ 1: Если пользователь имеет роли - используем фильтры ролей
         if self._user_has_roles():
             role_filters = self._get_role_filters(model_name)
             if role_filters:
                 queryset = queryset.filter(**role_filters)
-            return queryset  # Роли имеют приоритет - игнорируем подразделение
+                return queryset
             
-        # ПРИОРИТЕТ 2: Если нет ролей - применяем фильтры по подразделению
+        # ПРИОРИТЕТ 2: Если нет ролей или нет фильтров в ролях - применяем фильтры по подразделению
         queryset = self._apply_division_filters(queryset, model_name)
         
         return queryset
@@ -35,13 +35,14 @@ class RoleBasedFilterMixin:
         """Проверяет, имеет ли пользователь системные роли"""
         return self.request.user.groups.filter(name__startswith='role_').exists()
 
-    def _is_view_only_user(self):
-        """Проверяет, имеет ли пользователь только права просмотра"""
+    def _user_has_role(self, role_name):
+        """Проверяет, имеет ли пользователь конкретную роль"""
         from .permissions import RoleBasedPermission
-        return RoleBasedPermission.is_view_only_user(self.request.user)
+        perm_checker = RoleBasedPermission()
+        return perm_checker._user_has_role(self.request.user, role_name)
 
     def _get_role_filters(self, model_name):
-        """Получает фильтры из конфигурации ролей - ВЫСШИЙ ПРИОРИТЕТ"""
+        """Получает фильтры из конфигурации ролей"""
         from .permissions import RoleBasedPermission
         
         perm_checker = RoleBasedPermission()
@@ -58,19 +59,24 @@ class RoleBasedFilterMixin:
         return filters
     
     def _apply_division_filters(self, queryset, model_name):
-        """Применяет фильтры по подразделению (только если нет ролей)"""
+        """Применяет фильтры по подразделению"""
         user = self.request.user
         
+        # Получаем подразделение пользователя
+        user_division = getattr(user, 'division', None)
+        if not user_division and hasattr(user, 'employee') and user.employee:
+            user_division = getattr(user.employee, 'division', None)
+        
         # Если у модели есть связь с подразделением и пользователь имеет подразделение
-        if hasattr(queryset.model, 'division') and user.division:
-            queryset = queryset.filter(division=user.division)
+        if hasattr(queryset.model, 'division') and user_division:
+            queryset = queryset.filter(division=user_division)
                 
         return queryset
 
 
 class UserAccessMixin:
     """
-    Упрощенный миксин - роли имеют приоритет над подразделением
+    Упрощенный миксин для доступа пользователей
     """
 
     def get_queryset(self):
@@ -79,18 +85,23 @@ class UserAccessMixin:
         if not hasattr(self, 'request') or not self.request.user.is_authenticated:
             return queryset.none()
             
-        if self.request.user.is_superuser or self.request.user.has_role('admin'):
+        if self.request.user.is_superuser or self._user_has_role('admin'):
             return queryset
 
         user = self.request.user
         
-        # ПРИОРИТЕТ 1: Если у пользователя есть роли - не применяем фильтры подразделения
+        # Получаем подразделение пользователя
+        user_division = getattr(user, 'division', None)
+        if not user_division and hasattr(user, 'employee') and user.employee:
+            user_division = getattr(user.employee, 'division', None)
+        
+        # ПРИОРИТЕТ 1: Если у пользователя есть роли - используем их
         if user.groups.filter(name__startswith='role_').exists():
             return queryset  # Фильтрация будет в RoleBasedFilterMixin
             
         # ПРИОРИТЕТ 2: Если нет ролей - фильтруем по подразделению
-        if user.division and hasattr(queryset.model, 'division'):
-            return queryset.filter(division=user.division)
+        if user_division and hasattr(queryset.model, 'division'):
+            return queryset.filter(division=user_division)
             
         # ПРИОРИТЕТ 3: Для обычных пользователей - только свои данные
         if hasattr(queryset.model, 'user'):
@@ -100,3 +111,9 @@ class UserAccessMixin:
                 return queryset.filter(employee=user.employee)
                     
         return queryset.none()
+    
+    def _user_has_role(self, role_name):
+        """Проверяет, имеет ли пользователь конкретную роль"""
+        from .permissions import RoleBasedPermission
+        perm_checker = RoleBasedPermission()
+        return perm_checker._user_has_role(self.request.user, role_name)

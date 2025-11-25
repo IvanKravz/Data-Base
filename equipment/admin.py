@@ -58,7 +58,7 @@ class VLANInline(admin.TabularInline):
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = (
-        'name', 'type', 'get_category_display', 'status_colored', 
+        'id', 'name', 'type', 'get_category_display', 'status_colored', 
         'is_network', 'division', 'subdivision', 'assigned_to', 
         'facility', 'network_interfaces_count', 'secret_level'
     )

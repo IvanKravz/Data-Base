@@ -1,6 +1,10 @@
+# urls.py
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+
+# Импортируем обработчики ошибок из существующего приложения
+from users.views import error_400, error_403, error_404, error_500
 
 urlpatterns = [
     path('api/users/', include('users.urls')),
@@ -13,3 +17,8 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler400 = error_400
+handler403 = error_403
+handler404 = error_404
+handler500 = error_500

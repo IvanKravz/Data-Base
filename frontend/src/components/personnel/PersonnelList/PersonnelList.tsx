@@ -198,57 +198,57 @@ export function PersonnelList({
         person.subdivision?.name.toLowerCase().includes(searchLower);
 
       // ФИЛЬТРЫ ИЗ РАСШИРЕННОГО ПОИСКА
-      
+
       // Фильтр по званиям
-      const matchesRank = advancedFilters.ranks.length === 0 || 
-        advancedFilters.ranks.some(rank => 
+      const matchesRank = advancedFilters.ranks.length === 0 ||
+        advancedFilters.ranks.some(rank =>
           person.rank?.toLowerCase().includes(rank.toLowerCase())
         );
 
       // Фильтр по должностям
-      const matchesPosition = advancedFilters.positions.length === 0 || 
-        advancedFilters.positions.some(position => 
+      const matchesPosition = advancedFilters.positions.length === 0 ||
+        advancedFilters.positions.some(position =>
           person.position?.toLowerCase().includes(position.toLowerCase())
         );
 
       // Фильтр по подразделениям
-      const matchesDivision = advancedFilters.divisions.length === 0 || 
-        advancedFilters.divisions.some(divisionName => 
+      const matchesDivision = advancedFilters.divisions.length === 0 ||
+        advancedFilters.divisions.some(divisionName =>
           person.division?.name.toLowerCase().includes(divisionName.toLowerCase())
         );
 
       // Фильтр по классам сети
-      const matchesNetworkClass = advancedFilters.networkClasses.length === 0 || 
+      const matchesNetworkClass = advancedFilters.networkClasses.length === 0 ||
         advancedFilters.networkClasses.some(networkClass => {
           const personAccessLevel = person.sha_details?.access_level?.toString();
           return personAccessLevel === networkClass;
         });
 
       // Фильтр по формам ГТ
-      const matchesGtForm = advancedFilters.gtForms.length === 0 || 
+      const matchesGtForm = advancedFilters.gtForms.length === 0 ||
         advancedFilters.gtForms.some(gtForm => {
           const personGtForm = person.form_state_secrets;
           return personGtForm === gtForm;
         });
 
-      return matchesCategory && 
-             matchesSearch && 
-             matchesRank && 
-             matchesPosition && 
-             matchesDivision && 
-             matchesNetworkClass && 
-             matchesGtForm;
+      return matchesCategory &&
+        matchesSearch &&
+        matchesRank &&
+        matchesPosition &&
+        matchesDivision &&
+        matchesNetworkClass &&
+        matchesGtForm;
     });
 
     // Сортируем отфильтрованный список
     return sortEmployeesByPriority(filtered);
   }, [
-    basePersonnel, 
-    activeFilter, 
-    selectedOfficerFilter, 
-    selectedAccessClass, 
+    basePersonnel,
+    activeFilter,
+    selectedOfficerFilter,
+    selectedAccessClass,
     searchTerm,
-    advancedFilters // ДОБАВЛЯЕМ В ЗАВИСИМОСТИ
+    advancedFilters
   ]);
 
   // Остальной код без изменений...
@@ -266,7 +266,15 @@ export function PersonnelList({
         },
         officers: {
           staffCount: globalStaffCounts.officers,
-          actualCount: basePersonnel.filter(person => person.category === 'officer' || person.category === 'management').length
+          actualCount: basePersonnel.filter(person => {
+            if (selectedOfficerFilter === 'with_management') {
+              return person.category === 'officer' || person.category === 'management';
+            } else if (selectedOfficerFilter === 'without_management') {
+              return person.category === 'officer';
+            } else {
+              return person.category === 'officer' || person.category === 'management';
+            }
+          }).length
         },
         warrantOfficers: {
           staffCount: globalStaffCounts.warrant_officers,
@@ -310,7 +318,15 @@ export function PersonnelList({
       },
       officers: {
         staffCount: selectedSubdivision?.staff_planned_officers || division.staff_planned_officers || 0,
-        actualCount: filteredPersonnel.filter(person => person.category === 'officer' || person.category === 'management').length
+        actualCount: filteredPersonnel.filter(person => {
+          if (selectedOfficerFilter === 'with_management') {
+            return person.category === 'officer' || person.category === 'management';
+          } else if (selectedOfficerFilter === 'without_management') {
+            return person.category === 'officer';
+          } else {
+            return person.category === 'officer' || person.category === 'management';
+          }
+        }).length
       },
       warrantOfficers: {
         staffCount: selectedSubdivision?.staff_planned_warrant_officers || division.staff_planned_warrant_officers || 0,
@@ -430,7 +446,9 @@ export function PersonnelList({
         <div className="selected-subdivision-title">
           <div className="title-row">
             <div className="staff-info">
-              <span>По штату: {staffData.staffCount}</span>
+              {activeFilter !== 'mol' && activeFilter !== 'sha' && (
+                <span>По штату: {staffData.staffCount}</span>
+              )}
               <span>По списку: {staffData.actualCount}</span>
             </div>
           </div>

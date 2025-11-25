@@ -28,11 +28,11 @@ interface Division {
     id: string;
     name: string;
     type: {
-      id: string;          
+      id: string;
       name: string;
       description?: string;
     };
-    type_display: string;   
+    type_display: string;
     facility_class: string;
     class_display: string;
   }[];
@@ -48,7 +48,6 @@ export function EditEquipmentForm({
   initialData,
   onSubmit,
   onCancel,
-  isClosedEquipment = false,
 }: EditEquipmentFormProps) {
   const [formData, setFormData] = useState<Partial<Equipment>>({
     ...initialData,
@@ -61,6 +60,20 @@ export function EditEquipmentForm({
   const [categories, setCategories] = useState<EquipmentCategory[]>([]);
   const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
   const token = localStorage.getItem('accessToken');
+
+  // Вычисляем isClosedEquipment на основе выбранной категории
+  const isClosedEquipment = React.useMemo(() => {
+    if (formData.category) {
+      // Если категория - объект, берем поле is_closed
+      if (typeof formData.category === 'object' && 'is_closed' in formData.category) {
+        return formData.category.is_closed;
+      }
+      // Если категория - строка (value), ищем в списке категорий
+      const categoryObj = categories.find(cat => cat.value === formData.category);
+      return categoryObj ? categoryObj.is_closed : false;
+    }
+    return false;
+  }, [formData.category, categories]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -96,6 +109,24 @@ export function EditEquipmentForm({
 
   const handleChange = async (data: Partial<Equipment>) => {
     const newFormData = { ...formData, ...data };
+
+    // Если меняется категория, обновляем is_closed
+    if (data.category && data.category !== formData.category) {
+      let newIsClosed = false;
+
+      if (typeof data.category === 'object' && 'is_closed' in data.category) {
+        newIsClosed = data.category.is_closed;
+      } else {
+        const categoryObj = categories.find(cat =>
+          cat.value === (typeof data.category === 'object' ? data.category.value : data.category)
+        );
+        newIsClosed = categoryObj ? categoryObj.is_closed : false;
+      }
+
+      // Обновляем is_closed в formData
+      newFormData.is_closed = newIsClosed;
+    }
+
     setFormData(newFormData);
 
     if (data.division?.id && data.division.id !== formData.division?.id && token) {
@@ -174,11 +205,6 @@ export function EditEquipmentForm({
     return division?.subdivisions || [];
   };
 
-  // Фильтруем категории в зависимости от типа оборудования
-  const currentCategories = categories.filter(cat =>
-    isClosedEquipment ? cat.is_closed : !cat.is_closed
-  );
-
   return (
     <div className="equipment-form-container">
       <form onSubmit={handleSubmit}>
@@ -227,12 +253,13 @@ export function EditEquipmentForm({
             onChange={(value) => handleChange({ comments: value })}
           />
         </div>
-
+        <div className="equipment-form-structure">
         <ProductStructureEditor
           productStructures={formData.product_structures || []}
           onChange={handleStructureChange}
           isDisposed={formData.status === 'disposed'}
         />
+        </div>
 
         <FormActions
           onCancel={onCancel}

@@ -91,10 +91,18 @@ body {
   display: grid;
   background: white;
   padding: 1rem;
+  padding-bottom: 0;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: var(--space-lg);
   animation: fadeIn 0.3s ease-out;
+}
 
+.equipment-form-structure {
+  background: white;
+  padding: 0.1rem 1rem 1rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--space-lg);
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -166,8 +174,9 @@ body {
 }
 
 .equipment-card-table {
+  padding: 0 1rem 1rem ;
   margin-top: 1.5rem;
-  background: white;
+  /* background: white; */
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);

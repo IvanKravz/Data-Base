@@ -74,6 +74,8 @@ export function MainLayout() {
         <Route path="/facilities" element={<FacilitiesSection />} />
         <Route path="/tasks" element={<DivisionTasksSection />} />
 
+        <Route path="/communication-posts/new" element={<AddCommunicationPostForm />} />
+
         {/* Глобальные маршруты для сетей связи */}
         <Route path="/networks" element={<CommunicationNetworks />} />
         <Route path="/networks/management" element={<NetworkManagement />} />

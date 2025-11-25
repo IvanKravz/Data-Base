@@ -167,7 +167,7 @@
 }
 
 .facility-division-header-cell {
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 0.5rem;
     font-weight: 600;
     color: #1e40af;
     font-size: 1.2rem;
@@ -179,7 +179,7 @@
 }
 
 .facility-subdivision-header-cell {
-    padding: 4px 16px 4px 32px;
+    padding: 0.3rem 1rem;
     font-weight: 500;
     font-size: 1em;
     color: #374151;
@@ -322,6 +322,25 @@
     color: #3498db;
     background-color: #f1f5f9;
 }
+
+/* Стили для кнопок свертывания/развертывания в таблице объектов */
+.collapse-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    color: inherit;
+  }
+  
+  .collapse-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
 
 @keyframes pulse {
 

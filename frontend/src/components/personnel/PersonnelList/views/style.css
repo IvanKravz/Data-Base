@@ -53,7 +53,7 @@
 }
 
 .personnel-division-header-cell {
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.5rem;
   font-weight: 600;
   color: #1e40af;
   font-size: 1.2rem;
@@ -61,7 +61,7 @@
 }
 
 .personnel-subdivision-header-cell {
-  padding: 4px 16px 4px 32px;
+  padding: 0.3rem 1rem;
   font-weight: 500;
   font-size: 1.1em;
   color: #374151;
@@ -145,6 +145,31 @@
 
 .delete-button:hover {
   background-color: #fee2e2;
+}
+
+/* Стили для кнопок свертывания/развертывания */
+.collapse-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.collapse-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Стили для содержимого заголовков подразделений и отделений */
+.division-header-content,
+.subdivision-header-content {
+  display: flex;
+  align-items: center;
 }
 
 /* Адаптивность для мобильных устройств */

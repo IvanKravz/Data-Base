@@ -1,8 +1,8 @@
 // TableView.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Equipment } from '../../../../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { getStatusIcon, getStatusColor } from '../../../../utils/statusUtils';
 import { format } from 'date-fns';
 import { canEdit } from '../../../../api/utils/permissions';
@@ -25,15 +25,44 @@ export function TableView({
   subdivisionId,
   activeTab,
   disableRowClick = false,
-  showActions = true // Значение по умолчанию true
+  showActions = true
 }: TableViewProps & { disableRowClick?: boolean }) {
   const navigate = useNavigate();
+
+  // Состояния для отслеживания свернутых/развернутых разделов
+  const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
+  const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
+  
+  console.log('equipment', equipment)
   
   // Проверяем права на редактирование оборудования
   const hasEditPermission = canEdit('equipment');
   
   // Столбец действий отображается только если showActions=true И есть права на редактирование
   const shouldShowActions = showActions && hasEditPermission;
+
+  // Функция для переключения состояния подразделения
+  const toggleDivision = (divisionId: string) => {
+    const newCollapsed = new Set(collapsedDivisions);
+    if (newCollapsed.has(divisionId)) {
+      newCollapsed.delete(divisionId);
+    } else {
+      newCollapsed.add(divisionId);
+    }
+    setCollapsedDivisions(newCollapsed);
+  };
+
+  // Функция для переключения состояния отделения
+  const toggleSubdivision = (divisionId: string, subdivisionId: string) => {
+    const key = `${divisionId}-${subdivisionId}`;
+    const newCollapsed = new Set(collapsedSubdivisions);
+    if (newCollapsed.has(key)) {
+      newCollapsed.delete(key);
+    } else {
+      newCollapsed.add(key);
+    }
+    setCollapsedSubdivisions(newCollapsed);
+  };
 
   // Функция для сортировки техники внутри групп
   const sortEquipmentInGroup = (equipmentList: Equipment[]): Equipment[] => {
@@ -301,19 +330,30 @@ export function TableView({
           {/* Затем отображаем подразделения с отделениями */}
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
+            const isDivisionCollapsed = collapsedDivisions.has(divisionId);
 
             return (
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
                 <tr className="division-header-row">
                   <td colSpan={shouldShowActions ? 12 : 11} className="equipment-division-header-cell">
-                    {division.divisionName}
+                    <div className="division-header-content">
+                      <button 
+                        className="collapse-button"
+                        onClick={() => toggleDivision(divisionId)}
+                      >
+                        {isDivisionCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                      </button>
+                      <span>{division.divisionName}</span>
+                    </div>
                   </td>
                 </tr>
 
-                {/* Отделения внутри подразделения */}
-                {division.sortedSubdivisionIds.map(subdivisionId => {
+                {/* Отделения внутри подразделения (показываем только если подразделение не свернуто) */}
+                {!isDivisionCollapsed && division.sortedSubdivisionIds.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
+                  const subdivisionKey = `${divisionId}-${subdivisionId}`;
+                  const isSubdivisionCollapsed = collapsedSubdivisions.has(subdivisionKey);
 
                   return (
                     <React.Fragment key={subdivisionId}>
@@ -321,13 +361,21 @@ export function TableView({
                       {subdivision.equipment.length > 0 && (
                         <tr className="subdivision-header-row">
                           <td colSpan={shouldShowActions ? 12 : 11} className="equipment-subdivision-header-cell">
-                            {subdivision.subdivisionName}
+                            <div className="subdivision-header-content">
+                              <button 
+                                className="collapse-button"
+                                onClick={() => toggleSubdivision(divisionId, subdivisionId)}
+                              >
+                                {isSubdivisionCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                              </button>
+                              <span>{subdivision.subdivisionName}</span>
+                            </div>
                           </td>
                         </tr>
                       )}
 
-                      {/* Техника отделения */}
-                      {subdivision.equipment.map((item) => {
+                      {/* Техника отделения (показываем только если отделение не свернуто) */}
+                      {!isSubdivisionCollapsed && subdivision.equipment.map((item) => {
                         const StatusIcon = getStatusIcon(item.status);
                         return (
                           <tr
