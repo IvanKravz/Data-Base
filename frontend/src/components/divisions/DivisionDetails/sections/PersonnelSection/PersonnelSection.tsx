@@ -37,7 +37,7 @@ export function PersonnelSection() {
     ranks: [],
     positions: [],
     divisions: [],
-    subdivisions: [], // ДОБАВИТЬ
+    subdivisions: [], 
     networkClasses: [],
     gtForms: []
   });
@@ -201,19 +201,33 @@ export function PersonnelSection() {
   // Фильтрация по всем критериям
   const filterPersonnel = useCallback((items: any[]) => {
     let filtered = items;
-
-    // Фильтрация по поисковому запросу (ФИО)
+  
+    // Расширенная фильтрация по поисковому запросу
     if (searchTerm) {
-      filtered = filtered.filter(person =>
-        `${person.last_name || ''} ${person.first_name || ''} ${person.middle_name || ''}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        person.personal_number?.toString().includes(searchTerm) ||
-        person.phone_number?.includes(searchTerm)
-      );
+      const term = searchTerm.toLowerCase().trim(); // нормализуем поисковый запрос
+      filtered = filtered.filter(person => {
+        // Нормализуем все строки для поиска
+        const fullName = `${person.full_name || ''}`.toLowerCase().trim();
+        const personalNumber = person.personal_number?.toString().toLowerCase().trim() || '';
+        const phoneNumberWork = person.work_phone?.toLowerCase().trim() || '';
+        const phoneNumberPersonal = person.personal_phone?.toLowerCase().trim() || '';
+        const rank = person.rank?.toLowerCase().trim() || '';
+        const position = person.position?.toLowerCase().trim() || '';
+        const divisionName = person.division?.name?.toLowerCase().trim() || '';
+        const subdivisionName = person.subdivision?.name?.toLowerCase().trim() || '';
+  
+        return fullName.includes(term) ||
+          personalNumber.includes(term) ||
+          phoneNumberWork.includes(term) ||
+          phoneNumberPersonal.includes(term) ||
+          rank.includes(term) ||
+          position.includes(term) ||
+          divisionName.includes(term) ||
+          subdivisionName.includes(term);
+      });
     }
 
-    // Фильтрация по расширенным фильтрам
+    // Остальная логика расширенных фильтров остается без изменений
     if (advancedFilters.ranks.length > 0) {
       filtered = filtered.filter(person =>
         advancedFilters.ranks.some(rank =>
@@ -238,7 +252,6 @@ export function PersonnelSection() {
       );
     }
 
-    // фильтрация по отделениям
     if (advancedFilters.subdivisions.length > 0) {
       filtered = filtered.filter(person =>
         advancedFilters.subdivisions.some(subdivision =>
@@ -247,7 +260,6 @@ export function PersonnelSection() {
       );
     }
 
-    // ИСПРАВЛЕНИЕ: Используем правильные поля для классов сети и форм ГТ
     if (advancedFilters.networkClasses.length > 0) {
       filtered = filtered.filter(person =>
         advancedFilters.networkClasses.some(networkClass => {
@@ -268,6 +280,7 @@ export function PersonnelSection() {
 
     return filtered;
   }, [searchTerm, advancedFilters]);
+
 
   // Фильтруем персонал по отделению и фильтрам
   const displayedPersonnel = useMemo(() => {
@@ -367,7 +380,7 @@ export function PersonnelSection() {
             <SearchBar
               searchTerm={searchTerm}
               setSearchTerm={handleSearchTermChange}
-              placeholder="Поиск по ФИО, званию, должности, личному номеру, телефону..."
+              placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, личному номеру..."
             />
             <button
               className={`advanced-filter-button ${showAdvancedSearch ? 'active' : ''}`}

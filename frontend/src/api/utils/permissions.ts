@@ -28,7 +28,18 @@ export const canEdit = (module: AppModule): boolean => {
 
 // Проверка возможности удаления в модуле
 export const canDelete = (module: AppModule): boolean => {
-  return hasPermission(module, 'delete');
+  console.log('Checking delete permission for module:', module);
+  
+  // Явное ограничение для ролей эксплуатации
+  if ((module === 'equipment' || module === 'networks') && 
+      (isExploitationChief() || isExploitationEmployee())) {
+    console.log('Exploitation role detected, denying delete permission for:', module);
+    return false;
+  }
+  
+  const result = hasPermission(module, 'delete');
+  console.log('Delete permission result:', result);
+  return result;
 };
 
 // Получение всех прав доступа

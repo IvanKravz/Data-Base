@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Equipment, ProductStructure } from '../../../../../types';
+import { Equipment, ProductStructure, EquipmentFieldPermissions } from '../../../../../types';
 import { Plus, Trash2 } from 'lucide-react';
 import '../style.css';
 
@@ -7,12 +7,14 @@ interface ProductStructureEditorProps {
   productStructures: ProductStructure[];
   onChange: (structures: ProductStructure[]) => void;
   isDisposed?: boolean;
+  permissions: EquipmentFieldPermissions;
 }
 
 export function ProductStructureEditor({
   productStructures = [],
   onChange,
   isDisposed = false,
+  permissions
 }: ProductStructureEditorProps) {
   const [newItem, setNewItem] = useState<Omit<ProductStructure, 'id'>>({
     name: '',
@@ -22,7 +24,7 @@ export function ProductStructureEditor({
   });
 
   const handleAddItem = () => {
-    if (!newItem.name.trim()) return;
+    if (!newItem.name.trim() || !permissions.canEditProductStructure) return;
     onChange([...productStructures, { ...newItem, id: Date.now().toString() }]);
     setNewItem({
       name: '',
@@ -33,10 +35,12 @@ export function ProductStructureEditor({
   };
 
   const handleRemoveItem = (id: string) => {
+    if (!permissions.canEditProductStructure) return;
     onChange(productStructures.filter(item => item.id !== id));
   };
 
   const handleUpdateItem = (id: string, field: keyof ProductStructure, value: string) => {
+    if (!permissions.canEditProductStructure) return;
     onChange(
       productStructures.map(item =>
         item.id === id ? { ...item, [field]: value } : item
@@ -71,7 +75,7 @@ export function ProductStructureEditor({
                       value={item.name}
                       onChange={(e) => handleUpdateItem(item.id, 'name', e.target.value)}
                       className="form-input-edit"
-                      disabled={isDisposed}
+                      disabled={isDisposed || !permissions.canEditProductStructure}
                     />
                   </td>
                   <td>
@@ -80,7 +84,7 @@ export function ProductStructureEditor({
                       value={item.model || ''}
                       onChange={(e) => handleUpdateItem(item.id, 'model', e.target.value)}
                       className="form-input-edit"
-                      disabled={isDisposed}
+                      disabled={isDisposed || !permissions.canEditProductStructure}
                     />
                   </td>
                   <td>
@@ -89,7 +93,7 @@ export function ProductStructureEditor({
                       value={item.serial_number || ''}
                       onChange={(e) => handleUpdateItem(item.id, 'serial_number', e.target.value)}
                       className="form-input-edit"
-                      disabled={isDisposed}
+                      disabled={isDisposed || !permissions.canEditProductStructure}
                     />
                   </td>
                   <td>
@@ -98,11 +102,11 @@ export function ProductStructureEditor({
                       value={item.note || ''}
                       onChange={(e) => handleUpdateItem(item.id, 'note', e.target.value)}
                       className="form-input-edit"
-                      disabled={isDisposed}
+                      disabled={isDisposed || !permissions.canEditProductStructure}
                     />
                   </td>
                   <td>
-                    {!isDisposed && (
+                    {!isDisposed && permissions.canEditProductStructure && (
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
@@ -117,7 +121,7 @@ export function ProductStructureEditor({
               ))}
 
               {/* Строка для добавления нового компонента */}
-              {!isDisposed && (
+              {!isDisposed && permissions.canEditProductStructure && (
                 <tr className="add-new-row">
                   <td>
                     <input

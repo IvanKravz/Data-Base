@@ -176,8 +176,8 @@ ROLE_PERMISSIONS = {
         'Task': ['view'],
         'CommunicationPost': ['view'],
         'FacilityType': ['view'],
-        'EquipmentCategory': ['view'],  # ДОБАВЛЕНО
-        'InterestOrgan': ['view'],      # ДОБАВЛЕНО, если нужно
+        'EquipmentCategory': ['view'],  
+        'InterestOrgan': ['view'],     
     },
     'filters': {},
     'can_see_all_divisions': False,
@@ -190,13 +190,13 @@ ROLE_PERMISSIONS = {
             'Division': ['view'],
             'Employee': ['view'],
             'Equipment': ['view', 'change'],
-            'Facility': ['view', 'add', 'change', 'delete'],
+            'Facility': ['view'],
             'CommunicationNetwork': ['view', 'change'],
             'Task': ['view', 'add', 'change', 'delete'],
             'CommunicationPost': ['view'],
             'FacilityType': ['view'],
-            'EquipmentCategory': ['view'],  # ДОБАВЛЕНО
-            'InterestOrgan': ['view'],      # ДОБАВЛЕНО, если нужно
+            'EquipmentCategory': ['view'],  
+            'InterestOrgan': ['view'],      
         },
         'filters': {},
         'can_see_all_divisions': False,

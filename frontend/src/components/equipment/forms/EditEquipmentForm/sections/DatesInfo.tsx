@@ -1,5 +1,5 @@
 import React from 'react';
-import { Equipment } from '../../../../../types';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
 import { CalendarDays } from 'lucide-react';
 import '../style.css';
 
@@ -9,6 +9,7 @@ interface DatesInfoProps {
   serviceLife?: string;
   onServiceLifeChange: (value: string) => void;
   isDisposed?: boolean;
+  permissions: EquipmentFieldPermissions;
 }
 
 export function DatesInfo({
@@ -16,7 +17,8 @@ export function DatesInfo({
   onChange,
   serviceLife,
   onServiceLifeChange,
-  isDisposed = false
+  isDisposed = false,
+  permissions
 }: DatesInfoProps) {
   return (
     <div className="equipment-card-edit">
@@ -25,7 +27,6 @@ export function DatesInfo({
         <h3 className="equipment-card-title">Даты</h3>
       </div>
       <div className="equipment-card-content-edit">
-
         <div className="equipment-form-group">
           <label className="equipment-form-label">Дата производства</label>
           <input
@@ -33,7 +34,7 @@ export function DatesInfo({
             value={formData.manufacturing_date || ''}
             onChange={(e) => onChange({ manufacturing_date: e.target.value })}
             className="form-input-edit"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditManufacturingDate}
           />
         </div>
 
@@ -44,10 +45,9 @@ export function DatesInfo({
             value={formData.exploitation_date || ''}
             onChange={(e) => onChange({ exploitation_date: e.target.value })}
             className="form-input-edit"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditExploitationDate}
           />
         </div>
-
 
         <div className="form-row">
           <div className="equipment-form-group">
@@ -58,7 +58,7 @@ export function DatesInfo({
               onChange={(e) => onServiceLifeChange(e.target.value)}
               className="form-input-edit"
               placeholder="Например, 5 лет"
-              disabled={isDisposed}
+              disabled={isDisposed || !permissions.canEditServiceLife}
             />
           </div>
         </div>

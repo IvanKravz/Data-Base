@@ -1,12 +1,14 @@
 import React from 'react';
+import { EquipmentFieldPermissions } from '../../../../../types';
 import '../style.css';
 
 interface EditCommentsCardProps {
   comments: string | null;
   onChange: (value: string) => void;
+  permissions: EquipmentFieldPermissions;
 }
 
-export function EditCommentsCard({ comments, onChange }: EditCommentsCardProps) {
+export function EditCommentsCard({ comments, onChange, permissions }: EditCommentsCardProps) {
   // Функция для разделения комментариев по строкам
   const splitComments = (commentsText: string | null) => {
     if (!commentsText) return [];
@@ -15,6 +17,7 @@ export function EditCommentsCard({ comments, onChange }: EditCommentsCardProps) 
 
   // Обработчик изменения текста
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!permissions.canEditComments) return;
     onChange(e.target.value);
   };
 
@@ -46,6 +49,7 @@ export function EditCommentsCard({ comments, onChange }: EditCommentsCardProps) 
           className="form-input-edit form-textarea"
           rows={4}
           placeholder="Добавьте комментарии к технике..."
+          disabled={!permissions.canEditComments}
         />
       </div>
     </div>

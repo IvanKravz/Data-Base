@@ -23,7 +23,6 @@ interface PersonnelListProps {
   loading?: boolean;
   divisionId?: string;
   subdivisionId?: string;
-  // ДОБАВЛЯЕМ НОВЫЕ ПРОПСЫ ДЛЯ ФИЛЬТРОВ
   advancedFilters?: {
     ranks: string[];
     positions: string[];
@@ -50,7 +49,7 @@ export function PersonnelList({
   loading = false,
   divisionId,
   subdivisionId,
-  advancedFilters = { // ЗАДАЕМ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ
+  advancedFilters = {
     ranks: [],
     positions: [],
     divisions: [],
@@ -160,84 +159,47 @@ export function PersonnelList({
     fetchData();
   }, [division, token, externalPersonnel, dispatch]);
 
+  // УБИРАЕМ ВСЮ ДУБЛИРУЮЩУЮ ФИЛЬТРАЦИЮ - оставляем только фильтрацию по категориям
   const filteredPersonnel = useMemo(() => {
     const filtered = basePersonnel.filter(person => {
-      // Базовые фильтры по категории
+      // ТОЛЬКО фильтры по категориям (вкладкам)
       let matchesCategory = true;
-      if (activeFilter === 'management') {
-        matchesCategory = person.category === 'management';
-      } else if (activeFilter === 'officers') {
-        if (selectedOfficerFilter === 'with_management') {
-          matchesCategory = person.category === 'officer' || person.category === 'management';
-        } else if (selectedOfficerFilter === 'without_management') {
-          matchesCategory = person.category === 'officer';
-        } else {
-          matchesCategory = person.category === 'officer' || person.category === 'management';
-        }
-      } else if (activeFilter === 'warrantOfficers') {
-        matchesCategory = person.category === 'warrant_officer';
-      } else if (activeFilter === 'civilian') {
-        matchesCategory = person.category === 'civilian';
-      } else if (activeFilter === 'mol') {
-        matchesCategory = person.is_material_responsible;
-      } else if (activeFilter === 'sha') {
-        matchesCategory = person.is_sha_worker;
-        if (matchesCategory && selectedAccessClass !== 'all') {
-          matchesCategory = person.sha_details?.access_level === selectedAccessClass;
-        }
+      
+      switch (activeFilter) {
+        case 'management':
+          matchesCategory = person.category === 'management';
+          break;
+        case 'officers':
+          if (selectedOfficerFilter === 'with_management') {
+            matchesCategory = person.category === 'officer' || person.category === 'management';
+          } else if (selectedOfficerFilter === 'without_management') {
+            matchesCategory = person.category === 'officer';
+          } else {
+            matchesCategory = person.category === 'officer' || person.category === 'management';
+          }
+          break;
+        case 'warrantOfficers':
+          matchesCategory = person.category === 'warrant_officer';
+          break;
+        case 'civilian':
+          matchesCategory = person.category === 'civilian';
+          break;
+        case 'mol':
+          matchesCategory = person.is_material_responsible;
+          break;
+        case 'sha':
+          matchesCategory = person.is_sha_worker;
+          if (matchesCategory && selectedAccessClass !== 'all') {
+            matchesCategory = person.sha_details?.access_level === selectedAccessClass;
+          }
+          break;
+        case 'all':
+        default:
+          matchesCategory = true;
+          break;
       }
 
-      // Поиск по тексту
-      const searchLower = searchTerm.toLowerCase();
-      const matchesSearch = !searchTerm ||
-        person.full_name?.toLowerCase().includes(searchLower) ||
-        person.position?.toLowerCase().includes(searchLower) ||
-        person.work_phone?.toLowerCase().includes(searchLower) ||
-        person.personal_phone?.toLowerCase().includes(searchLower) ||
-        person.rank?.toLowerCase().includes(searchLower) ||
-        person.subdivision?.name.toLowerCase().includes(searchLower);
-
-      // ФИЛЬТРЫ ИЗ РАСШИРЕННОГО ПОИСКА
-
-      // Фильтр по званиям
-      const matchesRank = advancedFilters.ranks.length === 0 ||
-        advancedFilters.ranks.some(rank =>
-          person.rank?.toLowerCase().includes(rank.toLowerCase())
-        );
-
-      // Фильтр по должностям
-      const matchesPosition = advancedFilters.positions.length === 0 ||
-        advancedFilters.positions.some(position =>
-          person.position?.toLowerCase().includes(position.toLowerCase())
-        );
-
-      // Фильтр по подразделениям
-      const matchesDivision = advancedFilters.divisions.length === 0 ||
-        advancedFilters.divisions.some(divisionName =>
-          person.division?.name.toLowerCase().includes(divisionName.toLowerCase())
-        );
-
-      // Фильтр по классам сети
-      const matchesNetworkClass = advancedFilters.networkClasses.length === 0 ||
-        advancedFilters.networkClasses.some(networkClass => {
-          const personAccessLevel = person.sha_details?.access_level?.toString();
-          return personAccessLevel === networkClass;
-        });
-
-      // Фильтр по формам ГТ
-      const matchesGtForm = advancedFilters.gtForms.length === 0 ||
-        advancedFilters.gtForms.some(gtForm => {
-          const personGtForm = person.form_state_secrets;
-          return personGtForm === gtForm;
-        });
-
-      return matchesCategory &&
-        matchesSearch &&
-        matchesRank &&
-        matchesPosition &&
-        matchesDivision &&
-        matchesNetworkClass &&
-        matchesGtForm;
+      return matchesCategory;
     });
 
     // Сортируем отфильтрованный список
@@ -246,12 +208,11 @@ export function PersonnelList({
     basePersonnel,
     activeFilter,
     selectedOfficerFilter,
-    selectedAccessClass,
-    searchTerm,
-    advancedFilters
+    selectedAccessClass
+    // УБРАНЫ: searchTerm, advancedFilters
   ]);
 
-  // Остальной код без изменений...
+  // Функция для получения данных о штатной численности
   const getStaffCount = (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
     // В глобальном режиме показываем общую штатную численность и фактическое количество
     if (isGlobalView) {
@@ -463,11 +424,9 @@ export function PersonnelList({
 
         {filteredPersonnel.length === 0 && (
           <div className="personnel-list-empty-message">
-            {searchTerm || Object.values(advancedFilters).some(arr => arr.length > 0)
-              ? 'Нет сотрудников, соответствующих поиску'
-              : selectedCategory !== 'all'
-                ? `Нет ${selectedCategory === 'mol' ? 'материально ответственных лиц' : 'ШаРаботников'}`
-                : 'Нет сотрудников для отображения'}
+            {activeFilter !== 'all'
+              ? `Нет сотрудников в категории "${activeFilter}"`
+              : 'Нет сотрудников для отображения'}
           </div>
         )}
       </div>

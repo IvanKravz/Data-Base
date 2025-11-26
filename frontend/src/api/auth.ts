@@ -1,45 +1,6 @@
 // auth.ts
+import { LoginResponse, ModulePermissions, RegisterData } from '../types';
 import { api } from './client';
-
-interface LoginResponse {
-  access: string;
-  refresh: string;
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    position: string;
-    department: string;
-    division: string;
-    subdivision?: string;
-    is_global_view: boolean;
-    module_permissions: { 
-      employees: { can_view: boolean; can_edit: boolean };
-      equipment: { can_view: boolean; can_edit: boolean };
-      facilities: { can_view: boolean; can_edit: boolean };
-      tasks: { can_view: boolean; can_edit: boolean };
-      networks: { can_view: boolean; can_edit: boolean };
-    };
-  };
-}
-
-interface RegisterData {
-  username: string;
-  password: string;
-  name: string;
-  position: string;
-  department: string;
-  division: string;
-}
-
-// Добавляем интерфейс для прав доступа
-interface ModulePermissions {
-  employees: { can_view: boolean; can_edit: boolean };
-  equipment: { can_view: boolean; can_edit: boolean };
-  facilities: { can_view: boolean; can_edit: boolean };
-  tasks: { can_view: boolean; can_edit: boolean };
-  networks: { can_view: boolean; can_edit: boolean };
-}
 
 // Добавляем тип для модулей приложения
 type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks';
@@ -53,11 +14,6 @@ export const authApi = {
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
     
-    // Дополнительно сохраняем права отдельно для быстрого доступа
-    if (data.user.module_permissions) {
-      localStorage.setItem('module_permissions', JSON.stringify(data.user.module_permissions));
-    }
-    
     return data;
   },
 
@@ -67,10 +23,6 @@ export const authApi = {
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
-    
-    if (data.user.module_permissions) {
-      localStorage.setItem('module_permissions', JSON.stringify(data.user.module_permissions));
-    }
     
     return data;
   },
@@ -90,23 +42,13 @@ export const authApi = {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('module_permissions'); // Очищаем и права
+    localStorage.removeItem('module_permissions');
     sessionStorage.removeItem('appLoaded');
   },
 
   // Метод для получения прав доступа с приоритетом на отдельное хранение
   getModulePermissions: (): ModulePermissions | null => {
-    // Сначала проверяем отдельное хранилище
-    const permissionsStr = localStorage.getItem('module_permissions');
-    if (permissionsStr) {
-      try {
-        return JSON.parse(permissionsStr);
-      } catch (e) {
-        console.error('Error parsing module permissions:', e);
-      }
-    }
-    
-    // Если нет отдельного хранилища, проверяем в user объекте
+    // Теперь всегда берем из user объекта
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
@@ -169,11 +111,18 @@ export const authApi = {
   updateGlobalView: (isGlobalView: boolean): void => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return;
-
+  
     try {
       const user = JSON.parse(userStr);
       user.is_global_view = isGlobalView;
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Также обновляем module_permissions если он существует отдельно (для обратной совместимости)
+      const permissionsStr = localStorage.getItem('module_permissions');
+      if (permissionsStr) {
+        const permissions = JSON.parse(permissionsStr);
+        localStorage.setItem('module_permissions', JSON.stringify(permissions));
+      }
     } catch (e) {
       console.error('Error updating global view:', e);
     }

@@ -1,20 +1,13 @@
+// AccessDenied.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button, Container, Typography, Box } from '@mui/material';
-import { ArrowLeft } from 'lucide-react';
-
-// Импортируем изображение
-import forbiddenImage from '../../assets/images/errors/403-forbidden.png';
+import { ShieldAlert, Home } from 'lucide-react';
 
 const AccessDenied: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleGoBack = () => {
-    navigate(-1); // Возврат на предыдущую страницу
-  };
 
   const handleGoHome = () => {
-    navigate('/'); // Переход на главную
+    // Полная перезагрузка главной страницы для сброса всех состояний
+    window.location.href = '/';
   };
 
   return (
@@ -30,17 +23,25 @@ const AccessDenied: React.FC = () => {
         py: 4
       }}
     >
-      {/* Изображение */}
-      <Box sx={{ mb: 4, maxWidth: 300 }}>
-        <img 
-          src={forbiddenImage} 
-          alt="Доступ запрещен" 
-          style={{ 
-            width: '100%', 
-            height: 'auto',
-            filter: 'grayscale(30%)'
-          }} 
-        />
+      {/* Иконка доступа запрещено */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 120,
+          height: 120,
+          borderRadius: '50%',
+          backgroundColor: 'error.light',
+          color: 'error.contrastText',
+          '& svg': {
+            width: 64,
+            height: 64
+          }
+        }}
+      >
+        <ShieldAlert />
       </Box>
 
       {/* Заголовок и текст */}
@@ -51,33 +52,26 @@ const AccessDenied: React.FC = () => {
         color="error.main"
         sx={{ fontWeight: 'bold', mb: 2 }}
       >
-        Доступ запрещен
+        Доступ ограничен
       </Typography>
       
       <Typography 
         variant="h6" 
         color="text.secondary" 
-        sx={{ mb: 4, maxWidth: 600 }}
+        sx={{ mb: 4, maxWidth: 800, lineHeight: 1.6 }}
       >
         У вас недостаточно прав для просмотра этой страницы. 
-        Обратитесь к администратору для получения доступа.
+        Если вам необходим доступ к этому ресурсу, обратитесь к администратору системы.
       </Typography>
 
       {/* Кнопки действий */}
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Button
-          variant="outlined"
-          startIcon={<ArrowLeft />}
-          onClick={handleGoBack}
-          size="large"
-        >
-          Назад
-        </Button>
-        
-        <Button
           variant="contained"
+          startIcon={<Home size={20} />}
           onClick={handleGoHome}
           size="large"
+          sx={{ px: 3 }}
         >
           На главную
         </Button>
@@ -86,7 +80,7 @@ const AccessDenied: React.FC = () => {
       {/* Дополнительная информация */}
       <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          Код ошибки: 403 Forbidden
+          Код ошибки: 403 Forbidden • Отказано в доступе
         </Typography>
       </Box>
     </Container>

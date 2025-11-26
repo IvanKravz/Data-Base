@@ -50,7 +50,7 @@ interface AdvancedSearchFilters {
   exploitationDateFrom: string;
   exploitationDateTo: string;
   assignedTo: string[];
-  interestOrgans: InterestOrgan[]; // Добавлено новое поле
+  interestOrgans: InterestOrgan[];
 }
 
 export function EquipmentSection() {

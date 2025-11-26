@@ -1,18 +1,20 @@
 import React from 'react';
-import { Equipment } from '../../../../../types';
-import { FileText, ClipboardList } from 'lucide-react';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
+import { FileText } from 'lucide-react';
 import '../style.css';
 
 interface DocumentsInfoProps {
   formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
   isDisposed?: boolean;
+  permissions: EquipmentFieldPermissions;
 }
 
 export function DocumentsInfo({
   formData,
   onChange,
   isDisposed = false,
+  permissions
 }: DocumentsInfoProps) {
   return (
     <div className="equipment-card-edit">
@@ -29,7 +31,7 @@ export function DocumentsInfo({
             onChange={(e) => onChange({ first_invoice: e.target.value })}
             className="form-input-edit"
             placeholder="Номер первичного документа"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditDocuments}
           />
         </div>
 
@@ -41,7 +43,7 @@ export function DocumentsInfo({
             onChange={(e) => onChange({ material_invoice: e.target.value })}
             className="form-input-edit"
             placeholder="Номер накладной на МОЛ"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditDocuments}
           />
         </div>
       </div>

@@ -84,30 +84,17 @@ export function PersonnelDetails() {
     await dispatch(fetchPersonById({ token, id }));
   };
 
+  if (loading) {
+    return <div className="equipment-loading">Загрузка...</div>;
+  }
+
   if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-500">{error}</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Вернуться назад
-        </button>
-      </div>
-    );
+    return <div className="equipment-error">{error}</div>;
   }
 
   if (!person) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Сотрудник не найден</p>
-        <button
-          onClick={() => navigate(-1)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Вернуться назад
-        </button>
+      <div className="equipment-not-found">
       </div>
     );
   }

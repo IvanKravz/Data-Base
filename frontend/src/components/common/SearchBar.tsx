@@ -2,8 +2,8 @@ import { Search } from 'lucide-react';
 import './style.css';
 
 interface SearchBarProps {
-  searchTerm: string;  // переименовано с value на searchTerm
-  setSearchTerm: (term: string) => void;  // переименовано с onChange на setSearchTerm
+  searchTerm: string;  
+  setSearchTerm: (term: string) => void; 
   placeholder: string;
 }
 

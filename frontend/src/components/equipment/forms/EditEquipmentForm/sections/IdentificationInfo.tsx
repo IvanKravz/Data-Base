@@ -1,14 +1,15 @@
 import React from 'react';
-import { Equipment } from '../../../../../types';
-import { Fingerprint, Barcode } from 'lucide-react';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
+import { Fingerprint } from 'lucide-react';
 import '../style.css';
 
 interface IdentificationInfoProps {
   formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
+  permissions: EquipmentFieldPermissions;
 }
 
-export function IdentificationInfo({ formData, onChange }: IdentificationInfoProps) {
+export function IdentificationInfo({ formData, onChange, permissions }: IdentificationInfoProps) {
   return (
     <div className="equipment-card-edit">
       <div className="equipment-card-header">
@@ -17,8 +18,7 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
       </div>
       <div className="equipment-card-content-edit">
         <div className="equipment-form-group">
-          <label className="equipment-form-label">Серийный номер
-          </label>
+          <label className="equipment-form-label">Серийный номер</label>
           <input
             type="text"
             required
@@ -26,6 +26,7 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
             onChange={(e) => onChange({ serial_number: e.target.value })}
             className="form-input-edit"
             placeholder="Введите серийный номер"
+            disabled={!permissions.canEditIdentification}
           />
         </div>
 
@@ -37,6 +38,7 @@ export function IdentificationInfo({ formData, onChange }: IdentificationInfoPro
             onChange={(e) => onChange({ inventory_number: e.target.value })}
             className="form-input-edit"
             placeholder="Введите инвентарный номер"
+            disabled={!permissions.canEditIdentification}
           />
         </div>
       </div>

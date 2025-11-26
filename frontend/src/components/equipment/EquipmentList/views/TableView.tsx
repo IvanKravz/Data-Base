@@ -5,7 +5,7 @@ import { Equipment } from '../../../../types';
 import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { getStatusIcon, getStatusColor } from '../../../../utils/statusUtils';
 import { format } from 'date-fns';
-import { canEdit } from '../../../../api/utils/permissions';
+import { canEdit, canDelete } from '../../../../api/utils/permissions';
 import './style.css';
 
 interface TableViewProps {
@@ -35,11 +35,16 @@ export function TableView({
   
   console.log('equipment', equipment)
   
-  // Проверяем права на редактирование оборудования
+  // Проверяем права на редактирование и удаление оборудования
   const hasEditPermission = canEdit('equipment');
+  const hasDeletePermission = canDelete('equipment');
+  console.log('hasDeletePermission', hasDeletePermission)
   
-  // Столбец действий отображается только если showActions=true И есть права на редактирование
-  const shouldShowActions = showActions && hasEditPermission;
+  // Столбец действий отображается только если:
+  // 1. showActions=true 
+  // 2. Есть права на редактирование
+  // 3. Есть права на удаление
+  const shouldShowActions = showActions && hasEditPermission && hasDeletePermission;
 
   // Функция для переключения состояния подразделения
   const toggleDivision = (divisionId: string) => {

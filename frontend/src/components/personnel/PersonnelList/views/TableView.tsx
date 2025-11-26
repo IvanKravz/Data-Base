@@ -13,8 +13,7 @@ interface TableViewProps {
   divisionName: string;
 }
 
-export function TableView({ personnel, onPersonClick, onDelete, divisionName }: TableViewProps) {
-  const navigate = useNavigate(); 
+export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps) {
   
   // Состояния для отслеживания свернутых/развернутых разделов
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());

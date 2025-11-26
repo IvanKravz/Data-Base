@@ -86,7 +86,7 @@ class DivisionSerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()
     facilities_count = serializers.SerializerMethodField()
     tasks_count = serializers.SerializerMethodField()
-    networks_count = serializers.IntegerField(read_only=True)
+    networks_count = serializers.SerializerMethodField()
     subdivisions = SubdivisionSerializer(many=True, read_only=True)
     facilities = FacilityShortSerializer(many=True, read_only=True)
     order = serializers.IntegerField(required=False, default=0)

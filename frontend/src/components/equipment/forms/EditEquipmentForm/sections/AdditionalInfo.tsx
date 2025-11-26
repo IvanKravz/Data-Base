@@ -1,6 +1,6 @@
 import React from 'react';
-import { Equipment } from '../../../../../types';
-import { Shield, Target, Gift } from 'lucide-react';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
+import { Shield } from 'lucide-react';
 import '../style.css';
 
 interface AdditionalInfoProps {
@@ -8,15 +8,19 @@ interface AdditionalInfoProps {
     onChange: (data: Partial<Equipment>) => void;
     interestOrgans: any[];
     isDisposed?: boolean;
+    permissions: EquipmentFieldPermissions;
 }
 
 export function AdditionalInfo({
     formData,
     onChange,
     interestOrgans,
-    isDisposed = false
+    isDisposed = false,
+    permissions
 }: AdditionalInfoProps) {
     const handleFreeUseChange = (checked: boolean) => {
+        if (!permissions.canEditFreeUse) return;
+        
         const newData: Partial<Equipment> = {
             is_free_use: checked,
             // Если снимаем галочку, очищаем номер акта
@@ -27,6 +31,7 @@ export function AdditionalInfo({
 
     // Исправление: Обработчик изменения степени секретности
     const handleSecretLevelChange = (value: string) => {
+        if (!permissions.canEditSecretLevel) return;
         // Отправляем null вместо пустой строки
         onChange({ secret_level: value === '' ? null : value });
     };
@@ -44,7 +49,7 @@ export function AdditionalInfo({
                         value={formData.secret_level || ''}
                         onChange={(e) => handleSecretLevelChange(e.target.value)}
                         className="form-select"
-                        disabled={isDisposed}
+                        disabled={isDisposed || !permissions.canEditSecretLevel}
                     >
                         <option value="">Не выбрано</option>
                         <option value="OV">ОВ</option>
@@ -54,18 +59,18 @@ export function AdditionalInfo({
                     </select>
                 </div>
 
-                {/* Остальной код без изменений */}
                 <div className="equipment-form-group">
                     <label className="form-label">В чьих интересах эксплуатируется</label>
                     <select
                         value={formData.interest_organ?.id || ''}
                         onChange={(e) => {
+                            if (!permissions.canEditInterestOrgan) return;
                             const organId = e.target.value;
                             const selectedOrgan = interestOrgans.find(org => org.id.toString() === organId);
                             onChange({ interest_organ: selectedOrgan || null });
                         }}
                         className="form-select"
-                        disabled={isDisposed}
+                        disabled={isDisposed || !permissions.canEditInterestOrgan}
                     >
                         <option value="">Не выбрано</option>
                         {interestOrgans.map(organ => (
@@ -84,7 +89,7 @@ export function AdditionalInfo({
                                 className="checkbox-input"
                                 checked={formData.is_free_use || false}
                                 onChange={(e) => handleFreeUseChange(e.target.checked)}
-                                disabled={isDisposed}
+                                disabled={isDisposed || !permissions.canEditFreeUse}
                             />
                             <span className="checkbox-label-text">Выдана в безвозмездное пользование</span>
                         </label>
@@ -103,7 +108,7 @@ export function AdditionalInfo({
                             onChange={(e) => onChange({ free_use_act_number: e.target.value })}
                             className="form-input-edit"
                             placeholder="Введите номер акта"
-                            disabled={isDisposed}
+                            disabled={isDisposed || !permissions.canEditFreeUse}
                             required
                         />
                     </div>

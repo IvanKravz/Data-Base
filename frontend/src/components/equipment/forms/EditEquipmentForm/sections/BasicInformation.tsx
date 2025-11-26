@@ -1,5 +1,5 @@
 import React from 'react';
-import { Equipment } from '../../../../../types';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
 import { Package } from 'lucide-react';
 import '../style.css';
 
@@ -8,14 +8,16 @@ interface BasicInformationProps {
   onChange: (data: Partial<Equipment>) => void;
   isClosedEquipment?: boolean;
   isDisposed?: boolean;
-  equipmentCategories: { value: string; name: string; is_closed: boolean }[]; // Добавляем is_closed в тип
+  equipmentCategories: { value: string; name: string; is_closed: boolean }[];
+  permissions: EquipmentFieldPermissions;
 }
 
 export function BasicInformation({
   formData,
   onChange,
   isDisposed = false,
-  equipmentCategories = []
+  equipmentCategories = [],
+  permissions
 }: BasicInformationProps) {
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -25,13 +27,11 @@ export function BasicInformation({
     );
 
     if (selectedCategory) {
-      // Передаем полный объект категории И обновляем флаг is_closed оборудования
       onChange({
         category: selectedCategory,
-        is_closed: selectedCategory.is_closed // Важно: обновляем флаг оборудования
+        is_closed: selectedCategory.is_closed
       });
     } else {
-      // Если категория не выбрана, сбрасываем
       onChange({
         category: null,
         is_closed: false
@@ -60,7 +60,7 @@ export function BasicInformation({
               onChange={(e) => onChange({ name: e.target.value })}
               className="form-input-edit"
               placeholder="Введите название техники"
-              disabled={isDisposed}
+              disabled={isDisposed || !permissions.canEditName}
             />
           </div>
         </div>
@@ -72,7 +72,7 @@ export function BasicInformation({
               value={getCurrentCategoryValue()}
               onChange={handleCategoryChange}
               className="form-input-edit"
-              disabled={isDisposed}
+              disabled={isDisposed || !permissions.canEditCategory}
             >
               <option value="">Выберите категорию</option>
               {equipmentCategories.map((category) => (
@@ -95,7 +95,7 @@ export function BasicInformation({
             onChange={(e) => onChange({ type: e.target.value })}
             className="form-input-edit"
             placeholder="Введите тип техники"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditModel}
           />
         </div>
 
@@ -105,7 +105,7 @@ export function BasicInformation({
             value={formData.status || 'in-operation'}
             onChange={(e) => onChange({ status: e.target.value as Equipment['status'] })}
             className="form-input-edit"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditStatus}
           >
             <option value="in-operation">Эксплуатируется</option>
             <option value="in-storage">На складе</option>
@@ -123,7 +123,7 @@ export function BasicInformation({
             onChange={(e) => onChange({ ver_software: e.target.value })}
             className="form-input-edit"
             placeholder="Введите версию ПО"
-            disabled={isDisposed}
+            disabled={isDisposed || !permissions.canEditSoftwareVersion}
           />
         </div>
       </div>

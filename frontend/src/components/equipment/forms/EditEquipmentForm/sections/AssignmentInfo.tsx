@@ -1,6 +1,6 @@
 import React from 'react';
-import { Building2, User, MapPin } from 'lucide-react';
-import { Equipment } from '../../../../../types';
+import { Building2 } from 'lucide-react';
+import { Equipment, EquipmentFieldPermissions } from '../../../../../types';
 import '../style.css';
 
 interface AssignmentInfoProps {
@@ -23,6 +23,7 @@ interface AssignmentInfoProps {
   isLoading: boolean;
   fixedDivision?: boolean;
   fixedSubdivision?: boolean;
+  permissions: EquipmentFieldPermissions;
 }
 
 export function AssignmentInfo({
@@ -33,7 +34,8 @@ export function AssignmentInfo({
   divisions = [],
   isLoading,
   fixedDivision = false,
-  fixedSubdivision = false
+  fixedSubdivision = false,
+  permissions
 }: AssignmentInfoProps) {
   // Получаем текущее подразделение и доступные объекты
   const currentDivision = divisions.find(d => d.id === formData.division?.id);
@@ -56,7 +58,7 @@ export function AssignmentInfo({
 
   // Обработчик изменения подразделения
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (fixedDivision) return;
+    if (fixedDivision || !permissions.canEditDivision) return;
     
     const divisionId = e.target.value;
     const selectedDivision = divisions.find(d => String(d.id) === String(divisionId));
@@ -71,7 +73,7 @@ export function AssignmentInfo({
 
   // Обработчик изменения отделения
   const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (fixedSubdivision) return;
+    if (fixedSubdivision || !permissions.canEditSubdivision) return;
     
     const subdivisionId = e.target.value;
     const selectedSubdivision = availableSubdivisions.find(s => String(s.id) === String(subdivisionId));
@@ -86,6 +88,8 @@ export function AssignmentInfo({
 
   // Обработчик изменения объекта
   const handleFacilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!permissions.canEditFacility) return;
+    
     const facilityId = e.target.value;
     const selectedFacility = availableFacilities.find(f => String(f.id) === String(facilityId));
 
@@ -101,6 +105,8 @@ export function AssignmentInfo({
 
   // Обработчик изменения ответственного
   const handlePersonnelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!permissions.canEditAssignedTo) return;
+    
     const personId = e.target.value;
     const selectedPerson = filteredPersonnel.find(p => String(p.id) === String(personId));
 
@@ -128,7 +134,7 @@ export function AssignmentInfo({
               value={formData.division?.id ? String(formData.division.id) : ''}
               onChange={handleDivisionChange}
               className="form-select"
-              disabled={isLoading || fixedDivision}
+              disabled={isLoading || fixedDivision || !permissions.canEditDivision}
             >
               <option value="">Выберите подразделение</option>
               {divisions.map(division => (
@@ -147,7 +153,7 @@ export function AssignmentInfo({
             value={formData.subdivision?.id ? String(formData.subdivision.id) : ''}
             onChange={handleSubdivisionChange}
             className="form-select"
-            disabled={isLoading || !formData.division || fixedSubdivision}
+            disabled={isLoading || !formData.division || fixedSubdivision || !permissions.canEditSubdivision}
           >
             <option value="">Выберите отделение</option>
             {availableSubdivisions.map(subdivision => (
@@ -166,7 +172,7 @@ export function AssignmentInfo({
               value={formData.assigned_to?.id ? String(formData.assigned_to.id) : ''}
               onChange={handlePersonnelChange}
               className="form-select"
-              disabled={isLoading || !formData.division}
+              disabled={isLoading || !formData.division || !permissions.canEditAssignedTo}
             >
               <option value="">Не назначен</option>
               {filteredPersonnel.map(person => (
@@ -186,7 +192,7 @@ export function AssignmentInfo({
               value={formData.facility?.id ? String(formData.facility.id) : ''}
               onChange={handleFacilityChange}
               className="form-select"
-              disabled={isLoading || !formData.division}
+              disabled={isLoading || !formData.division || !permissions.canEditFacility}
             >
               <option value="">Не привязан к объекту</option>
               {availableFacilities.map(facility => (

@@ -1,4 +1,14 @@
 
+export interface User {
+  id: string;
+  username: string;
+  roles: string[];
+  permissions: {
+    canEditEquipmentBasicInfo?: boolean;
+    canEditEquipmentFullInfo?: boolean;
+  };
+}
+
 export interface Employee {
   id: string;
   photo?: string;
@@ -40,7 +50,11 @@ export interface Employee {
   description?: string;
 }
 
-export type EquipmentCategory = 'tko' | 'closed' | 'radio' | 'computer' | 'battery' | 'antenna' | 'power' | 'materials';
+export interface EquipmentCategory {
+  value: string;
+  name: string;
+  is_closed: boolean;
+}
 
 export interface DisposalInfo {
   actNumber: string;
@@ -95,12 +109,24 @@ export interface ClosedEquipmentCategory {
 export interface Division {
   id: string;
   name: string;
-  employees_count: number;
-  equipment_count: number;
-  facilities_count: number;
-  tasks_count: number;
-  networks_count: number;
-}
+  subdivisions: { id: string; name: string }[];
+  facilities: {
+    id: string;
+    name: string;
+    type: {
+      id: string;
+      name: string;
+      description?: string;
+    };
+    type_display: string;
+    facility_class: string;
+    class_display: string;
+    employees_count: number;
+    equipment_count: number;
+    facilities_count: number;
+    tasks_count: number;
+    networks_count: number;
+  }
 
 export interface Facility {
   id: string;
@@ -132,7 +158,7 @@ export interface Facility {
   kz_size?: string | null;;
   has_transformer_in_kz?: boolean;
   has_grounding_in_kz?: boolean;
-  inn?:string;
+  inn?: string;
   is_closed?: boolean;
 }
 
@@ -220,4 +246,66 @@ export interface NetworkDirection {
   bandwidth?: number;
   latency?: number;
   description?: string;
+}
+
+export interface EquipmentFieldPermissions {
+  canEditName: boolean;
+  canEditCategory: boolean;
+  canEditModel: boolean;
+  canEditStatus: boolean;
+  canEditSoftwareVersion: boolean;
+  canEditManufacturingDate: boolean;
+  canEditExploitationDate: boolean;
+  canEditServiceLife: boolean;
+  canEditSecretLevel: boolean;
+  canEditInterestOrgan: boolean;
+  canEditFreeUse: boolean;
+  canEditDivision: boolean;
+  canEditSubdivision: boolean;
+  canEditAssignedTo: boolean;
+  canEditFacility: boolean;
+  canEditComments: boolean;
+  canEditProductStructure: boolean;
+  canEditDocuments: boolean;
+  canEditIdentification: boolean;
+}
+
+export interface LoginResponse {
+  access: string;
+  refresh: string;
+  user: {
+    id: string;
+    username: string;
+    name: string;
+    position: string;
+    department: string;
+    division: string;
+    subdivision?: string;
+    is_global_view: boolean;
+    module_permissions: { 
+      employees: { can_view: boolean; can_edit: boolean };
+      equipment: { can_view: boolean; can_edit: boolean };
+      facilities: { can_view: boolean; can_edit: boolean };
+      tasks: { can_view: boolean; can_edit: boolean };
+      networks: { can_view: boolean; can_edit: boolean };
+    };
+  };
+}
+
+export interface RegisterData {
+  username: string;
+  password: string;
+  name: string;
+  position: string;
+  department: string;
+  division: string;
+}
+
+// Добавляем интерфейс для прав доступа
+export interface ModulePermissions {
+  employees: { can_view: boolean; can_edit: boolean };
+  equipment: { can_view: boolean; can_edit: boolean };
+  facilities: { can_view: boolean; can_edit: boolean };
+  tasks: { can_view: boolean; can_edit: boolean };
+  networks: { can_view: boolean; can_edit: boolean };
 }
