@@ -6,7 +6,7 @@ import '../style.css';
 interface IdentificationInfoProps {
   formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
-  permissions: EquipmentFieldPermissions;
+  permissions?: EquipmentFieldPermissions; // Делаем опциональным
 }
 
 export function IdentificationInfo({ formData, onChange, permissions }: IdentificationInfoProps) {
@@ -26,7 +26,7 @@ export function IdentificationInfo({ formData, onChange, permissions }: Identifi
             onChange={(e) => onChange({ serial_number: e.target.value })}
             className="form-input-edit"
             placeholder="Введите серийный номер"
-            disabled={!permissions.canEditIdentification}
+            disabled={!permissions?.canEditIdentification} // Используем опциональную цепочку
           />
         </div>
 
@@ -38,7 +38,7 @@ export function IdentificationInfo({ formData, onChange, permissions }: Identifi
             onChange={(e) => onChange({ inventory_number: e.target.value })}
             className="form-input-edit"
             placeholder="Введите инвентарный номер"
-            disabled={!permissions.canEditIdentification}
+            disabled={!permissions?.canEditIdentification} // Используем опциональную цепочку
           />
         </div>
       </div>

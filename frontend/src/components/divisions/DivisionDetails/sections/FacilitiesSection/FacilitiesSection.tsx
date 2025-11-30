@@ -20,7 +20,7 @@ import './FacilitiesSection.css';
 import { normalizeSearchString } from '../../../../../utils/normalizeSearchString';
 import { useDebounce } from '../../../../../utils/useDebounce';
 import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationModal';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canCreate, canDelete } from '../../../../../api/utils/permissions';
 
 // Ленивая загрузка карты
 const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
@@ -568,13 +568,13 @@ export function FacilitiesSection() {
   }, []);
 
   // Проверка прав доступа для кнопки "Добавить объект"
-  const canCreateFacilities = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
+  const canCreateFacilities = canCreate('facilities');
+
+  // Проверка прав доступа для кнопки "Добавить пост связи" - ИСПОЛЬЗУЕМ КОНКРЕТНО ДЛЯ COMMUNICATION POSTS
+  const canCreateCommunicationPosts = canCreate('communicationPosts');
+
+  // Проверка прав доступа для удаления постов связи
+  const canDeleteCommunicationPosts = canDelete('communicationPosts');
 
   if (loading) {
     return <div className="flex justify-center py-12">Загрузка данных...</div>;
@@ -599,23 +599,27 @@ export function FacilitiesSection() {
             </h2>
           </div>
 
-          {canCreateFacilities && (<div className="facilities-add-buttons">
+          {canCreateCommunicationPosts && (<div className="facilities-add-buttons">
             {activeTab === 'posts' ? (
-              <button
-                onClick={handleAddPost}
-                className="facilities-add-button"
-              >
-                <Plus size={18} />
-                <span>Добавить пост связи</span>
-              </button>
+              canCreateCommunicationPosts && (
+                <button
+                  onClick={handleAddPost}
+                  className="facilities-add-button"
+                >
+                  <Plus size={18} />
+                  <span>Добавить пост связи</span>
+                </button>
+              )
             ) : (
-              <button
-                onClick={handleAddFacility}
-                className="facilities-add-button"
-              >
-                <Plus size={18} />
-                <span>Добавить объект</span>
-              </button>
+              canCreateFacilities && (
+                <button
+                  onClick={handleAddFacility}
+                  className="facilities-add-button"
+                >
+                  <Plus size={18} />
+                  <span>Добавить объект</span>
+                </button>
+              )
             )}
           </div>
           )}
@@ -693,6 +697,7 @@ export function FacilitiesSection() {
                 onPostDeleted={handlePostDeleted}
                 isGlobalView={isGlobalView}
                 searchTerm={debouncedSearchTerm}
+                canDeletePosts={canDeleteCommunicationPosts}
               />
             ) : (
               <FacilityList

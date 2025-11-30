@@ -9,7 +9,7 @@ interface BasicInformationProps {
   isClosedEquipment?: boolean;
   isDisposed?: boolean;
   equipmentCategories: { value: string; name: string; is_closed: boolean }[];
-  permissions: EquipmentFieldPermissions;
+  permissions?: EquipmentFieldPermissions; // Делаем опциональным
 }
 
 export function BasicInformation({
@@ -60,7 +60,7 @@ export function BasicInformation({
               onChange={(e) => onChange({ name: e.target.value })}
               className="form-input-edit"
               placeholder="Введите название техники"
-              disabled={isDisposed || !permissions.canEditName}
+              disabled={isDisposed || !permissions?.canEditName} // Используем опциональную цепочку
             />
           </div>
         </div>
@@ -72,7 +72,7 @@ export function BasicInformation({
               value={getCurrentCategoryValue()}
               onChange={handleCategoryChange}
               className="form-input-edit"
-              disabled={isDisposed || !permissions.canEditCategory}
+              disabled={isDisposed || !permissions?.canEditCategory} // Используем опциональную цепочку
             >
               <option value="">Выберите категорию</option>
               {equipmentCategories.map((category) => (
@@ -95,7 +95,7 @@ export function BasicInformation({
             onChange={(e) => onChange({ type: e.target.value })}
             className="form-input-edit"
             placeholder="Введите тип техники"
-            disabled={isDisposed || !permissions.canEditModel}
+            disabled={isDisposed || !permissions?.canEditModel} // Используем опциональную цепочку
           />
         </div>
 
@@ -105,7 +105,7 @@ export function BasicInformation({
             value={formData.status || 'in-operation'}
             onChange={(e) => onChange({ status: e.target.value as Equipment['status'] })}
             className="form-input-edit"
-            disabled={isDisposed || !permissions.canEditStatus}
+            disabled={isDisposed || !permissions?.canEditStatus} // Используем опциональную цепочку
           >
             <option value="in-operation">Эксплуатируется</option>
             <option value="in-storage">На складе</option>
@@ -123,7 +123,7 @@ export function BasicInformation({
             onChange={(e) => onChange({ ver_software: e.target.value })}
             className="form-input-edit"
             placeholder="Введите версию ПО"
-            disabled={isDisposed || !permissions.canEditSoftwareVersion}
+            disabled={isDisposed || !permissions?.canEditSoftwareVersion} // Используем опциональную цепочку
           />
         </div>
       </div>

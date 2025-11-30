@@ -1,4 +1,4 @@
-import { Building2, Plus, Trash2 } from 'lucide-react';
+import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { Employee } from '../../../../../types';
 import '.././style.css';
 
@@ -34,7 +34,7 @@ export function ShaWorkerCard({
   return (
     <div className="personnel-card sha-worker-card">
       <div className="personnel-card-header-edit">
-        <Building2 size={20} />
+        <KeyRound size={20} />
         <h3 className="personnel-card-title">Данные ШаРаботника</h3>
       </div>
       <div className="personnel-card-content">

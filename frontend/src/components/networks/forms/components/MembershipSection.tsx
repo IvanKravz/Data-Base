@@ -1,3 +1,4 @@
+// MembershipSection.tsx
 import React from 'react';
 
 interface SelectedItem {
@@ -29,12 +30,19 @@ const MembershipSection: React.FC<MembershipSectionProps> = ({
     currentDivision,
     currentFacility,
     currentEquipment,
+    selectedConnections,
     onDivisionChange,
     onFacilityChange,
     onEquipmentChange,
     onAddItem,
+    onRemoveConnection,
     connectionError
 }) => {
+    // Фильтруем объекты по выбранному подразделению
+    const filteredFacilities = currentDivision 
+        ? facilities.filter(facility => facility.division?.id?.toString() === currentDivision)
+        : [];
+
     return (
         <div className="network-form-section">
             <div className="network-form-section-header">
@@ -67,14 +75,20 @@ const MembershipSection: React.FC<MembershipSectionProps> = ({
                         value={currentFacility}
                         onChange={(e) => onFacilityChange(e.target.value)}
                         className="network-form-select"
+                        disabled={!currentDivision} // Отключаем если не выбрано подразделение
                     >
                         <option value="">Выберите объект</option>
-                        {facilities.map(facility => (
+                        {filteredFacilities.map(facility => (
                             <option key={facility.id} value={facility.id.toString()}>
                                 {facility.name}
                             </option>
                         ))}
                     </select>
+                    {currentDivision && filteredFacilities.length === 0 && (
+                        <div className="network-form-hint">
+                            Нет объектов для выбранного подразделения
+                        </div>
+                    )}
                 </div>
 
                 <div className="network-form-group">
@@ -83,6 +97,7 @@ const MembershipSection: React.FC<MembershipSectionProps> = ({
                         value={currentEquipment}
                         onChange={(e) => onEquipmentChange(e.target.value)}
                         className="network-form-select"
+                        disabled={!currentFacility} // Отключаем если не выбран объект
                     >
                         <option value="">Выберите технику</option>
                         {equipment.map(eq => (
@@ -91,6 +106,11 @@ const MembershipSection: React.FC<MembershipSectionProps> = ({
                             </option>
                         ))}
                     </select>
+                    {currentFacility && equipment.length === 0 && (
+                        <div className="network-form-hint">
+                            Нет техники для выбранного объекта
+                        </div>
+                    )}
                 </div>
 
                 <div className="network-form-group">
@@ -98,6 +118,7 @@ const MembershipSection: React.FC<MembershipSectionProps> = ({
                         type="button"
                         onClick={onAddItem}
                         className="network-form-add-button"
+                        disabled={!currentDivision || !currentFacility || !currentEquipment}
                     >
                         Добавить связь
                     </button>

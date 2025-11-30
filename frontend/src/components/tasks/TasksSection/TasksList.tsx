@@ -67,7 +67,7 @@ export function TasksList({
   if (tasks.length === 0) {
     return (
       <div className="tasks-empty-state">
-        <h3>Задачи не найдены</h3>
+        <h3>Задачи отсутствуют</h3>
         <p>Попробуйте изменить параметры фильтрации</p>
       </div>
     );

@@ -23,7 +23,7 @@ import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
 import { NetworkInfo } from './sections/NetworkInfo';
 import { AdditionalInfo } from './sections/AdditionalInfo';
-import { getPermissions } from '../../../api/utils/permissions';
+import { canDelete, canEdit } from '../../../api/utils/permissions';
 
 export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,13 +41,8 @@ export function EquipmentDetailsPage() {
   const location = useLocation();
 
   // Проверка прав доступа для кнопки "Редактировать технику"
-  const canEditEquipment = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.equipment) {
-      return permissions.equipment.can_edit;
-    }
-    return false;
-  }, []);
+  const canEditEquipment = canEdit('equipment');
+  const canDeleteEquipment = canDelete('equipment');
 
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -124,7 +119,6 @@ export function EquipmentDetailsPage() {
 
     try {
       setLoading(true);
-      console.log('Обновляемые данные:', updatedEquipment);
 
       const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
       const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
@@ -193,6 +187,7 @@ export function EquipmentDetailsPage() {
         onEdit={() => setIsEditing(true)}
         onDelete={() => setShowDeleteModal(true)}
         canEditEquipment={canEditEquipment}
+        canDeleteEquipment={canDeleteEquipment}
       />
       {equipment && (
         <div className="equipment-grid equipment-grid--2cols">

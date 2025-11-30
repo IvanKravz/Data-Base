@@ -10,9 +10,10 @@ interface HeaderProps {
   onEdit: () => void;
   onDelete: () => void;
   canEditEquipment: boolean;
+  canDeleteEquipment: boolean;
 }
 
-export function Header({ equipment, onBack, onEdit, onDelete, canEditEquipment }: HeaderProps) {
+export function Header({ equipment, onBack, onEdit, onDelete, canEditEquipment, canDeleteEquipment }: HeaderProps) {
 
   return (
     <div className="equipment-header">
@@ -31,23 +32,23 @@ export function Header({ equipment, onBack, onEdit, onDelete, canEditEquipment }
           </span>
         </div>
       </div>
-      {canEditEquipment && (<div className="equipment-flex equipment-items-center equipment-gap-sm">
-        <button
+      <div className="equipment-flex equipment-items-center equipment-gap-sm">
+        {canEditEquipment && (<button
           onClick={onEdit}
           className="equipment-btn equipment-btn--primary"
         >
           <Pencil size={16} />
           Редактировать
-        </button>
-        <button
+        </button>)}
+        {canDeleteEquipment && (<button
           onClick={onDelete}
           className="equipment-btn equipment-btn--danger"
         >
           <Trash2 size={16} />
           Удалить
-        </button>
+        </button>)}
       </div>
-      )}
+
     </div>
   );
 }

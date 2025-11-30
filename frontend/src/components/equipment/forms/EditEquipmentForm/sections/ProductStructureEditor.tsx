@@ -1,3 +1,4 @@
+// ProductStructureEditor.tsx
 import React, { useState } from 'react';
 import { Equipment, ProductStructure, EquipmentFieldPermissions } from '../../../../../types';
 import { Plus, Trash2 } from 'lucide-react';
@@ -16,6 +17,12 @@ export function ProductStructureEditor({
   isDisposed = false,
   permissions
 }: ProductStructureEditorProps) {
+  // Добавляем защиту от undefined
+  if (!permissions) {
+    console.error('Permissions are undefined in ProductStructureEditor');
+    return null;
+  }
+
   const [newItem, setNewItem] = useState<Omit<ProductStructure, 'id'>>({
     name: '',
     model: '',

@@ -10,7 +10,6 @@ import { StorageSection } from './storage/StorageSection';
 import { CabinetSection } from './cabinet/CabinetSection';
 import { UserMenu } from './common/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
-import { ClosedFacilitiesPage } from './facilities/ClosedFacilitiesPage/ClosedFacilitiesPage';
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection/PersonnelSection';
@@ -27,6 +26,16 @@ import EditNetwork from './networks/forms/EditNetwork/EditNetwork';
 import { CreateEquipmentForm } from './equipment/forms/CreateEquipmentForm/CreateEquipmentForm';
 import { getCurrentUser, isExploitationChief, isExploitationEmployee } from '../api/utils/permissions';
 import { MapCountry } from './map/MapCountry/MapCountry';
+import {
+  PersonnelRoute,
+  EquipmentRoute,
+  FacilitiesRoute,
+  TasksRoute,
+  NetworksRoute,
+  CommunicationPostsRoute,
+  DivisionsRoute,
+  ProtectedRoute
+} from './ProtectedRoute';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -59,66 +68,216 @@ export function MainLayout() {
       <Routes>
         {/* Main Routes */}
         <Route path="/" element={
-          <MainContent
-            activeTab={activeTab}
-            viewTypes={viewTypes}
-            onSetActiveTab={setActiveTab}
-            onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
-            onSelectDivision={() => { }}
-          />
+          <ProtectedRoute model="Division" action="view">
+            <MainContent
+              activeTab={activeTab}
+              viewTypes={viewTypes}
+              onSetActiveTab={setActiveTab}
+              onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
+              onSelectDivision={() => { }}
+            />
+          </ProtectedRoute>
         } />
 
         {/* Global Routes (без привязки к подразделению) */}
-        <Route path="/personnel" element={<PersonnelSection />} />
-        <Route path="/equipment" element={<EquipmentSection />} />
-        <Route path="/facilities" element={<FacilitiesSection />} />
-        <Route path="/tasks" element={<DivisionTasksSection />} />
+        <Route path="/personnel" element={
+          <PersonnelRoute>
+            <PersonnelSection />
+          </PersonnelRoute>
+        } />
+        
+        <Route path="/equipment" element={
+          <EquipmentRoute>
+            <EquipmentSection />
+          </EquipmentRoute>
+        } />
+        
+        <Route path="/facilities" element={
+          <FacilitiesRoute>
+            <FacilitiesSection />
+          </FacilitiesRoute>
+        } />
+        
+        <Route path="/tasks" element={
+          <TasksRoute>
+            <DivisionTasksSection />
+          </TasksRoute>
+        } />
 
-        <Route path="/communication-posts/new" element={<AddCommunicationPostForm />} />
+        <Route path="/communication-posts/new" element={
+          <CommunicationPostsRoute action="add">
+            <AddCommunicationPostForm />
+          </CommunicationPostsRoute>
+        } />
 
         {/* Глобальные маршруты для сетей связи */}
-        <Route path="/networks" element={<CommunicationNetworks />} />
-        <Route path="/networks/management" element={<NetworkManagement />} />
-        <Route path="/networks/create" element={<CreateNetwork />} />
-        <Route path="/networks/communication-networks/edit/:id" element={<EditNetwork />} />
+        <Route path="/networks" element={
+          <NetworksRoute>
+            <CommunicationNetworks />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/networks/management" element={
+          <NetworksRoute>
+            <NetworkManagement />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/networks/create" element={
+          <NetworksRoute action="add">
+            <CreateNetwork />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/networks/communication-networks/edit/:id" element={
+          <NetworksRoute action="change">
+            <EditNetwork />
+          </NetworksRoute>
+        } />
 
         {/* Division Routes */}
-        <Route path="/divisions/:id" element={<DivisionDetails />} />
-        <Route path="/divisions/:id/personnel" element={<PersonnelSection />} />
-        <Route path="/divisions/:id/equipment" element={<EquipmentSection />} />
-        <Route path="/divisions/:id/facilities" element={<FacilitiesSection />} />
-        <Route path="/divisions/:id/facilities/new" element={<AddFacilityPage />} />
-        <Route path="/divisions/:id/communication-posts/new" element={<AddCommunicationPostForm />} />
-        <Route path="/divisions/:id/tasks" element={<DivisionTasksSection />} />
-        <Route path="/divisions/:id/networks" element={<CommunicationNetworks />} />
-        <Route path="/divisions/:id/networks/management" element={<NetworkManagement />} />
-        <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
-        <Route path="/divisions/:id/equipment/create" element={<CreateEquipmentForm />} />
+        <Route path="/divisions/:id" element={
+          <DivisionsRoute>
+            <DivisionDetails />
+          </DivisionsRoute>
+        } />
+        
+        <Route path="/divisions/:id/personnel" element={
+          <PersonnelRoute>
+            <PersonnelSection />
+          </PersonnelRoute>
+        } />
+        
+        <Route path="/divisions/:id/equipment" element={
+          <EquipmentRoute>
+            <EquipmentSection />
+          </EquipmentRoute>
+        } />
+        
+        <Route path="/divisions/:id/facilities" element={
+          <FacilitiesRoute>
+            <FacilitiesSection />
+          </FacilitiesRoute>
+        } />
+        
+        <Route path="/divisions/:id/facilities/new" element={
+          <FacilitiesRoute action="add">
+            <AddFacilityPage />
+          </FacilitiesRoute>
+        } />
+        
+        <Route path="/divisions/:id/communication-posts/new" element={
+          <CommunicationPostsRoute action="add">
+            <AddCommunicationPostForm />
+          </CommunicationPostsRoute>
+        } />
+        
+        <Route path="/divisions/:id/tasks" element={
+          <TasksRoute>
+            <DivisionTasksSection />
+          </TasksRoute>
+        } />
+        
+        <Route path="/divisions/:id/networks" element={
+          <NetworksRoute>
+            <CommunicationNetworks />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/divisions/:id/networks/management" element={
+          <NetworksRoute>
+            <NetworkManagement />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/divisions/:id/networks/create" element={
+          <NetworksRoute action="add">
+            <CreateNetwork />
+          </NetworksRoute>
+        } />
+        
+        <Route path="/divisions/:id/equipment/create" element={
+          <EquipmentRoute action="add">
+            <CreateEquipmentForm />
+          </EquipmentRoute>
+        } />
         
         {/* Equipment Routes */}
-        <Route path="/equipment/create" element={<CreateEquipmentForm />} />
-        <Route path="/equipment-disposed" element={<DisposedEquipmentPage />} />
-        <Route path="/equipment/:id" element={<EquipmentDetailsPage />} />
+        <Route path="/equipment/create" element={
+          <EquipmentRoute action="add">
+            <CreateEquipmentForm />
+          </EquipmentRoute>
+        } />
+        
+        <Route path="/equipment-disposed" element={
+          <EquipmentRoute>
+            <DisposedEquipmentPage />
+          </EquipmentRoute>
+        } />
+        
+        <Route path="/equipment/:id" element={
+          <EquipmentRoute>
+            <EquipmentDetailsPage />
+          </EquipmentRoute>
+        } />
 
         {/* Personnel Routes */}
-        <Route path="/personnel/create" element={<CreatePersonnelForm />} />
-        <Route path="/personnel/:id" element={<PersonnelDetails />} />
-        <Route path="/personnel/:id/qualitative" element={<QualitativeCharacteristics />} />
+        <Route path="/personnel/create" element={
+          <PersonnelRoute action="add">
+            <CreatePersonnelForm />
+          </PersonnelRoute>
+        } />
+        
+        <Route path="/personnel/:id" element={
+          <PersonnelRoute>
+            <PersonnelDetails />
+          </PersonnelRoute>
+        } />
+        
+        <Route path="/personnel/:id/qualitative" element={
+          <PersonnelRoute>
+            <QualitativeCharacteristics />
+          </PersonnelRoute>
+        } />
 
         {/* Facility Routes */}
-        <Route path="/facilities/create" element={<AddFacilityPage />} />
-        <Route path="/facilities-closed" element={<ClosedFacilitiesPage />} />
-        <Route path="/facilities/:id" element={<FacilityDetails />} />
+        <Route path="/facilities/create" element={
+          <FacilitiesRoute action="add">
+            <AddFacilityPage />
+          </FacilitiesRoute>
+        } />
+        
+        <Route path="/facilities/:id" element={
+          <FacilitiesRoute>
+            <FacilityDetails />
+          </FacilitiesRoute>
+        } />
 
         {/* CommunicationNetworks */}
-        <Route path="/divisions/:id/networks/communication-networks/edit/:id" element={<EditNetwork />} />
-        <Route path="/divisions/:id/networks/management" element={<NetworkManagement />} />
-        <Route path="/divisions/:id/networks/create" element={<CreateNetwork />} />
+        <Route path="/divisions/:id/networks/communication-networks/edit/:id" element={
+          <NetworksRoute action="change">
+            <EditNetwork />
+          </NetworksRoute>
+        } />
 
-        {/* Other Routes */}
-        <Route path="/storage" element={<StorageSection />} />
-        <Route path="/cabinet" element={<CabinetSection />} />
-        <Route path="/map" element={<MapCountry />} />
+        {/* Other Routes - проверяем базовые права на просмотр */}
+        <Route path="/storage" element={
+          <ProtectedRoute model="Equipment" action="view">
+            <StorageSection />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/cabinet" element={
+          <ProtectedRoute model="Employee" action="view">
+            <CabinetSection />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/map" element={
+          <ProtectedRoute model="Facility" action="view">
+            <MapCountry />
+          </ProtectedRoute>
+        } />
 
         {/* Fallback route - используем абсолютный путь */}
         <Route path="*" element={<Navigate to="/" replace />} />

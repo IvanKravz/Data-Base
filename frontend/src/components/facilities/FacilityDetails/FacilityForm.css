@@ -61,10 +61,8 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
     gap: 1rem;
     flex-wrap: nowrap;
-    min-height: 80px;
 }
 
 .facility-header-main {
@@ -319,14 +317,13 @@
 }
 
 .facility-btn--primary {
-    background-color: var(--color-primary);
+    background-color: #3891da;
     color: var(--color-white);
     border: none;
 }
 
 .facility-btn--primary:hover {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
+    background-color: #3182ce;
 }
 
 .facility-btn--danger {

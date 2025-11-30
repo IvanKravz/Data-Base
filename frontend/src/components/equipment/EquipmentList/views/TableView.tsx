@@ -33,12 +33,9 @@ export function TableView({
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
   
-  console.log('equipment', equipment)
-  
   // Проверяем права на редактирование и удаление оборудования
   const hasEditPermission = canEdit('equipment');
   const hasDeletePermission = canDelete('equipment');
-  console.log('hasDeletePermission', hasDeletePermission)
   
   // Столбец действий отображается только если:
   // 1. showActions=true 

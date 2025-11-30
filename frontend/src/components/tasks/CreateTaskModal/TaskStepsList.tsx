@@ -4,8 +4,8 @@ import { TaskStep } from '../../../types/tasks';
 import './style.css';
 
 interface TaskStepsListProps {
-  steps: Omit<TaskStep, 'id' | 'isCompleted'>[];
-  onStepsChange: (steps: Omit<TaskStep, 'id' | 'isCompleted'>[]) => void;
+  steps: Array<Omit<TaskStep, 'isCompleted'> & { id?: string }>;
+  onStepsChange: (steps: Array<Omit<TaskStep, 'isCompleted'> & { id?: string }>) => void;
 }
 
 export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
@@ -19,11 +19,18 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
   }, [newStepIndex]);
 
   const handleAddStep = () => {
-    onStepsChange([
+    const newSteps = [
       ...steps,
-      { name: '', comments: '', startDate: '', endDate: '' }
-    ]);
-    setNewStepIndex(steps.length);
+      { 
+        name: '', 
+        comments: '', 
+        startDate: '', 
+        endDate: '',
+        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Уникальный временный ID
+      }
+    ];
+    onStepsChange(newSteps);
+    setNewStepIndex(newSteps.length - 1);
   };
 
   const handleRemoveStep = (index: number) => {
@@ -48,7 +55,7 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
 
   const formatDateForServer = (dateString: string): string => {
     if (!dateString) return '';
-    return `${dateString}T00:00`;
+    return `${dateString}T00:00:00`;
   };
 
   return (
@@ -62,7 +69,7 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
       <div className="task-steps-list">
         {steps.map((step, index) => (
           <div 
-            key={index} 
+            key={step.id || `step-${index}`} // Используем ID этапа или индекс как ключ
             className={`task-step-card ${newStepIndex === index ? 'task-step-card-new' : ''}`}
           >
             <button

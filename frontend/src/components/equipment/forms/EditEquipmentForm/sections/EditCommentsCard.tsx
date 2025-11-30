@@ -5,7 +5,7 @@ import '../style.css';
 interface EditCommentsCardProps {
   comments: string | null;
   onChange: (value: string) => void;
-  permissions: EquipmentFieldPermissions;
+  permissions?: EquipmentFieldPermissions; // Делаем permissions опциональным
 }
 
 export function EditCommentsCard({ comments, onChange, permissions }: EditCommentsCardProps) {
@@ -17,7 +17,7 @@ export function EditCommentsCard({ comments, onChange, permissions }: EditCommen
 
   // Обработчик изменения текста
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!permissions.canEditComments) return;
+    if (!permissions?.canEditComments) return; // Используем опциональную цепочку
     onChange(e.target.value);
   };
 
@@ -49,7 +49,7 @@ export function EditCommentsCard({ comments, onChange, permissions }: EditCommen
           className="form-input-edit form-textarea"
           rows={4}
           placeholder="Добавьте комментарии к технике..."
-          disabled={!permissions.canEditComments}
+          disabled={!permissions?.canEditComments} 
         />
       </div>
     </div>

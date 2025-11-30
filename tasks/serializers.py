@@ -1,9 +1,11 @@
 from rest_framework import serializers
-
 from facilities.models import Division, Subdivision
 from .models import Task, TaskStep
 from users.serializers import UserSerializer
 from facilities.serializers import DivisionSerializer, SubdivisionSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TaskStepSerializer(serializers.ModelSerializer):
     completed_by = UserSerializer(read_only=True)
@@ -15,7 +17,7 @@ class TaskStepSerializer(serializers.ModelSerializer):
             'is_completed', 'completed_by', 'completed_at',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['completed_by', 'completed_at']
+        read_only_fields = ['completed_by', 'completed_at', 'created_at', 'updated_at']
 
 class TaskSerializer(serializers.ModelSerializer):
     steps = TaskStepSerializer(many=True, required=False)
@@ -30,7 +32,7 @@ class TaskSerializer(serializers.ModelSerializer):
         queryset=Division.objects.all(),
         source='division',
         write_only=True,
-        required=False
+        required=True
     )
     subdivision_id = serializers.PrimaryKeyRelatedField(
         queryset=Subdivision.objects.all(),
@@ -57,7 +59,13 @@ class TaskSerializer(serializers.ModelSerializer):
         return obj.progress
 
     def create(self, validated_data):
+        logger.info(f"Creating task with validated data: {validated_data}")
+        
         steps_data = validated_data.pop('steps', [])
+        
+        # Проверяем, что division присутствует
+        if 'division' not in validated_data:
+            raise serializers.ValidationError({"division_id": "Это поле обязательно."})
 
         # Устанавливаем текущего пользователя как создателя задачи
         validated_data['created_by'] = self.context['request'].user
@@ -73,15 +81,11 @@ class TaskSerializer(serializers.ModelSerializer):
         if 'division' in validated_data:
             instance.division = validated_data.pop('division')
         if 'subdivision' in validated_data:
-        # Получаем значение subdivision
             subdivision = validated_data.pop('subdivision')
-        # Устанавливаем null только если получено значение None
             instance.subdivision = subdivision
-        # Обновляем is_private, если оно передано
         if 'is_private' in validated_data:
             instance.is_private = validated_data.pop('is_private')
         
-        # Остальная логика обновления
         steps_data = validated_data.pop('steps', None)
         
         for attr, value in validated_data.items():
@@ -90,18 +94,59 @@ class TaskSerializer(serializers.ModelSerializer):
         instance.save()
         
         if steps_data is not None:
-            instance.steps.all().delete()
-            for step_data in steps_data:
-                TaskStep.objects.create(task=instance, **step_data)
-                
+            self._update_steps(instance, steps_data)
+                    
         return instance
+    
+    def _update_steps(self, instance, steps_data):
+        """Обновляет этапы задачи, сохраняя выполненные этапы"""
+        existing_steps = {str(step.id): step for step in instance.steps.all()}
+        updated_step_ids = set()
+        
+        for step_data in steps_data:
+            step_id = step_data.get('id')
+            
+            # Пропускаем этапы с временными ID (None или нечисловые значения)
+            if step_id is None:
+                # Создаем новый этап без ID
+                TaskStep.objects.create(task=instance, **step_data)
+                continue
+                
+            try:
+                step_id_str = str(step_id)
+                if step_id_str in existing_steps:
+                    # Обновляем существующий этап
+                    step_instance = existing_steps[step_id_str]
+                    for attr, value in step_data.items():
+                        if attr != 'id':  # Не обновляем ID
+                            setattr(step_instance, attr, value)
+                    step_instance.save()
+                    updated_step_ids.add(step_id_str)
+                else:
+                    # Создаем новый этап с указанным ID
+                    TaskStep.objects.create(task=instance, **step_data)
+            except (ValueError, TypeError):
+                # Если ID невалидный, создаем новый этап
+                step_data_without_id = {k: v for k, v in step_data.items() if k != 'id'}
+                TaskStep.objects.create(task=instance, **step_data_without_id)
+        
+        # Удаляем этапы, которых нет в обновленных данных
+        for step_id, step_instance in existing_steps.items():
+            if step_id not in updated_step_ids:
+                step_instance.delete()
     
     def validate(self, data):
         """
-        Проверка прав на изменение приватных задач
+        Проверка прав на изменение приватных задач и обязательных полей
         """
         instance = self.instance
         user = self.context['request'].user
+        
+        # Проверка при создании - division обязателен
+        if not instance and 'division' not in data:
+            raise serializers.ValidationError({
+                "division_id": "Это поле обязательно при создании задачи."
+            })
         
         # Проверка при обновлении
         if instance and instance.is_private:

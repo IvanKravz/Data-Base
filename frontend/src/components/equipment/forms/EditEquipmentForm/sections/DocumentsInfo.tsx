@@ -7,7 +7,7 @@ interface DocumentsInfoProps {
   formData: Partial<Equipment>;
   onChange: (data: Partial<Equipment>) => void;
   isDisposed?: boolean;
-  permissions: EquipmentFieldPermissions;
+  permissions?: EquipmentFieldPermissions; // Делаем опциональным
 }
 
 export function DocumentsInfo({
@@ -31,7 +31,7 @@ export function DocumentsInfo({
             onChange={(e) => onChange({ first_invoice: e.target.value })}
             className="form-input-edit"
             placeholder="Номер первичного документа"
-            disabled={isDisposed || !permissions.canEditDocuments}
+            disabled={isDisposed || !permissions?.canEditDocuments} // Используем опциональную цепочку
           />
         </div>
 
@@ -43,7 +43,7 @@ export function DocumentsInfo({
             onChange={(e) => onChange({ material_invoice: e.target.value })}
             className="form-input-edit"
             placeholder="Номер накладной на МОЛ"
-            disabled={isDisposed || !permissions.canEditDocuments}
+            disabled={isDisposed || !permissions?.canEditDocuments} // Используем опциональную цепочку
           />
         </div>
       </div>

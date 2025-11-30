@@ -249,6 +249,15 @@ body {
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
+/* Добавляем курсор not-allowed для недоступных полей */
+.form-input-edit:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: var(--gray-100);
+  color: var(--gray-500);
+  cursor: not-allowed;
+}
+
 .form-textarea {
   min-height: 120px;
   resize: vertical;
@@ -349,6 +358,7 @@ body {
   border-color: var(--primary);
 }
 
+/* Добавляем курсор not-allowed для недоступных чекбоксов */
 .checkbox-input:disabled {
   background-color: var(--gray-100);
   border-color: var(--gray-300);
@@ -407,6 +417,20 @@ body {
 
 .btn-danger:hover {
   background-color: var(--danger-hover);
+}
+
+/* Добавляем курсор not-allowed для недоступных кнопок */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary:disabled:hover {
+  background-color: var(--primary);
+}
+
+.btn-danger:disabled:hover {
+  background-color: var(--danger);
 }
 
 /* ===== FORM FOOTER STYLES (как в EditFacilityForm) ===== */
@@ -472,6 +496,20 @@ body {
   border-color: var(--danger-hover);
 }
 
+/* Добавляем курсор not-allowed для недоступных кнопок в футере */
+.equipment-form-footer-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.equipment-form-footer-submit:disabled:hover {
+  background-color: var(--primary);
+}
+
+.equipment-form-footer-dispose:disabled:hover {
+  background-color: var(--danger);
+}
+
 /* ===== GRID LAYOUTS ===== */
 .grid-cols-2 {
   display: grid;
@@ -525,6 +563,7 @@ body {
 .disabled {
   opacity: 0.6;
   pointer-events: none;
+  cursor: not-allowed;
 }
 
 .loading {

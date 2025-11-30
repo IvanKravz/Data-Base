@@ -24,7 +24,7 @@ const NetworkScene: React.FC<NetworkSceneProps> = ({
   const materialRef = useRef<THREE.MeshBasicMaterial[]>([]);
   const textRefs = useRef<THREE.Group[]>([]);
   const camera = useThree(state => state.camera);
-  console.log('node', nodes)
+
   useFrame(() => {
     // Обновляем цвета узлов
     nodes.forEach((node, i) => {

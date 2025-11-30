@@ -3,7 +3,15 @@ import { LoginResponse, ModulePermissions, RegisterData } from '../types';
 import { api } from './client';
 
 // Добавляем тип для модулей приложения
-type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks';
+type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks' | 'communicationPosts';
+
+// Тип для новой структуры permissions
+interface UserPermissions {
+  roles: string[];
+  filters: Record<string, any>;
+  models: Record<string, string[]>; // Например: { Employee: ['view', 'add', 'change', 'delete'] }
+  modules: string[];
+}
 
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
@@ -46,14 +54,28 @@ export const authApi = {
     sessionStorage.removeItem('appLoaded');
   },
 
-  // Метод для получения прав доступа с приоритетом на отдельное хранение
-  getModulePermissions: (): ModulePermissions | null => {
-    // Теперь всегда берем из user объекта
+  // Метод для получения прав доступа из новой структуры
+  getModulePermissions: (): UserPermissions | null => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        return user.module_permissions || null;
+        
+        // Возвращаем permissions из пользователя
+        if (user.permissions) {
+          return user.permissions;
+        }
+        
+        // Если permissions нет, создаем базовую структуру из roles
+        if (user.roles && Array.isArray(user.roles)) {
+          return {
+            roles: user.roles,
+            filters: {},
+            models: {},
+            modules: []
+          };
+        }
+       
       } catch (e) {
         console.error('Error parsing user data:', e);
       }
@@ -62,25 +84,29 @@ export const authApi = {
     return null;
   },
   
-  // ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ПРОВЕРКИ КОНКРЕТНЫХ ПРАВ
+  // ОБНОВЛЕННЫЙ МЕТОД ДЛЯ ПРОВЕРКИ КОНКРЕТНЫХ ПРАВ
   hasPermission: (module: AppModule, permission: string): boolean => {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
     
-    const modulePermissions = permissions[module];
-    if (!modulePermissions) return false;
+    // Маппинг модулей на модели
+    const moduleToModelMap: Record<AppModule, string> = {
+      'employees': 'Employee',
+      'equipment': 'Equipment',
+      'facilities': 'Facility', 
+      'tasks': 'Task',
+      'networks': 'CommunicationNetwork',
+      'communicationPosts': 'CommunicationPost'
+    };
     
-    switch (permission) {
-      case 'view':
-        return modulePermissions.can_view;
-      case 'add':
-      case 'change':
-      case 'delete':
-        // В текущей структуре прав can_edit включает все права на модификацию
-        return modulePermissions.can_edit;
-      default:
-        return false;
-    }
+    const modelName = moduleToModelMap[module];
+    if (!modelName) return false;
+    
+    const modelPermissions = permissions.models[modelName];
+    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+    
+    // Проверяем наличие конкретного права в массиве
+    return modelPermissions.includes(permission);
   },
   
   // Метод для проверки доступа к модулю
@@ -88,23 +114,47 @@ export const authApi = {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
     
-    // Проверяем существование модуля в правах
-    if (permissions[module as keyof ModulePermissions]) {
-      return permissions[module as keyof ModulePermissions].can_view;
-    }
+    // Маппинг модулей на модели
+    const moduleToModelMap: Record<string, string> = {
+      'employees': 'Employee',
+      'equipment': 'Equipment',
+      'facilities': 'Facility',
+      'tasks': 'Task',
+      'networks': 'CommunicationNetwork',
+      'communicationPosts': 'CommunicationPost'
+    };
     
-    return false;
+    const modelName = moduleToModelMap[module];
+    if (!modelName) return false;
+    
+    const modelPermissions = permissions.models[modelName];
+    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+    
+    return modelPermissions.includes('view');
   },
   
   canEditModule: (module: string): boolean => {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
     
-    if (permissions[module as keyof ModulePermissions]) {
-      return permissions[module as keyof ModulePermissions].can_edit;
-    }
+    // Маппинг модулей на модели
+    const moduleToModelMap: Record<string, string> = {
+      'employees': 'Employee',
+      'equipment': 'Equipment',
+      'facilities': 'Facility',
+      'tasks': 'Task',
+      'networks': 'CommunicationNetwork',
+      'communicationPosts': 'CommunicationPost'
+    };
     
-    return false;
+    const modelName = moduleToModelMap[module];
+    if (!modelName) return false;
+    
+    const modelPermissions = permissions.models[modelName];
+    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+    
+    // Для редактирования проверяем наличие change или edit прав
+    return modelPermissions.includes('change') || modelPermissions.includes('edit');
   },
 
   // Метод для обновления режима просмотра
@@ -116,13 +166,6 @@ export const authApi = {
       const user = JSON.parse(userStr);
       user.is_global_view = isGlobalView;
       localStorage.setItem('user', JSON.stringify(user));
-      
-      // Также обновляем module_permissions если он существует отдельно (для обратной совместимости)
-      const permissionsStr = localStorage.getItem('module_permissions');
-      if (permissionsStr) {
-        const permissions = JSON.parse(permissionsStr);
-        localStorage.setItem('module_permissions', JSON.stringify(permissions));
-      }
     } catch (e) {
       console.error('Error updating global view:', e);
     }

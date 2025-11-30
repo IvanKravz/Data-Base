@@ -15,7 +15,7 @@ import { facilitiesApi, authApi, divisionsApi } from '../../../api';
 import './FacilityForm.css';
 import { EditFacilityForm } from '../forms/EditFacilityForm/EditFacilityForm';
 import { ClassificationtFacility } from './sections/ClassificationtFacility';
-import { getPermissions } from '../../../api/utils/permissions';
+import { canEdit, getPermissions } from '../../../api/utils/permissions';
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -32,17 +32,7 @@ export function FacilityDetails() {
   const [isLoadingDivisions, setIsLoadingDivisions] = useState(false);
 
   const isGlobalView = authApi.getGlobalView();
-
-  const canEditFacility = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.facilities) {
-      return permissions.facilities.can_edit;
-    }
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
+  const canEditFacility = canEdit('facilities');
 
   useEffect(() => {
     const fetchDivisions = async () => {
@@ -90,6 +80,11 @@ export function FacilityDetails() {
 
     const typeFilter = currentSearchParams.get('type');
     const classFilter = currentSearchParams.get('class');
+
+    if (state?.from === 'map-view' && state?.returnPath) {
+      navigate(state.returnPath);
+      return;
+    }
 
     if (state?.from === 'facilities-section') {
       let backUrl = state.divisionId
@@ -224,6 +219,13 @@ export function FacilityDetails() {
       dispatch(deleteFacility(facility.id));
 
       const state = location.state;
+
+      // ДОБАВЛЯЕМ ПРОВЕРКУ ДЛЯ MAP-View И ЗДЕСЬ
+      if (state?.from === 'map-view' && state?.returnPath) {
+        navigate(state.returnPath);
+        return;
+      }
+
       if (state?.from === 'facilities-section') {
         let backUrl = state.divisionId
           ? `/divisions/${state.divisionId}/facilities`

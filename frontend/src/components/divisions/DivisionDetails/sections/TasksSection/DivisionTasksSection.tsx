@@ -18,214 +18,260 @@ interface CalendarState {
   activeStartDate: Date;
 }
 
+interface DivisionData {
+  id: string;
+  name: string;
+  subdivisions?: Array<{ id: string; name: string }>;
+}
+
 export function DivisionTasksSection() {
+  // Состояния интерфейса
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | 'all' | 'completed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [division, setDivision] = useState<any>(null);
-  const [subdivisionName, setSubdivisionName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const userData = JSON.parse(localStorage.getItem('user')) || {};
-  const currentUserId = userData.id || userData.user?.id || null;
+  // Данные
+  const [division, setDivision] = useState<DivisionData | null>(null);
+  const [subdivisionName, setSubdivisionName] = useState('');
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  const [calendarState, setCalendarState] = useState<CalendarState>({
-    date: new Date(),
-    view: 'month',
-    activeStartDate: new Date()
-  });
-
+  // Навигация и параметры
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
   const subdivisionId = searchParams.get('subdivision');
 
-  // Получаем данные текущего пользователя
+  // Пользователь и права
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserId = userData.id || userData.user?.id || null;
   const currentUser = getCurrentUser();
 
-  // Стабилизированные значения для зависимостей
+  // Календарь
+  const [calendarState, setCalendarState] = useState<CalendarState>({
+    date: new Date(),
+    view: 'month',
+    activeStartDate: new Date()
+  });
+
+  // Мемоизированные значения
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => subdivisionId, [subdivisionId]);
   const stableCurrentUser = useMemo(() => currentUser, [JSON.stringify(currentUser)]);
 
-  // Определяем тип пользователя
-  const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
+  // Проверки прав
+  const isExploitationUser = useMemo(() =>
+    isExploitationChief() || isExploitationEmployee(), []);
   const isChief = useMemo(() => isExploitationChief(), []);
-
-  // Для эксплуатационных пользователей отключаем глобальный режим
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
 
-  // Обработчик возврата назад
+  // Обработчики навигации
   const handleBack = useCallback(() => {
-    if (id) {
-      // Если есть subdivision в URL, возвращаемся к подразделению с учетом отделения
-      if (stableSubdivisionId) {
-        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
-      } else {
-        navigate(`/divisions/${id}`);
-      }
+    if (!id) return;
+
+    if (stableSubdivisionId) {
+      navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
+    } else {
+      navigate(`/divisions/${id}`);
     }
   }, [navigate, id, stableSubdivisionId]);
 
-  // Загрузка задач
-  useEffect(() => {
-    const loadTasks = async () => {
-      if (!stableToken) return;
+  // Вспомогательные функции
+  const calculateTaskCompletion = useCallback((task: Task): boolean => {
+    return task.steps.length > 0 && task.steps.every(step => step.is_completed);
+  }, []);
 
-      try {
-        setLoading(true);
+  // УЛУЧШЕННАЯ функция обновления задачи в состоянии
+  const updateTaskInState = useCallback((updatedTask: Task) => {
+    setTasks(prevTasks => {
+      const taskIndex = prevTasks.findIndex(task => task.id === updatedTask.id);
 
-        // Если пользователь эксплуатации и нет id (глобальный режим для обычных пользователей)
-        if (isExploitationUser && !id) {
-          const userDivisionId = stableCurrentUser?.division_info?.id;
-
-          if (userDivisionId) {
-            // Для начальника - все задачи подразделения
-            // Для сотрудника - задачи его отделения
-            const params = isChief ?
-              {
-                division: userDivisionId,
-                show_completed: "true",
-                show_only_mine: showOnlyMine
-              } :
-              {
-                division: userDivisionId,
-                subdivision: stableCurrentUser.division_info.subdivision?.id,
-                show_completed: "true",
-                show_only_mine: showOnlyMine
-              };
-
-            const [tasksData, div] = await Promise.all([
-              tasksApi.getTasks(params, stableToken),
-              divisionsApi.getDivisionById(userDivisionId, stableToken)
-            ]);
-
-            const tasksWithCompletion = tasksData.map(task => ({
-              ...task,
-              is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
-            }));
-
-            if (!isChief) {
-              const userSubdivision = div.subdivisions?.find(
-                s => s.id.toString() === stableCurrentUser.division_info.subdivision?.id?.toString()
-              );
-              setSubdivisionName(userSubdivision?.name || '');
-            }
-
-            setDivision(div);
-            setTasks(tasksWithCompletion);
-          } else {
-            // Если нет информации о подразделении, загружаем все задачи
-            const tasksData = await tasksApi.getTasks({
-              show_completed: "true",
-              show_only_mine: showOnlyMine
-            }, stableToken);
-
-            const tasksWithCompletion = tasksData.map(task => ({
-              ...task,
-              is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
-            }));
-
-            setTasks(tasksWithCompletion);
-          }
-        } else if (isGlobalView) {
-          // Глобальный режим для обычных пользователей - загружаем все задачи
-          const tasksData = await tasksApi.getTasks({
-            show_completed: "true",
-            show_only_mine: showOnlyMine
-          }, stableToken);
-
-          const tasksWithCompletion = tasksData.map(task => ({
-            ...task,
-            is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
-          }));
-
-          setTasks(tasksWithCompletion);
-        } else {
-          // Режим подразделения (есть id)
-          const params = {
-            division: id,
-            subdivision: stableSubdivisionId || undefined,
-            show_completed: "true",
-            show_only_mine: showOnlyMine
-          };
-
-          const [tasksData, divisionData] = await Promise.all([
-            tasksApi.getTasks(params, stableToken),
-            divisionsApi.getDivisionById(id, stableToken)
-          ]);
-
-          const tasksWithCompletion = tasksData.map(task => ({
-            ...task,
-            is_completed: task.steps.length > 0 && task.steps.every(step => step.is_completed)
-          }));
-
-          setDivision(divisionData);
-
-          if (stableSubdivisionId) {
-            const subdivision = divisionData.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
-            setSubdivisionName(subdivision?.name || '');
-          }
-
-          setTasks(tasksWithCompletion);
-        }
-      } catch (error) {
-        console.error('Не удалось загрузить данные:', error);
-      } finally {
-        setLoading(false);
+      if (taskIndex !== -1) {
+        const updatedTasks = [...prevTasks];
+        // Глубокое обновление задачи с сохранением всех полей
+        updatedTasks[taskIndex] = {
+          ...prevTasks[taskIndex], // Сохраняем существующие поля
+          ...updatedTask, // Обновляем переданными полями
+          steps: updatedTask.steps || prevTasks[taskIndex].steps, // Обновляем этапы
+          is_completed: calculateTaskCompletion(updatedTask)
+        };
+        return updatedTasks;
+      } else {
+        const newTask = {
+          ...updatedTask,
+          is_completed: calculateTaskCompletion(updatedTask)
+        };
+        return [newTask, ...prevTasks];
       }
+    });
+  }, [calculateTaskCompletion]);
+
+  // Загрузка данных
+  const loadTasksData = useCallback(async () => {
+    if (!stableToken) return;
+
+    try {
+      setLoading(true);
+
+      // Для эксплуатационных пользователей в глобальном режиме
+      if (isExploitationUser && !id) {
+        await loadExploitationUserTasks();
+      }
+      // Глобальный режим для обычных пользователей
+      else if (isGlobalView) {
+        await loadGlobalTasks();
+      }
+      // Режим конкретного подразделения
+      else {
+        await loadDivisionTasks();
+      }
+    } catch (error) {
+      console.error('Не удалось загрузить данные:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [stableToken, id, isExploitationUser, isGlobalView, isChief, stableCurrentUser, stableSubdivisionId, showOnlyMine]);
+
+  const loadExploitationUserTasks = async () => {
+    const userDivisionId = stableCurrentUser?.division_info?.id;
+
+    if (userDivisionId) {
+      const params = isChief ?
+        {
+          division: userDivisionId,
+          show_completed: "true",
+          show_only_mine: showOnlyMine
+        } :
+        {
+          division: userDivisionId,
+          subdivision: stableCurrentUser.division_info.subdivision?.id,
+          show_completed: "true",
+          show_only_mine: showOnlyMine
+        };
+
+      const [tasksData, divisionData] = await Promise.all([
+        tasksApi.getTasks(params, stableToken!),
+        divisionsApi.getDivisionById(userDivisionId, stableToken!)
+      ]);
+
+      const tasksWithCompletion = tasksData.map(task => ({
+        ...task,
+        is_completed: calculateTaskCompletion(task)
+      }));
+
+      if (!isChief) {
+        const userSubdivision = divisionData.subdivisions?.find(
+          s => s.id.toString() === stableCurrentUser.division_info.subdivision?.id?.toString()
+        );
+        setSubdivisionName(userSubdivision?.name || '');
+      }
+
+      setDivision(divisionData);
+      setTasks(tasksWithCompletion);
+    } else {
+      await loadGlobalTasks();
+    }
+  };
+
+  const restrictedDivisionId = useMemo(() => {
+    // Для эксплуатационных сотрудников (не начальников) ограничиваем выбор своим подразделением
+    if (isExploitationUser && !isChief && stableCurrentUser?.division_info?.id) {
+      return stableCurrentUser.division_info.id;
+    }
+    return null;
+  }, [isExploitationUser, isChief, stableCurrentUser]);
+
+  const restrictedSubdivisionId = useMemo(() => {
+    // Для эксплуатационных сотрудников (не начальников) ограничиваем выбор своим отделением
+    if (isExploitationUser && !isChief && stableCurrentUser?.division_info?.subdivision?.id) {
+      return stableCurrentUser.division_info.subdivision.id;
+    }
+    return null;
+  }, [isExploitationUser, isChief, stableCurrentUser]);
+
+  const loadGlobalTasks = async () => {
+    const tasksData = await tasksApi.getTasks({
+      show_completed: "true",
+      show_only_mine: showOnlyMine
+    }, stableToken!);
+
+    const tasksWithCompletion = tasksData.map(task => ({
+      ...task,
+      is_completed: calculateTaskCompletion(task)
+    }));
+
+    setTasks(tasksWithCompletion);
+  };
+
+  const loadDivisionTasks = async () => {
+    const params = {
+      division: id!,
+      subdivision: stableSubdivisionId || undefined,
+      show_completed: "true",
+      show_only_mine: showOnlyMine
     };
 
-    loadTasks();
-  }, [id, stableToken, stableSubdivisionId, showOnlyMine, isGlobalView, isExploitationUser, isChief, stableCurrentUser]);
+    const [tasksData, divisionData] = await Promise.all([
+      tasksApi.getTasks(params, stableToken!),
+      divisionsApi.getDivisionById(id!, stableToken!)
+    ]);
 
-  // Получаем заголовок в зависимости от контекста
+    const tasksWithCompletion = tasksData.map(task => ({
+      ...task,
+      is_completed: calculateTaskCompletion(task)
+    }));
+
+    setDivision(divisionData);
+
+    if (stableSubdivisionId) {
+      const subdivision = divisionData.subdivisions?.find(
+        s => s.id.toString() === stableSubdivisionId.toString()
+      );
+      setSubdivisionName(subdivision?.name || '');
+    }
+
+    setTasks(tasksWithCompletion);
+  };
+
+  useEffect(() => {
+    loadTasksData();
+  }, [loadTasksData]);
+
+  // Заголовок
   const getHeaderTitle = useCallback(() => {
-    // Для пользователей эксплуатации в "глобальном" режиме (когда нет id)
     if (isExploitationUser && !id) {
       const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
-      // Для всех эксплуатационных пользователей показываем только подразделение
       return `Задачи: ${divisionName}`;
     }
 
-    // Для глобального режима обычных пользователей
     if (isGlobalView) {
       return 'Все задачи';
     }
 
-    // Для режима конкретного подразделения
     return `Задачи: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   }, [isExploitationUser, id, stableCurrentUser, isGlobalView, division, subdivisionName]);
 
-  // Логика фильтрации для отделения
+  // Фильтрация
   const filterBySubdivision = useCallback((items: Task[]) => {
-    // Для сотрудника эксплуатации не фильтруем по отделению - показываем все задачи подразделения
-    if (isExploitationUser && !id) {
-      return items;
-    }
-
-    // Для обычных случаев
-    if (isGlobalView) return items;
-    if (!stableSubdivisionId) return items;
+    if (isExploitationUser && !id) return items;
+    if (isGlobalView || !stableSubdivisionId) return items;
 
     return items.filter(item =>
       item.subdivision?.id?.toString() === stableSubdivisionId.toString()
     );
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  // Фильтрация задач
   const filteredTasks = useMemo(() => {
     const subdivisionFilteredTasks = filterBySubdivision(tasks);
 
     return subdivisionFilteredTasks.filter(task => {
-      // 1. Фильтрация по поиску
+      // Поиск
       const searchMatch = searchTerm === '' ||
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.steps.some(step =>
@@ -233,13 +279,13 @@ export function DivisionTasksSection() {
           (step.comments && step.comments.toLowerCase().includes(searchTerm.toLowerCase()))
         );
 
-      // 2. Фильтрация по категории и завершенности
+      // Категория и завершенность
       const categoryMatch =
         selectedCategory === 'all' ? !task.is_completed :
           selectedCategory === 'completed' ? task.is_completed :
             !task.is_completed && task.category === selectedCategory;
 
-      // 3. Фильтрация по датам
+      // Даты
       let dateMatch = true;
       if (startDate || endDate) {
         dateMatch = task.steps.some(step => {
@@ -253,7 +299,7 @@ export function DivisionTasksSection() {
         });
       }
 
-      // 4. Фильтрация по "Свои задачи"
+      // Свои задачи
       const mineMatch = !showOnlyMine ||
         (task.is_private && task.created_by?.id === currentUserId);
 
@@ -261,11 +307,14 @@ export function DivisionTasksSection() {
     });
   }, [tasks, filterBySubdivision, selectedCategory, searchTerm, startDate, endDate, showOnlyMine, currentUserId]);
 
-  // Обработчики действий
+  // Обработчики задач
   const handleDeleteTask = async (taskId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить задачу?')) {
       try {
-        await tasksApi.deleteTask(taskId);
+        const token = localStorage.getItem('accessToken');
+        if (!token) throw new Error('Authentication token missing');
+
+        await tasksApi.deleteTask(taskId, token);
         setTasks(tasks.filter(task => task.id !== taskId));
       } catch (error) {
         console.error('Failed to delete task:', error);
@@ -278,11 +327,13 @@ export function DivisionTasksSection() {
     setShowCreateModal(true);
   };
 
-  const handleCreateTask = async (newTask: Omit<Task, 'id'>) => {
+  const handleCreateTask = async (newTaskData: Omit<Task, 'id'>) => {
     try {
-      // Для эксплуатационных пользователей в глобальном режиме используем их подразделение
-      let divisionId = newTask.division?.id;
-      let subdivisionId = newTask.subdivision?.id;
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error('Authentication token missing');
+
+      let divisionId = newTaskData.division_id;
+      let subdivisionId = newTaskData.subdivision_id;
 
       if (isExploitationUser && !id) {
         divisionId = stableCurrentUser?.division_info?.id;
@@ -291,47 +342,31 @@ export function DivisionTasksSection() {
         }
       }
 
-      const createdTask = await tasksApi.createTask({
-        title: newTask.title,
-        category: newTask.category,
+      const finalTaskData = {
+        ...newTaskData,
         division_id: divisionId,
         subdivision_id: subdivisionId ?? null,
-        is_private: newTask.is_private,
-        steps: newTask.steps.map(step => ({
-          name: step.name,
-          comments: step.comments,
-          start_date: step.start_date,
-          end_date: step.end_date,
-        })),
-      });
-
-      // Добавляем флаг завершенности для новой задачи
-      const taskWithCompletion = {
-        ...createdTask,
-        is_completed: createdTask.steps.length > 0 && createdTask.steps.every(step => step.is_completed)
       };
 
-      // НЕМЕДЛЕННО добавляем задачу в список
-      setTasks(prevTasks => {
-        const updatedTasks = [...prevTasks, taskWithCompletion];
-
-        // Сортируем задачи по дате создания (новые сверху)
-        return updatedTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      });
-
+      const createdTask = await tasksApi.createTask(finalTaskData, token);
+      updateTaskInState(createdTask);
       setShowCreateModal(false);
-
-      console.log('Задача успешно создана и добавлена в список');
 
     } catch (error) {
       console.error('Failed to create task:', error);
     }
   };
 
+  // УЛУЧШЕННЫЙ обработчик обновления задачи
   const handleUpdateTask = async (updatedTask: Task) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) throw new Error('Authentication token missing');
+
+      // Функция для проверки временных ID
+      const isTempId = (id: string | undefined): boolean => {
+        return !id || id.toString().startsWith('temp-');
+      };
 
       const response = await tasksApi.updateTask(
         token,
@@ -339,73 +374,116 @@ export function DivisionTasksSection() {
         {
           title: updatedTask.title,
           category: updatedTask.category,
-          division_id: updatedTask.division?.id || null,
+          division_id: updatedTask.division?.id,
           subdivision_id: updatedTask.subdivision?.id ?? null,
           is_private: updatedTask.is_private,
-          steps: updatedTask.steps.map(step => ({
-            name: step.name,
-            comments: step.comments || '',
-            start_date: step.start_date,
-            end_date: step.end_date
-          }))
+          steps: updatedTask.steps.map(step => {
+            const stepData: any = {
+              name: step.name,
+              comments: step.comments || '',
+              start_date: step.start_date,
+              end_date: step.end_date
+            };
+
+            // Добавляем ID только если он не временный и может быть преобразован в число
+            if (step.id && !isTempId(step.id) && !isNaN(Number(step.id))) {
+              stepData.id = parseInt(step.id);
+            }
+
+            return stepData;
+          })
         }
       );
 
-      // Добавляем флаг завершенности для обновленной задачи
-      const taskWithCompletion = {
-        ...response,
-        is_completed: response.steps.length > 0 && response.steps.every(step => step.is_completed)
-      };
-
-      // НЕМЕДЛЕННО обновляем задачу в списке
-      setTasks(prevTasks => {
-        const updatedTasks = prevTasks.map(task =>
-          task.id === updatedTask.id ? taskWithCompletion : task
-        );
-        return updatedTasks;
-      });
+      // Глубокое обновление состояния с ответом от сервера
+      updateTaskInState(response);
 
       setShowCreateModal(false);
       setSelectedTask(null);
+
+      // Дополнительная перезагрузка для гарантии синхронизации
+      setTimeout(() => {
+        loadTasksData();
+      }, 100);
 
     } catch (error) {
       console.error('Failed to update task:', error);
     }
   };
 
-  const toggleTaskStep = async (taskId: string, stepId: string, isCompleted: boolean) => {
+  const toggleTaskStep = async (taskId: string, stepId: string, currentCompleted: boolean) => {
     try {
-      await tasksApi.updateTaskStep(stepId, isCompleted);
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error('Authentication token missing');
 
-      setTasks(tasks.map(task => {
-        if (task.id === taskId) {
-          const updatedSteps = task.steps.map(step =>
-            step.id === stepId ? { ...step, is_completed: isCompleted } : step
-          );
+      const newCompletedStatus = !currentCompleted;
 
-          const allStepsCompleted = updatedSteps.length > 0 &&
-            updatedSteps.every(step => step.is_completed);
+      // Оптимистичное обновление UI
+      setTasks(prevTasks =>
+        prevTasks.map(task => {
+          if (task.id === taskId) {
+            const updatedSteps = task.steps.map(step =>
+              step.id === stepId
+                ? {
+                  ...step,
+                  is_completed: newCompletedStatus,
+                  // Временно устанавливаем текущего пользователя как выполнившего
+                  completed_by: newCompletedStatus ? currentUser : null,
+                  completed_at: newCompletedStatus ? new Date().toISOString() : null
+                }
+                : step
+            );
 
-          return {
-            ...task,
-            steps: updatedSteps,
-            is_completed: allStepsCompleted
-          };
-        }
-        return task;
-      }));
+            const allStepsCompleted = updatedSteps.length > 0 &&
+              updatedSteps.every(step => step.is_completed);
+
+            return {
+              ...task,
+              steps: updatedSteps,
+              is_completed: allStepsCompleted
+            };
+          }
+          return task;
+        })
+      );
+
+      // Вызов API с новым статусом (противоположным текущему)
+      const updatedStep = await tasksApi.updateTaskStep(stepId, newCompletedStatus, token);
+
+      // Обновление состояния с данными с сервера
+      setTasks(prevTasks =>
+        prevTasks.map(task => {
+          if (task.id === taskId) {
+            const updatedSteps = task.steps.map(step =>
+              step.id === stepId ? { ...step, ...updatedStep } : step
+            );
+
+            const allStepsCompleted = updatedSteps.length > 0 &&
+              updatedSteps.every(step => step.is_completed);
+
+            return {
+              ...task,
+              steps: updatedSteps,
+              is_completed: allStepsCompleted
+            };
+          }
+          return task;
+        })
+      );
+
     } catch (error) {
       console.error('Failed to toggle task step:', error);
+      // В случае ошибки перезагружаем данные для синхронизации
+      // Можно добавить вызов loadTasks() здесь, если у вас есть такая функция
     }
   };
 
-  // Функция для обновления состояния календаря
+  // Обработчики календаря
   const updateCalendarState = (newState: Partial<CalendarState>) => {
     setCalendarState(prev => ({ ...prev, ...newState }));
   };
 
-  // Обработчик клика на этапе в сайдбаре
-  const handleStepClick = (step: Step) => {
+  const handleStepClick = (step: any) => {
     const startDate = new Date(step.start_date);
     setActiveView('calendar');
     updateCalendarState({
@@ -414,14 +492,14 @@ export function DivisionTasksSection() {
     });
   };
 
-  // Функция для отображения сообщения когда нет задач
+  // Вспомогательные функции отображения
   const renderNoTasksMessage = () => {
     const hasActiveFilters = searchTerm || selectedCategory !== 'all' || startDate || endDate || showOnlyMine;
 
     if (hasActiveFilters) {
       return (
         <div className="tasks-empty-state">
-          <h3>Задачи не найдены</h3>
+          <h3>Задачи отсутствуют</h3>
           <p>Попробуйте изменить параметры фильтрации или очистить фильтры</p>
         </div>
       );
@@ -435,6 +513,47 @@ export function DivisionTasksSection() {
     }
   };
 
+  const renderTasksContent = () => {
+    if (loading) {
+      return (
+        <div className="tasks-loading">
+          <div className="tasks-spinner"></div>
+        </div>
+      );
+    }
+
+    if (filteredTasks.length === 0) {
+      return renderNoTasksMessage();
+    }
+
+    if (activeView === 'list') {
+      return (
+        <TasksList
+          tasks={filteredTasks}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+          onToggleStep={toggleTaskStep}
+        />
+      );
+    }
+
+    return (
+      <div className="calendar-view-container">
+        <TasksCalendarView
+          tasks={filteredTasks}
+          onTaskClick={handleEditTask}
+          calendarState={calendarState}
+          onCalendarStateChange={updateCalendarState}
+        />
+        <TasksCalendarSidebar
+          tasks={filteredTasks}
+          onTaskClick={handleEditTask}
+          onStepClick={handleStepClick}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="tasks-container">
       <div className="tasks-content-wrapper">
@@ -443,7 +562,7 @@ export function DivisionTasksSection() {
           divisionName={division?.name}
           onBack={handleBack}
           onCreateTask={() => setShowCreateModal(true)}
-          showBackButton={!!id} // Простая проверка - показывать кнопку назад только если есть id
+          showBackButton={!!id}
           headerTitle={getHeaderTitle()}
         />
 
@@ -467,49 +586,16 @@ export function DivisionTasksSection() {
           </div>
 
           <div className="tasks-main-section">
-            {loading ? (
-              <div className="tasks-loading">
-                <div className="tasks-spinner"></div>
-              </div>
-            ) : (
-              <>
-                {filteredTasks.length === 0 ? (
-                  renderNoTasksMessage()
-                ) : (
-                  <>
-                    {activeView === 'list' ? (
-                      <TasksList
-                        tasks={filteredTasks}
-                        onEditTask={handleEditTask}
-                        onDeleteTask={handleDeleteTask}
-                        onToggleStep={toggleTaskStep}
-                      />
-                    ) : (
-                      <div className="calendar-view-container">
-                        <TasksCalendarView
-                          tasks={filteredTasks}
-                          onTaskClick={handleEditTask}
-                          calendarState={calendarState}
-                          onCalendarStateChange={updateCalendarState}
-                        />
-                        <TasksCalendarSidebar
-                          tasks={filteredTasks}
-                          onTaskClick={handleEditTask}
-                          onStepClick={handleStepClick}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+            {renderTasksContent()}
           </div>
         </div>
 
         {showCreateModal && (
           <CreateTaskModal
             initialTask={selectedTask}
-            divisionId={id} // Может быть undefined в глобальном режиме
+            divisionId={id}
+            restrictedDivisionId={restrictedDivisionId} // Добавьте эту строку
+            restrictedSubdivisionId={restrictedSubdivisionId}
             onClose={() => {
               setShowCreateModal(false);
               setSelectedTask(null);

@@ -89,7 +89,7 @@
 .task-form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .task-form-basicinfo {
@@ -115,7 +115,7 @@
     display: block;
     font-size: 1rem;
     font-weight: 500;
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.2rem;
     color: #374151;
 }
 
@@ -448,7 +448,6 @@
 .task-step-content {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
 }
 
 .task-step-field {
@@ -616,6 +615,46 @@
 .task-step-add-last-icon {
     width: 1rem;
     height: 1rem;
+}
+
+.restricted-division-info {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.restricted-division-text {
+    font-weight: 500;
+    color: #374151;
+}
+
+.restricted-division-note {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.restricted-subdivision-info {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.restricted-subdivision-text {
+    font-weight: 500;
+    color: #374151;
+}
+
+.restricted-subdivision-note {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 2px;
 }
 
 @keyframes taskStepAppear {

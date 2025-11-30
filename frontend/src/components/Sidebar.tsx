@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight, Network, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api';
-import { isExploitationChief, getCurrentUser, isExploitationEmployee } from '../api/utils/permissions';
+import { isExploitationChief, getCurrentUser, isExploitationEmployee, canView } from '../api/utils/permissions';
 
 interface SidebarProps {
   activeTab: string;
@@ -22,17 +22,13 @@ interface MenuItem {
 export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [modulePermissions, setModulePermissions] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userDivision, setUserDivision] = useState<string | null>(null);
   const [showMapItem, setShowMapItem] = useState(false);
   const [isExploitationEmp, setIsExploitationEmp] = useState(false);
 
   useEffect(() => {
-    const loadPermissionsAndUser = () => {
-      const permissions = authApi.getModulePermissions();
-      setModulePermissions(permissions);
-
+    const loadUserData = () => {
       const user = getCurrentUser();
       if (user && user.division_info) {
         setUserDivision(user.division_info.id);
@@ -46,7 +42,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       setIsLoading(false);
     };
 
-    const timer = setTimeout(loadPermissionsAndUser, 100);
+    const timer = setTimeout(loadUserData, 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -76,7 +72,6 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
 
   const hasAccessToMenuItem = (item: MenuItem): boolean => {
     if (isLoading) return true;
-    if (!modulePermissions) return true;
 
     const alwaysAccessible = ['divisions', 'cabinet', 'storage', 'networks'];
     if (alwaysAccessible.includes(item.id)) return true;
@@ -86,15 +81,12 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
       return showMapItem;
     }
 
-    if (item.module && modulePermissions[item.module]) {
-      return modulePermissions[item.module].can_view;
+    // Используем новую функцию canView для проверки прав доступа к модулю
+    if (item.module) {
+      return canView(item.module as any);
     }
 
-    if (modulePermissions[item.id]) {
-      return modulePermissions[item.id].can_view;
-    }
-
-    return false;
+    return true;
   };
 
   const getDivisionsLabel = () => {

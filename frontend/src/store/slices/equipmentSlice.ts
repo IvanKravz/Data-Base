@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Equipment } from '../../types';
-import { sampleEquipment } from '../../data/sampleData';
 
 interface EquipmentState {
   equipment: Equipment[];
@@ -9,7 +8,7 @@ interface EquipmentState {
 }
 
 const initialState: EquipmentState = {
-  equipment: sampleEquipment, // Initialize with sample data
+  equipment: [],
   loading: false,
   error: null,
 };

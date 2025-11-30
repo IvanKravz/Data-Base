@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Marker, Popup } from 'react-leaflet';
 import { MapObject } from '../data/objects';
 import L from 'leaflet';
@@ -48,6 +48,7 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({
   setPopupRef
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const popupRef = useRef<L.Popup | null>(null);
 
   if (!object.lat || !object.lng) {
@@ -71,7 +72,15 @@ const ObjectMarker: React.FC<ObjectMarkerProps> = ({
   };
 
   const handleNavigate = () => {
-    navigate(`/facilities/${object.id}`);
+    // Получаем текущий путь откуда переходим (страница карты)
+    const fromPath = location.pathname + location.search;
+  
+    navigate(`/facilities/${object.id}`, {
+      state: {
+        from: 'map-view', // Новый тип для идентификации перехода с карты
+        returnPath: fromPath // Сохраняем текущий URL для возврата
+      }
+    });
   };
 
   return (

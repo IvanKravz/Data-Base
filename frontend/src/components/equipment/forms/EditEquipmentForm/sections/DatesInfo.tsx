@@ -9,7 +9,7 @@ interface DatesInfoProps {
   serviceLife?: string;
   onServiceLifeChange: (value: string) => void;
   isDisposed?: boolean;
-  permissions: EquipmentFieldPermissions;
+  permissions?: EquipmentFieldPermissions; // Делаем опциональным
 }
 
 export function DatesInfo({
@@ -34,7 +34,7 @@ export function DatesInfo({
             value={formData.manufacturing_date || ''}
             onChange={(e) => onChange({ manufacturing_date: e.target.value })}
             className="form-input-edit"
-            disabled={isDisposed || !permissions.canEditManufacturingDate}
+            disabled={isDisposed || !permissions?.canEditManufacturingDate} // Используем опциональную цепочку
           />
         </div>
 
@@ -45,7 +45,7 @@ export function DatesInfo({
             value={formData.exploitation_date || ''}
             onChange={(e) => onChange({ exploitation_date: e.target.value })}
             className="form-input-edit"
-            disabled={isDisposed || !permissions.canEditExploitationDate}
+            disabled={isDisposed || !permissions?.canEditExploitationDate} // Используем опциональную цепочку
           />
         </div>
 
@@ -58,7 +58,7 @@ export function DatesInfo({
               onChange={(e) => onServiceLifeChange(e.target.value)}
               className="form-input-edit"
               placeholder="Например, 5 лет"
-              disabled={isDisposed || !permissions.canEditServiceLife}
+              disabled={isDisposed || !permissions?.canEditServiceLife} // Используем опциональную цепочку
             />
           </div>
         </div>

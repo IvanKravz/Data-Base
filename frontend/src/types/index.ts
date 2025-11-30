@@ -127,6 +127,7 @@ export interface Division {
     tasks_count: number;
     networks_count: number;
   }
+}
 
 export interface Facility {
   id: string;
@@ -248,6 +249,14 @@ export interface NetworkDirection {
   description?: string;
 }
 
+export interface ProductStructure {
+  id: string;
+  name: string;
+  model?: string;
+  serial_number?: string;
+  note?: string;
+}
+
 export interface EquipmentFieldPermissions {
   canEditName: boolean;
   canEditCategory: boolean;
@@ -282,7 +291,7 @@ export interface LoginResponse {
     division: string;
     subdivision?: string;
     is_global_view: boolean;
-    module_permissions: { 
+    module_permissions: {
       employees: { can_view: boolean; can_edit: boolean };
       equipment: { can_view: boolean; can_edit: boolean };
       facilities: { can_view: boolean; can_edit: boolean };

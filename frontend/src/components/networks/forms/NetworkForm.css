@@ -1,3 +1,4 @@
+/* NetworkForm.css */
 .network-form-container {
     margin: 0 auto;
     padding: 15px;
@@ -84,7 +85,7 @@
     margin-bottom: 30px;
 }
 
-/* НОВЫЕ СТИЛИ ДЛЯ ПРОФЕССИОНАЛЬНЫХ КАРТОЧЕК */
+/* Стили для профессиональных карточек */
 .network-form-section {
     background: white;
     border-radius: 12px;
@@ -114,7 +115,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background:  #0e5be9;
+    background: #0e5be9;
     opacity: 0.7;
 }
 
@@ -132,7 +133,7 @@
     content: '';
     width: 4px;
     height: 16px;
-    background:  #0e5be9;
+    background: #0e5be9;
     border-radius: 2px;
 }
 
@@ -223,7 +224,6 @@
 }
 
 .network-form-save-button:hover:not(:disabled) {
-    /* transform: translateY(-1px); */
     background: #1386bc;
     box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3);
 }
@@ -248,20 +248,6 @@
 .network-form-select[multiple] {
     height: auto;
     min-height: 120px;
-}
-
-.network-form-select option {
-    padding: 8px 12px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.network-form-select option:checked {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: white;
-}
-
-.network-form-select option:hover {
-    background-color: #f1f5f9;
 }
 
 .network-form-add-button {
@@ -289,252 +275,61 @@
     margin-top: 30px;
 }
 
-.network-form-connections-display-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 30px;
-}
-
-.network-form-connections-display-section {
-    background: white;
-    border-radius: 12px;
-    padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-}
-
-.network-form-connections-display-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0;
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.network-form-connections-display-title {
-    color: #1e293b;
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.network-form-connections-count {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: white;
-    border-radius: 12px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
+.network-form-hint {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 6px;
+    font-style: italic;
 }
 
 .network-form-connections-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 12px 18px;
+    margin-top: 12px;
 }
 
-.network-form-connection-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px;
-    transition: all 0.2s;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.network-form-connection-card:hover {
-    border-color: #0ea5e9;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
-    transform: translateY(-1px);
-}
-
-.network-form-connection-card-header {
+.network-form-connection-item {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.4rem;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
-.network-form-connection-card-title {
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-    font-size: 1rem;
+.network-form-connection-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e0;
 }
 
-.network-form-connection-card-remove {
+.connection-text {
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.network-form-remove-button {
     background: none;
     border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
     color: #94a3b8;
+    cursor: pointer;
     padding: 4px;
-    width: 28px;
-    height: 28px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 1.2rem;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s;
 }
 
-.network-form-connection-card-remove:hover {
+.network-form-remove-button:hover {
     color: #ef4444;
-    background-color: #fee2e2;
-}
-
-.network-form-connection-card-details {
-    font-size: 0.85rem;
-    color: #19bc0a;
-    display: flex;
-    gap: 1rem;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 6px;
-}
-
-.network-form-connection-card-division {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.network-form-connection-card-facility {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.network-form-connection-card-equipment {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.network-form-connection-equipment {
-    color: #1e293b;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.network-form-direction-card {
-    background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 16px;
-    transition: all 0.2s;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.network-form-direction-card:hover {
-    border-color: #0ea5e9;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
-    transform: translateY(-1px);
-}
-
-.network-form-direction-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.network-form-direction-card-title {
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
-    font-size: 1rem;
-}
-
-.network-form-direction-path {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.network-form-direction-from,
-.network-form-direction-to {
-    color: #475569;
-    padding: 8px 12px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    font-weight: 500;
-    flex: 1;
-    min-width: 120px;
-}
-
-.network-form-direction-arrow {
-    font-size: 1.2rem;
-    margin: 0 8px;
-    color: #0ea5e9;
-    font-weight: bold;
-}
-
-.network-form-direction-details {
-    background: white;
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 0.85rem;
-    color: #64748b;
-    border: 1px solid #f1f5f9;
-}
-
-.network-form-direction-detail-item {
-    font-size: 0.9rem;
-    display: flex;
-    margin-bottom: 6px;
-    gap: 0.5rem;
-}
-
-.network-form-direction-detail-item:last-child {
-    margin-bottom: 0;
-}
-
-.network-form-direction-detail-label {
-    font-weight: 500;
-    color: #475569;
-    min-width: 80px;
-}
-
-.network-form-empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #94a3b8;
-}
-
-.network-form-empty-state-icon {
-    font-size: 3rem;
-    margin-bottom: 16px;
-    opacity: 0.5;
-}
-
-.network-form-empty-state-text {
-    font-size: 1rem;
-    margin: 0;
-    font-weight: 500;
+    background: #fee2e2;
 }
 
 /* Адаптивность */
@@ -550,10 +345,6 @@
     }
 
     .network-form-connections-container {
-        grid-template-columns: 1fr;
-    }
-
-    .network-form-connections-display-container {
         grid-template-columns: 1fr;
     }
 }
@@ -596,17 +387,6 @@
         width: 100%;
         min-width: auto;
     }
-
-    .network-form-direction-path {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .network-form-direction-arrow {
-        margin: 8px 0;
-        text-align: center;
-        transform: rotate(90deg);
-    }
 }
 
 @media (max-width: 480px) {
@@ -625,165 +405,4 @@
     .network-form-section-content {
         padding: 16px;
     }
-
-    .network-form-connections-list {
-        padding: 16px;
-    }
-}
-
-.network-form-connections-display-header {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 0;
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.network-form-connections-display-header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.network-form-search-container {
-    position: relative;
-    width: 100%;
-}
-
-.network-form-search-input {
-    width: 100%;
-    padding: 10px 40px 10px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background: white;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.network-form-search-input:focus {
-    outline: none;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-}
-
-.network-form-search-input::placeholder {
-    color: #94a3b8;
-    font-size: 0.85rem;
-}
-
-.network-form-search-clear {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #94a3b8;
-    padding: 4px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.network-form-search-clear:hover {
-    color: #ef4444;
-    background-color: #fee2e2;
-}
-
-.network-form-clear-search-button {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    margin-top: 8px;
-}
-
-.network-form-clear-search-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
-}
-
-/* Адаптивность для поиска */
-@media (max-width: 768px) {
-    .network-form-connections-display-header {
-        padding: 16px 20px;
-        gap: 12px;
-    }
-
-    .network-form-connections-display-header-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .network-form-search-container {
-        max-width: 100%;
-    }
-
-    .network-form-connections-count {
-        align-self: flex-end;
-        margin-top: -24px;
-        position: relative;
-        top: 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .network-form-connections-display-header {
-        padding: 14px 16px;
-    }
-
-    .network-form-search-input {
-        padding: 8px 36px 8px 12px;
-        font-size: 0.85rem;
-    }
-
-    .network-form-search-input::placeholder {
-        font-size: 0.8rem;
-    }
-}
-
-/* Улучшаем отображение счетчика */
-.network-form-connections-count {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: white;
-    border-radius: 12px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-/* Улучшаем пустые состояния */
-.network-form-empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #94a3b8;
-}
-
-.network-form-empty-state-icon {
-    font-size: 3rem;
-    margin-bottom: 16px;
-    opacity: 0.5;
-}
-
-.network-form-empty-state-text {
-    font-size: 1rem;
-    margin: 0 0 12px 0;
-    font-weight: 500;
 }

@@ -11,18 +11,20 @@ interface CommunicationPostsListProps {
   posts: CommunicationPost[];
   onPostDeleted: (deletedId: string) => void;
   isGlobalView?: boolean;
-  searchTerm?: string; // Добавляем пропс для поиска
+  searchTerm?: string;
+  canDeletePosts?: boolean;
 }
 
 interface GroupedPosts {
   [divisionName: string]: CommunicationPost[];
 }
 
-export function CommunicationPostsList({ 
-  posts, 
-  onPostDeleted, 
+export function CommunicationPostsList({
+  posts,
+  onPostDeleted,
   isGlobalView = false,
-  searchTerm = '' // Значение по умолчанию
+  searchTerm = '',
+  canDeletePosts
 }: CommunicationPostsListProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -35,23 +37,23 @@ export function CommunicationPostsList({
     if (!searchTerm.trim()) return posts;
 
     const normalizedSearch = normalizeSearchString(searchTerm);
-    return posts.filter(post => 
+    return posts.filter(post =>
       normalizeSearchString(post.name).includes(normalizedSearch)
     );
   }, [posts, searchTerm]);
 
   // Группировка отфильтрованных постов по подразделениям только в глобальном режиме
-  const groupedPosts: GroupedPosts = isGlobalView 
+  const groupedPosts: GroupedPosts = isGlobalView
     ? filteredPosts.reduce((acc, post) => {
-        const divisionName = post.division_name || 'Без подразделения';
-        
-        if (!acc[divisionName]) {
-          acc[divisionName] = [];
-        }
+      const divisionName = post.division_name || 'Без подразделения';
 
-        acc[divisionName].push(post);
-        return acc;
-      }, {} as GroupedPosts)
+      if (!acc[divisionName]) {
+        acc[divisionName] = [];
+      }
+
+      acc[divisionName].push(post);
+      return acc;
+    }, {} as GroupedPosts)
     : { 'Все посты': filteredPosts }; // В неглобальном режиме все посты в одной группе
 
   // Получаем отсортированные названия подразделений
@@ -151,7 +153,7 @@ export function CommunicationPostsList({
       <div className="communication-posts-container">
         <div className="communication-posts-content">
           <div className="communication-posts-empty-message">
-            {searchTerm.trim() 
+            {searchTerm.trim()
               ? `Посты связи по запросу "${searchTerm}" не найдены`
               : 'Нет постов связи для отображения'
             }
@@ -171,7 +173,7 @@ export function CommunicationPostsList({
           )}
         </div>
       )}
-      
+
       <div className="communication-posts-content">
         {divisionNames.map(divisionName => {
           const postsInDivision = groupedPosts[divisionName];
@@ -199,20 +201,22 @@ export function CommunicationPostsList({
                     <div key={post.id} className="communication-post-card">
                       <div className="communication-post-header">
                         <h3 className="communication-post-title">{post.name}</h3>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(post.id);
-                          }}
-                          className="communication-post-delete-btn"
-                          aria-label="Удалить пост связи"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canDeletePosts && ( 
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(post.id);
+                            }}
+                            className="communication-post-delete-btn"
+                            aria-label="Удалить пост связи"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
 
                       <div className="communication-post-content">
-                        <p 
+                        <p
                           ref={el => descriptionRefs.current[post.id] = el}
                           className="communication-post-description"
                           onMouseEnter={(e) => handleDescriptionMouseEnter(post.id, post.description || 'Описание отсутствует', e)}
@@ -249,7 +253,7 @@ export function CommunicationPostsList({
       </div>
 
       {tooltip.show && (
-        <div 
+        <div
           className="communication-post-tooltip"
           style={{
             left: `${tooltip.x}px`,

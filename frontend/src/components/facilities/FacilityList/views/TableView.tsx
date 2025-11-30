@@ -317,7 +317,7 @@ export function TableView({
               className="facility-locate-btn"
               aria-label="Найти на карте"
             >
-              <LocateFixed className="h-4 w-4" />
+              <LocateFixed className="h-5 w-5" />
             </button>
           )}
           {/* Показываем кнопку удаления только если есть право 'delete' */}
@@ -330,7 +330,7 @@ export function TableView({
               className="facility-delete-btn"
               aria-label="Удалить объект"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-5 w-4" />
             </button>
           )}
         </div>

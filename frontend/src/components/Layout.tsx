@@ -1,16 +1,27 @@
+// Layout.tsx
 import React from 'react';
 import { Sidebar } from './Sidebar';
-import label from '../assets/label.webp'
-import './style.css'
+import label from '../assets/label.webp';
+import './style.css';
+import { useAppPermissions } from '../api/utils/AppPermissionsContext';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
-  onSetActiveTab: (tab: string) => void; // Расширяем тип
+  onSetActiveTab: (tab: string) => void;
   userMenu?: React.ReactNode;
 }
 
 export function Layout({ children, activeTab, onSetActiveTab, userMenu }: LayoutProps) {
+  const { 
+    canAccessDivisions, 
+    canAccessPersonnel, 
+    canAccessEquipment, 
+    canAccessFacilities, 
+    canAccessTasks,
+    canAccessNetworks 
+  } = useAppPermissions();
+
   return (
     <div className="page-container">
       {/* Хедер */}
@@ -30,7 +41,18 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
 
       {/* Сайдбар */}
       <div className="sidebar">
-        <Sidebar activeTab={activeTab} onSetActiveTab={onSetActiveTab} />
+        <Sidebar 
+          activeTab={activeTab} 
+          onSetActiveTab={onSetActiveTab}
+          availableTabs={{
+            divisions: canAccessDivisions(),
+            personnel: canAccessPersonnel(),
+            equipment: canAccessEquipment(),
+            facilities: canAccessFacilities(),
+            tasks: canAccessTasks(),
+            networks: canAccessNetworks(),
+          }}
+        />
       </div>
 
       {/* Основной контент */}

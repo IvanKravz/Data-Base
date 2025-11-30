@@ -2,7 +2,7 @@
 import React from 'react';
 import { Employee, Division } from '../../../../../types';
 import '.././style.css';
-import { Building2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 interface AffiliationCardProps {
   formData: Employee;
@@ -56,7 +56,7 @@ export function AffiliationCard({
   return (
     <div className="personnel-card">
       <div className="personnel-card-header-edit">
-        <Building2 size={20} />
+        <Users size={20} />
         <h3 className="personnel-card-title">Принадлежность</h3>
       </div>
       <div className="personnel-card-content">

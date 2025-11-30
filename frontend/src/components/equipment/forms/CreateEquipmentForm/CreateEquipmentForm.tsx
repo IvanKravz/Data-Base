@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Equipment } from '../../../../types';
@@ -13,6 +13,8 @@ import { EditCommentsCard } from '../EditEquipmentForm/sections/EditCommentsCard
 import { DocumentsInfo } from '../EditEquipmentForm/sections/DocumentsInfo';
 import { ProductStructureEditor } from '../EditEquipmentForm/sections/ProductStructureEditor';
 import { AdditionalInfo } from '../EditEquipmentForm/sections/AdditionalInfo';
+import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
+import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
 
 interface Division {
     id: string;
@@ -33,11 +35,43 @@ interface EquipmentCategory {
     is_closed: boolean;
 }
 
+// Создаем объект прав по умолчанию
+const defaultFieldPermissions = {
+  canEditName: false,
+  canEditCategory: false,
+  canEditModel: false,
+  canEditStatus: false,
+  canEditSoftwareVersion: false,
+  canEditManufacturingDate: false,
+  canEditExploitationDate: false,
+  canEditServiceLife: false,
+  canEditSecretLevel: false,
+  canEditInterestOrgan: false,
+  canEditFreeUse: false,
+  canEditDivision: false,
+  canEditSubdivision: false,
+  canEditAssignedTo: false,
+  canEditFacility: false,
+  canEditComments: false,
+  canEditProductStructure: false,
+  canEditDocuments: false,
+  canEditIdentification: false,
+};
+
 export function CreateEquipmentForm() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>(); // id будет undefined в глобальном режиме
     const location = useLocation();
     const token = localStorage.getItem('accessToken');
+
+    // Используем хук для получения прав доступа
+    const { canCreate } = useAppPermissions();
+    const fieldPermissions = useEquipmentFieldPermissions(); 
+
+    const hasCreatePermission = canCreate('equipment');
+
+    // Используем permissions или значение по умолчанию
+    const effectivePermissions = fieldPermissions || defaultFieldPermissions;
 
     // Получаем данные из состояния навигации
     const navigationState = location.state as {
@@ -273,21 +307,28 @@ export function CreateEquipmentForm() {
                         isClosedEquipment={isClosedEquipment}
                         isDisposed={false}
                         equipmentCategories={currentCategories}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
                     <DocumentsInfo
                         formData={formData}
                         onChange={handleChange}
                         isDisposed={false}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
-                    <IdentificationInfo formData={formData} onChange={handleChange} />
+                    <IdentificationInfo 
+                        formData={formData} 
+                        onChange={handleChange}
+                        permissions={effectivePermissions} // Передаем permissions
+                    />
 
                     <DatesInfo
                         formData={formData}
                         onChange={handleChange}
                         serviceLife={formData.service_life}
                         onServiceLifeChange={(value) => handleChange({ service_life: value })}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
                     <AdditionalInfo
@@ -295,6 +336,7 @@ export function CreateEquipmentForm() {
                         onChange={handleChange}
                         interestOrgans={interestOrgans}
                         isDisposed={false}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
                     <AssignmentInfo
@@ -306,11 +348,13 @@ export function CreateEquipmentForm() {
                         isLoading={isLoading}
                         fixedDivision={!!fixedDivision}
                         fixedSubdivision={!!fixedSubdivision}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
                     <EditCommentsCard
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
 
                 </div>
@@ -319,12 +363,14 @@ export function CreateEquipmentForm() {
                         productStructures={formData.product_structures || []}
                         onChange={handleStructureChange}
                         isDisposed={false}
+                        permissions={effectivePermissions} // Передаем permissions
                     />
                 </div>
                 <FormActions
                     onCancel={handleCancel}
                     showDisposeButton={false}
                     isLoading={isLoading}
+                    hasEditPermission={hasCreatePermission} // Передаем права на создание
                 />
             </form>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Employee } from '../../../../../types';
 import '.././style.css';
-import { Building2 } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 
 interface ResponsibilityCardProps {
   formData: Employee;
@@ -12,7 +12,7 @@ export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardPro
   return (
     <div className="personnel-card">
       <div className="personnel-card-header-edit">
-        <Building2 size={20} />
+        <ShieldAlert size={20} />
         <h3 className="personnel-card-title">Ответственность</h3>
       </div>
       <div className="personnel-card-content">

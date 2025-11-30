@@ -1,5 +1,7 @@
+// App.tsx
 import { BrowserRouter } from 'react-router-dom';
 import AppRouter from './AppRouter';
+import { AppPermissionsProvider } from './api/utils/AppPermissionsContext';
 
 const App = () => {
   return (
@@ -8,7 +10,9 @@ const App = () => {
         v7_relativeSplatPath: true,
       }}
     >
-      <AppRouter />
+      <AppPermissionsProvider>
+        <AppRouter />
+      </AppPermissionsProvider>
     </BrowserRouter>
   );
 };

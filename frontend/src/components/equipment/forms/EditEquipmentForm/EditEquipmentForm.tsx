@@ -12,10 +12,8 @@ import { EditCommentsCard } from './sections/EditCommentsCard';
 import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureEditor } from './sections/ProductStructureEditor';
 import { AdditionalInfo } from './sections/AdditionalInfo';
-import { useEquipmentPermissions } from './hooks/usePermissions';
+import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
 import { canEdit } from '../../../../api/utils/permissions';
-// import { useEquipmentPermissions } from '../../../../hooks/useEquipmentPermissions';
-// import { canEdit } from '../../../../utils/permissions';
 
 interface EditEquipmentFormProps {
   initialData: Equipment;
@@ -42,7 +40,7 @@ export function EditEquipmentForm({
   const token = localStorage.getItem('accessToken');
   
   // Используем хук для получения прав доступа
-  const permissions = useEquipmentPermissions();
+  const permissions = useEquipmentFieldPermissions();
   const hasEditPermission = canEdit('equipment');
 
   // Вычисляем isClosedEquipment на основе выбранной категории

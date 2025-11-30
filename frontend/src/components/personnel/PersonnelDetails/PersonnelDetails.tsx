@@ -16,7 +16,7 @@ import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
 import { Employee } from '../../../types';
 import { EditPersonnelForm } from '../forms/EditPersonnelForm';
-import { getPermissions } from '../../../api/utils/permissions';
+import { canEdit, getPermissions } from '../../../api/utils/permissions';
 
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
@@ -31,17 +31,10 @@ export function PersonnelDetails() {
   const token = localStorage.getItem('accessToken');
 
   const isGlobalView = authApi.getGlobalView();
+  const canEditEmployee = canEdit('employees');
 
   // Получаем состояние навигации
   const navigationState = location.state;
-
-  const canEditEmployee = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
 
   useEffect(() => {
     if (id && token && !person) {

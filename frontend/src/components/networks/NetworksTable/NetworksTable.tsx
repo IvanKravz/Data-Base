@@ -12,7 +12,7 @@ interface NetworksTableProps {
   divisionId?: string;
   divisions?: Array<{ id: string; name: string }>;
   onDelete?: (networkId: string) => void;
-  canEdit?: boolean;
+  canEdit?: boolean; 
 }
 
 const NetworksTable: React.FC<NetworksTableProps> = ({
@@ -22,10 +22,10 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
   divisionId,
   divisions = [],
   onDelete,
-  canEdit = false
+  canEdit
 }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Добавляем useLocation
+  const location = useLocation();
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     division: '',
@@ -39,9 +39,15 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
     e.stopPropagation();
 
     // Определяем базовый путь в зависимости от наличия divisionId
-    const basePath = divisionId
-      ? `/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`
-      : `/networks/edit/${networkId}`;
+    let basePath = '';
+    
+    if (divisionId) {
+      // Режим подразделения
+      basePath = `/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`;
+    } else {
+      // Глобальный режим (без divisionId)
+      basePath = `/networks/communication-networks/edit/${networkId}`;
+    }
 
     // Передаем состояние навигации для корректного возврата
     navigate(basePath, {
@@ -123,7 +129,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
 
   return (
     <div className="nt-container">
-      {/* Панель поиска и фильтров - без изменений */}
+      {/* Панель поиска и фильтров */}
       <div className="nt-search-filters-panel">
         <div className="nt-search-container">
           <div className="nt-search-input-wrapper">
@@ -155,7 +161,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
           </div>
         </div>
 
-        {/* Расширенные фильтры - без изменений */}
+        {/* Расширенные фильтры */}
         {showFilters && (
           <div className="nt-filters-content">
             {/* Фильтр по подразделению */}
@@ -226,7 +232,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
         )}
       </div>
 
-      {/* Таблица - без изменений */}
+      {/* Таблица */}
       <div className="nt-wrapper">
         <table className="nt-table">
           <thead>

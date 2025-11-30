@@ -8,7 +8,7 @@ import NetworkDetails from '../../../../networks/NetworkDetails/NetworkDetails';
 import NetworkVisualization from '../../../../networks/NetworkVisualization/NetworkVisualization';
 import { networksApi } from '../../../../../api/networksApi';
 import { Header } from '../../../../networks/Header/Header';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canEdit, canCreate } from '../../../../../api/utils/permissions';
 import { divisionsApi } from '../../../../../api/divisions';
 
 const CommunicationNetworks: React.FC = () => {
@@ -44,25 +44,11 @@ const CommunicationNetworks: React.FC = () => {
   }, [currentUser]);
 
   // Проверка прав доступа для редактирования сетей
-  const canEditNetworks = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.networks) {
-      return permissions.networks.can_edit;
-    }
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
+  const canEditNetworks = canEdit('networks');
 
   // Проверка прав доступа для создания сетей
-  const canCreateNetworks = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
+  const canCreateNetworks = canCreate('networks');
+
 
   // Функция загрузки данных
   const fetchData = useCallback(async () => {

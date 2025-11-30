@@ -6,6 +6,7 @@ interface TaskParams {
   endDate?: string;
   divisionId?: string;
 }
+
 export const tasksApi = {
   getTasks: async (params: {
     division?: string;
@@ -46,7 +47,7 @@ export const tasksApi = {
   createTask: async (taskData: {
     title: string;
     category: string;
-    division_id: string;
+    division_id: string; // Должно быть строкой
     subdivision_id?: string | null;
     is_private: boolean;
     steps: Array<{
@@ -56,9 +57,14 @@ export const tasksApi = {
       end_date: string;
     }>;
   }, token: string) => {
+    console.log('Sending create task data:', taskData); // Для отладки
+    
     const { data } = await api.post('/tasks/', taskData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });;
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
     return data;
   },
 
@@ -69,6 +75,7 @@ export const tasksApi = {
     subdivision_id?: string | null;
     is_private: boolean;
     steps?: Array<{
+      id?: string;
       name: string;
       comments?: string;
       start_date: string;
@@ -79,19 +86,14 @@ export const tasksApi = {
       throw new Error(`Invalid task ID format. Expected numeric string, got: ${id}`);
     }
 
-    // console.log('taskData', taskData)
+    console.log('Updating task with data:', taskData);
 
-    const { data } = await api.patch(`/tasks/${id}/`, {
-      ...taskData,
-      // Убедитесь что бэкенд ожидает именно такие названия полей
-      division: taskData.division_id,
-      subdivision: taskData.subdivision_id === null ? null : taskData.subdivision_id
-    }, {
+    const { data } = await api.patch(`/tasks/${id}/`, taskData, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
     });
-    console.log('data', data)
     return data;
   },
 
@@ -102,16 +104,16 @@ export const tasksApi = {
   },
 
   completeStep: async (stepId: string, token: string) => {
-    const { data } = await api.post(`/tasks/steps/${stepId}/complete/`, {
+    const { data } = await api.post(`/tasks/steps/${stepId}/complete/`, {}, {
       headers: { Authorization: `Bearer ${token}` }
-    });;
+    });
     return data;
   },
 
   uncompleteStep: async (stepId: string, token: string) => {
-    const { data } = await api.post(`/tasks/steps/${stepId}/uncomplete/`, {
+    const { data } = await api.post(`/tasks/steps/${stepId}/uncomplete/`, {}, {
       headers: { Authorization: `Bearer ${token}` }
-    });;
+    });
     return data;
   },
 

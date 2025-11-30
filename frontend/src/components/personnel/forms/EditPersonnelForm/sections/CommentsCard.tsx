@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import '.././style.css';
 
 interface CommentsCardProps {
@@ -28,7 +28,7 @@ export function CommentsCard({ description, onChange }: CommentsCardProps) {
   return (
     <div className="personnel-card comments-card">
       <div className="personnel-card-header-edit">
-        <Building2 size={20} />
+        <MessageSquare size={20} />
         <h3 className="personnel-card-title">Комментарии и заметки</h3>
       </div>
       <div className="personnel-card-content">

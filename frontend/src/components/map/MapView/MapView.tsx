@@ -12,6 +12,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useDebounce } from '../../../utils/useDebounce';
+import { useLocation } from 'react-router-dom';
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -45,6 +46,7 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
   const mapRef = useRef<L.Map | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const location = useLocation(); 
 
   const setPopupRef = useCallback((id: string, popup: L.Popup | null) => {
     popupRefs.current[id] = popup;

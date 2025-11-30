@@ -9,9 +9,10 @@ interface Subdivision {
 interface SubdivisionSelectorProps {
   subdivisions: Subdivision[];
   selectedSubdivisionId: string | null;
-  onChange: (subdivisionId: string | null) => void; // Явно разрешаем null
+  onChange: (subdivisionId: string | null) => void;
   isLoading: boolean;
   hasDivision: boolean;
+  restrictedSubdivisionId?: string | null; // Новый пропс
 }
 
 export function SubdivisionSelector({
@@ -19,10 +20,36 @@ export function SubdivisionSelector({
   selectedSubdivisionId,
   onChange,
   isLoading,
-  hasDivision
+  hasDivision,
+  restrictedSubdivisionId // Принимаем новый пропс
 }: SubdivisionSelectorProps) {
   // Скрываем если нет подразделения или нет отделений в подразделении
   if (!hasDivision || subdivisions.length === 0) return null;
+
+  // Если есть ограничение по отделению, показываем специальное сообщение вместо выпадающего списка
+  if (restrictedSubdivisionId) {
+    const restrictedSubdivision = subdivisions.find(sub => sub.id === restrictedSubdivisionId);
+    return (
+      <div className="task-form-field">
+        <label className="task-form-label">
+          Отделение
+        </label>
+        <div className="restricted-subdivision-info">
+          <span className="restricted-subdivision-text">
+            {restrictedSubdivision?.name || 'Ваше отделение'}
+          </span>
+          <span className="restricted-subdivision-note">
+            (доступно только ваше отделение)
+          </span>
+        </div>
+        <input
+          type="hidden"
+          value={restrictedSubdivisionId}
+          onChange={() => {}} // Пустая функция для подавления предупреждений
+        />
+      </div>
+    );
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;

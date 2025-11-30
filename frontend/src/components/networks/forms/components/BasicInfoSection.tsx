@@ -41,3 +41,4 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({ currentNetwork, onC
 };
 
 export default BasicInfoSection;
+

@@ -22,8 +22,8 @@ const ClassificationSection: React.FC<ClassificationSectionProps> = ({ currentNe
                         className="network-form-select"
                     >
                         <option value="">Выберите класс</option>
-                        <option value="local">Локальная</option>
-                        <option value="global">Глобальная</option>
+                        <option value="1">1 класс</option>
+                        <option value="2">2 класс</option>
                     </select>
                 </div>
                 <div className="network-form-group">
@@ -34,9 +34,10 @@ const ClassificationSection: React.FC<ClassificationSectionProps> = ({ currentNe
                         onChange={onChange}
                         className="network-form-select"
                     >
-                        <option value="public">Публичная</option>
+                        <option value="public">Открытая</option>
                         <option value="confidential">Конфиденциальная</option>
                         <option value="secret">Секретная</option>
+                        <option value="top_secret">Совершенно секретная</option>
                     </select>
                 </div>
             </div>

@@ -14,7 +14,7 @@ import TechnicalParamsSection from '../components/TechnicalParamsSection';
 import MembershipSection from '../components/MembershipSection';
 import ConnectionSection from '../components/ConnectionSection';
 import NetworkActions from '../components/NetworkActions';
-import ConnectionsDisplay from '../components/ConnectionsDisplay';
+import ConnectionsDisplay from '../components/ConnectionsDisplay/ConnectionsDisplay';
 import '../NetworkForm.css';
 
 interface SelectedItem {

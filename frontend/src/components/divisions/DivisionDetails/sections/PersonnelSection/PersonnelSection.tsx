@@ -6,7 +6,7 @@ import { SearchBar } from '../../../../common/SearchBar';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { authApi, divisionsApi, employeesApi } from '../../../../../api';
 import './PersonnelSection.css';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions } from '../../../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canCreate } from '../../../../../api/utils/permissions';
 import { PersonnelAdvancedSearchModal } from '../../../../personnel/forms/PersonnelAdvancedSearchModal/PersonnelAdvancedSearchModal';
 
 interface PersonnelAdvancedSearchFilters {
@@ -330,13 +330,7 @@ export function PersonnelSection() {
   }, []);
 
   // Проверка прав доступа для кнопки "Добавить сотрудника"
-  const canCreateEmployee = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
-  }, []);
+  const canCreateEmployee = canCreate('employees');
 
   // Проверка наличия активных расширенных фильтров
   const hasActiveAdvancedFilters = useMemo(() =>

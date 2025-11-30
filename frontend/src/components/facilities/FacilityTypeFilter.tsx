@@ -1,6 +1,18 @@
 // FacilityTypeFilter.tsx
 import React, { useState } from 'react';
-import { Building2, Factory, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Building2,
+  ShieldX, 
+  KeyRound, 
+  ChevronDown, 
+  ChevronUp,
+  Satellite,
+  Phone,
+  Radio,
+  Antenna,
+  RadioTower,
+  Home
+} from 'lucide-react';
 import { Facility } from '../../types';
 import './style.css';
 
@@ -10,7 +22,7 @@ interface FacilityTypeFilterProps {
   onTypeChange: (type: 'all' | number) => void;
   selectedClass: 'all' | '1' | '2';
   onClassChange: (facilityClass: 'all' | '1' | '2') => void;
-  activeTab?: 'all' | 'open' | 'closed'; // Добавляем пропс activeTab
+  activeTab?: 'all' | 'open' | 'closed';
 }
 
 export function FacilityTypeFilter({
@@ -77,11 +89,28 @@ export function FacilityTypeFilter({
     setShowClassFilters(!showClassFilters);
   };
 
+  // Функция для получения иконки по типу объекта
+  const getFacilityIcon = (typeName: string) => {
+    const lowerName = typeName.toLowerCase();
+    
+    if (lowerName.includes('лаз')) return Phone;
+    if (lowerName.includes('передающий')) return RadioTower;
+    if (lowerName.includes('приёмный')) return Antenna;
+    if (lowerName.includes('спутниковая')) return Satellite;
+    if (lowerName.includes('радиорелейная')) return Radio;
+    if (lowerName.includes('шд')) return KeyRound;
+    if (lowerName.includes('спец.')) return ShieldX;
+    
+    return Home; // Станция и другие по умолчанию
+  };
+
   const shdType = facilityTypes.find(t => t.name.toLowerCase().includes('шд'));
+  const specType = facilityTypes.find(t => t.name.toLowerCase().includes('спец.'));
 
   return (
     <div className="facility-filter-container">
       <div className="facility-type-grid">
+        {/* Все объекты */}
         <button
           onClick={() => handleTypeChange('all')}
           className={`facility-filter-btn ${selectedType === 'all' ? 'facility-filter-all-active' : 'facility-filter-all'}`}
@@ -95,30 +124,53 @@ export function FacilityTypeFilter({
           </span>
         </button>
 
-        {facilityTypes.filter(t => !t.name.toLowerCase().includes('шд')).map(type => (
+        {/* Остальные типы объектов (кроме ШД и спец.) */}
+        {facilityTypes.filter(t => 
+          !t.name.toLowerCase().includes('шд') && !t.name.toLowerCase().includes('спец.')
+        ).map(type => {
+          const IconComponent = getFacilityIcon(type.name);
+          return (
+            <button
+              key={type.id}
+              onClick={() => handleTypeChange(type.id)}
+              className={`facility-filter-btn ${selectedType === type.id ? 'facility-filter-station-active' : 'facility-filter-station'}`}
+            >
+              <div className="facility-filter-content">
+                <IconComponent className="facility-filter-icon" />
+                <span className="facility-filter-label">{type.name}</span>
+              </div>
+              <span className="facility-filter-count">
+                {getTypeCount(type.id)}
+              </span>
+            </button>
+          );
+        })}
+
+        {/* Станция спец. связи */}
+        {specType && (
           <button
-            key={type.id}
-            onClick={() => handleTypeChange(type.id)}
-            className={`facility-filter-btn ${selectedType === type.id ? 'facility-filter-station-active' : 'facility-filter-station'}`}
+            onClick={() => handleTypeChange(specType.id)}
+            className={`facility-filter-btn ${selectedType === specType.id ? 'facility-filter-shd-active' : 'facility-filter-shd'}`}
           >
             <div className="facility-filter-content">
-              <Building2 className="facility-filter-icon" />
-              <span className="facility-filter-label">{type.name}</span>
+              <ShieldX className="facility-filter-icon" />
+              <span className="facility-filter-label">{specType.name}</span>
             </div>
             <span className="facility-filter-count">
-              {getTypeCount(type.id)}
+              {getTypeCount(specType.id)}
             </span>
           </button>
-        ))}
+        )}
 
-        {shdType && showClassFilter && ( // Показываем ШД только если разрешен фильтр по классам
+        {/* ШД с фильтром по классам */}
+        {shdType && showClassFilter && (
           <div className="shd-filter-wrapper">
             <button
               onClick={() => handleTypeChange(shdType.id)}
               className={`facility-filter-btn ${selectedType === shdType.id ? 'facility-filter-shd-active' : 'facility-filter-shd'}`}
             >
               <div className="facility-filter-content">
-                <Factory className="facility-filter-icon" />
+                <KeyRound className="facility-filter-icon" />
                 <span className="facility-filter-label">
                   {selectedType === shdType.id && selectedClass !== 'all'
                     ? `ШД (${selectedClass} класс)`
@@ -133,7 +185,7 @@ export function FacilityTypeFilter({
                       : getClassCount('2')
                     : getTypeCount(shdType.id)}
                 </span>
-                {selectedType === shdType.id && showClassFilter && ( // Показываем шеврон только если разрешен фильтр по классам
+                {selectedType === shdType.id && showClassFilter && (
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();

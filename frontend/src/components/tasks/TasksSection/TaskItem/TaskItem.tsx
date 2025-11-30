@@ -1,8 +1,9 @@
 // TaskItem.tsx
-import React, { useMemo, useState } from 'react';
-import { Pencil, Trash2, Lock, ChevronDown, ChevronUp, X, ListTodo } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Pencil, Trash2, Lock, ChevronDown, ChevronUp, X, ListTodo, Crown } from 'lucide-react';
 import { Task } from '../../../../types/tasks';
 import './TaskItem.css';
+import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 
 interface TaskItemProps {
   task: Task;
@@ -13,45 +14,11 @@ interface TaskItemProps {
 
 export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleStep }: TaskItemProps) => {
   const [stepsExpanded, setStepsExpanded] = useState(false);
-  const [progressHovered, setProgressHovered] = useState(false); // Добавляем состояние для ховера
-  const isCompleted = task.steps.every(step => step.is_completed);
-  const { badgeClass, badgeText } = useMemo(() => {
-    if (isCompleted) {
-      return { badgeClass: 'tasks-badge-completed', badgeText: 'Завершено' };
-    }
+  const [progressHovered, setProgressHovered] = useState(false);
+  const [localSteps, setLocalSteps] = useState(task.steps);
+  const { canEditTask, canDeleteTask, getCurrentUser } = useAppPermissions();
 
-    switch (task.category) {
-      case 'urgent':
-        return { badgeClass: 'tasks-badge-urgent', badgeText: 'Срочно' };
-      case 'planned':
-        return { badgeClass: 'tasks-badge-planned', badgeText: 'Запланировано' };
-      default:
-        return { badgeClass: 'tasks-badge-attention', badgeText: 'Требует внимания' };
-    }
-  }, [isCompleted, task.category]);
-
-  const userJson = localStorage.getItem('user');
-  let currentUserId = null;
-  if (userJson) {
-    try {
-      const user = JSON.parse(userJson);
-      currentUserId = user.id;
-    } catch (e) {
-      console.error('Ошибка парсинга пользователя:', e);
-    }
-  }
-
-  // Проверка прав на действие
-  const canEdit = !task.is_private || (task.created_by && task.created_by.id === currentUserId);
-  const canDelete = canEdit;
-
-  const completedStepsCount = task.steps.filter(s => s.is_completed).length;
-  const progressPercentage = (completedStepsCount / task.steps.length) * 100;
-
-  const handleStepToggle = (stepId: string, isCompleted: boolean) => {
-    onToggleStep(task.id, stepId, !isCompleted);
-  };
-
+  // Функции форматирования дат
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU', {
@@ -72,7 +39,49 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
     });
   };
 
-  const lastCompletedStep = task.steps
+  // ОТЛАДКА: Логируем получение новых этапов
+  useEffect(() => {
+    setLocalSteps(task.steps);
+  }, [task.steps, task.id]);
+
+  const currentUser = getCurrentUser();
+  
+  const isCompleted = useMemo(() => 
+    localSteps.length > 0 && localSteps.every(step => step.is_completed), 
+    [localSteps]
+  );
+
+  const { badgeClass, badgeText } = useMemo(() => {
+    if (isCompleted) {
+      return { badgeClass: 'tasks-badge-completed', badgeText: 'Завершено' };
+    }
+
+    switch (task.category) {
+      case 'urgent':
+        return { badgeClass: 'tasks-badge-urgent', badgeText: 'Срочно' };
+      case 'planned':
+        return { badgeClass: 'tasks-badge-planned', badgeText: 'Запланировано' };
+      default:
+        return { badgeClass: 'tasks-badge-attention', badgeText: 'Требует внимания' };
+    }
+  }, [isCompleted, task.category]);
+
+  // Проверка прав на действие с учетом ролей
+  const canEdit = canEditTask(task, currentUser);
+  const canDelete = canDeleteTask(task, currentUser);
+
+  // Проверка, является ли создатель руководителем
+  const isCreatorLeader = task.created_by?.roles?.includes('director') ||
+    task.created_by?.roles?.includes('deputy_director');
+
+  const completedStepsCount = localSteps.filter(s => s.is_completed).length;
+  const progressPercentage = localSteps.length > 0 ? (completedStepsCount / localSteps.length) * 100 : 0;
+
+  const handleStepToggle = (stepId: string, currentCompleted: boolean) => {
+    onToggleStep(task.id, stepId, currentCompleted);
+  };
+
+  const lastCompletedStep = localSteps
     .filter(step => step.is_completed && step.completed_by && step.completed_at)
     .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0];
 
@@ -81,12 +90,14 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
       <div className={`tasks-list-item ${isCompleted ? 'tasks-completed' : ''}`}>
         <div className="tasks-item-content">
           <div className="tasks-item-main">
-            {/* Заголовок и бейдж в отдельных независимых блоках */}
             <div className="tasks-item-header">
               <div className="tasks-badge-wrapper">
                 <span className={`tasks-badge ${badgeClass}`}>
                   {badgeText}
                 </span>
+                {isCreatorLeader && (
+                  <Crown className="inline-block ml-2 h-4 w-4 text-yellow-500" title="Создано руководителем" />
+                )}
               </div>
               <div className="tasks-item-actions">
                 {canEdit && (
@@ -134,6 +145,21 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
                 <span className="tasks-meta-label">Создал:</span>
                 <span className="tasks-meta-value">
                   {task.created_by.username} ({formatDateTime(task.created_at)})
+                  {(task.created_by.roles?.includes('director') || task.created_by.roles?.includes('deputy_director')) && (
+                    <Crown className="inline-block ml-1 h-3 w-3 text-yellow-500" title="Руководитель" />
+                  )}
+                </span>
+              </div>
+            )}
+
+            {task.updated_by && task.updated_at && (
+              <div className="tasks-meta-info">
+                <span className="tasks-meta-label">Изменено:</span>
+                <span className="tasks-meta-value">
+                  {task.updated_by.username} ({formatDateTime(task.updated_at)})
+                  {(task.updated_by.roles?.includes('director') || task.updated_by.roles?.includes('deputy_director')) && (
+                    <Crown className="inline-block ml-1 h-3 w-3 text-yellow-500" title="Руководитель" />
+                  )}
                 </span>
               </div>
             )}
@@ -155,10 +181,9 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
 
             <div className="tasks-progress-container">
               <span className="tasks-progress-text">
-                Выполнено {completedStepsCount} из {task.steps.length} этапов
+                Выполнено {completedStepsCount} из {localSteps.length} этапов
               </span>
-              {/* Заменяем кнопку на интерактивный прогресс-бар */}
-              <div 
+              <div
                 className="tasks-progress-bar"
                 onMouseEnter={() => setProgressHovered(true)}
                 onMouseLeave={() => setProgressHovered(false)}
@@ -182,19 +207,19 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
       {/* Модальное окно с этапами */}
       {stepsExpanded && (
         <>
-          <div 
+          <div
             className="tasks-steps-backdrop"
             onClick={() => setStepsExpanded(false)}
           />
           <div className="tasks-steps-container">
-            <button 
+            <button
               className="tasks-steps-close"
               onClick={() => setStepsExpanded(false)}
               aria-label="Закрыть"
             >
               <X size={18} />
             </button>
-            
+
             <div className="tasks-steps-header">
               <h3 className="tasks-steps-title">{task.title}</h3>
               <div className="tasks-steps-subtitle">
@@ -202,13 +227,16 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
                 {task.is_private && (
                   <Lock size={14} className="text-gray-500" />
                 )}
+                {isCreatorLeader && (
+                  <Crown size={14} className="text-yellow-500" title="Создано руководителем" />
+                )}
               </div>
             </div>
 
             <div className="tasks-steps-content">
               <div className="tasks-steps-list">
-                {task.steps.map((step) => (
-                  <div key={step.id} className="tasks-step">
+                {localSteps.map((step, index) => (
+                  <div key={step.id || `step-${index}`} className="tasks-step">
                     <div
                       className={`tasks-step-indicator ${step.is_completed ? 'tasks-step-completed' : ''}`}
                       onClick={() => handleStepToggle(step.id, step.is_completed)}

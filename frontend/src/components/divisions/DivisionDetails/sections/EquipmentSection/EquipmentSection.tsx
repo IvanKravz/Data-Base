@@ -22,7 +22,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { setEquipment, deleteEquipment } from '../../../../../store/slices/equipmentSlice';
 import { RootState } from '../../../../../store/store';
-import { getCurrentUser, getPermissions, isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
+import { canCreate, getCurrentUser, getPermissions, isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
 const CATEGORY_ICONS = {
   'tko': <Server className="equipment-tab-icon" size={16} />,
@@ -105,13 +105,7 @@ export function EquipmentSection() {
   });
 
   // Проверка прав доступа для кнопки "Добавить технику"
-  const canCreateEquipment = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.equipment) {
-      return permissions.equipment.can_edit;
-    }
-    return false;
-  }, []);
+  const canCreateEquipment = canCreate('equipment');
 
   // Функция обновления индикатора
   const updateIndicator = () => {
@@ -315,7 +309,7 @@ export function EquipmentSection() {
         item.assigned_to?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.subdivision?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.inventory_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.interest_organ?.name?.toLowerCase().includes(searchTerm.toLowerCase()); // Добавлен поиск по interest_organ
+        item.interest_organ?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesAdvancedSearch =
         (advancedFilters.names.length === 0 || advancedFilters.names.some(name =>
@@ -327,7 +321,7 @@ export function EquipmentSection() {
         (advancedFilters.assignedTo.length === 0 || advancedFilters.assignedTo.some(assigned =>
           item.assigned_to?.full_name?.toLowerCase().includes(assigned.toLowerCase()))) &&
         (advancedFilters.interestOrgans.length === 0 || advancedFilters.interestOrgans.some(organ =>
-          item.interest_organ?.id === organ.id)) && // Добавлена фильтрация по interest_organ
+          item.interest_organ?.id === organ.id)) && 
         (!advancedFilters.manufacturingDateFrom || item.manufacturing_date >= advancedFilters.manufacturingDateFrom) &&
         (!advancedFilters.manufacturingDateTo || item.manufacturing_date <= advancedFilters.manufacturingDateTo) &&
         (!advancedFilters.exploitationDateFrom || item.exploitation_date >= advancedFilters.exploitationDateFrom) &&
@@ -376,7 +370,7 @@ export function EquipmentSection() {
       exploitationDateFrom: '',
       exploitationDateTo: '',
       assignedTo: [],
-      interestOrgans: [] // Добавлено новое поле
+      interestOrgans: [] 
     });
   };
 
@@ -389,7 +383,7 @@ export function EquipmentSection() {
     advancedFilters.exploitationDateFrom !== '' ||
     advancedFilters.exploitationDateTo !== '' ||
     advancedFilters.assignedTo.length > 0 ||
-    advancedFilters.interestOrgans.length > 0; // Добавлено новое поле
+    advancedFilters.interestOrgans.length > 0; 
 
   const handleCreateEquipment = () => {
     if (isGlobalView) {

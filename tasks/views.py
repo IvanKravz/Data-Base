@@ -7,6 +7,9 @@ from django.db.models import Count, Q, F
 from .models import Task, TaskStep
 from .serializers import TaskSerializer, TaskStepSerializer
 from users.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
@@ -46,6 +49,10 @@ class TaskViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(incomplete_steps__gt=0)
 
         return queryset.prefetch_related('steps')
+    
+    def create(self, request, *args, **kwargs):
+        logger.info(f"Creating task with data: {request.data}")
+        return super().create(request, *args, **kwargs)
     
     @action(detail=False, methods=['get'])
     def incomplete_count(self, request):
@@ -107,7 +114,10 @@ class TaskStepViewSet(viewsets.ModelViewSet):
         step.completed_by = request.user
         step.completed_at = timezone.now()
         step.save()
-        return Response(self.get_serializer(step).data)
+        
+        # Перезагружаем объект с связанными данными
+        step.refresh_from_db()
+        return Response(TaskStepSerializer(step).data)
 
     @action(detail=True, methods=['post'])
     def uncomplete(self, request, pk=None):
@@ -116,4 +126,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
         step.completed_by = None
         step.completed_at = None
         step.save()
-        return Response(self.get_serializer(step).data)
+        
+        # Перезагружаем объект
+        step.refresh_from_db()
+        return Response(TaskStepSerializer(step).data)

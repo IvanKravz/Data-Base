@@ -6,14 +6,18 @@ import './style.css';
 interface CreateTaskModalProps {
   initialTask?: Task | null;
   divisionId?: string;
+  restrictedDivisionId?: string | null; // Новый пропс
+  restrictedSubdivisionId?: string | null;
   onClose: () => void;
-  onCreate?: (task: Task) => void;
+  onCreate?: (task: Omit<Task, 'id'>) => void;
   onUpdate?: (task: Task) => void;
 }
 
 export function CreateTaskModal({
   initialTask,
   divisionId,
+  restrictedDivisionId, // Принимаем новый пропс
+  restrictedSubdivisionId,
   onClose,
   onCreate,
   onUpdate
@@ -59,6 +63,8 @@ export function CreateTaskModal({
           <TaskForm
             initialTask={initialTask}
             divisionId={divisionId}
+            restrictedDivisionId={restrictedDivisionId} // Передаем в TaskForm
+            restrictedSubdivisionId={restrictedSubdivisionId}
             onSuccess={onClose}
             onError={setError}
             onCreate={onCreate}
