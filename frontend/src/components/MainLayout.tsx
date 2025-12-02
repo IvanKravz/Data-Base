@@ -6,7 +6,7 @@ import { MainContent } from './MainContent';
 import { DivisionDetails } from './divisions/DivisionDetails/DivisionDetails';
 import { PersonnelDetails } from './personnel/PersonnelDetails/PersonnelDetails';
 import { FacilityDetails } from './facilities/FacilityDetails/FacilityDetails';
-import { StorageSection } from './storage/StorageSection';
+import Storage from './storage/Storage';
 import { CabinetSection } from './cabinet/CabinetSection';
 import { UserMenu } from './common/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
@@ -34,6 +34,9 @@ import {
   NetworksRoute,
   CommunicationPostsRoute,
   DivisionsRoute,
+  StorageRoute,
+  MapRoute,
+  CabinetRoute,
   ProtectedRoute
 } from './ProtectedRoute';
 
@@ -68,7 +71,7 @@ export function MainLayout() {
       <Routes>
         {/* Main Routes */}
         <Route path="/" element={
-          <ProtectedRoute model="Division" action="view">
+          <DivisionsRoute>
             <MainContent
               activeTab={activeTab}
               viewTypes={viewTypes}
@@ -76,7 +79,7 @@ export function MainLayout() {
               onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
               onSelectDivision={() => { }}
             />
-          </ProtectedRoute>
+          </DivisionsRoute>
         } />
 
         {/* Global Routes (без привязки к подразделению) */}
@@ -260,23 +263,23 @@ export function MainLayout() {
           </NetworksRoute>
         } />
 
-        {/* Other Routes - проверяем базовые права на просмотр */}
+        {/* Other Routes - используем специализированные маршруты */}
         <Route path="/storage" element={
-          <ProtectedRoute model="Equipment" action="view">
-            <StorageSection />
-          </ProtectedRoute>
+          <StorageRoute>
+            <Storage />
+          </StorageRoute>
         } />
         
         <Route path="/cabinet" element={
-          <ProtectedRoute model="Employee" action="view">
+          <CabinetRoute>
             <CabinetSection />
-          </ProtectedRoute>
+          </CabinetRoute>
         } />
         
         <Route path="/map" element={
-          <ProtectedRoute model="Facility" action="view">
+          <MapRoute>
             <MapCountry />
-          </ProtectedRoute>
+          </MapRoute>
         } />
 
         {/* Fallback route - используем абсолютный путь */}

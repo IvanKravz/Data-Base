@@ -1,0 +1,307 @@
+.storage-upload-button-container {
+    position: relative;
+    display: inline-block;
+}
+
+.storage-upload-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    outline: none;
+}
+
+.storage-upload-button:focus {
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+}
+
+.storage-upload-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Variants */
+.storage-upload-button-primary {
+    background: linear-gradient(135deg, #1976d2, #1565c0);
+    color: white;
+    border: 2px solid #1976d2;
+}
+
+.storage-upload-button-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1565c0, #0d47a1);
+    border-color: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.storage-upload-button-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+.storage-upload-button-secondary {
+    background: white;
+    color: #1976d2;
+    border: 2px solid #1976d2;
+}
+
+.storage-upload-button-secondary:hover:not(:disabled) {
+    background: #e3f2fd;
+    color: #1565c0;
+    border-color: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+}
+
+.storage-upload-button-secondary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);
+}
+
+.storage-upload-button-icon {
+    background: #1976d2;
+    color: white;
+    border: 2px solid #1976d2;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.storage-upload-button-icon:hover:not(:disabled) {
+    background: #1565c0;
+    border-color: #1565c0;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.storage-upload-button-icon:active:not(:disabled) {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+/* Sizes */
+.storage-upload-button-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+}
+
+.storage-upload-button-small.storage-upload-button-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.storage-upload-button-medium {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 40px;
+}
+
+.storage-upload-button-medium.storage-upload-button-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+
+.storage-upload-button-large {
+    padding: 12px 24px;
+    font-size: 16px;
+    min-height: 48px;
+}
+
+.storage-upload-button-large.storage-upload-button-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+}
+
+/* Dragging State */
+.storage-upload-button-dragging {
+    animation: storage-upload-pulse 1.5s infinite;
+}
+
+@keyframes storage-upload-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(25, 118, 210, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
+    }
+}
+
+/* Drag Overlay */
+.storage-upload-drag-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(25, 118, 210, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: storage-upload-fadeIn 0.3s ease-out;
+}
+
+@keyframes storage-upload-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.storage-upload-drag-content {
+    text-align: center;
+    color: white;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    animation: storage-upload-bounce 2s infinite;
+}
+
+@keyframes storage-upload-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.storage-upload-drag-content i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.storage-upload-drag-content p {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Loading Animation */
+.storage-upload-button.loading {
+    position: relative;
+    color: transparent;
+}
+
+.storage-upload-button.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: storage-upload-spin 0.8s linear infinite;
+}
+
+.storage-upload-button-secondary.loading::after {
+    border-color: rgba(25, 118, 210, 0.3);
+    border-top-color: #1976d2;
+}
+
+@keyframes storage-upload-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tooltip for icon button */
+.storage-upload-button-icon[title] {
+    position: relative;
+}
+
+.storage-upload-button-icon[title]::before {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    margin-bottom: 8px;
+    z-index: 1000;
+}
+
+.storage-upload-button-icon[title]::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    margin-bottom: -2px;
+    z-index: 1000;
+}
+
+.storage-upload-button-icon[title]:hover::before,
+.storage-upload-button-icon[title]:hover::after {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .storage-upload-button-large {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+
+    .storage-upload-button-large.storage-upload-button-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .storage-upload-drag-content {
+        padding: 30px;
+    }
+
+    .storage-upload-drag-content i {
+        font-size: 48px;
+    }
+
+    .storage-upload-drag-content p {
+        font-size: 20px;
+    }
+}

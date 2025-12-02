@@ -19,9 +19,15 @@ ROLE_PERMISSIONS = {
             'CommunicationPost': ['view', 'add', 'change', 'delete'],
             'FacilityType': ['view''add', 'change', 'delete'],
             'EquipmentCategory': ['view', 'add', 'change', 'delete'],
+            'StorageFolder': ['view', 'add', 'change', 'delete'],
+            'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {},
         'can_see_all_divisions': True,
+        'can_access_storage': True,
+        'can_see_all_storage': True,
+        'storage_quota': None,  # Без лимита
+        'max_file_size': 1024 * 1024 * 1024,  # 1GB
         'description': 'Полный доступ ко всем функциям системы'
     },
     
@@ -41,9 +47,15 @@ ROLE_PERMISSIONS = {
             'CommunicationPost': ['view'],
             'FacilityType': ['view'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {},
         'can_see_all_divisions': True,
+        'can_access_storage': True,
+        'can_see_all_storage': True,
+        'storage_quota': 10 * 1024 * 1024 * 1024,  # 10GB
+        'max_file_size': 100 * 1024 * 1024,  # 100MB
         'description': 'Просмотр всей информации без возможности изменений'
     },
 
@@ -60,9 +72,15 @@ ROLE_PERMISSIONS = {
             'CommunicationPost': ['view'],
             'FacilityType': ['view'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {},
         'can_see_all_divisions': True,
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Просмотр всех данных системы'
     },
     
@@ -83,11 +101,17 @@ ROLE_PERMISSIONS = {
             'FacilityType': ['view'],
             'Task': ['view'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {
             'Task': {'division_id': 1},
         },
-        'can_see_all_divisions': True,  # Только свое подразделение
+        'can_see_all_divisions': True, 
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Полный просмотр, управление задачами 1 отдела'
     },
     
@@ -108,9 +132,15 @@ ROLE_PERMISSIONS = {
             'CommunicationNetwork': ['view'],
             'Task': ['view'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {},
         'can_see_all_divisions': True,  # Только свое подразделение
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Просмотр всей информации без возможности изменений'
     },
     
@@ -119,12 +149,18 @@ ROLE_PERMISSIONS = {
         'models': {
             'Employee': ['view', 'add', 'change', 'delete'],
             'Task': ['view', 'add', 'change', 'delete'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {
             'Employee': {'division_id': 1},
             'Task': {'division_id': 1, 'subdivision_id': 1}
         },
         'can_see_all_divisions': True,  # Только свое подразделение
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Управление сотрудниками 1 отдела, задачи 1 отделения'
     },
     
@@ -136,12 +172,18 @@ ROLE_PERMISSIONS = {
             'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
             'Task': ['view', 'add', 'change', 'delete'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {
             'Equipment': {'division_id': 1, 'is_closed': False},
             'Task': {'division_id': 1, 'subdivision_id': 1}
         },
         'can_see_all_divisions': True,  # Только свое подразделение
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Управление техникой и сетями связи 1 отдела'
     },
     
@@ -154,6 +196,8 @@ ROLE_PERMISSIONS = {
             'CommunicationNetwork': ['view'],
             'Task': ['view', 'add', 'change', 'delete'],
             'EquipmentCategory': ['view'],
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],
         },
         'filters': {
             'Employee': {'is_sha_worker': True},
@@ -162,6 +206,10 @@ ROLE_PERMISSIONS = {
             'Task': {'division_id': 1, 'subdivision_id': 2}
         },
         'can_see_all_divisions': True,  # Только свое подразделение
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Специализированный доступ для 2 отделения'
     },
 
@@ -177,10 +225,16 @@ ROLE_PERMISSIONS = {
         'CommunicationPost': ['view'],
         'FacilityType': ['view'],
         'EquipmentCategory': ['view'],  
-        'InterestOrgan': ['view'],     
+        'InterestOrgan': ['view'],   
+        'StorageFolder': ['view'],
+        'StorageFile': ['view'],  
     },
     'filters': {},
     'can_see_all_divisions': False,
+    'can_access_storage': True,
+    'can_see_all_storage': False,
+    'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+    'max_file_size': 50 * 1024 * 1024,  # 50MB
     'description': 'Просмотр данных своего подразделения'
 },
 
@@ -196,10 +250,16 @@ ROLE_PERMISSIONS = {
             'CommunicationPost': ['view', 'add', 'delete'],
             'FacilityType': ['view'],
             'EquipmentCategory': ['view'],  
-            'InterestOrgan': ['view'],      
+            'InterestOrgan': ['view'],  
+            'StorageFolder': ['view'],
+            'StorageFile': ['view'],    
         },
         'filters': {},
         'can_see_all_divisions': False,
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
+        'max_file_size': 50 * 1024 * 1024,  # 50MB
         'description': 'Полное управление данными своего подразделения'
     },
 }

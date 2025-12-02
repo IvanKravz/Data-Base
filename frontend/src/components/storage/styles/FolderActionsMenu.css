@@ -1,0 +1,244 @@
+.storage-folder-actions-menu {
+    width: 280px;
+    background: white;
+    border-radius: 8px;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: storage-menu-slideIn 0.2s ease-out;
+}
+
+.storage-folder-menu-header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    gap: 12px;
+}
+
+.storage-folder-menu-preview {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(25, 118, 210, 0.1);
+    border-radius: 8px;
+    font-size: 24px;
+}
+
+.storage-folder-menu-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.storage-folder-menu-title {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.storage-folder-menu-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.storage-folder-menu-content {
+    padding: 8px 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.storage-folder-menu-item {
+    width: 100%;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    color: #495057;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.storage-folder-menu-item:hover:not(:disabled) {
+    background: #f8f9fa;
+    color: #1976d2;
+}
+
+.storage-folder-menu-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.storage-folder-menu-item i:first-child {
+    width: 20px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.storage-folder-menu-item:hover i {
+    color: inherit;
+}
+
+.storage-folder-menu-item.danger {
+    color: #dc3545;
+}
+
+.storage-folder-menu-item.danger:hover {
+    background: #f8d7da;
+    color: #c82333;
+}
+
+.storage-folder-menu-divider {
+    height: 1px;
+    background: #e9ecef;
+    margin: 8px 0;
+}
+
+.storage-folder-rename-form {
+    padding: 12px 16px;
+}
+
+.storage-folder-rename-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.storage-folder-rename-input:focus {
+    outline: none;
+    border-color: #1976d2;
+}
+
+.storage-folder-rename-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.storage-folder-rename-cancel,
+.storage-folder-rename-save {
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.storage-folder-rename-cancel {
+    background: #f8f9fa;
+    color: #495057;
+    border-color: #dee2e6;
+}
+
+.storage-folder-rename-cancel:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.storage-folder-rename-save {
+    background: #1976d2;
+    color: white;
+    border-color: #1976d2;
+}
+
+.storage-folder-rename-save:hover:not(:disabled) {
+    background: #1565c0;
+    border-color: #1565c0;
+}
+
+.storage-folder-rename-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.storage-folder-color-picker-container {
+    position: relative;
+}
+
+.storage-folder-color-picker {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    z-index: 1002;
+    min-width: 120px;
+    animation: storage-color-picker-slide 0.2s ease-out;
+}
+
+@keyframes storage-color-picker-slide {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.storage-folder-color-option {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.storage-folder-color-option:hover {
+    transform: scale(1.1);
+}
+
+.storage-folder-color-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.storage-folder-color-option:hover .storage-folder-color-preview {
+    border-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .storage-folder-actions-menu {
+        width: 250px;
+    }
+
+    .storage-folder-color-picker {
+        left: auto;
+        right: 100%;
+    }
+}

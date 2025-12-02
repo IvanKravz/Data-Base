@@ -1,0 +1,275 @@
+.storage-sidebar {
+    width: 280px;
+    height: 100%;
+    background: linear-gradient(180deg, #669dd3 0%, #376998 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.5rem;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+    flex-shrink: 0; /* Чтобы не сжимался */
+}
+
+.storage-sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-sidebar-title {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+}
+
+.storage-view-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.storage-view-toggle-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.storage-view-toggle-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.storage-view-toggle-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+.storage-sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+}
+
+.storage-menu-section {
+    margin-bottom: 24px;
+}
+
+.storage-menu-section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 20px 12px 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.storage-menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.storage-menu-list li {
+    margin: 2px 0;
+}
+
+.storage-menu-item {
+    width: 100%;
+    padding: 10px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.storage-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.storage-menu-item.active {
+    background: rgba(238, 232, 120, 0.2);
+    color: #022a45;
+    border-left: 4px solid #c7ba25;
+    /* border-left: none; */
+}
+
+.storage-menu-item i {
+    width: 20px;
+    font-size: 16px;
+}
+
+.storage-menu-item span {
+    flex: 1;
+}
+
+.storage-menu-badge {
+    background: #e74c3c;
+    color: white;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    max-width: 3rem;
+    text-align: center;
+}
+
+.storage-trash-actions {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-empty-trash-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.storage-empty-trash-btn:hover {
+    background: rgba(231, 76, 60, 0.3);
+    border-color: #e74c3c;
+}
+
+.storage-storage-info {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.storage-info-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.storage-info-value {
+    color: white;
+    font-weight: 500;
+}
+
+.storage-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.storage-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.storage-sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.storage-user-avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.storage-user-details {
+    flex: 1;
+}
+
+.storage-user-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.storage-user-role {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Изменяем анимацию */
+@keyframes storage-slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.storage-sidebar {
+    animation: storage-slideIn 0.3s ease-out;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .storage-sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        order: 2;
+        margin-top: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .storage-sidebar-menu {
+        max-height: 300px;
+    }
+    
+    .storage-menu-item.active {
+        border-right: none;
+        border-bottom: 3px solid #3498db;
+    }
+}

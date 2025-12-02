@@ -396,6 +396,7 @@
 
 .tasks-step-details {
     flex: 1;
+    cursor: default;
 }
 
 .tasks-step-name {

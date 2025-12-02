@@ -1,0 +1,492 @@
+.storage-statistics-view {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.storage-statistics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.storage-statistics-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.storage-statistics-title i {
+    color: #1976d2;
+}
+
+.storage-statistics-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.storage-statistics-time-range {
+    display: flex;
+    gap: 4px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.storage-time-range-btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.storage-time-range-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+.storage-time-range-btn.active {
+    background: #1976d2;
+    color: white;
+}
+
+.storage-statistics-refresh {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.storage-statistics-refresh:hover {
+    background: #e0e0e0;
+    color: #1976d2;
+}
+
+.storage-statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.storage-statistics-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.storage-statistics-card-title {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Общая информация */
+.storage-statistics-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.storage-statistics-overview-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.storage-statistics-overview-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.storage-statistics-overview-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1976d2;
+    color: white;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.storage-statistics-overview-content {
+    flex: 1;
+}
+
+.storage-statistics-overview-label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.storage-statistics-overview-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.storage-statistics-overview-percentage {
+    font-size: 12px;
+    color: #4caf50;
+    margin-left: 4px;
+}
+
+.storage-statistics-quota {
+    margin-top: 20px;
+}
+
+.storage-statistics-quota-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.storage-statistics-quota-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.storage-statistics-quota-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Распределение по типам */
+.storage-statistics-types-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.storage-statistics-type-item {
+    display: grid;
+    grid-template-columns: 2fr 3fr 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.storage-statistics-type-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.storage-statistics-type-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.storage-statistics-type-name {
+    font-size: 14px;
+    color: #333;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.storage-statistics-type-count {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1976d2;
+    flex-shrink: 0;
+}
+
+.storage-statistics-type-bar {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.storage-statistics-type-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.storage-statistics-type-percentage {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Популярные расширения */
+.storage-statistics-extensions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.storage-statistics-extensions-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.storage-statistics-extensions-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.storage-statistics-extensions-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.storage-statistics-extension-item {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.storage-statistics-extension-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.storage-statistics-extension-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.storage-statistics-extension-name {
+    font-size: 13px;
+    color: #333;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.storage-statistics-extension-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1976d2;
+    flex-shrink: 0;
+}
+
+.storage-statistics-extension-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.storage-statistics-extension-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+/* Активность */
+.storage-statistics-activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.storage-statistics-activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.storage-statistics-activity-item:hover {
+    background: #e3f2fd;
+    transform: translateX(4px);
+}
+
+.storage-statistics-activity-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1976d2;
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.storage-statistics-activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.storage-statistics-activity-text {
+    display: block;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.storage-statistics-activity-text strong {
+    font-weight: 600;
+}
+
+.storage-statistics-activity-time {
+    display: block;
+    font-size: 11px;
+    color: #666;
+}
+
+.storage-statistics-activity-empty {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 20px 0;
+}
+
+/* Состояния загрузки и ошибки */
+.storage-statistics-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    gap: 16px;
+}
+
+.storage-statistics-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #1976d2;
+    border-radius: 50%;
+    animation: storage-statistics-spin 1s linear infinite;
+}
+
+@keyframes storage-statistics-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.storage-statistics-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    gap: 16px;
+    color: #f44336;
+}
+
+.storage-statistics-error i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.storage-statistics-retry {
+    padding: 8px 24px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.storage-statistics-retry:hover {
+    background: #1565c0;
+}
+
+.storage-statistics-empty {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-style: italic;
+}
+
+@media (max-width: 1200px) {
+    .storage-statistics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .storage-statistics-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .storage-statistics-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .storage-statistics-time-range {
+        flex-wrap: wrap;
+    }
+
+    .storage-time-range-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+
+    .storage-statistics-overview-grid {
+        grid-template-columns: 1fr;
+    }
+}

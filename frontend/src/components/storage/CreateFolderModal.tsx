@@ -1,64 +1,177 @@
+// components/storage/CreateFolderModal.tsx
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import './styles/CreateFolderModal.css';
 
 interface CreateFolderModalProps {
-  onConfirm: (name: string) => void;
-  onCancel: () => void;
+    currentFolder: any | null;
+    viewType: 'work' | 'personal';
+    onCreate: (name: string, color?: string) => void;
+    onClose: () => void;
 }
 
-export function CreateFolderModal({ onConfirm, onCancel }: CreateFolderModalProps) {
-  const [folderName, setFolderName] = useState('');
+const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
+    currentFolder,
+    viewType,
+    onCreate,
+    onClose
+}) => {
+    const [folderName, setFolderName] = useState('');
+    const [selectedColor, setSelectedColor] = useState('#1976D2');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (folderName.trim()) {
-      onConfirm(folderName.trim());
-    }
-  };
+    const colorOptions = [
+        { value: '#1976D2', label: 'Синий' },
+        { value: '#4CAF50', label: 'Зеленый' },
+        { value: '#FF9800', label: 'Оранжевый' },
+        { value: '#9C27B0', label: 'Фиолетовый' },
+        { value: '#F44336', label: 'Красный' },
+        { value: '#00BCD4', label: 'Голубой' },
+        { value: '#FFC107', label: 'Желтый' },
+        { value: '#795548', label: 'Коричневый' },
+    ];
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
-        <div className="flex justify-between items-center px-6 py-4 border-b">
-          <h2 className="text-xl font-semibold">Создать папку</h2>
-          <button onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-lg">
-            <X className="h-5 w-5" />
-          </button>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!folderName.trim()) {
+            setError('Введите название папки');
+            return;
+        }
+
+        if (folderName.length > 100) {
+            setError('Название папки не должно превышать 100 символов');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            await onCreate(folderName, selectedColor);
+            onClose();
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при создании папки');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleOverlayClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    return (
+        <div className="storage-modal-overlay" onClick={handleOverlayClick}>
+            <div className="storage-create-folder-modal">
+                <div className="storage-modal-header">
+                    <h2 className="storage-modal-title">Создать новую папку</h2>
+                    <button className="storage-modal-close" onClick={onClose}>
+                        <i className="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div className="storage-modal-body">
+                    <div className="storage-create-folder-info">
+                        <div className="storage-folder-location">
+                            <i className="fas fa-folder"></i>
+                            <span className="storage-folder-location-text">
+                                {currentFolder
+                                    ? `В папке "${currentFolder.name}"`
+                                    : 'В корне хранилища'
+                                }
+                            </span>
+                        </div>
+                        <div className="storage-folder-type-badge">
+                            <i className={`fas ${viewType === 'personal' ? 'fa-user' : 'fa-briefcase'}`}></i>
+                            {viewType === 'personal' ? 'Личная папка' : 'Рабочая папка'}
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="storage-create-folder-form">
+                        <div className="storage-form-group">
+                            <label htmlFor="folderName" className="storage-form-label">
+                                Название папки *
+                            </label>
+                            <input
+                                type="text"
+                                id="folderName"
+                                value={folderName}
+                                onChange={(e) => setFolderName(e.target.value)}
+                                className="storage-form-input"
+                                placeholder="Введите название папки"
+                                autoFocus
+                                maxLength={100}
+                            />
+                            <div className="storage-form-helper">
+                                Максимум 100 символов
+                            </div>
+                        </div>
+
+                        <div className="storage-form-group">
+                            <label className="storage-form-label">
+                                Цвет папки
+                            </label>
+                            <div className="storage-color-picker">
+                                {colorOptions.map(color => (
+                                    <label key={color.value} className="storage-color-option">
+                                        <input
+                                            type="radio"
+                                            name="folderColor"
+                                            value={color.value}
+                                            checked={selectedColor === color.value}
+                                            onChange={(e) => setSelectedColor(e.target.value)}
+                                            className="storage-color-radio"
+                                        />
+                                        <span
+                                            className="storage-color-preview"
+                                            style={{ backgroundColor: color.value }}
+                                            title={color.label}
+                                        ></span>
+                                        <span className="storage-color-label">{color.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="storage-form-error">
+                                <i className="fas fa-exclamation-circle"></i>
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="storage-modal-actions">
+                            <button
+                                type="button"
+                                className="storage-modal-cancel"
+                                onClick={onClose}
+                                disabled={isSubmitting}
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                type="submit"
+                                className="storage-modal-submit"
+                                disabled={isSubmitting || !folderName.trim()}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <i className="fas fa-spinner fa-spin"></i>
+                                        Создание...
+                                    </>
+                                ) : (
+                                    'Создать папку'
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Название папки
-            </label>
-            <input
-              type="text"
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              autoFocus
-              placeholder="Новая папка"
-            />
-          </div>
+    );
+};
 
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-              disabled={!folderName.trim()}
-            >
-              Создать
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+export default CreateFolderModal;

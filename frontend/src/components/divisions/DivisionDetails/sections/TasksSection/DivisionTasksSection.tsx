@@ -5,7 +5,7 @@ import { tasksApi } from '../../../../../api/tasks';
 import { divisionsApi } from '../../../../../api/divisions';
 import { TasksHeader } from '../../../../tasks/TasksSection/TasksHeader';
 import { TasksFilters } from '../../../../tasks/TasksSection/TasksFilters';
-import { TasksList } from '../../../../tasks/TasksSection/TasksList';
+import { TasksList } from '../../../../tasks/TasksSection/TasksList/TasksList';
 import { TasksCalendarView } from '../../../../tasks/TasksSection/TasksCalendarView';
 import { TasksCalendarSidebar } from '../../../../tasks/TasksSection/TasksCalendarSidebar';
 import { CreateTaskModal } from '../../../../tasks/CreateTaskModal';

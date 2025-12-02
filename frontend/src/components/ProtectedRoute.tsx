@@ -76,3 +76,25 @@ export const DivisionsRoute: React.FC<{ children: React.ReactNode; action?: Perm
             {children}
         </ProtectedRoute>
     );
+
+// Новые специализированные маршруты для Storage и Map
+export const StorageRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
+    ({ children, action = 'view' }) => (
+        <ProtectedRoute model="StorageFile" action={action}>
+            {children}
+        </ProtectedRoute>
+    );
+
+export const MapRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
+    ({ children, action = 'view' }) => (
+        <ProtectedRoute model="Map" action={action}>
+            {children}
+        </ProtectedRoute>
+    );
+
+export const CabinetRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
+    ({ children, action = 'view' }) => (
+        <ProtectedRoute model="Employee" action={action}>
+            {children}
+        </ProtectedRoute>
+    );

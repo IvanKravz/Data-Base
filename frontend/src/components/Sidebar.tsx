@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Users, Database, LayoutGrid, Building2, ListTodo, HardDrive, UserCog, ChevronRight, Network, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api';
-import { isExploitationChief, getCurrentUser, isExploitationEmployee, canView } from '../api/utils/permissions';
+import {
+  isExploitationChief,
+  getCurrentUser,
+  isExploitationEmployee,
+  canAccessPage
+} from '../api/utils/permissions';
 
 interface SidebarProps {
   activeTab: string;
@@ -15,7 +20,8 @@ interface MenuItem {
   icon: React.ElementType;
   label: string;
   path?: string;
-  module?: string;
+  model?: string;  // Модель для проверки прав
+  action?: string; // Действие (по умолчанию 'view')
   children?: MenuItem[];
 }
 
@@ -24,7 +30,6 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userDivision, setUserDivision] = useState<string | null>(null);
-  const [showMapItem, setShowMapItem] = useState(false);
   const [isExploitationEmp, setIsExploitationEmp] = useState(false);
 
   useEffect(() => {
@@ -34,9 +39,7 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
         setUserDivision(user.division_info.id);
       }
 
-      // Проверяем, нужно ли показывать пункт "Карта ТОБ"
       const isEmp = isExploitationEmployee();
-      setShowMapItem(isExploitationChief() || isEmp);
       setIsExploitationEmp(isEmp);
 
       setIsLoading(false);
@@ -73,20 +76,22 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   const hasAccessToMenuItem = (item: MenuItem): boolean => {
     if (isLoading) return true;
 
-    const alwaysAccessible = ['divisions', 'cabinet', 'storage', 'networks'];
-    if (alwaysAccessible.includes(item.id)) return true;
+    // Для кабинета всегда доступен (авторизованным пользователям)
+    if (item.id === 'cabinet') {
+      return true;
+    }
 
-    // Для пункта "Карта ТОБ" проверяем роль
+    // Для карты ТОБ проверяем права через модель Map
     if (item.id === 'map') {
-      return showMapItem;
+      return canAccessPage('Map', 'view');
     }
 
-    // Используем новую функцию canView для проверки прав доступа к модулю
-    if (item.module) {
-      return canView(item.module as any);
+    // Для остальных проверяем права через canAccessPage
+    if (item.model) {
+      return canAccessPage(item.model, (item.action || 'view') as any);
     }
 
-    return true;
+    return false;
   };
 
   const getDivisionsLabel = () => {
@@ -101,53 +106,57 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
     {
       id: 'divisions',
       icon: LayoutGrid,
-      label: getDivisionsLabel()
+      label: getDivisionsLabel(),
+      model: 'Division'
     },
     {
       id: 'personnel',
       icon: Users,
       label: 'Сотрудники',
       path: '/personnel',
-      module: 'employees'
+      model: 'Employee'
     },
     {
       id: 'equipment',
       icon: Database,
       label: 'Техника',
       path: '/equipment',
-      module: 'equipment'
+      model: 'Equipment'
     },
     {
       id: 'facilities',
       icon: Building2,
       label: 'Объекты',
       path: '/facilities',
-      module: 'facilities'
+      model: 'Facility'
     },
     {
       id: 'networks',
       icon: Network,
       label: 'Сети связи',
-      path: '/networks'
+      path: '/networks',
+      model: 'CommunicationNetwork'
     },
     {
       id: 'tasks',
       icon: ListTodo,
       label: 'Задачи',
       path: '/tasks',
-      module: 'tasks'
+      model: 'Task'
     },
     {
       id: 'storage',
       icon: HardDrive,
       label: 'Хранилище',
-      path: '/storage'
+      path: '/storage',
+      model: 'StorageFile'
     },
     {
       id: 'map',
       icon: Map,
       label: 'Карта ТОБ',
-      path: '/map'
+      path: '/map',
+      model: 'Map'
     },
     {
       id: 'cabinet',
