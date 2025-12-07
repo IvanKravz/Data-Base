@@ -12,6 +12,7 @@ import {
 
 interface SidebarProps {
   activeTab: string;
+  availableTabs?: Record<string, boolean>;
   onSetActiveTab: (tab: string) => void;
 }
 
@@ -25,7 +26,7 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
-export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
+export function Sidebar({ activeTab, onSetActiveTab, availableTabs }: SidebarProps) {
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,25 +75,18 @@ export function Sidebar({ activeTab, onSetActiveTab }: SidebarProps) {
   };
 
   const hasAccessToMenuItem = (item: MenuItem): boolean => {
-    if (isLoading) return true;
-
-    // Для кабинета всегда доступен (авторизованным пользователям)
+    // Для кабинета всегда доступен
     if (item.id === 'cabinet') {
-      return true;
+        return true;
     }
 
-    // Для карты ТОБ проверяем права через модель Map
-    if (item.id === 'map') {
-      return canAccessPage('Map', 'view');
-    }
-
-    // Для остальных проверяем права через canAccessPage
+    // Для всех остальных пунктов - строгая проверка через canAccessPage
     if (item.model) {
-      return canAccessPage(item.model, (item.action || 'view') as any);
+        return canAccessPage(item.model, (item.action || 'view') as any);
     }
 
     return false;
-  };
+};
 
   const getDivisionsLabel = () => {
     // Для сотрудника эксплуатации и начальника эксплуатации - "Подразделение"

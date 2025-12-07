@@ -1,5 +1,5 @@
 // contexts/AppPermissionsContext.tsx
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import {
     canAccessPersonnel,
     canAccessEquipment,
@@ -8,6 +8,7 @@ import {
     canAccessNetworks,
     canAccessCommunicationPosts,
     canAccessDivisions,
+    canAccessPage, // Добавляем canAccessPage
     canView,
     canCreate,
     canEdit,
@@ -19,7 +20,8 @@ import {
     hasRole,
     getCurrentUser,
     canEditTask,
-    canDeleteTask
+    canDeleteTask,
+    PermissionType
 } from '../utils/permissions';
 
 interface AppPermissionsContextType {
@@ -30,6 +32,9 @@ interface AppPermissionsContextType {
     canAccessNetworks: (action?: string) => boolean;
     canAccessCommunicationPosts: (action?: string) => boolean;
     canAccessDivisions: (action?: string) => boolean;
+    canAccessMap: (action?: PermissionType) => boolean; // Добавляем
+    canAccessStorage: (action?: PermissionType) => boolean; // Добавляем
+    canAccessPage: (model: string, action?: PermissionType) => boolean; // Экспортируем canAccessPage
     canView: (module: any) => boolean;
     canCreate: (module: any) => boolean;
     canEdit: (module: any) => boolean;
@@ -47,7 +52,16 @@ interface AppPermissionsContextType {
 const AppPermissionsContext = createContext<AppPermissionsContextType | null>(null);
 
 export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const value = {
+    // Мемоизируем функции для оптимизации производительности
+    const canAccessMap = useCallback((action: PermissionType = 'view') => {
+        return canAccessPage('Map', action);
+    }, []);
+
+    const canAccessStorage = useCallback((action: PermissionType = 'view') => {
+        return canAccessPage('StorageFile', action);
+    }, []);
+
+    const value = useMemo(() => ({
         canAccessPersonnel,
         canAccessEquipment,
         canAccessFacilities,
@@ -55,6 +69,9 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         canAccessNetworks,
         canAccessCommunicationPosts,
         canAccessDivisions,
+        canAccessMap, // Добавляем
+        canAccessStorage, // Добавляем
+        canAccessPage, // Экспортируем напрямую
         canView,
         canCreate,
         canEdit,
@@ -67,7 +84,7 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         getCurrentUser,
         canEditTask,
         canDeleteTask
-    };
+    }), [canAccessMap, canAccessStorage]);
 
     return (
         <AppPermissionsContext.Provider value={value}>

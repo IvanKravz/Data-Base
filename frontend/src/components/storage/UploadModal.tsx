@@ -1,7 +1,29 @@
-// components/storage/UploadModal.tsx
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { storageApi } from '../../api/storage';
 import './styles/UploadModal.css';
+
+// Можно использовать react-icons для иконок
+import {
+    FaTimes,
+    FaFolder,
+    FaUser,
+    FaBriefcase,
+    FaCloudUploadAlt,
+    FaFile,
+    FaClock,
+    FaSpinner,
+    FaCheck,
+    FaExclamationCircle,
+    FaRedo,
+    FaImage,
+    FaFilePdf,
+    FaFileWord,
+    FaFileExcel,
+    FaFilePowerpoint,
+    FaFileArchive,
+    FaMusic,
+    FaVideo
+} from 'react-icons/fa';
 
 interface UploadModalProps {
     currentFolder: any | null;
@@ -17,6 +39,7 @@ interface UploadFile {
     progress: number;
     status: 'pending' | 'uploading' | 'success' | 'error';
     error?: string;
+    previewUrl?: string; // URL для предпросмотра изображений
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({
@@ -28,9 +51,59 @@ const UploadModal: React.FC<UploadModalProps> = ({
 }) => {
     const [uploadQueue, setUploadQueue] = useState<UploadFile[]>([]);
     const [isDragging, setIsDragging] = useState(false);
-    const [uploadAll, setUploadAll] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Функция для получения иконки файла в зависимости от типа
+    const getFileIcon = (file: File) => {
+        const type = file.type.toLowerCase();
+        
+        if (type.startsWith('image/')) {
+            return <FaImage size={20} />;
+        }
+        if (type.includes('pdf')) {
+            return <FaFilePdf size={20} />;
+        }
+        if (type.includes('word') || type.includes('document')) {
+            return <FaFileWord size={20} />;
+        }
+        if (type.includes('excel') || type.includes('spreadsheet')) {
+            return <FaFileExcel size={20} />;
+        }
+        if (type.includes('powerpoint') || type.includes('presentation')) {
+            return <FaFilePowerpoint size={20} />;
+        }
+        if (type.includes('zip') || type.includes('archive') || type.includes('compressed')) {
+            return <FaFileArchive size={20} />;
+        }
+        if (type.startsWith('audio/')) {
+            return <FaMusic size={20} />;
+        }
+        if (type.startsWith('video/')) {
+            return <FaVideo size={20} />;
+        }
+        
+        return <FaFile size={20} />;
+    };
+
+    // Функция для создания превью изображений
+    const createPreviewUrl = (file: File): string | undefined => {
+        if (file.type.startsWith('image/')) {
+            return URL.createObjectURL(file);
+        }
+        return undefined;
+    };
+
+    // Очистка превью URL при размонтировании
+    useEffect(() => {
+        return () => {
+            uploadQueue.forEach(file => {
+                if (file.previewUrl) {
+                    URL.revokeObjectURL(file.previewUrl);
+                }
+            });
+        };
+    }, [uploadQueue]);
 
     const handleFileSelect = (files: FileList) => {
         const newFiles: UploadFile[] = [];
@@ -60,11 +133,15 @@ const UploadModal: React.FC<UploadModalProps> = ({
                 return;
             }
 
+            // Создаем превью для изображений
+            const previewUrl = createPreviewUrl(file);
+
             newFiles.push({
                 id: `${Date.now()}-${Math.random()}`,
                 file,
                 progress: 0,
-                status: 'pending'
+                status: 'pending',
+                previewUrl
             });
         });
 
@@ -108,7 +185,13 @@ const UploadModal: React.FC<UploadModalProps> = ({
     }, []);
 
     const handleRemoveFile = (id: string) => {
-        setUploadQueue(prev => prev.filter(file => file.id !== id));
+        setUploadQueue(prev => {
+            const fileToRemove = prev.find(file => file.id === id);
+            if (fileToRemove?.previewUrl) {
+                URL.revokeObjectURL(fileToRemove.previewUrl);
+            }
+            return prev.filter(file => file.id !== id);
+        });
     };
 
     const handleRetryUpload = async (file: UploadFile) => {
@@ -123,55 +206,50 @@ const UploadModal: React.FC<UploadModalProps> = ({
         if (uploadQueue.length === 0) return;
 
         setIsUploading(true);
-        const filesToUpload = uploadAll ? uploadQueue : uploadQueue.filter(f => f.status === 'pending');
+        const filesToUpload = uploadQueue.filter(f => f.status === 'pending');
 
-        for (const uploadFile of filesToUpload) {
-            if (uploadFile.status !== 'pending') continue;
+        try {
+            // Собираем ВСЕ файлы для загрузки
+            const pendingFiles = filesToUpload.map(f => f.file);
 
-            try {
-                // Обновляем статус на загрузку
-                setUploadQueue(prev => prev.map(f =>
-                    f.id === uploadFile.id ? { ...f, status: 'uploading', progress: 0 } : f
-                ));
+            if (pendingFiles.length === 0) return;
 
-                // Загружаем файл
-                await storageApi.uploadFile(
-                    uploadFile.file,
-                    currentFolder?.id || null,
-                    viewType,
-                    (progress) => {
-                        setUploadQueue(prev => prev.map(f =>
-                            f.id === uploadFile.id ? { ...f, progress: progress.percentage } : f
-                        ));
-                    }
-                );
+            // ВСЕГДА используем множественную загрузку
+            const uploadedFiles = await storageApi.uploadMultipleFiles(
+                pendingFiles,
+                currentFolder?.id || null,
+                viewType
+            );
 
-                // Успешная загрузка
-                setUploadQueue(prev => prev.map(f =>
-                    f.id === uploadFile.id ? { ...f, status: 'success', progress: 100 } : f
-                ));
+            // Отмечаем файлы как успешно загруженные
+            setUploadQueue(prev => prev.map(file =>
+                pendingFiles.some(f => f.name === file.file.name)
+                    ? { ...file, status: 'success', progress: 100 }
+                    : file
+            ));
 
-            } catch (error: any) {
-                // Ошибка загрузки
-                setUploadQueue(prev => prev.map(f =>
-                    f.id === uploadFile.id ? {
-                        ...f,
-                        status: 'error',
-                        error: error.message || 'Ошибка при загрузке файла'
-                    } : f
-                ));
-            }
-        }
+            // Передаем ЗАГРУЖЕННЫЕ файлы, а не исходные
+            onUpload(uploadedFiles); 
 
-        setIsUploading(false);
-
-        // Если все файлы успешно загружены, закрываем модальное окно
-        const allSuccess = uploadQueue.every(f => f.status === 'success');
-        if (allSuccess && uploadAll) {
             setTimeout(() => {
-                onUpload(uploadQueue.map(f => f.file));
                 onClose();
             }, 1000);
+
+        } catch (error: any) {
+            console.error('Upload error:', error);
+
+            // Отмечаем все файлы как ошибку
+            setUploadQueue(prev => prev.map(file =>
+                filesToUpload.some(f => f.id === file.id)
+                    ? {
+                        ...file,
+                        status: 'error',
+                        error: error.message || 'Ошибка при загрузке файлов'
+                    }
+                    : file
+            ));
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -192,14 +270,14 @@ const UploadModal: React.FC<UploadModalProps> = ({
                 <div className="storage-modal-header">
                     <h2 className="storage-modal-title">Загрузка файлов</h2>
                     <button className="storage-modal-close" onClick={onClose}>
-                        <i className="fas fa-times"></i>
+                        <FaTimes />
                     </button>
                 </div>
 
                 <div className="storage-modal-body">
                     <div className="storage-upload-info">
                         <div className="storage-upload-location">
-                            <i className="fas fa-folder"></i>
+                            <FaFolder />
                             <span className="storage-upload-location-text">
                                 {currentFolder
                                     ? `Папка: "${currentFolder?.name}"`
@@ -208,7 +286,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                             </span>
                         </div>
                         <div className="storage-upload-type">
-                            <i className={`fas ${viewType === 'personal' ? 'fa-user' : 'fa-briefcase'}`}></i>
+                            {viewType === 'personal' ? <FaUser /> : <FaBriefcase />}
                             {viewType === 'personal' ? 'Личные файлы' : 'Рабочие файлы'}
                         </div>
                     </div>
@@ -221,7 +299,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <div className="storage-upload-dropzone-icon">
-                            <i className="fas fa-cloud-upload-alt"></i>
+                            <FaCloudUploadAlt size={48} />
                         </div>
                         <h3 className="storage-upload-dropzone-title">
                             Перетащите файлы сюда
@@ -248,32 +326,24 @@ const UploadModal: React.FC<UploadModalProps> = ({
 
                     {uploadQueue.length > 0 && (
                         <div className="storage-upload-queue">
-                            <div className="storage-upload-queue-header">
-                                <h4 className="storage-upload-queue-title">
-                                    Очередь загрузки ({uploadQueue.length})
-                                </h4>
-                                <div className="storage-upload-stats">
-                                    <span className="storage-upload-stat pending">
-                                        <i className="fas fa-clock"></i> {pendingFiles}
-                                    </span>
-                                    <span className="storage-upload-stat uploading">
-                                        <i className="fas fa-spinner fa-spin"></i> {uploadingFiles}
-                                    </span>
-                                    <span className="storage-upload-stat success">
-                                        <i className="fas fa-check"></i> {successfulFiles}
-                                    </span>
-                                    <span className="storage-upload-stat error">
-                                        <i className="fas fa-times"></i> {errorFiles}
-                                    </span>
-                                </div>
-                            </div>
-
+                           
                             <div className="storage-upload-list">
                                 {uploadQueue.map((uploadFile) => (
                                     <div key={uploadFile.id} className="storage-upload-item">
                                         <div className="storage-upload-item-info">
                                             <div className="storage-upload-item-icon">
-                                                <i className="fas fa-file"></i>
+                                                {uploadFile.previewUrl ? (
+                                                    <img 
+                                                        src={uploadFile.previewUrl} 
+                                                        alt={uploadFile.file.name}
+                                                        onLoad={() => {
+                                                            // Освобождаем память после загрузки
+                                                            // В реальном приложении можно оставить для кеширования
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    getFileIcon(uploadFile.file)
+                                                )}
                                             </div>
                                             <div className="storage-upload-item-details">
                                                 <h5 className="storage-upload-item-name" title={uploadFile.file.name}>
@@ -293,7 +363,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                                         <div className="storage-upload-item-status">
                                             {uploadFile.status === 'pending' && (
                                                 <span className="storage-upload-status pending">
-                                                    <i className="fas fa-clock"></i> В очереди
+                                                    <FaClock /> В очереди
                                                 </span>
                                             )}
 
@@ -313,21 +383,21 @@ const UploadModal: React.FC<UploadModalProps> = ({
 
                                             {uploadFile.status === 'success' && (
                                                 <span className="storage-upload-status success">
-                                                    <i className="fas fa-check"></i> Загружено
+                                                    <FaCheck /> Загружено
                                                 </span>
                                             )}
 
                                             {uploadFile.status === 'error' && (
                                                 <div className="storage-upload-status error">
                                                     <span className="storage-upload-error">
-                                                        <i className="fas fa-exclamation-circle"></i>
+                                                        <FaExclamationCircle />
                                                         {uploadFile.error}
                                                     </span>
                                                     <button
                                                         className="storage-upload-retry"
                                                         onClick={() => handleRetryUpload(uploadFile)}
                                                     >
-                                                        <i className="fas fa-redo"></i>
+                                                        <FaRedo />
                                                     </button>
                                                 </div>
                                             )}
@@ -338,7 +408,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                                             onClick={() => handleRemoveFile(uploadFile.id)}
                                             title="Удалить из очереди"
                                         >
-                                            <i className="fas fa-times"></i>
+                                            <FaTimes />
                                         </button>
                                     </div>
                                 ))}
@@ -346,19 +416,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         </div>
                     )}
 
-                    <div className="storage-upload-options">
-                        <label className="storage-upload-option">
-                            <input
-                                type="checkbox"
-                                checked={uploadAll}
-                                onChange={(e) => setUploadAll(e.target.checked)}
-                                className="storage-upload-checkbox"
-                            />
-                            <span className="storage-upload-option-text">
-                                Начать загрузку всех файлов автоматически
-                            </span>
-                        </label>
-                    </div>
+                    {/* Опция "Начать загрузку всех файлов автоматически" УДАЛЕНА */}
 
                     <div className="storage-modal-actions">
                         <button
@@ -377,7 +435,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         >
                             {isUploading ? (
                                 <>
-                                    <i className="fas fa-spinner fa-spin"></i>
+                                    <FaSpinner className="fa-spin" />
                                     Загрузка...
                                 </>
                             ) : (

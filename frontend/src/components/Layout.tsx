@@ -13,13 +13,14 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeTab, onSetActiveTab, userMenu }: LayoutProps) {
-  const { 
-    canAccessDivisions, 
-    canAccessPersonnel, 
-    canAccessEquipment, 
-    canAccessFacilities, 
+  const {
+    canAccessDivisions,
+    canAccessPersonnel,
+    canAccessEquipment,
+    canAccessFacilities,
     canAccessTasks,
-    canAccessNetworks 
+    canAccessNetworks,
+    canAccessMap
   } = useAppPermissions();
 
   return (
@@ -41,8 +42,8 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
 
       {/* Сайдбар */}
       <div className="sidebar">
-        <Sidebar 
-          activeTab={activeTab} 
+        <Sidebar
+          activeTab={activeTab}
           onSetActiveTab={onSetActiveTab}
           availableTabs={{
             divisions: canAccessDivisions(),
@@ -51,6 +52,7 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
             facilities: canAccessFacilities(),
             tasks: canAccessTasks(),
             networks: canAccessNetworks(),
+            map: canAccessMap(),
           }}
         />
       </div>

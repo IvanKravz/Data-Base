@@ -1,160 +1,163 @@
 .storage-breadcrumbs {
-    display: flex;
-    align-items: center;
-    background: white;
-    border-radius: 8px;
-    padding: 8px 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+}
+
+.storage-breadcrumbs-up {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  color: #495057;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.3s ease;
+  border: none;
+  padding: 0;
+}
+
+.storage-breadcrumbs-up:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #212529;
+}
+
+.storage-breadcrumbs-up:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.storage-breadcrumbs-up svg {
+  font-size: 14px;
+}
+
+.storage-breadcrumbs-path {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+.storage-breadcrumbs-path::-webkit-scrollbar {
+  height: 4px;
+}
+
+.storage-breadcrumbs-path::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.storage-breadcrumbs-path::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.storage-breadcrumbs-path::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.storage-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storage-breadcrumb-item:hover:not(.active) {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.storage-breadcrumb-item.active {
+  background: #e3f2fd;
+  color: #1976d2;
+  cursor: default;
+}
+
+.storage-breadcrumb-item svg {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.storage-breadcrumb-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.storage-breadcrumb-home {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.storage-breadcrumb-home:hover {
+  background: #e3f2fd;
+}
+
+.storage-breadcrumb-separator {
+  color: #adb5bd;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+}
+
+.storage-breadcrumb-separator svg {
+  font-size: 12px;
+}
+
+/* Анимация появления хлебных крошек */
+@keyframes storage-breadcrumb-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  
-  .storage-breadcrumbs-up {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    color: #495057;
-    cursor: pointer;
-    margin-right: 12px;
-    transition: all 0.3s ease;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .storage-breadcrumbs-up:hover:not(:disabled) {
-    background: #e9ecef;
-    border-color: #adb5bd;
-    color: #212529;
+}
+
+.storage-breadcrumb-item {
+  animation: storage-breadcrumb-fadeIn 0.3s ease-out;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .storage-breadcrumbs {
+    padding: 6px 12px;
   }
-  
-  .storage-breadcrumbs-up:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .storage-breadcrumbs-up i {
-    font-size: 14px;
-  }
-  
-  .storage-breadcrumbs-path {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: thin;
-  }
-  
-  .storage-breadcrumbs-path::-webkit-scrollbar {
-    height: 4px;
-  }
-  
-  .storage-breadcrumbs-path::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 2px;
-  }
-  
-  .storage-breadcrumbs-path::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 2px;
-  }
-  
-  .storage-breadcrumbs-path::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-  }
-  
+
   .storage-breadcrumb-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    color: #6c757d;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 6px 8px;
+    max-width: 150px;
   }
-  
-  .storage-breadcrumb-item:hover:not(.active) {
-    background: #f8f9fa;
-    color: #495057;
-  }
-  
-  .storage-breadcrumb-item.active {
-    background: #e3f2fd;
-    color: #1976d2;
-    cursor: default;
-  }
-  
-  .storage-breadcrumb-item i {
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  
+
   .storage-breadcrumb-item span {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
   }
-  
-  .storage-breadcrumb-home {
-    color: #1976d2;
-    font-weight: 500;
+
+  .storage-breadcrumb-item svg {
+    margin-right: 0;
   }
-  
-  .storage-breadcrumb-home:hover {
-    background: #e3f2fd;
-  }
-  
-  .storage-breadcrumb-separator {
-    color: #adb5bd;
-    padding: 0 4px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .storage-breadcrumb-separator i {
-    font-size: 12px;
-  }
-  
-  /* Анимация появления хлебных крошек */
-  @keyframes storage-breadcrumb-fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .storage-breadcrumb-item {
-    animation: storage-breadcrumb-fadeIn 0.3s ease-out;
-  }
-  
-  /* Адаптивность */
-  @media (max-width: 768px) {
-    .storage-breadcrumbs {
-      padding: 6px 12px;
-    }
-    
-    .storage-breadcrumb-item {
-      padding: 6px 8px;
-      max-width: 150px;
-    }
-    
-    .storage-breadcrumb-item span {
-      display: none;
-    }
-    
-    .storage-breadcrumb-item i {
-      margin-right: 0;
-    }
-  }
+}

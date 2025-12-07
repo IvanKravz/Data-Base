@@ -1,59 +1,127 @@
+/* components/storage/styles/FileItem.css */
 .storage-file-item {
     background: white;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    transition: all 0.2s ease;
     position: relative;
+    overflow: hidden;
 }
 
 .storage-file-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-    border-color: #e3f2fd;
+    background: #f9f9f9;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
 }
 
 .storage-file-item.selected {
-    background: #e3f2fd;
-    border-color: #1976d2;
+    background: #f0f7ff;
+    outline: 1px solid #1d6aff;
+    outline-offset: -1px;
 }
 
 /* Grid Mode */
 .storage-file-grid {
     display: flex;
     flex-direction: column;
-    padding: 16px;
-    width: 200px;
-    height: 220px;
+    padding: 20px 16px 16px;
+    width: 180px;
+    height: 230px;
     cursor: pointer;
+    position: relative;
 }
 
 .storage-file-select {
     position: absolute;
     top: 12px;
     left: 12px;
-    z-index: 2;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.storage-file-item:hover .storage-file-select {
+    opacity: 1;
 }
 
 .storage-file-checkbox {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
-    accent-color: #1976d2;
+    border: 2px solid #c5c7d0;
+    border-radius: 4px;
+    background: white;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
+.storage-file-checkbox:checked {
+    background: #1d6aff;
+    border-color: #1d6aff;
+}
+
+.storage-file-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: translate(-50%, -60%) rotate(-45deg);
+}
+
+/* Основной контейнер для иконки/изображения */
 .storage-file-icon {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 64px;
-    margin: 20px 0;
+    margin: 8px 0 16px;
     position: relative;
-    transition: transform 0.3s ease;
+    height: 100px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f9f9f9 100%);
 }
 
-.storage-file-grid:hover .storage-file-icon {
-    transform: scale(1.1);
+/* Стиль для изображения в grid режиме */
+.storage-file-image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+    background-color: transparent;
+}
+
+.storage-file-grid:hover .storage-file-image-preview {
+    transform: scale(1.05);
+}
+
+/* Контейнер для fallback изображения */
+.storage-file-icon-fallback,
+.storage-file-icon-default {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Стиль для изображения в fallback контейнере */
+.storage-file-icon-fallback img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.storage-file-icon-default {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .storage-file-pin-badge,
@@ -61,96 +129,104 @@
     position: absolute;
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 3;
 }
 
 .storage-file-pin-badge {
-    top: -5px;
-    right: -5px;
-    background: #ff9800;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
     color: white;
 }
 
 .storage-file-favorite-badge {
-    bottom: -5px;
-    right: -5px;
-    background: #ffd700;
-    color: #333;
+    top: 40px;
+    right: 8px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+    color: white;
 }
 
 .storage-file-info {
-    text-align: center;
+    text-align: left;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
 }
 
 .storage-file-name {
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
     font-size: 14px;
-    font-weight: 600;
-    color: #333;
+    font-weight: 500;
+    color: #1a1a1a;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
-    padding: 4px 0;
+    line-height: 1.3;
 }
 
 .storage-file-name:hover {
-    color: #1976d2;
+    color: #1d6aff;
 }
 
 .storage-file-meta {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
-    color: #666;
+    color: #707070;
     margin-bottom: 8px;
 }
 
 .storage-file-separator {
-    color: #999;
+    color: #d0d0d0;
     font-size: 10px;
+}
+
+.storage-file-type {
+    font-weight: 500;
+    color: #5a5a5a;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
 }
 
 .storage-file-stats {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 8px;
-    font-size: 11px;
+    justify-content: space-between;
+    font-size: 12px;
     color: #888;
-    padding: 4px 8px;
-    background: #f5f5f5;
-    border-radius: 4px;
 }
 
-.storage-file-stats i {
-    font-size: 10px;
-    margin-right: 2px;
+.storage-file-downloads {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #707070;
 }
 
 .storage-file-actions {
     position: absolute;
     top: 12px;
     right: 12px;
-    display: flex;
-    gap: 4px;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
 }
 
-.storage-file-item:hover .storage-file-actions,
-.storage-file-item.selected .storage-file-actions {
+.storage-file-item:hover .storage-file-actions {
     opacity: 1;
+    transform: translateY(0);
 }
 
-.storage-file-action-btn {
+.storage-file-download-btn {
     width: 32px;
     height: 32px;
     display: flex;
@@ -158,27 +234,19 @@
     justify-content: center;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border-radius: 8px;
     color: #666;
     cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.storage-file-action-btn:hover {
-    background: #f5f5f5;
-    border-color: #bdbdbd;
-    color: #333;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .storage-file-download-btn:hover {
-    background: #e3f2fd;
-    border-color: #1976d2;
-    color: #1976d2;
-}
-
-.storage-file-download-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    background: #1d6aff;
+    border-color: #1d6aff;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(29, 106, 255, 0.25);
 }
 
 /* List Mode */
@@ -186,29 +254,37 @@
     display: grid;
     grid-template-columns: auto auto 1fr auto auto;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 20px;
     gap: 16px;
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin: 2px 4px;
 }
 
 .storage-file-list:hover {
-    background: #fafafa;
+    background: #f9f9f9;
 }
 
 .storage-file-list.selected {
-    background: #e3f2fd;
+    background: #f0f7ff;
 }
 
 .storage-file-icon-list {
-    font-size: 24px;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(25, 118, 210, 0.1);
-    border-radius: 6px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f0f0f0 100%);
+}
+
+/* Стиль для миниатюры в list режиме */
+.storage-file-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .storage-file-main {
@@ -219,8 +295,8 @@
 .storage-file-name-list {
     margin: 0 0 4px 0;
     font-size: 14px;
-    font-weight: 600;
-    color: #333;
+    font-weight: 500;
+    color: #1a1a1a;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -230,81 +306,116 @@
 }
 
 .storage-file-pin-indicator {
-    color: #ff9800;
+    color: #ff4757;
     font-size: 12px;
 }
 
 .storage-file-favorite-indicator {
-    color: #ffd700;
+    color: #ffa500;
     font-size: 12px;
 }
 
 .storage-file-details {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     font-size: 12px;
-    color: #666;
+    color: #707070;
 }
 
 .storage-file-type-list {
     padding: 2px 8px;
-    background: #e3f2fd;
-    color: #1976d2;
+    background: #f0f0f0;
+    color: #5a5a5a;
     border-radius: 10px;
     font-weight: 500;
+    font-size: 11px;
 }
 
 .storage-file-secondary {
     display: flex;
     align-items: center;
-    gap: 24px;
-    font-size: 12px;
+    gap: 32px;
+    font-size: 13px;
     color: #666;
-    min-width: 300px;
+    min-width: 280px;
 }
 
 .storage-file-size-list {
     width: 80px;
     text-align: right;
+    font-weight: 500;
+    color: #1a1a1a;
 }
 
 .storage-file-date-list {
-    width: 100px;
-}
-
-.storage-file-modified {
     width: 120px;
+    color: #707070;
 }
 
 .storage-file-downloads-list {
-    width: 60px;
+    width: 80px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    color: #707070;
 }
 
-.storage-file-downloads-list i {
-    font-size: 10px;
+.storage-file-downloads-list svg {
+    opacity: 0.6;
 }
 
 .storage-file-actions-list {
-    display: flex;
-    gap: 4px;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateX(-5px);
+    transition: all 0.2s ease;
 }
 
-.storage-file-list:hover .storage-file-actions-list,
-.storage-file-list.selected .storage-file-actions-list {
+.storage-file-list:hover .storage-file-actions-list {
     opacity: 1;
+    transform: translateX(0);
 }
 
-/* Анимации */
+/* Loading States */
+.storage-file-icon-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    z-index: 2;
+    animation: storage-file-fade-in 0.3s ease;
+}
+
+/* Спиннер с исправленной анимацией */
+.storage-file-icon-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(240, 240, 240, 0.3);
+    border-top: 3px solid #1d6aff;
+    border-radius: 50%;
+    animation: storage-file-spin 0.8s linear infinite;
+}
+
+/* Иконки для не-изображений в fallback контейнере */
+.storage-file-icon-fallback-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+}
+
+/* Animations */
 @keyframes storage-file-appear {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
     }
 
     to {
@@ -313,60 +424,109 @@
     }
 }
 
-.storage-file-item {
-    animation: storage-file-appear 0.3s ease-out;
-}
-
-@keyframes storage-download-spin {
-    from {
+@keyframes storage-file-spin {
+    0% {
         transform: rotate(0deg);
     }
 
-    to {
+    100% {
         transform: rotate(360deg);
     }
 }
 
-.fa-spinner {
-    animation: storage-download-spin 1s linear infinite;
+@keyframes storage-file-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-/* Адаптивность */
+.storage-file-item {
+    animation: storage-file-appear 0.3s ease-out;
+}
+
+/* Responsive */
 @media (max-width: 1200px) {
     .storage-file-grid {
         width: 180px;
-        height: 200px;
+        height: 180px;
     }
 
     .storage-file-secondary {
-        min-width: 200px;
-        gap: 12px;
-    }
-
-    .storage-file-size-list,
-    .storage-file-date-list,
-    .storage-file-modified {
-        width: auto;
+        min-width: 240px;
+        gap: 20px;
     }
 }
 
 @media (max-width: 768px) {
     .storage-file-grid {
-        width: 150px;
-        height: 180px;
-        padding: 12px;
+        width: 160px;
+        height: 170px;
+        padding: 16px 12px 12px;
     }
 
     .storage-file-icon {
-        font-size: 48px;
+        height: 80px;
     }
 
     .storage-file-list {
         grid-template-columns: auto 1fr auto;
         gap: 12px;
+        padding: 12px 16px;
     }
 
     .storage-file-secondary {
         display: none;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .storage-file-item {
+        background: #2d2d2d;
+    }
+
+    .storage-file-item:hover {
+        background: #3a3a3a;
+    }
+
+    .storage-file-item.selected {
+        background: #1e3a5f;
+    }
+
+    .storage-file-name,
+    .storage-file-name-list {
+        color: #e0e0e0;
+    }
+
+    .storage-file-checkbox {
+        border-color: #555;
+        background: #3a3a3a;
+    }
+
+    .storage-file-icon {
+        background: linear-gradient(135deg, #3a3a3a 0%, #333 100%);
+    }
+
+    .storage-file-icon-fallback,
+    .storage-file-icon-default {
+        background: #3a3a3a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .storage-file-info {
+        border-top-color: #404040;
+    }
+
+    .storage-file-icon-loading {
+        background: rgba(45, 45, 45, 0.9);
+    }
+
+    .storage-file-icon-spinner {
+        border-color: rgba(60, 60, 60, 0.3);
+        border-top-color: #1d6aff;
     }
 }

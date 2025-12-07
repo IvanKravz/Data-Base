@@ -1,10 +1,12 @@
-# views.py
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse, Http404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils import timezone
+from django.db.models import Q, Sum, Count
 from .models import StorageFolder, StorageFile, FileShareLink, Favorite
 from .serializers import (
     StorageFolderSerializer, StorageFileSerializer, 
@@ -12,11 +14,13 @@ from .serializers import (
     FileUploadSerializer
 )
 from .filters import StorageFileFilter, StorageFolderFilter
+from storage.permissions import HasFolderAccess, HasFileAccess, CanShareFiles, CanEmptyTrash
+
 
 class StorageFolderViewSet(viewsets.ModelViewSet):
     queryset = StorageFolder.objects.all()
     serializer_class = StorageFolderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasFolderAccess]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = StorageFolderFilter
     search_fields = ['name']
@@ -24,25 +28,29 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_queryset(self):
+        user = self.request.user
         queryset = super().get_queryset()
         
         # Фильтрация по типу (личное/рабочее)
         folder_type = self.request.query_params.get('type')
         if folder_type in ['personal', 'work']:
             queryset = queryset.filter(folder_type=folder_type)
+        else:
+            # По умолчанию показываем доступные папки
+            queryset = queryset.filter(
+                Q(folder_type='work') | 
+                Q(folder_type='personal', created_by=user)
+            )
         
-        # Фильтрация по подразделению и отделению
-        division_id = self.request.query_params.get('division_id')
-        if division_id:
-            queryset = queryset.filter(division_id=division_id)
-        
-        subdivision_id = self.request.query_params.get('subdivision_id')
-        if subdivision_id:
-            queryset = queryset.filter(subdivision_id=subdivision_id)
-        
-        # Показываем только папки пользователя для личных файлов
-        if folder_type == 'personal':
-            queryset = queryset.filter(created_by=self.request.user)
+        # Фильтрация по подразделению (только для рабочих папок)
+        if folder_type == 'work' or folder_type is None:
+            division_id = self.request.query_params.get('division_id')
+            if division_id:
+                queryset = queryset.filter(division_id=division_id)
+            
+            subdivision_id = self.request.query_params.get('subdivision_id')
+            if subdivision_id:
+                queryset = queryset.filter(subdivision_id=subdivision_id)
         
         # Фильтрация по родительской папке
         parent_id = self.request.query_params.get('parent_id')
@@ -50,6 +58,10 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(parent=None)
         elif parent_id:
             queryset = queryset.filter(parent_id=parent_id)
+        
+        # Исключаем удаленные папки (кроме запросов к корзине)
+        if not self.request.query_params.get('trash'):
+            queryset = queryset.filter(is_deleted=False)
         
         return queryset
     
@@ -62,54 +74,167 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         folder = self.get_object()
         folder.is_pinned = not folder.is_pinned
         folder.save()
-        return Response({'is_pinned': folder.is_pinned})
+        return Response({
+            'id': folder.id,
+            'is_pinned': folder.is_pinned
+        })
     
     @action(detail=True, methods=['get'])
     def contents(self, request, pk=None):
-        """Получить содержимое папки"""
+        """Получить содержимое папки с пагинацией"""
         folder = self.get_object()
+        
+        # Получаем параметры пагинации
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 50))
+        
+        # Получаем подпапки и файлы
         subfolders = folder.subfolders.filter(is_deleted=False)
         files = folder.files.filter(is_deleted=False)
         
+        # Применяем пагинацию
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        
+        paginated_subfolders = subfolders[start_idx:end_idx]
+        paginated_files = files[start_idx:end_idx]
+        
         return Response({
             'folder': StorageFolderSerializer(folder, context={'request': request}).data,
-            'subfolders': StorageFolderSerializer(subfolders, many=True, context={'request': request}).data,
-            'files': StorageFileSerializer(files, many=True, context={'request': request}).data,
+            'subfolders': StorageFolderSerializer(paginated_subfolders, many=True, context={'request': request}).data,
+            'files': StorageFileSerializer(paginated_files, many=True, context={'request': request}).data,
+            'pagination': {
+                'page': page,
+                'page_size': page_size,
+                'total_subfolders': subfolders.count(),
+                'total_files': files.count(),
+                'has_next': (subfolders.count() + files.count()) > end_idx
+            }
         })
+    
+    @action(detail=True, methods=['post'])
+    def move(self, request, pk=None):
+        """Переместить папку в другую папку"""
+        folder = self.get_object()
+        target_folder_id = request.data.get('target_folder_id')
+        
+        if target_folder_id == 'root':
+            folder.parent = None
+        elif target_folder_id:
+            try:
+                target_folder = StorageFolder.objects.get(id=target_folder_id)
+                # Проверка на циклическую ссылку
+                if folder.is_descendant_of(target_folder):
+                    return Response(
+                        {'error': 'Невозможно переместить папку в её же подпапку'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                folder.parent = target_folder
+            except StorageFolder.DoesNotExist:
+                return Response(
+                    {'error': 'Целевая папка не найдена'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
+        folder.save()
+        return Response(StorageFolderSerializer(folder, context={'request': request}).data)
+    
+    @action(detail=True, methods=['post'])
+    def rename(self, request, pk=None):
+        """Переименовать папку"""
+        folder = self.get_object()
+        new_name = request.data.get('name')
+        
+        if not new_name:
+            return Response(
+                {'error': 'Имя папки не может быть пустым'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        folder.name = new_name
+        folder.save()
+        return Response(StorageFolderSerializer(folder, context={'request': request}).data)
     
     @action(detail=True, methods=['post'])
     def soft_delete(self, request, pk=None):
         """Мягкое удаление папки"""
         folder = self.get_object()
         folder.soft_delete(user=request.user)
-        return Response({'status': 'deleted'})
+        return Response({
+            'id': folder.id,
+            'status': 'deleted',
+            'deleted_at': folder.deleted_at
+        })
     
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
         """Восстановить папку из корзины"""
         folder = self.get_object()
         folder.restore()
-        return Response({'status': 'restored'})
+        return Response({
+            'id': folder.id,
+            'status': 'restored'
+        })
     
     @action(detail=False, methods=['get'])
     def trash(self, request):
-        """Получить корзину (удаленные папки)"""
-        deleted_folders = StorageFolder.objects.deleted().filter(created_by=request.user)
-        serializer = self.get_serializer(deleted_folders, many=True)
-        return Response(serializer.data)
+        """Получить корзину (удаленные папки) с пагинацией"""
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        
+        deleted_folders = StorageFolder.objects.deleted().filter(
+            Q(created_by=request.user) | 
+            Q(folder_type='work')
+        )
+        
+        # Применяем пагинацию
+        start_idx = (page - 1) * page_size
+        paginated_folders = deleted_folders[start_idx:start_idx + page_size]
+        
+        serializer = self.get_serializer(paginated_folders, many=True)
+        return Response({
+            'folders': serializer.data,
+            'pagination': {
+                'page': page,
+                'page_size': page_size,
+                'total': deleted_folders.count(),
+                'has_next': deleted_folders.count() > start_idx + page_size
+            }
+        })
     
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, CanEmptyTrash])
     def empty_trash(self, request):
-        """Очистить корзину"""
+        """Очистить корзину (только для администраторов и руководителей)"""
         deleted_folders = StorageFolder.objects.deleted().filter(created_by=request.user)
+        count = deleted_folders.count()
+        
         for folder in deleted_folders:
             folder.hard_delete()
-        return Response({'status': 'trash_emptied'})
+        
+        return Response({
+            'status': 'trash_emptied',
+            'deleted_count': count
+        })
+    
+    @action(detail=False, methods=['get'])
+    def pinned(self, request):
+        """Получить закрепленные папки"""
+        pinned_folders = StorageFolder.objects.filter(
+            is_pinned=True,
+            is_deleted=False
+        ).filter(
+            Q(folder_type='work') | 
+            Q(folder_type='personal', created_by=request.user)
+        )
+        
+        serializer = self.get_serializer(pinned_folders, many=True)
+        return Response(serializer.data)
+
 
 class StorageFileViewSet(viewsets.ModelViewSet):
     queryset = StorageFile.objects.all()
     serializer_class = StorageFileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasFileAccess]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = StorageFileFilter
     search_fields = ['name', 'original_name', 'mime_type']
@@ -117,21 +242,29 @@ class StorageFileViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_queryset(self):
+        user = self.request.user
         queryset = super().get_queryset()
         
         # Фильтрация по типу
         file_type = self.request.query_params.get('type')
         if file_type in ['personal', 'work']:
             queryset = queryset.filter(file_type=file_type)
+        else:
+            # По умолчанию показываем доступные файлы
+            queryset = queryset.filter(
+                Q(file_type='work') | 
+                Q(file_type='personal', uploaded_by=user)
+            )
         
-        # Фильтрация по подразделению и отделению
-        division_id = self.request.query_params.get('division_id')
-        if division_id:
-            queryset = queryset.filter(division_id=division_id)
-        
-        subdivision_id = self.request.query_params.get('subdivision_id')
-        if subdivision_id:
-            queryset = queryset.filter(subdivision_id=subdivision_id)
+        # Фильтрация по подразделению (только для рабочих файлов)
+        if file_type == 'work' or file_type is None:
+            division_id = self.request.query_params.get('division_id')
+            if division_id:
+                queryset = queryset.filter(division_id=division_id)
+            
+            subdivision_id = self.request.query_params.get('subdivision_id')
+            if subdivision_id:
+                queryset = queryset.filter(subdivision_id=subdivision_id)
         
         # Фильтрация по папке
         folder_id = self.request.query_params.get('folder_id')
@@ -140,25 +273,32 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         elif folder_id:
             queryset = queryset.filter(folder_id=folder_id)
         
-        # Показываем только файлы пользователя для личных файлов
-        if file_type == 'personal':
-            queryset = queryset.filter(uploaded_by=self.request.user)
+        # Исключаем удаленные файлы (кроме запросов к корзине)
+        if not self.request.query_params.get('trash'):
+            queryset = queryset.filter(is_deleted=False)
         
         return queryset
     
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
         """Скачать файл и увеличить счетчик"""
         file = self.get_object()
-        file.increment_download_count()
         
-        # Возвращаем URL для скачивания
-        from django.http import FileResponse
-        response = FileResponse(file.file.open(), as_attachment=True, filename=file.original_name)
-        return response
+        try:
+            file.increment_download_count()
+            response = FileResponse(
+                file.file.open('rb'),
+                as_attachment=True,
+                filename=file.original_name or file.name
+            )
+            response['Content-Type'] = file.mime_type or 'application/octet-stream'
+            response['Content-Length'] = file.size
+            return response
+        except FileNotFoundError:
+            raise Http404("Файл не найден на сервере")
     
     @action(detail=True, methods=['post'])
     def pin(self, request, pk=None):
@@ -166,86 +306,216 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         file = self.get_object()
         file.is_pinned = not file.is_pinned
         file.save()
-        return Response({'is_pinned': file.is_pinned})
+        return Response({
+            'id': file.id,
+            'is_pinned': file.is_pinned
+        })
+    
+    @action(detail=True, methods=['post'])
+    def move(self, request, pk=None):
+        """Переместить файл в другую папку"""
+        file = self.get_object()
+        target_folder_id = request.data.get('target_folder_id')
+        
+        if target_folder_id == 'root':
+            file.folder = None
+        elif target_folder_id:
+            try:
+                target_folder = StorageFolder.objects.get(id=target_folder_id)
+                file.folder = target_folder
+            except StorageFolder.DoesNotExist:
+                return Response(
+                    {'error': 'Целевая папка не найдена'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
+        file.save()
+        return Response(StorageFileSerializer(file, context={'request': request}).data)
+    
+    @action(detail=True, methods=['post'])
+    def rename(self, request, pk=None):
+        """Переименовать файл"""
+        file = self.get_object()
+        new_name = request.data.get('name')
+        
+        if not new_name:
+            return Response(
+                {'error': 'Имя файла не может быть пустым'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        file.name = new_name
+        file.save()
+        return Response(StorageFileSerializer(file, context={'request': request}).data)
     
     @action(detail=True, methods=['post'])
     def soft_delete(self, request, pk=None):
         """Мягкое удаление файла"""
         file = self.get_object()
         file.soft_delete(user=request.user)
-        return Response({'status': 'deleted'})
+        return Response({
+            'id': file.id,
+            'status': 'deleted',
+            'deleted_at': file.deleted_at
+        })
     
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
         """Восстановить файл из корзины"""
         file = self.get_object()
         file.restore()
-        return Response({'status': 'restored'})
+        return Response({
+            'id': file.id,
+            'status': 'restored'
+        })
     
     @action(detail=True, methods=['post'])
     def hard_delete(self, request, pk=None):
-        """Полное удаление файла"""
+        """Полное удаление файла (только для администраторов)"""
         file = self.get_object()
+        file_id = file.id
+        file_name = file.name
         file.hard_delete()
-        return Response({'status': 'permanently_deleted'})
+        return Response({
+            'status': 'permanently_deleted',
+            'id': file_id,
+            'name': file_name
+        })
     
     @action(detail=False, methods=['post'])
     def upload_multiple(self, request):
         """Множественная загрузка файлов"""
         serializer = FileUploadSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            files = serializer.save()
+            created_files = serializer.save()  # Возвращает список файлов
+            
+            # Сериализуем созданные файлы
+            file_serializer = StorageFileSerializer(
+                created_files,  # Передаем список файлов
+                many=True, 
+                context={'request': request}
+            )
+            
             return Response(
-                StorageFileSerializer(files, many=True, context={'request': request}).data,
+                file_serializer.data,
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['get'])
     def trash(self, request):
-        """Получить корзину (удаленные файлы)"""
-        deleted_files = StorageFile.objects.deleted().filter(uploaded_by=request.user)
-        serializer = self.get_serializer(deleted_files, many=True)
-        return Response(serializer.data)
+        """Получить корзину (удаленные файлы) с пагинацией"""
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        
+        deleted_files = StorageFile.objects.deleted().filter(
+            Q(uploaded_by=request.user) | 
+            Q(file_type='work')
+        )
+        
+        # Применяем пагинацию
+        start_idx = (page - 1) * page_size
+        paginated_files = deleted_files[start_idx:start_idx + page_size]
+        
+        serializer = self.get_serializer(paginated_files, many=True)
+        return Response({
+            'files': serializer.data,
+            'pagination': {
+                'page': page,
+                'page_size': page_size,
+                'total': deleted_files.count(),
+                'has_next': deleted_files.count() > start_idx + page_size
+            }
+        })
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Недавно загруженные файлы"""
+        """Недавно загруженные файлы с пагинацией"""
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        
         recent_files = StorageFile.objects.filter(
-            uploaded_by=request.user
-        ).order_by('-created_at')[:20]
-        serializer = self.get_serializer(recent_files, many=True)
+            uploaded_by=request.user,
+            is_deleted=False
+        ).order_by('-created_at')
+        
+        # Применяем пагинацию
+        start_idx = (page - 1) * page_size
+        paginated_files = recent_files[start_idx:start_idx + page_size]
+        
+        serializer = self.get_serializer(paginated_files, many=True)
+        return Response({
+            'files': serializer.data,
+            'pagination': {
+                'page': page,
+                'page_size': page_size,
+                'total': recent_files.count(),
+                'has_next': recent_files.count() > start_idx + page_size
+            }
+        })
+    
+    @action(detail=False, methods=['get'])
+    def pinned(self, request):
+        """Получить закрепленные файлы"""
+        pinned_files = StorageFile.objects.filter(
+            is_pinned=True,
+            is_deleted=False
+        ).filter(
+            Q(file_type='work') | 
+            Q(file_type='personal', uploaded_by=request.user)
+        )
+        
+        serializer = self.get_serializer(pinned_files, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """Статистика по файлам"""
-        from django.db.models import Sum, Count
+        user_files = StorageFile.objects.filter(uploaded_by=request.user, is_deleted=False)
+        work_files = StorageFile.objects.filter(file_type='work', is_deleted=False)
         
-        total_files = StorageFile.objects.filter(uploaded_by=request.user).count()
-        total_size = StorageFile.objects.filter(
-            uploaded_by=request.user
-        ).aggregate(Sum('size'))['size__sum'] or 0
+        # Общая статистика
+        total_files = user_files.count()
+        total_size = user_files.aggregate(Sum('size'))['size__sum'] or 0
         
-        by_type = StorageFile.objects.filter(
-            uploaded_by=request.user
-        ).values('file_type').annotate(count=Count('id'))
+        # По типам
+        by_type = user_files.values('file_type').annotate(
+            count=Count('id'),
+            total_size=Sum('size')
+        )
         
-        by_extension = StorageFile.objects.filter(
-            uploaded_by=request.user
-        ).values('extension').annotate(count=Count('id')).order_by('-count')[:10]
+        # По расширениям
+        by_extension = user_files.values('extension').annotate(
+            count=Count('id')
+        ).order_by('-count')[:10]
+        
+        # По датам
+        today = timezone.now().date()
+        last_week = today - timezone.timedelta(days=7)
+        
+        recent_uploads = user_files.filter(
+            created_at__date__gte=last_week
+        ).count()
         
         return Response({
-            'total_files': total_files,
-            'total_size': total_size,
+            'personal': {
+                'total_files': total_files,
+                'total_size': total_size,
+                'recent_uploads': recent_uploads,
+            },
+            'work': {
+                'total_files': work_files.count(),
+                'total_size': work_files.aggregate(Sum('size'))['size__sum'] or 0,
+            },
             'by_type': list(by_type),
             'top_extensions': list(by_extension),
         })
 
+
 class FileShareLinkViewSet(viewsets.ModelViewSet):
     queryset = FileShareLink.objects.all()
     serializer_class = FileShareLinkSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanShareFiles]  # Только для тех, кто может делиться файлами
     
     def get_queryset(self):
         return FileShareLink.objects.filter(created_by=self.request.user)
@@ -261,7 +531,10 @@ class FileShareLinkViewSet(viewsets.ModelViewSet):
         link = self.get_object()
         link.is_active = not link.is_active
         link.save()
-        return Response({'is_active': link.is_active})
+        return Response({
+            'id': link.id,
+            'is_active': link.is_active
+        })
     
     @action(detail=False, methods=['get'], permission_classes=[])
     def download_shared(self, request, token):
@@ -282,17 +555,27 @@ class FileShareLinkViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Увеличиваем счетчик
+        # Увеличиваем счетчики
         link.download_count += 1
         link.save()
-        
-        # Увеличиваем счетчик файла
         link.file.increment_download_count()
         
-        return Response({
-            'file': StorageFileSerializer(link.file, context={'request': request}).data,
-            'download_url': request.build_absolute_uri(link.file.file.url)
-        })
+        # Возвращаем файл
+        try:
+            response = FileResponse(
+                link.file.file.open('rb'),
+                as_attachment=True,
+                filename=link.file.original_name or link.file.name
+            )
+            response['Content-Type'] = link.file.mime_type or 'application/octet-stream'
+            response['Content-Length'] = link.file.size
+            return response
+        except FileNotFoundError:
+            return Response(
+                {'error': 'Файл не найден на сервере'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
@@ -303,6 +586,33 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        """Получить все избранные элементы"""
+        favorites = self.get_queryset()
+        
+        # Разделяем на папки и файлы
+        folder_favorites = favorites.filter(folder__isnull=False)
+        file_favorites = favorites.filter(file__isnull=False)
+        
+        folder_ids = [fav.folder.id for fav in folder_favorites]
+        file_ids = [fav.file.id for fav in file_favorites]
+        
+        # Получаем актуальные объекты
+        folders = StorageFolder.objects.filter(
+            id__in=folder_ids,
+            is_deleted=False
+        )
+        files = StorageFile.objects.filter(
+            id__in=file_ids,
+            is_deleted=False
+        )
+        
+        return Response({
+            'folders': StorageFolderSerializer(folders, many=True, context={'request': request}).data,
+            'files': StorageFileSerializer(files, many=True, context={'request': request}).data,
+        })
     
     @action(detail=False, methods=['post'])
     def toggle(self, request):
@@ -319,8 +629,18 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             )
             if not created:
                 favorite.delete()
-                return Response({'status': 'removed', 'is_favorited': False})
-            return Response({'status': 'added', 'is_favorited': True})
+                return Response({
+                    'status': 'removed',
+                    'is_favorited': False,
+                    'type': 'folder',
+                    'id': folder_id
+                })
+            return Response({
+                'status': 'added',
+                'is_favorited': True,
+                'type': 'folder',
+                'id': folder_id
+            })
         
         elif file_id:
             obj = get_object_or_404(StorageFile, id=file_id)
@@ -331,8 +651,18 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             )
             if not created:
                 favorite.delete()
-                return Response({'status': 'removed', 'is_favorited': False})
-            return Response({'status': 'added', 'is_favorited': True})
+                return Response({
+                    'status': 'removed',
+                    'is_favorited': False,
+                    'type': 'file',
+                    'id': file_id
+                })
+            return Response({
+                'status': 'added',
+                'is_favorited': True,
+                'type': 'file',
+                'id': file_id
+            })
         
         return Response(
             {'error': 'Укажите folder_id или file_id'},

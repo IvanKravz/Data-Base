@@ -1,5 +1,5 @@
 // components/storage/FileActionsMenu.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import { storageApi } from '../../api/storage';
 import './styles/FileActionsMenu.css';
@@ -22,7 +22,8 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     const [isSharing, setIsSharing] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isFavoriting, setIsFavoriting] = useState(false);
-    const menuRef = React.useRef<HTMLDivElement>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -45,6 +46,36 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
+
+    // Эффект для корректировки позиции меню
+    useEffect(() => {
+        if (!menuRef.current) return;
+
+        const rect = menuRef.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        let adjustedX = position.x;
+        let adjustedY = position.y;
+
+        if (rect.right > windowWidth) {
+            adjustedX = position.x - rect.width;
+        }
+        if (rect.bottom > windowHeight) {
+            adjustedY = position.y - rect.height;
+        }
+
+        // Убедимся, что меню не выходит за левую и верхнюю границы
+        adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
+        adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+
+        setMenuStyle({
+            position: 'fixed',
+            left: `${adjustedX}px`,
+            top: `${adjustedY}px`,
+            zIndex: 1001,
+        });
+    }, [position]);
 
     const handleDownload = async () => {
         if (isDownloading) return;
@@ -106,7 +137,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     };
 
     const handleMove = async () => {
-        // Здесь можно открыть модальное окно для перемещения
         console.log('Move file:', file.id);
         onClose();
     };
@@ -124,7 +154,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
 
     const handleShare = () => {
         setIsSharing(true);
-        // Здесь можно открыть модальное окно для настройки общего доступа
         console.log('Share file:', file.id);
         onClose();
     };
@@ -132,7 +161,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(file.download_url);
-            // Можно показать уведомление об успешном копировании
             onClose();
         } catch (error) {
             console.error('Error copying link:', error);
@@ -144,32 +172,19 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
         onClose();
     };
 
-    // Позиционирование меню
-    const style: React.CSSProperties = {
-        position: 'fixed',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: 1001,
-    };
-
-    // Если меню выходит за пределы окна, смещаем его
-    useEffect(() => {
-        if (menuRef.current) {
-            const rect = menuRef.current.getBoundingClientRect();
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-
-            if (rect.right > windowWidth) {
-                style.left = `${position.x - rect.width}px`;
-            }
-            if (rect.bottom > windowHeight) {
-                style.top = `${position.y - rect.height}px`;
-            }
-        }
-    }, [position]);
+    const renderMenuItem = (icon: string, text: string, onClick: () => void, disabled = false, danger = false) => (
+        <button
+            className={`storage-file-menu-item ${danger ? 'danger' : ''}`}
+            onClick={onClick}
+            disabled={disabled}
+        >
+            <i className={`fas ${icon}`}></i>
+            <span>{text}</span>
+        </button>
+    );
 
     return (
-        <div ref={menuRef} className="storage-file-actions-menu" style={style}>
+        <div ref={menuRef} className="storage-file-actions-menu" style={menuStyle}>
             <div className="storage-file-menu-header">
                 <div className="storage-file-menu-preview">
                     <i className="fas fa-file"></i>
@@ -221,94 +236,65 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
                     </div>
                 ) : (
                     <>
-                        <button
-                            className="storage-file-menu-item"
-                            onClick={handleDownload}
-                            disabled={isDownloading}
-                        >
-                            <i className={`fas ${isDownloading ? 'fa-spinner fa-spin' : 'fa-download'}`}></i>
-                            <span>{isDownloading ? 'Скачивание...' : 'Скачать'}</span>
-                        </button>
-
-                        {permissions.canEditItem(file) && (
-                            <button
-                                className="storage-file-menu-item"
-                                onClick={handleRename}
-                            >
-                                <i className="fas fa-edit"></i>
-                                <span>Переименовать</span>
-                            </button>
+                        {renderMenuItem(
+                            isDownloading ? 'fa-spinner fa-spin' : 'fa-download',
+                            isDownloading ? 'Скачивание...' : 'Скачать',
+                            handleDownload,
+                            isDownloading
                         )}
 
-                        <button
-                            className="storage-file-menu-item"
-                            onClick={handleToggleFavorite}
-                            disabled={isFavoriting}
-                        >
-                            <i className={`fas ${isFavoriting ? 'fa-spinner fa-spin' : 'fa-star'}`}></i>
-                            <span>
-                                {isFavoriting ? 'Обработка...' :
-                                    file.is_favorited ? 'Удалить из избранного' : 'Добавить в избранное'
-                                }
-                            </span>
-                        </button>
-
-                        <button
-                            className="storage-file-menu-item"
-                            onClick={handleTogglePin}
-                        >
-                            <i className="fas fa-thumbtack"></i>
-                            <span>
-                                {file.is_pinned ? 'Открепить' : 'Закрепить'}
-                            </span>
-                        </button>
-
-                        {permissions.canEditItem(file) && (
-                            <button
-                                className="storage-file-menu-item"
-                                onClick={handleMove}
-                            >
-                                <i className="fas fa-folder-open"></i>
-                                <span>Переместить</span>
-                            </button>
+                        {permissions.canEditItem(file) && renderMenuItem(
+                            'fa-edit',
+                            'Переименовать',
+                            handleRename
                         )}
 
-                        {permissions.canShareItem(file) && (
-                            <button
-                                className="storage-file-menu-item"
-                                onClick={handleShare}
-                            >
-                                <i className="fas fa-share-alt"></i>
-                                <span>Поделиться</span>
-                            </button>
+                        {renderMenuItem(
+                            isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
+                            isFavoriting ? 'Обработка...' : 
+                                file.is_favorited ? 'Удалить из избранного' : 'Добавить в избранное',
+                            handleToggleFavorite,
+                            isFavoriting
                         )}
 
-                        <button
-                            className="storage-file-menu-item"
-                            onClick={handleCopyLink}
-                        >
-                            <i className="fas fa-link"></i>
-                            <span>Копировать ссылку</span>
-                        </button>
+                        {renderMenuItem(
+                            'fa-thumbtack',
+                            file.is_pinned ? 'Открепить' : 'Закрепить',
+                            handleTogglePin
+                        )}
+
+                        {permissions.canEditItem(file) && renderMenuItem(
+                            'fa-folder-open',
+                            'Переместить',
+                            handleMove
+                        )}
+
+                        {permissions.canShareItem(file) && renderMenuItem(
+                            'fa-share-alt',
+                            'Поделиться',
+                            handleShare
+                        )}
+
+                        {renderMenuItem(
+                            'fa-link',
+                            'Копировать ссылку',
+                            handleCopyLink
+                        )}
 
                         <div className="storage-file-menu-divider"></div>
 
-                        <button
-                            className="storage-file-menu-item"
-                            onClick={handleGetInfo}
-                        >
-                            <i className="fas fa-info-circle"></i>
-                            <span>Свойства</span>
-                        </button>
+                        {renderMenuItem(
+                            'fa-info-circle',
+                            'Свойства',
+                            handleGetInfo
+                        )}
 
-                        {permissions.canDeleteItem(file) && (
-                            <button
-                                className="storage-file-menu-item danger"
-                                onClick={handleDelete}
-                            >
-                                <i className="fas fa-trash"></i>
-                                <span>Удалить</span>
-                            </button>
+                        {permissions.canDeleteItem(file) && renderMenuItem(
+                            'fa-trash',
+                            'Удалить',
+                            handleDelete,
+                            false,
+                            true
                         )}
                     </>
                 )}

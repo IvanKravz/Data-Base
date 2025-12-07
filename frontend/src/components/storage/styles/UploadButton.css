@@ -7,7 +7,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     border: none;
     border-radius: 6px;
     font-family: inherit;
@@ -20,58 +19,40 @@
     outline: none;
 }
 
-.storage-upload-button:focus {
-    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
-}
-
-.storage-upload-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
 /* Variants */
 .storage-upload-button-primary {
-    background: linear-gradient(135deg, #1976d2, #1565c0);
+    background-color: #1976d2;
     color: white;
-    border: 2px solid #1976d2;
+    border: none;
 }
 
 .storage-upload-button-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1565c0, #0d47a1);
-    border-color: #1565c0;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    background-color: #1565c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
 }
 
 .storage-upload-button-primary:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
 }
 
 .storage-upload-button-secondary {
     background: white;
     color: #1976d2;
-    border: 2px solid #1976d2;
+    border: 1px solid #1976d2;
 }
 
 .storage-upload-button-secondary:hover:not(:disabled) {
     background: #e3f2fd;
     color: #1565c0;
     border-color: #1565c0;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
-}
-
-.storage-upload-button-secondary:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);
 }
 
 .storage-upload-button-icon {
     background: #1976d2;
     color: white;
-    border: 2px solid #1976d2;
+    border: none;
     border-radius: 50%;
     padding: 0;
     display: flex;
@@ -81,14 +62,6 @@
 
 .storage-upload-button-icon:hover:not(:disabled) {
     background: #1565c0;
-    border-color: #1565c0;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-}
-
-.storage-upload-button-icon:active:not(:disabled) {
-    transform: scale(1);
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
 }
 
 /* Sizes */
@@ -233,50 +206,6 @@
     to {
         transform: rotate(360deg);
     }
-}
-
-/* Tooltip for icon button */
-.storage-upload-button-icon[title] {
-    position: relative;
-}
-
-.storage-upload-button-icon[title]::before {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    margin-bottom: 8px;
-    z-index: 1000;
-}
-
-.storage-upload-button-icon[title]::after {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: #333;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    margin-bottom: -2px;
-    z-index: 1000;
-}
-
-.storage-upload-button-icon[title]:hover::before,
-.storage-upload-button-icon[title]:hover::after {
-    opacity: 1;
 }
 
 /* Responsive */

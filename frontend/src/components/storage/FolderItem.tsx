@@ -1,5 +1,13 @@
 // components/storage/FolderItem.tsx
 import React, { useState } from 'react';
+import {
+    FaUserCircle,
+    FaThumbtack,
+    FaFolderOpen,
+    FaFolder,
+    FaDatabase,
+    FaEllipsisV
+} from 'react-icons/fa';
 import FolderActionsMenu from './FolderActionsMenu';
 import './styles/FolderItem.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
@@ -52,15 +60,15 @@ const FolderItem: React.FC<FolderItemProps> = ({
 
     const getFolderIcon = () => {
         if (folder.folder_type === 'personal') {
-            return 'fas fa-user-circle';
+            return <FaUserCircle size={viewMode === 'grid' ? 56 : 24} />;
         }
         if (folder.is_pinned) {
-            return 'fas fa-thumbtack';
+            return <FaThumbtack size={viewMode === 'grid' ? 56 : 24} />;
         }
         if (folder.subfolders_count > 0) {
-            return 'fas fa-folder-open';
+            return <FaFolderOpen size={viewMode === 'grid' ? 56 : 24} />;
         }
-        return 'fas fa-folder';
+        return <FaFolder size={viewMode === 'grid' ? 56 : 24} />;
     };
 
     const getFolderColor = () => {
@@ -96,10 +104,10 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         onClick={onClick}
                         style={{ color: getFolderColor() }}
                     >
-                        <i className={getFolderIcon()}></i>
+                        {getFolderIcon()}
                         {folder.is_pinned && (
                             <span className="storage-folder-pin-badge">
-                                <i className="fas fa-thumbtack"></i>
+                                <FaThumbtack size={10} />
                             </span>
                         )}
                     </div>
@@ -125,23 +133,11 @@ const FolderItem: React.FC<FolderItemProps> = ({
 
                         <div className="storage-folder-stats">
                             <span className="storage-folder-size">
-                                <i className="fas fa-database"></i>
+                                <FaDatabase size={10} />
                                 {formatBytes(folder.total_size || 0)}
                             </span>
                         </div>
                     </div>
-
-                    {(isHovered || isSelected) && (
-                        <div className="storage-folder-actions">
-                            <button
-                                className="storage-folder-action-btn"
-                                onClick={() => setShowActionsMenu(true)}
-                                title="Действия"
-                            >
-                                <i className="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    )}
                 </div>
 
                 {showActionsMenu && (
@@ -181,7 +177,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     onClick={onClick}
                     style={{ color: getFolderColor() }}
                 >
-                    <i className={getFolderIcon()}></i>
+                    {getFolderIcon()}
                 </div>
 
                 <div className="storage-folder-main" onClick={onClick}>
@@ -189,7 +185,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         {folder.name}
                         {folder.is_pinned && (
                             <span className="storage-folder-pin-indicator">
-                                <i className="fas fa-thumbtack"></i>
+                                <FaThumbtack size={12} />
                             </span>
                         )}
                     </h4>
@@ -228,7 +224,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                             onClick={() => setShowActionsMenu(true)}
                             title="Действия"
                         >
-                            <i className="fas fa-ellipsis-v"></i>
+                            <FaEllipsisV size={14} />
                         </button>
                     </div>
                 )}

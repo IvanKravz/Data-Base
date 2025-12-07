@@ -1,7 +1,7 @@
 // components/storage/RecentFilesView.tsx
 import React, { useState, useEffect } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
-import FileItem from './FileItem';
+import FileItem from './FileItem/FileItem';
 import './styles/RecentFilesView.css';
 
 interface RecentFilesViewProps {

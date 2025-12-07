@@ -1,5 +1,5 @@
 // components/storage/FolderActionsMenu.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import { storageApi } from '../../api/storage';
 import './styles/FolderActionsMenu.css';
@@ -21,7 +21,8 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     const [newName, setNewName] = useState(folder.name);
     const [isFavoriting, setIsFavoriting] = useState(false);
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
-    const menuRef = React.useRef<HTMLDivElement>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const colorOptions = [
         { value: '#1976D2', label: 'Синий' },
@@ -58,6 +59,36 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
+    // Эффект для корректировки позиции меню
+    useEffect(() => {
+        if (!menuRef.current) return;
+
+        const rect = menuRef.current.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        let adjustedX = position.x;
+        let adjustedY = position.y;
+
+        if (rect.right > windowWidth) {
+            adjustedX = position.x - rect.width;
+        }
+        if (rect.bottom > windowHeight) {
+            adjustedY = position.y - rect.height;
+        }
+
+        // Убедимся, что меню не выходит за левую и верхнюю границы
+        adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
+        adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+
+        setMenuStyle({
+            position: 'fixed',
+            left: `${adjustedX}px`,
+            top: `${adjustedY}px`,
+            zIndex: 1001,
+        });
+    }, [position]);
+
     const handleRename = async () => {
         if (isRenaming) {
             try {
@@ -84,7 +115,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         try {
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ folder_id: folder.id });
-            // Обновляем состояние в родительском компоненте
             onClose();
         } catch (error) {
             console.error('Error toggling favorite:', error);
@@ -115,7 +145,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleMove = async () => {
-        // Здесь можно открыть модальное окно для перемещения
         console.log('Move folder:', folder.id);
         onClose();
     };
@@ -132,7 +161,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleDownload = async () => {
-        // Здесь можно реализовать скачивание всей папки (например, в виде архива)
         console.log('Download folder:', folder.id);
         onClose();
     };
@@ -142,30 +170,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         onClose();
     };
 
-    // Позиционирование меню
-    const style: React.CSSProperties = {
-        position: 'fixed',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: 1001,
-    };
-
-    // Если меню выходит за пределы окна, смещаем его
-    useEffect(() => {
-        if (menuRef.current) {
-            const rect = menuRef.current.getBoundingClientRect();
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-
-            if (rect.right > windowWidth) {
-                style.left = `${position.x - rect.width}px`;
-            }
-            if (rect.bottom > windowHeight) {
-                style.top = `${position.y - rect.height}px`;
-            }
-        }
-    }, [position]);
-
     const getFolderIcon = () => {
         if (folder.folder_type === 'personal') {
             return 'fas fa-user-circle';
@@ -173,8 +177,21 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         return 'fas fa-folder';
     };
 
+    const renderMenuItem = (icon: string, text: string, onClick: () => void, disabled = false, danger = false) => (
+        <button
+            className={`storage-folder-menu-item ${danger ? 'danger' : ''}`}
+            onClick={onClick}
+            disabled={disabled}
+        >
+            <div className="storage-folder-menu-item-content">
+                <i className={`fas ${icon}`}></i>
+                <span>{text}</span>
+            </div>
+        </button>
+    );
+
     return (
-        <div ref={menuRef} className="storage-folder-actions-menu" style={style}>
+        <div ref={menuRef} className="storage-folder-actions-menu" style={menuStyle}>
             <div className="storage-folder-menu-header">
                 <div
                     className="storage-folder-menu-preview"
@@ -229,36 +246,24 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                     </div>
                 ) : (
                     <>
-                        {permissions.canEditItem(folder) && (
-                            <button
-                                className="storage-folder-menu-item"
-                                onClick={handleRename}
-                            >
-                                <i className="fas fa-edit"></i>
-                                <span>Переименовать</span>
-                            </button>
+                        {permissions.canEditItem(folder) && renderMenuItem(
+                            'fa-edit',
+                            'Переименовать',
+                            handleRename
                         )}
 
-                        <button
-                            className="storage-folder-menu-item"
-                            onClick={handleToggleFavorite}
-                            disabled={isFavoriting}
-                        >
-                            <i className={`fas ${isFavoriting ? 'fa-spinner fa-spin' : 'fa-star'}`}></i>
-                            <span>
-                                {isFavoriting ? 'Обработка...' : 'Добавить в избранное'}
-                            </span>
-                        </button>
+                        {renderMenuItem(
+                            isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
+                            isFavoriting ? 'Обработка...' : 'Добавить в избранное',
+                            handleToggleFavorite,
+                            isFavoriting
+                        )}
 
-                        <button
-                            className="storage-folder-menu-item"
-                            onClick={handleTogglePin}
-                        >
-                            <i className="fas fa-thumbtack"></i>
-                            <span>
-                                {folder.is_pinned ? 'Открепить' : 'Закрепить'}
-                            </span>
-                        </button>
+                        {renderMenuItem(
+                            'fa-thumbtack',
+                            folder.is_pinned ? 'Открепить' : 'Закрепить',
+                            handleTogglePin
+                        )}
 
                         {permissions.canEditItem(folder) && (
                             <div className="storage-folder-color-picker-container">
@@ -266,9 +271,11 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                                     className="storage-folder-menu-item"
                                     onClick={() => setColorPickerOpen(!colorPickerOpen)}
                                 >
-                                    <i className="fas fa-palette"></i>
-                                    <span>Изменить цвет</span>
-                                    <i className={`fas fa-chevron-${colorPickerOpen ? 'up' : 'down'}`}></i>
+                                    <div className="storage-folder-menu-item-content">
+                                        <i className="fas fa-palette"></i>
+                                        <span>Изменить цвет</span>
+                                        <i className={`fas fa-chevron-${colorPickerOpen ? 'up' : 'down'}`}></i>
+                                    </div>
                                 </button>
 
                                 {colorPickerOpen && (
@@ -291,42 +298,32 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                             </div>
                         )}
 
-                        {permissions.canEditItem(folder) && (
-                            <button
-                                className="storage-folder-menu-item"
-                                onClick={handleMove}
-                            >
-                                <i className="fas fa-folder-open"></i>
-                                <span>Переместить</span>
-                            </button>
+                        {permissions.canEditItem(folder) && renderMenuItem(
+                            'fa-folder-open',
+                            'Переместить',
+                            handleMove
                         )}
 
-                        <button
-                            className="storage-folder-menu-item"
-                            onClick={handleDownload}
-                        >
-                            <i className="fas fa-download"></i>
-                            <span>Скачать папку</span>
-                        </button>
+                        {renderMenuItem(
+                            'fa-download',
+                            'Скачать папку',
+                            handleDownload
+                        )}
 
                         <div className="storage-folder-menu-divider"></div>
 
-                        <button
-                            className="storage-folder-menu-item"
-                            onClick={handleGetInfo}
-                        >
-                            <i className="fas fa-info-circle"></i>
-                            <span>Свойства</span>
-                        </button>
+                        {renderMenuItem(
+                            'fa-info-circle',
+                            'Свойства',
+                            handleGetInfo
+                        )}
 
-                        {permissions.canDeleteItem(folder) && (
-                            <button
-                                className="storage-folder-menu-item danger"
-                                onClick={handleDelete}
-                            >
-                                <i className="fas fa-trash"></i>
-                                <span>Удалить</span>
-                            </button>
+                        {permissions.canDeleteItem(folder) && renderMenuItem(
+                            'fa-trash',
+                            'Удалить',
+                            handleDelete,
+                            false,
+                            true
                         )}
                     </>
                 )}

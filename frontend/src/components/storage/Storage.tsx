@@ -10,9 +10,10 @@ import StatisticsView from './StatisticsView';
 import RecentFilesView from './RecentFilesView';
 import FavoritesView from './FavoritesView';
 import TrashView from './TrashView';
-import styles from './styles/Storage.module.css';
+import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface StorageProps {
     initialFolderId?: number | null;
@@ -77,17 +78,21 @@ const Storage: React.FC<StorageProps> = ({
                     break;
 
                 case 'recent':
-                    fetchedFiles = await storageApi.getRecentFiles();
+                    const recentFiles = await storageApi.getRecentFiles();
+                    fetchedFiles = Array.isArray(recentFiles) ? recentFiles : [];
                     break;
 
                 case 'favorites':
                     const favorites = await storageApi.getFavorites();
-                    fetchedFolders = favorites.filter(f => f.folder).map(f => f.folder!);
-                    fetchedFiles = favorites.filter(f => f.file).map(f => f.file!);
+                    fetchedFolders = Array.isArray(favorites)
+                        ? favorites.filter(f => f?.folder).map(f => f.folder!)
+                        : [];
+                    fetchedFiles = Array.isArray(favorites)
+                        ? favorites.filter(f => f?.file).map(f => f.file!)
+                        : [];
                     break;
 
                 case 'statistics':
-                    // Только статистика, без файлов/папок
                     break;
 
                 case 'trash':
@@ -95,10 +100,11 @@ const Storage: React.FC<StorageProps> = ({
                         storageApi.getTrashFolders(),
                         storageApi.getTrashFiles()
                     ]);
+                    fetchedFolders = Array.isArray(fetchedFolders) ? fetchedFolders : [];
+                    fetchedFiles = Array.isArray(fetchedFiles) ? fetchedFiles : [];
                     break;
             }
 
-            // Применяем сортировку
             fetchedFolders = sortItems(fetchedFolders) as StorageFolder[];
             fetchedFiles = sortItems(fetchedFiles) as StorageFile[];
 
@@ -113,6 +119,10 @@ const Storage: React.FC<StorageProps> = ({
     };
 
     const sortItems = (items: Array<StorageFolder | StorageFile>) => {
+        if (!Array.isArray(items)) {
+            return [];
+        }
+
         return [...items].sort((a, b) => {
             let aValue: any, bValue: any;
 
@@ -148,7 +158,6 @@ const Storage: React.FC<StorageProps> = ({
 
     const handleNavigateUp = () => {
         if (currentFolder?.parent) {
-            // Загружаем родительскую папку
             storageApi.getFolders({ parent_id: currentFolder.parent })
                 .then(fetchedFolders => {
                     const parentFolder = fetchedFolders.find(f => f.id === currentFolder.parent);
@@ -179,14 +188,9 @@ const Storage: React.FC<StorageProps> = ({
         }
     };
 
-    const handleUploadFiles = async (files: File[]) => {
+    const handleUploadFiles = async (uploadedFiles: StorageFile[]) => {
         try {
-            const uploadedFiles = await storageApi.uploadMultipleFiles(
-                files,
-                currentFolder?.id || null,
-                viewType
-            );
-
+            // Просто обновляем состояние, НЕ загружаем снова
             setFiles(prev => [...prev, ...uploadedFiles]);
             setIsUploadModalOpen(false);
         } catch (err: any) {
@@ -211,7 +215,6 @@ const Storage: React.FC<StorageProps> = ({
                 await Promise.all(fileIds.map(id => storageApi.softDeleteFile(id)));
             }
 
-            // Обновляем список
             setFolders(prev => prev.filter(f => !folderIds.includes(f.id)));
             setFiles(prev => prev.filter(f => !fileIds.includes(f.id)));
             setSelectedItems([]);
@@ -233,7 +236,6 @@ const Storage: React.FC<StorageProps> = ({
                 await Promise.all(fileIds.map(id => storageApi.restoreFile(id)));
             }
 
-            // Удаляем из текущего вида
             setFolders(prev => prev.filter(f => !folderIds.includes(f.id)));
             setFiles(prev => prev.filter(f => !fileIds.includes(f.id)));
             setSelectedItems([]);
@@ -284,8 +286,8 @@ const Storage: React.FC<StorageProps> = ({
 
     if (!permissions.canViewStorage) {
         return (
-            <div className={styles.storageContainer}>
-                <div className={styles.accessDenied}>
+            <div className="storage-container">
+                <div className="storage-access-denied">
                     <h2>Доступ запрещен</h2>
                     <p>У вас нет прав для просмотра хранилища файлов.</p>
                 </div>
@@ -294,44 +296,36 @@ const Storage: React.FC<StorageProps> = ({
     }
 
     return (
-        <div className={`${styles.storageContainer} ${sidebarVisible ? styles.withSidebar : styles.sidebarHidden}`}>
-            <div className={styles.mainContent}>
-                <div className={styles.header}>
-                    <div className={styles.headerLeft}>
+        <div className={`storage-container ${sidebarVisible ? 'storage-with-sidebar' : 'storage-sidebar-hidden'}`}>
+            <div className="storage-main-content">
+                <div className="storage-header">
+                    <div className="storage-header-left">
                         <Breadcrumbs
                             currentFolder={currentFolder}
                             onNavigateUp={handleNavigateUp}
                             onFolderClick={handleFolderClick}
                         />
-                        
-                        <button
-                            onClick={toggleSidebar}
-                            className={styles.toggleSidebarButton}
-                        >
-                            <i className={`fas fa-${sidebarVisible ? 'chevron-right' : 'chevron-left'}`}></i>
-                            {sidebarVisible ? 'Скрыть панель' : 'Показать панель'}
-                        </button>
                     </div>
 
-                    <div className={styles.headerRight}>
-                        <div className={styles.searchBox}>
+                    <div className="storage-header-right">
+                        <div className="storage-search-box">
                             <input
                                 type="text"
                                 placeholder="Поиск файлов и папок..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className={styles.searchInput}
+                                className="storage-search-input"
                             />
-                            <button className={styles.searchButton}>
+                            <button className="storage-search-button">
                                 <i className="fas fa-search"></i>
                             </button>
                         </div>
 
-                        <div className={styles.sortControls}>
+                        <div className="storage-sort-controls">
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as any)}
-                                className={styles.sortSelect}
+                                className="storage-sort-select"
                             >
                                 <option value="date">По дате</option>
                                 <option value="name">По имени</option>
@@ -339,33 +333,46 @@ const Storage: React.FC<StorageProps> = ({
                             </select>
                             <button
                                 onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                className={styles.sortOrderButton}
+                                className="storage-sort-order-button"
                             >
                                 {sortOrder === 'asc' ? '↑' : '↓'}
                             </button>
                         </div>
 
                         {permissions.canUploadFiles && (
-                            <UploadButton onClick={() => setIsUploadModalOpen(true)} />
+                            <button
+                                className="storage-upload-button-inline"
+                                onClick={() => setIsUploadModalOpen(true)}
+                            >
+                                <i className="fas fa-cloud-upload-alt"></i> Загрузить файлы
+                            </button>
                         )}
 
                         {permissions.canCreateFolders && (
                             <button
                                 onClick={() => setIsCreateFolderModalOpen(true)}
-                                className={styles.createFolderButton}
+                                className="storage-create-folder-button"
                             >
                                 <i className="fas fa-folder-plus"></i> Новая папка
                             </button>
                         )}
 
+                        <button
+                            onClick={toggleSidebar}
+                            className="storage-toggle-sidebar-button"
+                            title={sidebarVisible ? 'Скрыть панель' : 'Показать панель'}
+                        >
+                            {sidebarVisible ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                        </button>
+
                         {selectedItems.length > 0 && (
-                            <div className={styles.selectionActions}>
-                                <span className={styles.selectionCount}>
+                            <div className="storage-selection-actions">
+                                <span className="storage-selection-count">
                                     Выбрано: {selectedItems.length}
                                 </span>
                                 <button
                                     onClick={() => handleDeleteItems(selectedItems)}
-                                    className={styles.deleteSelectedButton}
+                                    className="storage-delete-selected-button"
                                     disabled={!selectedItems.every(item => permissions.canDeleteItem(item))}
                                 >
                                     Удалить
@@ -373,7 +380,7 @@ const Storage: React.FC<StorageProps> = ({
                                 {activeView === 'trash' && (
                                     <button
                                         onClick={() => handleRestoreItems(selectedItems)}
-                                        className={styles.restoreSelectedButton}
+                                        className="storage-restore-selected-button"
                                     >
                                         Восстановить
                                     </button>
@@ -383,17 +390,17 @@ const Storage: React.FC<StorageProps> = ({
                     </div>
                 </div>
 
-                <div className={styles.contentArea}>
+                <div className="storage-content-area">
                     {loading ? (
-                        <div className={styles.loading}>
-                            <div className={styles.spinner}></div>
+                        <div className="storage-loading">
+                            <div className="storage-spinner"></div>
                             <p>Загрузка...</p>
                         </div>
                     ) : error ? (
-                        <div className={styles.error}>
+                        <div className="storage-error">
                             <i className="fas fa-exclamation-triangle"></i>
                             <p>{error}</p>
-                            <button onClick={loadData} className={styles.retryButton}>
+                            <button onClick={loadData} className="storage-retry-button">
                                 Повторить попытку
                             </button>
                         </div>
@@ -410,6 +417,8 @@ const Storage: React.FC<StorageProps> = ({
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}
+                                    onUploadClick={() => setIsUploadModalOpen(true)}
+                                    onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
                                 />
                             )}
 
@@ -433,9 +442,7 @@ const Storage: React.FC<StorageProps> = ({
 
                             {activeView === 'statistics' && (
                                 <StatisticsView
-                                    onRefresh={() => {
-                                        // Здесь можно обновить статистику
-                                    }}
+                                    onRefresh={() => { }}
                                 />
                             )}
 
@@ -453,11 +460,11 @@ const Storage: React.FC<StorageProps> = ({
                     )}
                 </div>
 
-                <div className={styles.storageInfo}>
-                    <div className={styles.storageUsage}>
-                        <div className={styles.usageBar}>
+                <div className="storage-info">
+                    <div className="storage-usage">
+                        <div className="storage-usage-bar">
                             <div
-                                className={styles.usageFill}
+                                className="storage-usage-fill"
                                 style={{
                                     width: `${permissions.usedStorage && permissions.storageQuota
                                         ? (permissions.usedStorage / permissions.storageQuota) * 100
@@ -465,7 +472,7 @@ const Storage: React.FC<StorageProps> = ({
                                 }}
                             ></div>
                         </div>
-                        <span className={styles.usageText}>
+                        <span className="storage-usage-text">
                             Использовано: {formatBytes(permissions.usedStorage)} /
                             {permissions.storageQuota ? formatBytes(permissions.storageQuota) : '∞'}
                         </span>
@@ -484,7 +491,6 @@ const Storage: React.FC<StorageProps> = ({
                 />
             )}
 
-            {/* Модальные окна */}
             {isCreateFolderModalOpen && (
                 <CreateFolderModal
                     currentFolder={currentFolder}
@@ -507,7 +513,6 @@ const Storage: React.FC<StorageProps> = ({
     );
 };
 
-// Вспомогательная функция для форматирования байтов
 const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
 

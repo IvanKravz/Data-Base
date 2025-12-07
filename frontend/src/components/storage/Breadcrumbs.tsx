@@ -1,5 +1,12 @@
 // components/storage/Breadcrumbs.tsx
 import React, { useState, useEffect } from 'react';
+import { 
+  FaArrowUp, 
+  FaHome, 
+  FaFolder, 
+  FaChevronRight,
+  FaChevronLeft
+} from 'react-icons/fa';
 import './styles/Breadcrumbs.css';
 import { storageApi } from '../../api/storage';
 
@@ -49,7 +56,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                 disabled={!currentFolder}
                 title="На уровень выше"
             >
-                <i className="fas fa-arrow-up"></i>
+                <FaChevronLeft size={14} />
             </button>
 
             <div className="storage-breadcrumbs-path">
@@ -57,21 +64,21 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                     className="storage-breadcrumb-item storage-breadcrumb-home"
                     onClick={() => onFolderClick(null)}
                 >
-                    <i className="fas fa-home"></i>
+                    <FaHome size={16} />
                     <span>Главная</span>
                 </button>
 
                 {path.map((folder, index) => (
                     <React.Fragment key={folder.id}>
                         <div className="storage-breadcrumb-separator">
-                            <i className="fas fa-chevron-right"></i>
+                            <FaChevronRight size={12} />
                         </div>
                         <button
                             className={`storage-breadcrumb-item ${index === path.length - 1 ? 'active' : ''}`}
                             onClick={() => handleBreadcrumbClick(folder, index)}
                             title={folder.name}
                         >
-                            <i className="fas fa-folder"></i>
+                            <FaFolder size={16} />
                             <span>{folder.name}</span>
                         </button>
                     </React.Fragment>

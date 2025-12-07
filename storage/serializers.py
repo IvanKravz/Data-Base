@@ -1,4 +1,3 @@
-# serializers.py
 from rest_framework import serializers
 from .models import StorageFolder, StorageFile, FileShareLink, Favorite
 from users.serializers import UserSerializer, DivisionSerializer, SubdivisionSerializer
@@ -41,6 +40,7 @@ class StorageFileSerializer(serializers.ModelSerializer):
     subdivision = SubdivisionSerializer(read_only=True)
     folder_name = serializers.CharField(source='folder.name', read_only=True)
     download_url = serializers.SerializerMethodField()
+    download_endpoint = serializers.SerializerMethodField()  # НОВОЕ ПОЛЕ
     human_readable_size = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     
@@ -49,9 +49,9 @@ class StorageFileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'original_name', 'file', 'size', 'human_readable_size',
             'mime_type', 'extension', 'file_type', 'folder', 'folder_name',
-            'division', 'subdivision', 'uploaded_by', 'download_url', 'is_favorited',
-            'is_pinned', 'download_count', 'last_downloaded', 'created_at',
-            'updated_at', 'is_deleted'
+            'division', 'subdivision', 'uploaded_by', 'download_url', 'download_endpoint',
+            'is_favorited', 'is_pinned', 'download_count', 'last_downloaded', 
+            'created_at', 'updated_at', 'is_deleted'
         ]
         read_only_fields = ['is_deleted', 'deleted_at', 'download_count', 'last_downloaded']
     
@@ -59,6 +59,14 @@ class StorageFileSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and obj.file:
             return request.build_absolute_uri(obj.file.url)
+        return None
+    
+    def get_download_endpoint(self, obj):
+        """Возвращает URL для скачивания через эндпоинт API"""
+        request = self.context.get('request')
+        if request:
+            # URL для эндпоинта скачивания
+            return request.build_absolute_uri(f'/api/storage/files/{obj.id}/download/')
         return None
     
     def get_human_readable_size(self, obj):
@@ -95,10 +103,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'folder', 'file', 'created_at']
         read_only_fields = ['user', 'created_at']
 
-class FileUploadSerializer(serializers.ModelSerializer):
+class FileUploadSerializer(serializers.Serializer):  # Изменено с ModelSerializer на Serializer
     files = serializers.ListField(
         child=serializers.FileField(max_length=100),
-        write_only=True
+        write_only=True,
+        required=True
     )
     folder_id = serializers.IntegerField(required=False, allow_null=True)
     file_type = serializers.ChoiceField(
@@ -106,25 +115,47 @@ class FileUploadSerializer(serializers.ModelSerializer):
         default='work'
     )
     
-    class Meta:
-        model = StorageFile
-        fields = ['files', 'folder_id', 'file_type']
+    # Убрали Meta класс, так как это больше не ModelSerializer
+    
+    def validate(self, data):
+        """Дополнительная валидация"""
+        files = data.get('files', [])
+        
+        if not files:
+            raise serializers.ValidationError({
+                'files': 'Необходимо загрузить хотя бы один файл'
+            })
+        
+        # Проверка размера файлов
+        max_file_size = 1024 * 1024 * 100  # 100MB, можно вынести в настройки
+        for file in files:
+            if file.size > max_file_size:
+                raise serializers.ValidationError({
+                    'files': f'Файл {file.name} превышает максимальный размер {max_file_size / (1024*1024)}MB'
+                })
+        
+        return data
     
     def create(self, validated_data):
         request = self.context.get('request')
         folder_id = validated_data.get('folder_id')
         files = validated_data.get('files', [])
+        file_type = validated_data.get('file_type', 'work')
         
         created_files = []
         for file in files:
+            # Извлекаем расширение файла
+            file_name_parts = file.name.split('.')
+            extension = file_name_parts[-1].lower() if len(file_name_parts) > 1 else ''
+            
             storage_file = StorageFile(
                 name=file.name,
                 original_name=file.name,
                 file=file,
                 size=file.size,
-                mime_type=file.content_type,
-                extension=file.name.split('.')[-1] if '.' in file.name else '',
-                file_type=validated_data.get('file_type', 'work'),
+                mime_type=file.content_type or 'application/octet-stream',
+                extension=extension,
+                file_type=file_type,
                 uploaded_by=request.user,
                 folder_id=folder_id if folder_id else None
             )
@@ -141,4 +172,10 @@ class FileUploadSerializer(serializers.ModelSerializer):
             storage_file.save()
             created_files.append(storage_file)
         
-        return created_files
+        return created_files  # Возвращаем список
+    
+    def to_representation(self, instance):
+        """Преобразуем результат в формат для ответа"""
+        if isinstance(instance, list):
+            return StorageFileSerializer(instance, many=True, context=self.context).data
+        return StorageFileSerializer(instance, context=self.context).data

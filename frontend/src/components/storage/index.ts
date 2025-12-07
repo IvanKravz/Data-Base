@@ -4,7 +4,7 @@ export { default as Storage } from './Storage';
 export { default as FileExplorer } from './FileExplorer';
 // export { default as FileList } from './FileList';
 // export { default as FolderList } from './FolderList';
-export { default as FileItem } from './FileItem';
+export { default as FileItem } from './FileItem/FileItem';
 export { default as FolderItem } from './FolderItem';
 export { default as UploadButton } from './UploadButton';
 export { default as UploadModal } from './UploadModal';

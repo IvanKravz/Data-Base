@@ -1,4 +1,3 @@
-// api/storage.ts
 import { api } from './client';
 
 export interface StorageFolder {
@@ -154,50 +153,26 @@ export const storageApi = {
     return data;
   },
 
-  uploadFile: async (
-    file: File,
-    folderId?: number | null,
-    fileType: 'personal' | 'work' = 'work',
-    onUploadProgress?: (progress: UploadProgress) => void
-  ) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', file.name);
-    formData.append('file_type', fileType);
-    
-    if (folderId) {
-      formData.append('folder_id', folderId.toString());
-    }
-
-    const { data } = await api.post('/storage/files/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        if (onUploadProgress && progressEvent.total) {
-          onUploadProgress({
-            loaded: progressEvent.loaded,
-            total: progressEvent.total,
-            percentage: Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          });
-        }
-      }
-    });
-    return data;
-  },
-
+  // Используем специальный endpoint для множественной загрузки
   uploadMultipleFiles: async (
     files: File[],
     folderId?: number | null,
     fileType: 'personal' | 'work' = 'work'
   ) => {
     const formData = new FormData();
-    files.forEach((file, index) => {
-      formData.append(`files[${index}]`, file);
+
+    // Добавляем все файлы с ключом 'files[]' для множественной загрузки
+    files.forEach(file => {
+      formData.append('files', file); // Используем 'files' (множественное число)
     });
-    formData.append('folder_id', folderId?.toString() || '');
+
+    if (folderId) {
+      formData.append('folder_id', folderId.toString());
+    }
+
     formData.append('file_type', fileType);
 
+    // Используем специальный endpoint для множественной загрузки
     const { data } = await api.post('/storage/files/upload_multiple/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -230,7 +205,7 @@ export const storageApi = {
   },
 
   downloadFile: async (fileId: number) => {
-    const response = await api.post(`/storage/files/${fileId}/download/`, {}, {
+    const response = await api.get(`/storage/files/${fileId}/download/`, {
       responseType: 'blob'
     });
     return response.data;
@@ -300,8 +275,8 @@ export const storageApi = {
   },
 
   emptyTrash: async () => {
+    // Используем endpoint для папок, который очищает корзину
     await api.post('/storage/folders/empty_trash/');
-    await api.post('/storage/files/empty_trash/');
   },
 
   // === Статистика ===

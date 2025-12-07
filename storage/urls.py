@@ -1,4 +1,4 @@
-# urls.py
+# storage/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register(r'folders', StorageFolderViewSet)
 router.register(r'files', StorageFileViewSet)
 router.register(r'share-links', FileShareLinkViewSet)
-router.register(r'favorites', FavoriteViewSet)
+router.register(r'favorites', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('', include(router.urls)),

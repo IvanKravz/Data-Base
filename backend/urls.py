@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/tasks/', include('tasks.urls')),
     path('api/networks/', include('networks.urls')),
     path('api/map/', include('map.urls')),
+    path('api/storage/', include('storage.urls'))
 ]
 
 if settings.DEBUG:

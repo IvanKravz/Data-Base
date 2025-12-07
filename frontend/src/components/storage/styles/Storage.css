@@ -1,25 +1,18 @@
-.storageContainer {
+.storage-container {
     display: flex;
-    height: calc(100vh - 60px);
-    /* Учитываем высоту заголовка приложения */
-    min-height: 600px;
-    background-color: #f5f5f5;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    background: #f5f5f5;
     position: relative;
 }
 
-.mainContent {
+.storage-main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: margin 0.3s ease;
 }
 
-.header {
+.storage-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -30,26 +23,26 @@
     flex-shrink: 0;
 }
 
-.headerLeft {
+.storage-header-left {
     flex: 1;
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.headerRight {
+.storage-header-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
-.searchBox {
+.storage-search-box {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.searchInput {
+.storage-search-input {
     padding: 8px 40px 8px 16px;
     border: 1px solid #ddd;
     border-radius: 20px;
@@ -58,13 +51,13 @@
     transition: all 0.3s ease;
 }
 
-.searchInput:focus {
+.storage-search-input:focus {
     outline: none;
     border-color: #1976d2;
     box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
 }
 
-.searchButton {
+.storage-search-button {
     position: absolute;
     right: 8px;
     background: none;
@@ -74,13 +67,13 @@
     padding: 4px;
 }
 
-.sortControls {
+.storage-sort-controls {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.sortSelect {
+.storage-sort-select {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -89,7 +82,7 @@
     cursor: pointer;
 }
 
-.sortOrderButton {
+.storage-sort-order-button {
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -99,30 +92,64 @@
     transition: all 0.3s ease;
 }
 
-.sortOrderButton:hover {
+.storage-sort-order-button:hover {
     background-color: #f5f5f5;
 }
 
-.createFolderButton {
+/* Обновленные стили для кнопок */
+.storage-create-folder-button {
     display: flex;
     align-items: center;
-    gap: 8px;
     padding: 8px 16px;
     background-color: #1976d2;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    font-family: inherit;
 }
 
-.createFolderButton:hover {
+.storage-create-folder-button:hover {
     background-color: #1565c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
 }
 
-.selectionActions {
+.storage-create-folder-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+.storage-upload-button-inline {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.storage-upload-button-inline:hover {
+    background-color: #1565c0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+}
+
+.storage-upload-button-inline:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+.storage-selection-actions {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -132,14 +159,14 @@
     border: 1px solid #bbdefb;
 }
 
-.selectionCount {
+.storage-selection-count {
     font-size: 14px;
     color: #1976d2;
     font-weight: 500;
 }
 
-.deleteSelectedButton,
-.restoreSelectedButton {
+.storage-delete-selected-button,
+.storage-restore-selected-button {
     padding: 6px 12px;
     border: none;
     border-radius: 4px;
@@ -149,37 +176,37 @@
     transition: all 0.3s ease;
 }
 
-.deleteSelectedButton {
+.storage-delete-selected-button {
     background-color: #f44336;
     color: white;
 }
 
-.deleteSelectedButton:hover:not(:disabled) {
+.storage-delete-selected-button:hover:not(:disabled) {
     background-color: #d32f2f;
 }
 
-.deleteSelectedButton:disabled {
+.storage-delete-selected-button:disabled {
     background-color: #ffcdd2;
     cursor: not-allowed;
 }
 
-.restoreSelectedButton {
+.storage-restore-selected-button {
     background-color: #4caf50;
     color: white;
 }
 
-.restoreSelectedButton:hover {
+.storage-restore-selected-button:hover {
     background-color: #388e3c;
 }
 
-.contentArea {
+.storage-content-area {
     flex: 1;
     overflow-y: auto;
     padding: 24px;
     background-color: #fafafa;
 }
 
-.loading {
+.storage-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -188,16 +215,16 @@
     gap: 16px;
 }
 
-.spinner {
+.storage-spinner {
     width: 50px;
     height: 50px;
     border: 4px solid #f3f3f3;
     border-top: 4px solid #1976d2;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: storage-spin 1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes storage-spin {
     0% {
         transform: rotate(0deg);
     }
@@ -207,7 +234,7 @@
     }
 }
 
-.error {
+.storage-error {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -217,12 +244,12 @@
     color: #d32f2f;
 }
 
-.error i {
+.storage-error i {
     font-size: 48px;
     margin-bottom: 16px;
 }
 
-.retryButton {
+.storage-retry-button {
     padding: 8px 24px;
     background-color: #1976d2;
     color: white;
@@ -234,11 +261,11 @@
     transition: background-color 0.3s ease;
 }
 
-.retryButton:hover {
+.storage-retry-button:hover {
     background-color: #1565c0;
 }
 
-.accessDenied {
+.storage-access-denied {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -248,24 +275,24 @@
     color: #d32f2f;
 }
 
-.accessDenied h2 {
+.storage-access-denied h2 {
     margin: 0;
 }
 
-.storageInfo {
+.storage-info {
     padding: 16px 24px;
     background-color: white;
     border-top: 1px solid #e0e0e0;
     flex-shrink: 0;
 }
 
-.storageUsage {
+.storage-usage {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.usageBar {
+.storage-usage-bar {
     flex: 1;
     height: 8px;
     background-color: #e0e0e0;
@@ -273,101 +300,103 @@
     overflow: hidden;
 }
 
-.usageFill {
+.storage-usage-fill {
     height: 100%;
     background-color: #4caf50;
     transition: width 0.3s ease;
 }
 
-.usageText {
+.storage-usage-text {
     font-size: 14px;
     color: #666;
     white-space: nowrap;
 }
 
-/* Кнопка переключения sidebar */
-.toggleSidebarButton {
+.storage-toggle-sidebar-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #f0f0f0;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: white;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #333;
+    border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s ease;
+    color: #666;
+    margin-left: 8px;
 }
 
-.toggleSidebarButton:hover {
-    background-color: #e0e0e0;
-    border-color: #ccc;
+.storage-toggle-sidebar-button:hover {
+    background-color: #f5f5f5;
+    border-color: #1976d2;
+    color: #1976d2;
+    transform: scale(1.05);
+}
+
+/* Стили для контейнера с sidebar */
+.storage-sidebar {
+    flex-shrink: 0;
+}
+
+.storage-sidebar.hidden {
+    width: 60px;
 }
 
 /* Адаптивность */
 @media (max-width: 1200px) {
-    .header {
+    .storage-header {
         flex-direction: column;
         gap: 16px;
         align-items: stretch;
     }
 
-    .headerLeft,
-    .headerRight {
+    .storage-header-left,
+    .storage-header-right {
         width: 100%;
     }
 
-    .searchInput {
+    .storage-search-input {
         width: 100%;
     }
 
-    .headerLeft {
+    .storage-header-left {
         flex-direction: column;
         align-items: flex-start;
     }
 }
 
 @media (max-width: 768px) {
-    .storageContainer {
+    .storage-container {
         flex-direction: column;
         height: auto;
         min-height: 500px;
     }
 
-    .mainContent {
+    .storage-main-content {
         order: 1;
     }
 
-    .headerRight {
+    .storage-header-right {
         flex-wrap: wrap;
+        justify-content: space-between;
     }
 
-    .selectionActions {
-        order: 1;
+    .storage-toggle-sidebar-button {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .storage-create-folder-button,
+    .storage-upload-button-inline {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    .storage-selection-actions {
+        order: 4;
         width: 100%;
         justify-content: space-between;
         margin-top: 12px;
     }
-}
-
-/* Класс для скрытого sidebar */
-.sidebarHidden .mainContent {
-    width: 100%;
-}
-
-/* Стили для контейнера с sidebar */
-.withSidebar {
-    display: flex;
-    gap: 0;
-    width: 100%;
-}
-
-.withSidebar .mainContent {
-    flex: 1;
-}
-
-.withSidebar .storage-sidebar {
-    width: 280px;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
 }

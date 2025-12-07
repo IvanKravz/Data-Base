@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import { storageApi } from '../../api/storage';
 import FolderItem from './FolderItem';
-import FileItem from './FileItem';
+import FileItem from './FileItem/FileItem';
 import './styles/FavoritesView.css';
 
 interface FavoritesViewProps {

@@ -1,7 +1,7 @@
 // components/storage/FileExplorer.tsx
 import React, { useState } from 'react';
 import FolderItem from './FolderItem';
-import FileItem from './FileItem';
+import FileItem from './FileItem/FileItem';
 import './styles/FileExplorer.css';
 import { StorageFile, StorageFolder } from '../../api/storage';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
@@ -16,6 +16,8 @@ interface FileExplorerProps {
     selectedItems: Array<StorageFolder | StorageFile>;
     onSelectItems: (items: Array<StorageFolder | StorageFile>) => void;
     permissions: StoragePermissions;
+    onUploadClick?: () => void;
+    onCreateFolderClick?: () => void;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -27,7 +29,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     viewMode,
     selectedItems,
     onSelectItems,
-    permissions
+    permissions,
+    onUploadClick,
+    onCreateFolderClick
 }) => {
     const [dragOver, setDragOver] = useState(false);
     const [draggedItem, setDraggedItem] = useState<any>(null);
@@ -214,11 +218,17 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     <p>Добавьте файлы или создайте новую папку</p>
                     {permissions.canUploadFiles && (
                         <div className="empty-state-actions">
-                            <button className="upload-button">
+                            <button
+                                className="upload-button"
+                                onClick={onUploadClick} 
+                            >
                                 <i className="fas fa-upload"></i> Загрузить файлы
                             </button>
                             {permissions.canCreateFolders && (
-                                <button className="create-folder-button">
+                                <button
+                                    className="create-folder-button"
+                                    onClick={onCreateFolderClick} 
+                                >
                                     <i className="fas fa-folder-plus"></i> Создать папку
                                 </button>
                             )}
