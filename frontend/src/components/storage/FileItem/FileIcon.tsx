@@ -1,13 +1,13 @@
-// components/storage/FileItem/FileIcon.tsx (упрощенная версия)
-import React, { useState, useEffect } from 'react';
+// components/storage/FileItem/FileIcon.tsx
+import React from 'react';
 import { FaThumbtack, FaStar, FaImage } from 'react-icons/fa';
 import { isImageFile } from './utils/fileUtils';
 import { useFileIcon } from './hooks/useFileIcon';
+import { useFileImage } from './hooks/useFileImage';
 
 interface FileIconProps {
     file: any;
     viewMode: 'list' | 'grid';
-    imageUrl: string | null;
     onClick: (e: React.MouseEvent) => void;
     showBadges: boolean;
 }
@@ -15,49 +15,56 @@ interface FileIconProps {
 const FileIcon: React.FC<FileIconProps> = ({
     file,
     viewMode,
-    imageUrl,
     onClick,
     showBadges
 }) => {
     const { getFileIcon, getIconColor } = useFileIcon();
+    const { imageUrl, imageLoading, imageError } = useFileImage(file);
     const isImage = isImageFile(file);
-    
-    const [imageLoading, setImageLoading] = useState(true);
-    const [imageError, setImageError] = useState(false);
 
-    // Сброс состояния при изменении imageUrl
-    useEffect(() => {
-        if (imageUrl) {
-            setImageLoading(true);
-            setImageError(false);
-        } else {
-            setImageLoading(false);
-            setImageError(true);
-        }
-    }, [imageUrl]);
+    console.log('FileIcon Render:', {
+        fileName: file.name,
+        isImage,
+        imageUrl,
+        imageLoading,
+        imageError,
+        mime_type: file.mime_type,
+        extension: file.extension
+    });
 
     const renderIconContent = () => {
+        // Если это изображение и есть URL для превью без ошибок
         if (isImage && imageUrl && !imageError) {
+            console.log('Rendering image preview:', imageUrl);
             return (
-                <img
-                    src={imageUrl}
-                    alt={file.name}
-                    className={`${viewMode === 'grid' ? 'storage-file-image-preview' : 'storage-file-thumbnail'}`}
-                    onLoad={() => setImageLoading(false)}
-                    onError={() => {
-                        setImageLoading(false);
-                        setImageError(true);
-                    }}
-                    style={{
-                        opacity: imageLoading ? 0 : 1,
-                        transition: 'opacity 0.3s ease'
-                    }}
-                    loading="lazy"
-                />
+                <>
+                    <img
+                        src={imageUrl}
+                        alt={file.name}
+                        className={`${viewMode === 'grid' ? 'storage-file-image-preview' : 'storage-file-thumbnail'}`}
+                        style={{
+                            opacity: imageLoading ? 0 : 1,
+                            transition: 'opacity 0.3s ease'
+                        }}
+                        loading="lazy"
+                        onLoad={() => console.log('Image loaded in img tag')}
+                        onError={(e) => {
+                            console.error('Image failed to load in img tag:', e);
+                            // Если изображение не загрузилось, покажем fallback иконку
+                        }}
+                    />
+                    {imageLoading && (
+                        <div className="storage-file-icon-loading">
+                            <div className="storage-file-icon-spinner"></div>
+                        </div>
+                    )}
+                </>
             );
         }
 
+        // Fallback для изображений (когда нет URL или есть ошибка)
         if (isImage) {
+            console.log('Rendering image fallback icon');
             return (
                 <div className="storage-file-icon-fallback">
                     <div className="storage-file-icon-fallback-icon">
@@ -70,8 +77,10 @@ const FileIcon: React.FC<FileIconProps> = ({
             );
         }
 
+        // Для обычных файлов
+        console.log('Rendering regular file icon');
         return (
-            <div
+            <div 
                 className="storage-file-icon-default"
                 style={{ color: getIconColor(file) }}
             >
@@ -80,15 +89,11 @@ const FileIcon: React.FC<FileIconProps> = ({
         );
     };
 
-    return (
-        <div className={`storage-file-icon${viewMode === 'list' ? '-list' : ''}`} onClick={onClick}>
-            {renderIconContent()}
+    const iconClassName = viewMode === 'grid' ? 'storage-file-icon' : 'storage-file-icon-list';
 
-            {isImage && imageLoading && imageUrl && !imageError && (
-                <div className="storage-file-icon-loading">
-                    <div className="storage-file-icon-spinner"></div>
-                </div>
-            )}
+    return (
+        <div className={iconClassName} onClick={onClick}>
+            {renderIconContent()}
 
             {showBadges && file.is_pinned && (
                 <span className="storage-file-pin-badge">

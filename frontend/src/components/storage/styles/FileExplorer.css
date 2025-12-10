@@ -1,19 +1,41 @@
 /* components/storage/styles/FileExplorer.css */
 
+:root {
+    --file-explorer-primary: #3d7ac9;
+    --file-explorer-primary-light: #818cf8;
+    --file-explorer-primary-dark: #4f46e5;
+    --file-explorer-bg: #ffffff;
+    --file-explorer-surface: #f8fafc;
+    --file-explorer-border: #e2e8f0;
+    --file-explorer-text: #334155;
+    --file-explorer-text-light: #64748b;
+    --file-explorer-text-lighter: #94a3b8;
+    --file-explorer-success: #10b981;
+    --file-explorer-warning: #f59e0b;
+    --file-explorer-error: #ef4444;
+    --file-explorer-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --file-explorer-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --file-explorer-radius: 12px;
+    --file-explorer-radius-sm: 8px;
+    --file-explorer-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .file-explorer {
     position: relative;
     min-height: 500px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #fff;
-    padding: 20px;
-    transition: all 0.3s ease;
+    border: 1px solid var(--file-explorer-border);
+    border-radius: var(--file-explorer-radius);
+    background-color: var(--file-explorer-bg);
+    padding: 24px;
+    transition: none;
+    overflow: hidden;
 }
 
 .file-explorer.drag-over {
-    border-color: #3f51b5;
-    background-color: rgba(63, 81, 181, 0.05);
-    box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+    border-color: var(--file-explorer-primary);
+    background-color: rgba(99, 102, 241, 0.02);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    transition: none;
 }
 
 /* Панель управления */
@@ -21,9 +43,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--file-explorer-surface);
+    position: sticky;
+    top: 0;
+    background: var(--file-explorer-bg);
+    z-index: 10;
+    backdrop-filter: blur(8px);
 }
 
 .control-buttons {
@@ -32,72 +59,120 @@
 }
 
 .control-button {
-    padding: 8px 16px;
-    border: 1px solid #d0d0d0;
-    border-radius: 4px;
-    background-color: #fff;
-    color: #333;
+    padding: 10px 20px;
+    border: 1px solid var(--file-explorer-border);
+    border-radius: var(--file-explorer-radius-sm);
+    background-color: var(--file-explorer-surface);
+    color: var(--file-explorer-text);
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s ease;
+    font-weight: 500;
+    transition: var(--file-explorer-transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.01em;
 }
 
 .control-button:hover:not(:disabled) {
-    background-color: #f5f5f5;
-    border-color: #aaa;
+    background-color: #f1f5f9;
+    border-color: var(--file-explorer-primary-light);
+    color: var(--file-explorer-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--file-explorer-shadow);
+}
+
+.control-button:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .control-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background-color: var(--file-explorer-surface);
 }
 
 .selection-info {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     font-size: 14px;
-    color: #666;
+    color: var(--file-explorer-text-light);
+    font-weight: 500;
 }
 
 .selection-size {
-    padding: 4px 12px;
-    background-color: #f0f0f0;
-    border-radius: 12px;
-    font-weight: 500;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--file-explorer-primary) 0%, var(--file-explorer-primary-light) 100%);
+    color: white;
+    border-radius: 20px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
 
 /* Секции */
 .section {
-    margin-bottom: 32px;
+    margin-bottom: 40px;
+}
+
+.section:last-child {
+    margin-bottom: 0;
 }
 
 .section-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    font-size: 18px;
+    gap: 12px;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: #333;
+    color: var(--file-explorer-text);
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--file-explorer-surface);
 }
 
 .section-title .fas {
-    color: #ff9800;
+    color: var(--file-explorer-warning);
     font-size: 16px;
+    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2));
+}
+
+.section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--file-explorer-border), transparent);
+    margin-left: 12px;
+}
+
+.folders-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    justify-items: center;
+}
+
+.files-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    /* gap: 15px; */
+    justify-items: center;
 }
 
 /* Режимы отображения */
 .list-view {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 1px;
+    background: var(--file-explorer-surface);
+    border-radius: var(--file-explorer-radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--file-explorer-border);
 }
 
 .grid-view {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
 }
 
 /* Пустое состояние */
@@ -106,66 +181,116 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
+    padding: 80px 20px;
     text-align: center;
-    color: #888;
+    color: var(--file-explorer-text-light);
 }
 
 .empty-state-icon {
-    font-size: 64px;
-    color: #ddd;
-    margin-bottom: 20px;
+    font-size: 72px;
+    color: #e2e8f0;
+    margin-bottom: 24px;
+    opacity: 0.7;
+    position: relative;
+}
+
+.empty-state-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
 }
 
 .empty-state h3 {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
-    margin-bottom: 8px;
-    color: #666;
+    margin-bottom: 12px;
+    color: var(--file-explorer-text);
+    background: linear-gradient(135deg, var(--file-explorer-text) 0%, var(--file-explorer-text-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .empty-state p {
-    font-size: 14px;
-    margin-bottom: 24px;
+    font-size: 15px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+    max-width: 400px;
+    color: var(--file-explorer-text-lighter);
 }
 
 .empty-state-actions {
     display: flex;
-    gap: 12px;
-    margin-top: 16px;
+    gap: 16px;
+    margin-top: 24px;
 }
 
 .upload-button,
 .create-folder-button {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 14px;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: var(--file-explorer-radius-sm);
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--file-explorer-transition);
+    border: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-button::before,
+.create-folder-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.upload-button:hover::before,
+.create-folder-button:hover::before {
+    left: 100%;
 }
 
 .upload-button {
-    background-color: #3f51b5;
+    background: linear-gradient(135deg, var(--file-explorer-primary) 0%, var(--file-explorer-primary-light) 100%);
     color: white;
-    border: none;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .upload-button:hover {
-    background-color: #303f9f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.upload-button:active {
+    transform: translateY(0);
 }
 
 .create-folder-button {
-    background-color: #fff;
-    color: #3f51b5;
-    border: 1px solid #3f51b5;
+    background: white;
+    color: var(--file-explorer-primary);
+    border: 2px solid var(--file-explorer-border);
+    box-shadow: var(--file-explorer-shadow);
 }
 
 .create-folder-button:hover {
-    background-color: rgba(63, 81, 181, 0.05);
+    background: var(--file-explorer-surface);
+    border-color: var(--file-explorer-primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--file-explorer-shadow-lg);
 }
 
 /* Зона перетаскивания */
@@ -179,23 +304,34 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: rgba(63, 81, 181, 0.9);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(129, 140, 248, 0.95) 100%);
     color: white;
-    z-index: 100;
-    border-radius: 8px;
+    z-index: 1000;
+    border-radius: var(--file-explorer-radius);
     animation: fadeIn 0.2s ease;
+    backdrop-filter: blur(8px);
 }
 
 .drop-zone .fas {
-    font-size: 64px;
-    margin-bottom: 16px;
+    font-size: 72px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+    animation: pulse 2s infinite;
 }
 
 .drop-zone p {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 
+.drop-zone .subtext {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: normal;
+}
+
+/* Анимации */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -206,16 +342,84 @@
     }
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Стили для счетчиков */
+.counter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    background: var(--file-explorer-primary);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
 /* Адаптивность */
+@media (max-width: 1024px) {
+    .grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
+    .file-explorer {
+        padding: 16px;
+        border-radius: var(--file-explorer-radius-sm);
+    }
+
     .controls {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+    }
+
+    .control-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .control-button {
+        flex: 1;
+        justify-content: center;
     }
 
     .grid-view {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
     }
 
     .empty-state-actions {
@@ -229,4 +433,93 @@
         justify-content: center;
         width: 100%;
     }
+
+    .selection-info {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .selection-size {
+        text-align: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-view {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .empty-state-icon {
+        font-size: 56px;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+    }
+
+    .empty-state p {
+        font-size: 14px;
+    }
+}
+
+/* Темная тема (опционально) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --file-explorer-bg: #1e293b;
+        --file-explorer-surface: #0f172a;
+        --file-explorer-border: #334155;
+        --file-explorer-text: #f1f5f9;
+        --file-explorer-text-light: #cbd5e1;
+        --file-explorer-text-lighter: #94a3b8;
+    }
+
+    .file-explorer {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    .control-button {
+        background-color: #334155;
+        color: #f1f5f9;
+        border-color: #475569;
+    }
+
+    .control-button:hover:not(:disabled) {
+        background-color: #475569;
+    }
+
+    .create-folder-button {
+        background: #334155;
+        color: #f1f5f9;
+        border-color: #475569;
+    }
+
+    .create-folder-button:hover {
+        background: #475569;
+    }
+
+    .list-view {
+        background: #0f172a;
+    }
+}
+
+/* Стили для скроллбара (опционально) */
+.file-explorer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-explorer::-webkit-scrollbar-track {
+    background: var(--file-explorer-surface);
+    border-radius: 4px;
+}
+
+.file-explorer::-webkit-scrollbar-thumb {
+    background: var(--file-explorer-border);
+    border-radius: 4px;
+}
+
+.file-explorer::-webkit-scrollbar-thumb:hover {
+    background: var(--file-explorer-primary-light);
 }

@@ -109,14 +109,24 @@ class StorageFolder(SoftDeleteMixin):
     def __str__(self):
         return self.name
     
-    def get_full_path(self):
-        """Получить полный путь папки"""
-        path = []
+    def get_ancestors(self, include_self=True):
+        """Рекурсивно получаем всех предков папки"""
+        ancestors = []
         current = self
+        
+        if not include_self:
+            current = self.parent
+        
         while current:
-            path.insert(0, current.name)
+            ancestors.insert(0, current)  # Вставляем в начало
             current = current.parent
-        return ' / '.join(path) if path else self.name
+        
+        return ancestors
+
+    def get_full_path(self):
+        """Получить полный путь как строку"""
+        ancestors = self.get_ancestors()
+        return '/'.join([folder.name for folder in ancestors])
     
     def get_total_size(self):
         """Общий размер всех файлов в папке (включая подпапки)"""
@@ -127,6 +137,22 @@ class StorageFolder(SoftDeleteMixin):
             total += subfolder.get_total_size()
         
         return total
+    
+    def save(self, *args, **kwargs):
+        """Автоматически наследуем division и subdivision от родительской папки"""
+        if self.parent and not self.division:
+            self.division = self.parent.division
+            self.subdivision = self.parent.subdivision
+        
+        # Если это корневая папка рабочего типа, устанавливаем division пользователя
+        if not self.parent and self.folder_type == 'work' and self.created_by and not self.division:
+            # Получаем division из профиля пользователя
+            if hasattr(self.created_by, 'division'):
+                self.division = self.created_by.division
+            if hasattr(self.created_by, 'subdivision'):
+                self.subdivision = self.created_by.subdivision
+        
+        super().save(*args, **kwargs)
     
     def delete(self, *args, **kwargs):
         """Переопределяем удаление для мягкого удаления всех вложенных файлов"""

@@ -1,5 +1,5 @@
 // components/storage/FileExplorer.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem/FileItem';
 import './styles/FileExplorer.css';
@@ -18,6 +18,8 @@ interface FileExplorerProps {
     permissions: StoragePermissions;
     onUploadClick?: () => void;
     onCreateFolderClick?: () => void;
+    onDeleteSelected?: () => void;
+    onDownloadSelected?: () => void;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -31,10 +33,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     onSelectItems,
     permissions,
     onUploadClick,
-    onCreateFolderClick
+    onCreateFolderClick,
+    onDeleteSelected,
+    onDownloadSelected
 }) => {
     const [dragOver, setDragOver] = useState(false);
     const [draggedItem, setDraggedItem] = useState<any>(null);
+
+    // Мемоизация вычислений
+    const { pinnedFolders, regularFolders, pinnedFiles, regularFiles, totalSize } = useMemo(() => {
+        const pinnedFolders = folders.filter(f => f.is_pinned);
+        const regularFolders = folders.filter(f => !f.is_pinned);
+        const pinnedFiles = files.filter(f => f.is_pinned);
+        const regularFiles = files.filter(f => !f.is_pinned);
+        
+        const totalSize = selectedItems.reduce((sum, item) => sum + (item.size || 0), 0);
+        
+        return { pinnedFolders, regularFolders, pinnedFiles, regularFiles, totalSize };
+    }, [folders, files, selectedItems]);
 
     const handleSelectAll = () => {
         const allItems = [...folders, ...files];
@@ -58,31 +74,57 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         setDraggedItem(item);
         e.dataTransfer.setData('text/plain', JSON.stringify(item));
         e.dataTransfer.effectAllowed = 'move';
+        
+        // Добавляем визуальную обратную связь
+        const target = e.target as HTMLElement;
+        target.style.opacity = '0.4';
+    };
+
+    const handleDragEnd = (e: React.DragEvent) => {
+        const target = e.target as HTMLElement;
+        target.style.opacity = '1';
     };
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         setDragOver(true);
     };
 
-    const handleDragLeave = () => {
-        setDragOver(false);
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Проверяем, вышли ли мы за пределы элемента
+        const relatedTarget = e.relatedTarget as Node;
+        const currentTarget = e.currentTarget as Node;
+        
+        if (!currentTarget.contains(relatedTarget)) {
+            setDragOver(false);
+        }
     };
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         setDragOver(false);
 
         // Здесь можно обработать перемещение файла/папки
         if (draggedItem) {
             console.log('Dropped item:', draggedItem, 'into folder:', currentFolder?.id);
+            // Реализуйте логику перемещения здесь
         }
     };
 
-    const pinnedFolders = folders.filter(f => f.is_pinned);
-    const regularFolders = folders.filter(f => !f.is_pinned);
-    const pinnedFiles = files.filter(f => f.is_pinned);
-    const regularFiles = files.filter(f => !f.is_pinned);
+    const formatTotalSize = (bytes: number): string => {
+        if (bytes === 0) return '0 B';
+
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
     return (
         <div
@@ -98,23 +140,52 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         onClick={handleSelectAll}
                         className="control-button"
                         disabled={folders.length + files.length === 0}
+                        title="Выбрать все элементы"
                     >
+                        <i className="fas fa-check-square"></i>
                         Выбрать все
                     </button>
                     <button
                         onClick={handleClearSelection}
                         className="control-button"
                         disabled={selectedItems.length === 0}
+                        title="Снять выделение"
                     >
+                        <i className="fas fa-times-circle"></i>
                         Снять выделение
                     </button>
+                    
+                    {selectedItems.length > 0 && onDownloadSelected && (
+                        <button
+                            onClick={onDownloadSelected}
+                            className="control-button"
+                            title="Скачать выбранные"
+                        >
+                            <i className="fas fa-download"></i>
+                            Скачать
+                        </button>
+                    )}
+                    
+                    {selectedItems.length > 0 && onDeleteSelected && (
+                        <button
+                            onClick={onDeleteSelected}
+                            className="control-button"
+                            style={{ color: 'var(--file-explorer-error)' }}
+                            title="Удалить выбранные"
+                        >
+                            <i className="fas fa-trash"></i>
+                            Удалить
+                        </button>
+                    )}
                 </div>
 
                 {selectedItems.length > 0 && (
                     <div className="selection-info">
-                        Выбрано элементов: {selectedItems.length}
+                        <span>
+                            Выбрано: <strong>{selectedItems.length}</strong> элементов
+                        </span>
                         <span className="selection-size">
-                            Общий размер: {formatTotalSize(selectedItems)}
+                            <i className="fas fa-hdd"></i> {formatTotalSize(totalSize)}
                         </span>
                     </div>
                 )}
@@ -125,8 +196,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 <div className="section">
                     <h3 className="section-title">
                         <i className="fas fa-thumbtack"></i> Закрепленные папки
+                        <span className="counter-badge">{pinnedFolders.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'grid-view' : 'list-view'}>
+                    <div className={viewMode === 'grid' ? 'folders-grid-view' : 'list-view'}>
                         {pinnedFolders.map(folder => (
                             <FolderItem
                                 key={folder.id}
@@ -136,6 +208,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onSelect={() => handleItemSelect(folder)}
                                 onClick={() => onFolderClick(folder)}
                                 onDragStart={(e) => handleDragStart(e, folder)}
+                                onDragEnd={handleDragEnd}
                                 permissions={permissions}
                             />
                         ))}
@@ -146,8 +219,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {/* Папки */}
             {regularFolders.length > 0 && (
                 <div className="section">
-                    <h3 className="section-title">Папки ({regularFolders.length})</h3>
-                    <div className={viewMode === 'grid' ? 'grid-view' : 'list-view'}>
+                    <h3 className="section-title">
+                        <i className="fas fa-folder"></i> Папки
+                        <span className="counter-badge">{regularFolders.length}</span>
+                    </h3>
+                    <div className={viewMode === 'grid' ? 'folders-grid-view' : 'list-view'}>
                         {regularFolders.map(folder => (
                             <FolderItem
                                 key={folder.id}
@@ -157,6 +233,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onSelect={() => handleItemSelect(folder)}
                                 onClick={() => onFolderClick(folder)}
                                 onDragStart={(e) => handleDragStart(e, folder)}
+                                onDragEnd={handleDragEnd}
                                 permissions={permissions}
                             />
                         ))}
@@ -169,8 +246,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 <div className="section">
                     <h3 className="section-title">
                         <i className="fas fa-thumbtack"></i> Закрепленные файлы
+                        <span className="counter-badge">{pinnedFiles.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'grid-view' : 'list-view'}>
+                    <div className={viewMode === 'grid' ? 'files-grid-view' : 'list-view'}>
                         {pinnedFiles.map(file => (
                             <FileItem
                                 key={file.id}
@@ -180,6 +258,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onSelect={() => handleItemSelect(file)}
                                 onClick={() => onFileClick(file)}
                                 onDragStart={(e) => handleDragStart(e, file)}
+                                onDragEnd={handleDragEnd}
                                 permissions={permissions}
                             />
                         ))}
@@ -190,8 +269,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {/* Файлы */}
             {regularFiles.length > 0 && (
                 <div className="section">
-                    <h3 className="section-title">Файлы ({regularFiles.length})</h3>
-                    <div className={viewMode === 'grid' ? 'grid-view' : 'list-view'}>
+                    <h3 className="section-title">
+                        <i className="fas fa-file"></i> Файлы
+                        <span className="counter-badge">{regularFiles.length}</span>
+                    </h3>
+                    <div className={viewMode === 'grid' ? 'files-grid-view' : 'list-view'}>
                         {regularFiles.map(file => (
                             <FileItem
                                 key={file.id}
@@ -201,6 +283,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onSelect={() => handleItemSelect(file)}
                                 onClick={() => onFileClick(file)}
                                 onDragStart={(e) => handleDragStart(e, file)}
+                                onDragEnd={handleDragEnd}
                                 permissions={permissions}
                             />
                         ))}
@@ -214,20 +297,25 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     <div className="empty-state-icon">
                         <i className="fas fa-folder-open"></i>
                     </div>
-                    <h3>Папка пуста</h3>
-                    <p>Добавьте файлы или создайте новую папку</p>
+                    <h3>{currentFolder ? 'Папка пуста' : 'Хранилище пусто'}</h3>
+                    <p>
+                        {currentFolder 
+                            ? 'Добавьте файлы или создайте новую папку' 
+                            : 'Начните с загрузки файлов или создания папок'
+                        }
+                    </p>
                     {permissions.canUploadFiles && (
                         <div className="empty-state-actions">
                             <button
                                 className="upload-button"
-                                onClick={onUploadClick} 
+                                onClick={onUploadClick}
                             >
                                 <i className="fas fa-upload"></i> Загрузить файлы
                             </button>
                             {permissions.canCreateFolders && (
                                 <button
                                     className="create-folder-button"
-                                    onClick={onCreateFolderClick} 
+                                    onClick={onCreateFolderClick}
                                 >
                                     <i className="fas fa-folder-plus"></i> Создать папку
                                 </button>
@@ -241,26 +329,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {dragOver && (
                 <div className="drop-zone">
                     <i className="fas fa-cloud-upload-alt"></i>
-                    <p>Перетащите файлы сюда</p>
+                    <p>Отпустите файлы для загрузки</p>
+                    <p className="subtext">Файлы будут загружены в текущую папку</p>
                 </div>
             )}
         </div>
     );
-};
-
-// Вспомогательная функция для подсчета общего размера
-const formatTotalSize = (items: Array<any>): string => {
-    const totalBytes = items.reduce((total, item) => {
-        return total + (item.size || 0);
-    }, 0);
-
-    if (totalBytes === 0) return '0 B';
-
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(totalBytes) / Math.log(k));
-
-    return parseFloat((totalBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 export default FileExplorer;

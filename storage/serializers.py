@@ -33,6 +33,29 @@ class StorageFolderSerializer(serializers.ModelSerializer):
     
     def get_full_path(self, obj):
         return obj.get_full_path()
+    
+    def to_representation(self, instance):
+        """Добавляем дополнительную информацию для диагностики"""
+        data = super().to_representation(instance)
+        
+        # Добавляем информацию о доступе
+        request = self.context.get('request')
+        if request and request.user:
+            from storage.permissions import HasFolderAccess
+            from storage.views import StorageFolderViewSet
+            
+            view = StorageFolderViewSet()
+            view.request = request
+            view.format_kwarg = None
+            
+            permission = HasFolderAccess()
+            data['_debug'] = {
+                'has_access': permission.has_object_permission(request, view, instance),
+                'user_id': request.user.id,
+                'user_division': request.user.division.id if hasattr(request.user, 'division') and request.user.division else None,
+            }
+        
+        return data
 
 class StorageFileSerializer(serializers.ModelSerializer):
     uploaded_by = UserSerializer(read_only=True)
@@ -175,7 +198,33 @@ class FileUploadSerializer(serializers.Serializer):  # Изменено с Model
         return created_files  # Возвращаем список
     
     def to_representation(self, instance):
-        """Преобразуем результат в формат для ответа"""
-        if isinstance(instance, list):
-            return StorageFileSerializer(instance, many=True, context=self.context).data
-        return StorageFileSerializer(instance, context=self.context).data
+        """Добавляем дополнительную информацию для диагностики"""
+        data = super().to_representation(instance)
+        
+        # Добавляем информацию о доступе
+        request = self.context.get('request')
+        if request and request.user:
+            from storage.permissions import HasFolderAccess
+            from storage.views import StorageFolderViewSet
+            
+            view = StorageFolderViewSet()
+            view.request = request
+            view.format_kwarg = None
+            
+            permission = HasFolderAccess()
+            
+            # Добавляем детальную информацию о пользователе и объекте
+            data['_debug'] = {
+                'has_access': permission.has_object_permission(request, view, instance),
+                'user_id': request.user.id,
+                'user_username': request.user.username,
+                'user_roles': permission._get_user_roles(request.user),
+                'user_division': request.user.division.id if hasattr(request.user, 'division') and request.user.division else None,
+                'object_id': instance.id,
+                'object_folder_type': instance.folder_type,
+                'object_division': instance.division.id if instance.division else None,
+                'object_created_by': instance.created_by.id if instance.created_by else None,
+                'is_owner': instance.created_by == request.user if instance.created_by else False,
+            }
+        
+        return data

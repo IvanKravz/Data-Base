@@ -1,7 +1,5 @@
-// components/storage/FileItem/FileMetaInfo.tsx
+// components/storage/FileItem/FileMetaInfo.tsx - Updated
 import React from 'react';
-import { formatBytes } from './utils/fileUtils';
-import { formatDate } from './utils/dateUtils';
 
 interface FileMetaInfoProps {
     file: any;
@@ -15,11 +13,11 @@ const FileMetaInfo: React.FC<FileMetaInfoProps> = ({ file, viewMode, onClick }) 
         return extension.toUpperCase();
     };
 
-    const getFileType = () => {
-        return getFileExtension() || file.type?.split('/')[1]?.toUpperCase() || 'ФАЙЛ';
-    };
-
     if (viewMode === 'grid') {
+        const fileName = file.name || '';
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+        const ext = getFileExtension();
+        
         return (
             <div className="storage-file-info">
                 <h4
@@ -27,32 +25,29 @@ const FileMetaInfo: React.FC<FileMetaInfoProps> = ({ file, viewMode, onClick }) 
                     onClick={onClick}
                     title={file.name}
                 >
-                    {file.name}
+                    {nameWithoutExt}
                 </h4>
+                {ext && (
+                    <div className="storage-file-extension">
+                        {ext}
+                    </div>
+                )}
+            </div>
+        );
+    }
 
-                <div className="storage-file-meta">
-                    <span className="storage-file-type">
-                        {getFileType()}
-                    </span>
-                    <span className="storage-file-separator">•</span>
-                    <span className="storage-file-date">
-                        {formatDate(file.created_at || file.uploaded_at || file.modified_at)}
-                    </span>
-                </div>
-
-                <div className="storage-file-stats">
-                    <span className="storage-file-size">
-                        {formatBytes(file.size || 0)}
-                    </span>
-                    {file.download_count > 0 && (
-                        <>
-                            <span className="storage-file-separator">•</span>
-                            <span className="storage-file-downloads">
-                                {file.download_count} скач.
-                            </span>
-                        </>
-                    )}
-                </div>
+    // For list view, we'll handle it differently
+    if (viewMode === 'list') {
+        const fileName = file.name || '';
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+        const ext = getFileExtension();
+        
+        return (
+            <div className="storage-file-main" onClick={onClick}>
+                <h4 className="storage-file-name-list" title={file.name}>
+                    {nameWithoutExt}
+                    {ext && <span className="storage-file-extension-list">{ext}</span>}
+                </h4>
             </div>
         );
     }

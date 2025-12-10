@@ -233,10 +233,10 @@ ROLE_PERMISSIONS = {
     'filters': {},
     'can_see_all_divisions': False,
     'can_access_storage': True,
-    'can_see_all_storage': False,
-    'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
-    'max_file_size': 50 * 1024 * 1024,  # 50MB
-    'description': 'Просмотр данных своего подразделения'
+    'can_see_all_storage': True,  # Ключевое изменение
+    'storage_quota': 5 * 1024 * 1024 * 1024,
+    'max_file_size': 50 * 1024 * 1024,
+    'description': 'Полный доступ к хранилищу'
 },
 
     'exploitation_employee': {
@@ -259,10 +259,10 @@ ROLE_PERMISSIONS = {
         'filters': {},
         'can_see_all_divisions': False,
         'can_access_storage': True,
-        'can_see_all_storage': False,
-        'storage_quota': 5 * 1024 * 1024 * 1024,  # 5GB
-        'max_file_size': 50 * 1024 * 1024,  # 50MB
-        'description': 'Полное управление данными своего подразделения'
+        'can_see_all_storage': True,  # Ключевое изменение
+        'storage_quota': 5 * 1024 * 1024 * 1024,
+        'max_file_size': 50 * 1024 * 1024,
+        'description': 'Полный доступ к хранилищу'
     },
 }
 

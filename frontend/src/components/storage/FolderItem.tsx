@@ -3,11 +3,17 @@ import React, { useState } from 'react';
 import {
     FaUserCircle,
     FaThumbtack,
-    FaFolderOpen,
-    FaFolder,
-    FaDatabase,
     FaEllipsisV
 } from 'react-icons/fa';
+import {
+    HiFolder,
+    HiFolderOpen,
+    HiOutlineDatabase
+} from 'react-icons/hi';
+import {
+    MdFolderShared,
+    MdFolderSpecial
+} from 'react-icons/md';
 import FolderActionsMenu from './FolderActionsMenu';
 import './styles/FolderItem.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
@@ -37,9 +43,12 @@ const FolderItem: React.FC<FolderItemProps> = ({
 
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation();
+
         if (!permissions.canEditItem(folder) && !permissions.canDeleteItem(folder)) return;
 
-        setMenuPosition({ x: e.clientX, y: e.clientY });
+        const { clientX, clientY } = e;
+        setMenuPosition({ x: clientX, y: clientY });
         setShowActionsMenu(true);
     };
 
@@ -59,82 +68,139 @@ const FolderItem: React.FC<FolderItemProps> = ({
     };
 
     const getFolderIcon = () => {
+        const iconSize = viewMode === 'grid' ? 64 : 24;
+
+        // Если у папки есть кастомный цвет, используем его
+        if (folder.color && folder.color.startsWith('#')) {
+            return (
+                <div
+                    className="storage-folder-icon-gradient custom-color"
+                    style={{
+                        background: folder.color,
+                        color: getContrastColor(folder.color)
+                    }}
+                >
+                    {getFolderIconByType(iconSize)}
+                </div>
+            );
+        }
+
+        // Иначе используем градиенты по типам
         if (folder.folder_type === 'personal') {
-            return <FaUserCircle size={viewMode === 'grid' ? 56 : 24} />;
+            return (
+                <div className="storage-folder-icon-gradient personal">
+                    <HiFolder size={iconSize} />
+                </div>
+            );
         }
+
+        if (folder.folder_type === 'shared') {
+            return (
+                <div className="storage-folder-icon-gradient shared">
+                    <MdFolderShared size={iconSize} />
+                </div>
+            );
+        }
+
         if (folder.is_pinned) {
-            return <FaThumbtack size={viewMode === 'grid' ? 56 : 24} />;
+            return (
+                <div className="storage-folder-icon-gradient pinned">
+                    <MdFolderSpecial size={iconSize} />
+                </div>
+            );
         }
+
         if (folder.subfolders_count > 0) {
-            return <FaFolderOpen size={viewMode === 'grid' ? 56 : 24} />;
+            return (
+                <div className="storage-folder-icon-gradient has-subfolders">
+                    <HiFolderOpen size={iconSize} />
+                </div>
+            );
         }
-        return <FaFolder size={viewMode === 'grid' ? 56 : 24} />;
+
+        return (
+            <div className="storage-folder-icon-gradient default">
+                <HiFolder size={iconSize} />
+            </div>
+        );
     };
 
-    const getFolderColor = () => {
-        if (folder.color && folder.color.startsWith('#')) {
-            return folder.color;
+    // Вспомогательная функция для определения иконки по типу папки
+    const getFolderIconByType = (size: number) => {
+        if (folder.folder_type === 'shared') {
+            return <MdFolderShared size={size} />;
         }
-        return folder.folder_type === 'personal' ? '#4CAF50' : '#FF9800';
+        if (folder.is_pinned) {
+            return <MdFolderSpecial size={size} />;
+        }
+        if (folder.subfolders_count > 0) {
+            return <HiFolderOpen size={size} />;
+        }
+        return <HiFolder size={size} />;
+    };
+
+    // Функция для определения контрастного цвета текста
+    const getContrastColor = (hexColor: string) => {
+        // Удаляем символ # если есть
+        const hex = hexColor.replace('#', '');
+
+        // Преобразуем hex в RGB
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+
+        // Рассчитываем яркость (формула для восприятия человеком)
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+        // Если цвет светлый, возвращаем темный цвет для контраста
+        return brightness > 128 ? '#1e293b' : '#ffffff';
     };
 
     if (viewMode === 'grid') {
         return (
             <>
                 <div
-                    className={`storage-folder-item storage-folder-grid ${isSelected ? 'selected' : ''}`}
+                    className={`storage-folder-card ${isSelected ? 'selected' : ''}`}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                     onContextMenu={handleContextMenu}
                     draggable={permissions.canEditItem(folder)}
                     onDragStart={handleDragStart}
                 >
-                    <div className="storage-folder-select">
-                        <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={onSelect}
-                            className="storage-folder-checkbox"
-                            title="Выбрать папку"
-                        />
-                    </div>
+                    <div className="storage-folder-card-header">
+                        <div className="storage-folder-select">
+                            <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={onSelect}
+                                className="storage-folder-checkbox"
+                                title="Выбрать папку"
+                            />
+                        </div>
 
-                    <div
-                        className="storage-folder-icon"
-                        onClick={onClick}
-                        style={{ color: getFolderColor() }}
-                    >
-                        {getFolderIcon()}
                         {folder.is_pinned && (
-                            <span className="storage-folder-pin-badge">
-                                <FaThumbtack size={10} />
-                            </span>
+                            <div className="storage-folder-pin-indicator" title="Закреплено">
+                                <FaThumbtack size={12} />
+                            </div>
                         )}
                     </div>
 
-                    <div className="storage-folder-info">
+                    <div className="storage-folder-icon-container" onClick={onClick}>
+                        {getFolderIcon()}
+                    </div>
+
+                    <div className="storage-folder-card-body">
                         <h4
-                            className="storage-folder-name"
+                            className="storage-folder-title"
                             onClick={onClick}
                             title={folder.name}
                         >
                             {folder.name}
                         </h4>
 
-                        <div className="storage-folder-meta">
-                            <span className="storage-folder-count">
-                                {folder.files_count} файлов
-                            </span>
-                            <span className="storage-folder-separator">•</span>
-                            <span className="storage-folder-date">
-                                {formatDate(folder.created_at)}
-                            </span>
-                        </div>
-
-                        <div className="storage-folder-stats">
-                            <span className="storage-folder-size">
-                                <FaDatabase size={10} />
-                                {formatBytes(folder.total_size || 0)}
+                        <div className="storage-folder-badges">
+                            <span className="storage-folder-type-badge">
+                                {folder.folder_type === 'personal' ? 'Личная' : 'Общая'}
                             </span>
                         </div>
                     </div>
@@ -156,7 +222,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
     return (
         <>
             <div
-                className={`storage-folder-item storage-folder-list ${isSelected ? 'selected' : ''}`}
+                className={`storage-folder-row ${isSelected ? 'selected' : ''}`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 onContextMenu={handleContextMenu}
@@ -172,62 +238,56 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     />
                 </div>
 
-                <div
-                    className="storage-folder-icon-list"
-                    onClick={onClick}
-                    style={{ color: getFolderColor() }}
-                >
+                <div className="storage-folder-row-icon" onClick={onClick}>
                     {getFolderIcon()}
                 </div>
 
-                <div className="storage-folder-main" onClick={onClick}>
-                    <h4 className="storage-folder-name-list" title={folder.name}>
-                        {folder.name}
+                <div className="storage-folder-row-main" onClick={onClick}>
+                    <div className="storage-folder-row-header">
+                        <h4 className="storage-folder-row-title" title={folder.name}>
+                            {folder.name}
+                        </h4>
                         {folder.is_pinned && (
-                            <span className="storage-folder-pin-indicator">
+                            <span className="storage-folder-row-pin">
                                 <FaThumbtack size={12} />
                             </span>
                         )}
-                    </h4>
+                    </div>
 
-                    <div className="storage-folder-details">
-                        <span className="storage-folder-type">
-                            {folder.folder_type === 'personal' ? 'Личная' : 'Рабочая'}
+                    <div className="storage-folder-row-meta">
+                        <span className="storage-folder-row-type">
+                            {folder.folder_type === 'personal' ? 'Личная папка' : 'Общая папка'}
                         </span>
                         <span className="storage-folder-separator">•</span>
-                        <span className="storage-folder-files">
+                        <span className="storage-folder-row-count">
                             {folder.files_count} файлов
                         </span>
                         <span className="storage-folder-separator">•</span>
-                        <span className="storage-folder-folders">
-                            {folder.subfolders_count} папок
+                        <span className="storage-folder-row-subfolders">
+                            {folder.subfolders_count} вложенных
                         </span>
                     </div>
                 </div>
 
-                <div className="storage-folder-secondary">
-                    <span className="storage-folder-size-list">
-                        {formatBytes(folder.total_size || 0)}
-                    </span>
-                    <span className="storage-folder-date-list">
+                <div className="storage-folder-row-info">
+                    <div className="storage-folder-row-size">
+                        <HiOutlineDatabase size={14} />
+                        <span>{formatBytes(folder.total_size || 0)}</span>
+                    </div>
+                    <div className="storage-folder-row-date">
                         {formatDate(folder.updated_at)}
-                    </span>
-                    <span className="storage-folder-owner">
-                        {folder.created_by?.username || 'Неизвестно'}
-                    </span>
+                    </div>
                 </div>
 
-                {(isHovered || isSelected) && (
-                    <div className="storage-folder-actions-list">
-                        <button
-                            className="storage-folder-action-btn"
-                            onClick={() => setShowActionsMenu(true)}
-                            title="Действия"
-                        >
-                            <FaEllipsisV size={14} />
-                        </button>
-                    </div>
-                )}
+                <div className="storage-folder-row-actions">
+                    <button
+                        className="storage-folder-action-btn"
+                        onClick={() => setShowActionsMenu(true)}
+                        title="Действия"
+                    >
+                        <FaEllipsisV size={14} />
+                    </button>
+                </div>
             </div>
 
             {showActionsMenu && (

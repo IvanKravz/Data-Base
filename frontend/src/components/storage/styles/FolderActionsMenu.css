@@ -36,9 +36,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(25, 118, 210, 0.1);
     border-radius: 8px;
     font-size: 24px;
+    transition: all 0.3s ease;
 }
 
 .storage-folder-menu-info {
@@ -202,40 +202,44 @@
 
 .storage-folder-color-picker {
     position: absolute;
-    left: 50%;
-    top: 80%;
+    left: 0;
+    top: 100%;
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 8px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
     z-index: 1002;
-    min-width: 120px;
+    width: 100%;
     animation: storage-color-picker-slide 0.2s ease-out;
+    margin-top: 4px;
 }
 
 @keyframes storage-color-picker-slide {
     from {
         opacity: 0;
-        transform: translateX(-10px);
+        transform: translateY(-10px);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 
 .storage-folder-color-option {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border: none;
     border-radius: 50%;
     cursor: pointer;
     padding: 0;
     overflow: hidden;
     transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .storage-folder-color-option:hover {
@@ -253,6 +257,11 @@
 .storage-folder-color-option:hover .storage-folder-color-preview {
     border-color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Стиль для кнопки сброса цвета */
+.storage-folder-color-preview[style*="transparent"] {
+    background: linear-gradient(45deg, transparent 45%, #dc3545 45%, #dc3545 55%, transparent 55%);
 }
 
 /* Анимация спиннера */
@@ -276,7 +285,6 @@
     }
 
     .storage-folder-color-picker {
-        left: auto;
-        right: 100%;
+        grid-template-columns: repeat(4, 1fr);
     }
 }

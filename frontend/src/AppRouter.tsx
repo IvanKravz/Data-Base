@@ -27,16 +27,30 @@ function AppRouter() {
     const handleApiError = (event: CustomEvent<ApiError>) => {
       const { status, message, originalStatus, url } = event.detail;
 
+      // Обработка 404 для папок хранилища - НЕ перенаправляем, просто логируем
+      if (status === 404 && url && url.includes('/storage/folders/')) {
+        console.warn('Storage folder not found:', message);
+        // НЕ перенаправляем, компонент Storage сам обработает ошибку
+        return;
+      }
+
       // Обработка 404 для конкретных ресурсов как доступ запрещен
       if (status === 404 && url &&
         (url.includes('/facilities/') ||
-         url.includes('/equipment/') ||
-         url.includes('/personnel/') ||
-         url.includes('/employees/'))) {  // Добавьте эту строку
+          url.includes('/equipment/') ||
+          url.includes('/personnel/') ||
+          url.includes('/employees/') ||
+          url.includes('/divisions/'))) {
         setApiError({ status: 403, message: 'Доступ к ресурсу запрещен', originalStatus: 404 });
         navigate('/access-denied', { replace: true });
         return;
-    }
+      }
+
+      // Для 404 при запросе папок не перенаправляем, просто логируем
+      if (status === 404 && url && url.includes('/storage/folders/')) {
+        console.warn('Folder not found:', message);
+        return; // Не перенаправляем, компонент Storage сам обработает
+      }
 
       // Для критических ошибок перенаправляем на соответствующие страницы
       if (status === 403) {

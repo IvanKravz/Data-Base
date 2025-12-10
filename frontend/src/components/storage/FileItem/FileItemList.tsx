@@ -1,7 +1,8 @@
 // components/storage/FileItem/FileItemList.tsx
 import React from 'react';
-import { FaThumbtack, FaStar, FaDownload } from 'react-icons/fa';
 import FileIcon from './FileIcon';
+import FileMetaInfo from './FileMetaInfo';
+import FileActions from './FileActions';
 import { formatBytes } from './utils/fileUtils';
 import { formatDate } from './utils/dateUtils';
 
@@ -15,9 +16,9 @@ interface FileItemListProps {
     handleDownload: (e: React.MouseEvent) => void;
     handleContextMenu: (e: React.MouseEvent) => void;
     fileRef: React.RefObject<HTMLDivElement>;
-    imageUrl: string | null;
-    imageLoading: boolean;
-    imageError: boolean;
+    permissions: any;
+    onDragStart?: (e: React.DragEvent) => void;
+    onDragEnd?: (e: React.DragEvent) => void;
 }
 
 const FileItemList: React.FC<FileItemListProps> = ({
@@ -30,19 +31,10 @@ const FileItemList: React.FC<FileItemListProps> = ({
     handleDownload,
     handleContextMenu,
     fileRef,
-    imageUrl,
-    imageLoading,
-    imageError
+    permissions,
+    onDragStart,
+    onDragEnd
 }) => {
-    const getFileExtension = (): string => {
-        const extension = file.extension || file.name?.split('.').pop() || '';
-        return extension.toUpperCase();
-    };
-
-    const getFileType = () => {
-        return getFileExtension() || file.type?.split('/')[1]?.toUpperCase() || 'ФАЙЛ';
-    };
-
     return (
         <div
             ref={fileRef}
@@ -50,6 +42,9 @@ const FileItemList: React.FC<FileItemListProps> = ({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onContextMenu={handleContextMenu}
+            draggable={permissions.canMoveItem?.(file) || true}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
         >
             <div className="storage-file-select">
                 <input
@@ -57,73 +52,41 @@ const FileItemList: React.FC<FileItemListProps> = ({
                     checked={isSelected}
                     onChange={onSelect}
                     className="storage-file-checkbox"
+                    onClick={(e) => e.stopPropagation()}
                 />
             </div>
 
             <FileIcon
                 file={file}
                 viewMode="list"
-                imageUrl={imageUrl}
-                imageLoading={imageLoading}
-                imageError={imageError}
                 onClick={handleFileClick}
                 showBadges={false}
             />
 
-            <div className="storage-file-main" onClick={handleFileClick}>
-                <h4 className="storage-file-name-list" title={file.name}>
-                    {file.name}
-                    {file.is_pinned && (
-                        <span className="storage-file-pin-indicator">
-                            <FaThumbtack size={12} />
-                        </span>
-                    )}
-                    {file.is_favorite && (
-                        <span className="storage-file-favorite-indicator">
-                            <FaStar size={12} />
-                        </span>
-                    )}
-                </h4>
+            <FileMetaInfo
+                file={file}
+                viewMode="list"
+                onClick={handleFileClick}
+            />
 
-                <div className="storage-file-details">
-                    <span className="storage-file-type-list">
-                        {getFileType()}
-                    </span>
-                    <span className="storage-file-separator">•</span>
-                    <span className="storage-file-owner">
-                        {file.uploaded_by?.username || file.owner?.username || 'Неизвестно'}
-                    </span>
-                    <span className="storage-file-separator">•</span>
-                    <span className="storage-file-modified">
-                        Изменен: {formatDate(file.modified_at || file.created_at || file.uploaded_at)}
-                    </span>
-                </div>
-            </div>
-
-            <div className="storage-file-secondary">
+            <div className="storage-file-details">
                 <span className="storage-file-size-list">
                     {formatBytes(file.size || 0)}
                 </span>
                 <span className="storage-file-date-list">
-                    {formatDate(file.created_at || file.uploaded_at)}
+                    {formatDate(file.created_at || file.uploaded_at || file.updated_at)}
                 </span>
                 <span className="storage-file-downloads-list">
-                    <FaDownload size={10} />
+                    <i className="fas fa-download" style={{ fontSize: '10px' }}></i>
                     {file.download_count || 0}
                 </span>
             </div>
 
-            {(isHovered || isSelected) && (
-                <div className="storage-file-actions-list">
-                    <button
-                        className="storage-file-download-btn"
-                        onClick={handleDownload}
-                        title="Скачать файл"
-                    >
-                        <FaDownload size={14} />
-                    </button>
-                </div>
-            )}
+            <FileActions
+                viewMode="list"
+                onDownload={handleDownload}
+                isVisible={permissions.canDownloadFiles}
+            />
         </div>
     );
 };

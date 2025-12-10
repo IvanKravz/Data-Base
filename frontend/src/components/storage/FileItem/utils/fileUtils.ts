@@ -1,81 +1,64 @@
 // components/storage/FileItem/utils/fileUtils.ts
 export const isImageFile = (file: any): boolean => {
     const type = file.type?.toLowerCase() || '';
-    const name = file.name?.toLowerCase() || '';
+    const extension = file.extension?.toLowerCase() || file.name?.toLowerCase()?.split('.').pop() || '';
     
-    // Проверяем MIME-типы изображений
-    const imageMimeTypes = [
-        'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp',
-        'image/webp', 'image/svg+xml', 'image/tiff', 'image/x-icon'
-    ];
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico', 'tiff'];
+    const imageMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/svg+xml', 'image/webp'];
     
-    // Проверяем расширения файлов
-    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg', '.ico', '.tiff', '.tif'];
-    
-    // Проверяем по MIME-типу
-    if (type && imageMimeTypes.some(mime => type.startsWith('image/'))) {
-        return true;
-    }
-    
-    // Проверяем по расширению файла
-    if (name && imageExtensions.some(ext => name.endsWith(ext))) {
-        return true;
-    }
-    
-    return false;
+    return imageMimeTypes.includes(type) || imageExtensions.includes(extension);
 };
 
 export const getImageUrlFromFile = (file: any): string | null => {
-    // Если это локальный файл (объект File из input)
-    if (file instanceof File || file.file instanceof File) {
-        const fileObj = file instanceof File ? file : file.file;
-        return URL.createObjectURL(fileObj);
-    }
+    // Проверяем наличие URL для превью
+    console.log('file', file)
+    if (file.preview_url) return file.preview_url;
+    if (file.thumbnail_url) return file.thumbnail_url;
+    if (file.url) return file.url;
     
-    // Если есть URL превью
-    if (file.preview_url) {
-        return file.preview_url;
-    }
-    
-    // Если есть прямой URL
-    if (file.url) {
-        return file.url;
-    }
-    
-    // Если есть thumbnail_url
-    if (file.thumbnail_url) {
-        return file.thumbnail_url;
-    }
-    
-    // Если есть blob URL
-    if (file.blob_url) {
-        return file.blob_url;
-    }
-    
-    // Проверяем стандартные пути Django/Flask
-    if (file.file) {
-        return file.file;
-    }
-    
-    // Проверяем стандартный медиа URL
-    if (file.media_url) {
-        return file.media_url;
+    // Для локальных файлов
+    if (file.file && file.file instanceof File) {
+        return URL.createObjectURL(file.file);
     }
     
     return null;
 };
 
-export const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+export const formatBytes = (bytes: number, decimals: number = 2): string => {
+    if (bytes === 0) return '0 Bytes';
 
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-export const getFileExtension = (file: any): string => {
-    const extension = file.extension || file.name?.split('.').pop() || '';
-    return extension.toUpperCase();
+export const getFileType = (file: any): string => {
+    const type = file.type?.toLowerCase() || '';
+    const extension = file.extension?.toLowerCase() || file.name?.toLowerCase()?.split('.').pop() || '';
+    
+    if (!type && !extension) return 'unknown';
+    
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico', 'tiff'];
+    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', 'mpg', 'mpeg'];
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'wma'];
+    const documentExtensions = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'md', 'odt'];
+    const spreadsheetExtensions = ['xls', 'xlsx', 'csv', 'ods'];
+    const presentationExtensions = ['ppt', 'pptx', 'odp'];
+    const archiveExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'];
+    const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'json', 'xml', 'py', 'java', 'cpp', 'c', 'cs', 'php', 'rb', 'go'];
+    
+    if (imageExtensions.includes(extension) || type.startsWith('image/')) return 'image';
+    if (videoExtensions.includes(extension) || type.startsWith('video/')) return 'video';
+    if (audioExtensions.includes(extension) || type.startsWith('audio/')) return 'audio';
+    if (documentExtensions.includes(extension)) return 'document';
+    if (spreadsheetExtensions.includes(extension)) return 'spreadsheet';
+    if (presentationExtensions.includes(extension)) return 'presentation';
+    if (archiveExtensions.includes(extension)) return 'archive';
+    if (codeExtensions.includes(extension)) return 'code';
+    
+    return extension || 'file';
 };

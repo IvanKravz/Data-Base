@@ -31,6 +31,14 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
         
+        # ВАЖНО: Для запроса конкретной папки (retrieve) и кастомных детальных действий 
+        # (path, contents, check_access) не применяем фильтры
+        # Это позволяет получить любую папку по ID, если у пользователя есть права
+        if self.action in ['retrieve', 'path', 'contents', 'check_access', 'pin', 'move', 
+                        'rename', 'soft_delete', 'restore']:
+            return queryset.all()  # Возвращаем ВСЕ объекты для проверки доступа
+        
+        # Для списковых запросов применяем фильтрацию
         # Фильтрация по типу (личное/рабочее)
         folder_type = self.request.query_params.get('type')
         if folder_type in ['personal', 'work']:
@@ -67,6 +75,76 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Получение конкретной папки по ID.
+        Отдельно обрабатываем, чтобы не применять фильтры из get_queryset
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def get_object(self):
+        """
+        Переопределяем get_object для лучшего контроля.
+        Для детальных действий используем полный queryset.
+        """
+        # Получаем queryset в зависимости от действия
+        if self.action in ['retrieve', 'path', 'contents', 'check_access', 'pin', 'move', 
+                        'rename', 'soft_delete', 'restore']:
+            # Для детальных действий используем все объекты
+            queryset = StorageFolder.objects.all()
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        
+        # Выполняем фильтрацию по lookup_field
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        
+        # ВАЖНО: Некоторые действия могут не иметь lookup_url_kwarg
+        if lookup_url_kwarg not in self.kwargs:
+            # Если это кастомное действие без прямого lookup, возвращаем объект из queryset
+            return queryset.get(pk=self.kwargs.get('pk'))
+        
+        lookup_value = self.kwargs[lookup_url_kwarg]
+        
+        # Фильтруем по lookup полю
+        filter_kwargs = {self.lookup_field: lookup_value}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+        
+        # Проверяем права доступа
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    @action(detail=True, methods=['get'])
+    def check_access(self, request, pk=None):
+        """Проверить доступ к папке"""
+        from django.http import Http404
+        
+        try:
+            folder = StorageFolder.objects.get(id=pk)
+        except StorageFolder.DoesNotExist:
+            raise Http404("Папка не найдена")
+        
+        # Проверяем permissions
+        permission = HasFolderAccess()
+        has_access = permission.has_object_permission(request, self, folder)
+        
+        return Response({
+            'has_access': has_access,
+            'folder': {
+                'id': folder.id,
+                'name': folder.name,
+                'folder_type': folder.folder_type,
+                'division_id': folder.division_id if folder.division else None,
+                'created_by_id': folder.created_by_id if folder.created_by else None,
+            },
+            'user': {
+                'id': request.user.id,
+                'username': request.user.username,
+                'division_id': request.user.division.id if hasattr(request.user, 'division') and request.user.division else None,
+            }
+        })
     
     @action(detail=True, methods=['post'])
     def pin(self, request, pk=None):
@@ -229,6 +307,40 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(pinned_folders, many=True)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def path(self, request, pk=None):
+        """Получить полный путь к папке"""
+        try:
+            # Получаем папку с проверкой прав доступа
+            folder = self.get_object()
+            
+            # Получаем всех предков папки (от корня к текущей папке)
+            ancestors = []
+            current = folder
+            
+            while current:
+                ancestors.insert(0, current)  # Вставляем в начало
+                current = current.parent
+            
+            # Сериализуем всех предков
+            serializer = self.get_serializer(ancestors, many=True)
+            
+            return Response({
+                'current_folder': self.get_serializer(folder).data,
+                'breadcrumbs': serializer.data,
+                'path': serializer.data  # Для совместимости, если где-то используется path
+            })
+        except Http404:
+            return Response(
+                {'error': 'Папка не найдена или у вас нет к ней доступа'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Ошибка при получении пути: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class StorageFileViewSet(viewsets.ModelViewSet):

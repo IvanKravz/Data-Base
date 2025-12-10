@@ -87,6 +87,11 @@ export const storageApi = {
     return data;
   },
 
+  getFolder: async (folderId: number) => {
+    const { data } = await api.get(`/storage/folders/${folderId}/`);
+    return data;
+  },
+
   createFolder: async (folderData: {
     name: string;
     parent?: number | null;

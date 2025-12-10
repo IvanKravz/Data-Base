@@ -14,9 +14,9 @@ interface FileItemGridProps {
     handleDownload: (e: React.MouseEvent) => void;
     handleContextMenu: (e: React.MouseEvent) => void;
     fileRef: React.RefObject<HTMLDivElement>;
-    imageUrl: string | null;
-    imageLoading: boolean;
-    imageError: boolean;
+    permissions: any;
+    onDragStart?: (e: React.DragEvent) => void;
+    onDragEnd?: (e: React.DragEvent) => void;
 }
 
 const FileItemGrid: React.FC<FileItemGridProps> = ({
@@ -29,9 +29,9 @@ const FileItemGrid: React.FC<FileItemGridProps> = ({
     handleDownload,
     handleContextMenu,
     fileRef,
-    imageUrl,
-    imageLoading,
-    imageError
+    permissions,
+    onDragStart,
+    onDragEnd
 }) => {
     return (
         <div
@@ -39,7 +39,10 @@ const FileItemGrid: React.FC<FileItemGridProps> = ({
             className={`storage-file-item storage-file-grid ${isSelected ? 'selected' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onContextMenu={handleContextMenu} 
+            onContextMenu={handleContextMenu}
+            draggable={permissions.canMoveItem?.(file) || true}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
         >
             <div className="storage-file-select">
                 <input
@@ -48,15 +51,13 @@ const FileItemGrid: React.FC<FileItemGridProps> = ({
                     onChange={onSelect}
                     className="storage-file-checkbox"
                     title="Выбрать файл"
+                    onClick={(e) => e.stopPropagation()}
                 />
             </div>
 
             <FileIcon
                 file={file}
                 viewMode="grid"
-                imageUrl={imageUrl}
-                imageLoading={imageLoading}
-                imageError={imageError}
                 onClick={handleFileClick}
                 showBadges={true}
             />
@@ -67,11 +68,10 @@ const FileItemGrid: React.FC<FileItemGridProps> = ({
                 onClick={handleFileClick}
             />
 
-            {/* Убираем условие для тестирования */}
             <FileActions
                 viewMode="grid"
                 onDownload={handleDownload}
-                isVisible={true}
+                isVisible={permissions.canDownloadFiles}
             />
         </div>
     );

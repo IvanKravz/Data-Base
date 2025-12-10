@@ -88,19 +88,19 @@ export function MainLayout() {
             <PersonnelSection />
           </PersonnelRoute>
         } />
-        
+
         <Route path="/equipment" element={
           <EquipmentRoute>
             <EquipmentSection />
           </EquipmentRoute>
         } />
-        
+
         <Route path="/facilities" element={
           <FacilitiesRoute>
             <FacilitiesSection />
           </FacilitiesRoute>
         } />
-        
+
         <Route path="/tasks" element={
           <TasksRoute>
             <DivisionTasksSection />
@@ -119,19 +119,19 @@ export function MainLayout() {
             <CommunicationNetworks />
           </NetworksRoute>
         } />
-        
+
         <Route path="/networks/management" element={
           <NetworksRoute>
             <NetworkManagement />
           </NetworksRoute>
         } />
-        
+
         <Route path="/networks/create" element={
           <NetworksRoute action="add">
             <CreateNetwork />
           </NetworksRoute>
         } />
-        
+
         <Route path="/networks/communication-networks/edit/:id" element={
           <NetworksRoute action="change">
             <EditNetwork />
@@ -144,80 +144,80 @@ export function MainLayout() {
             <DivisionDetails />
           </DivisionsRoute>
         } />
-        
+
         <Route path="/divisions/:id/personnel" element={
           <PersonnelRoute>
             <PersonnelSection />
           </PersonnelRoute>
         } />
-        
+
         <Route path="/divisions/:id/equipment" element={
           <EquipmentRoute>
             <EquipmentSection />
           </EquipmentRoute>
         } />
-        
+
         <Route path="/divisions/:id/facilities" element={
           <FacilitiesRoute>
             <FacilitiesSection />
           </FacilitiesRoute>
         } />
-        
+
         <Route path="/divisions/:id/facilities/new" element={
           <FacilitiesRoute action="add">
             <AddFacilityPage />
           </FacilitiesRoute>
         } />
-        
+
         <Route path="/divisions/:id/communication-posts/new" element={
           <CommunicationPostsRoute action="add">
             <AddCommunicationPostForm />
           </CommunicationPostsRoute>
         } />
-        
+
         <Route path="/divisions/:id/tasks" element={
           <TasksRoute>
             <DivisionTasksSection />
           </TasksRoute>
         } />
-        
+
         <Route path="/divisions/:id/networks" element={
           <NetworksRoute>
             <CommunicationNetworks />
           </NetworksRoute>
         } />
-        
+
         <Route path="/divisions/:id/networks/management" element={
           <NetworksRoute>
             <NetworkManagement />
           </NetworksRoute>
         } />
-        
+
         <Route path="/divisions/:id/networks/create" element={
           <NetworksRoute action="add">
             <CreateNetwork />
           </NetworksRoute>
         } />
-        
+
         <Route path="/divisions/:id/equipment/create" element={
           <EquipmentRoute action="add">
             <CreateEquipmentForm />
           </EquipmentRoute>
         } />
-        
+
         {/* Equipment Routes */}
         <Route path="/equipment/create" element={
           <EquipmentRoute action="add">
             <CreateEquipmentForm />
           </EquipmentRoute>
         } />
-        
+
         <Route path="/equipment-disposed" element={
           <EquipmentRoute>
             <DisposedEquipmentPage />
           </EquipmentRoute>
         } />
-        
+
         <Route path="/equipment/:id" element={
           <EquipmentRoute>
             <EquipmentDetailsPage />
@@ -230,13 +230,13 @@ export function MainLayout() {
             <CreatePersonnelForm />
           </PersonnelRoute>
         } />
-        
+
         <Route path="/personnel/:id" element={
           <PersonnelRoute>
             <PersonnelDetails />
           </PersonnelRoute>
         } />
-        
+
         <Route path="/personnel/:id/qualitative" element={
           <PersonnelRoute>
             <QualitativeCharacteristics />
@@ -249,7 +249,7 @@ export function MainLayout() {
             <AddFacilityPage />
           </FacilitiesRoute>
         } />
-        
+
         <Route path="/facilities/:id" element={
           <FacilitiesRoute>
             <FacilityDetails />
@@ -269,13 +269,23 @@ export function MainLayout() {
             <Storage />
           </StorageRoute>
         } />
-        
+        <Route path="/storage/:folderId" element={
+          <StorageRoute>
+            <Storage />
+          </StorageRoute>
+        } />
+        <Route path="/storage/:folderId/:subfolderId" element={
+          <StorageRoute>
+            <Storage />
+          </StorageRoute>
+        } />
+
         <Route path="/cabinet" element={
           <CabinetRoute>
             <CabinetSection />
           </CabinetRoute>
         } />
-        
+
         <Route path="/map" element={
           <MapRoute>
             <MapCountry />

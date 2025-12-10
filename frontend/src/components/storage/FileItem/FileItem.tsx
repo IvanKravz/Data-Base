@@ -2,9 +2,8 @@
 import React, { useState, useRef } from 'react';
 import FileItemGrid from './FileItemGrid';
 import FileItemList from './FileItemList';
-import FileActionsMenu from '../FileActionsMenu'; // Изменено: импортируем FileActionsMenu
+import FileActionsMenu from '../FileActionsMenu';
 import { useFileHandlers } from './hooks/useFileHandlers';
-import { useFileImage } from './hooks/useFileImage';
 import { StoragePermissions } from '../../../api/utils/useStoragePermissions';
 import '../styles/FileItem.css';
 
@@ -16,6 +15,8 @@ interface FileItemProps {
     onClick: () => void;
     onDownload: () => void;
     permissions: StoragePermissions;
+    onDragStart?: (e: React.DragEvent, item: any) => void;
+    onDragEnd?: (e: React.DragEvent) => void;
 }
 
 const FileItem: React.FC<FileItemProps> = ({
@@ -25,16 +26,15 @@ const FileItem: React.FC<FileItemProps> = ({
     onSelect,
     onClick,
     onDownload,
-    permissions
+    permissions,
+    onDragStart,
+    onDragEnd
 }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [showActionsMenu, setShowActionsMenu] = useState(false); // Изменено: переименовано
-    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 }); // Изменено: переименовано
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
     const fileRef = useRef<HTMLDivElement>(null);
-    const contextMenuRef = useRef<HTMLDivElement>(null);
-
-    const { imageUrl } = useFileImage(file);
 
     const {
         handleFileClick,
@@ -42,26 +42,50 @@ const FileItem: React.FC<FileItemProps> = ({
         handleContextMenu: originalHandleContextMenu
     } = useFileHandlers({
         file,
-        imageUrl,
         onClick,
         onDownload,
         onContextMenu: undefined,
-        setContextMenuPosition: setMenuPosition, // Изменено: передаем setMenuPosition
-        setShowContextMenu: setShowActionsMenu // Изменено: передаем setShowActionsMenu
+        setContextMenuPosition: setMenuPosition,
+        setShowContextMenu: setShowActionsMenu
     });
 
     // Создаем новый обработчик контекстного меню для файлов
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!permissions.canEditItem(file) && !permissions.canDeleteItem(file)) return;
 
-        setMenuPosition({ x: e.clientX, y: e.clientY });
+        // Используем точные координаты без дополнительных вычислений
+        const { clientX, clientY } = e;
+        setMenuPosition({ x: clientX, y: clientY });
         setShowActionsMenu(true);
     };
 
     const closeContextMenu = () => setShowActionsMenu(false);
+
+    // Обработчики drag and drop
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('text/plain', JSON.stringify(file));
+        e.dataTransfer.effectAllowed = 'move';
+
+        // Добавляем визуальную обратную связь
+        const target = e.currentTarget as HTMLElement;
+        target.style.opacity = '0.4';
+
+        if (onDragStart) {
+            onDragStart(e, file);
+        }
+    };
+
+    const handleDragEnd = (e: React.DragEvent) => {
+        const target = e.currentTarget as HTMLElement;
+        target.style.opacity = '1';
+
+        if (onDragEnd) {
+            onDragEnd(e);
+        }
+    };
 
     const commonProps = {
         file,
@@ -71,10 +95,11 @@ const FileItem: React.FC<FileItemProps> = ({
         onSelect,
         handleFileClick,
         handleDownload,
-        handleContextMenu, // Используем новый обработчик
+        handleContextMenu,
         fileRef,
-        imageUrl,
-        permissions
+        permissions,
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd
     };
 
     return (
@@ -86,7 +111,7 @@ const FileItem: React.FC<FileItemProps> = ({
             )}
 
             {showActionsMenu && (
-                <FileActionsMenu // Изменено: используем FileActionsMenu вместо FileContextMenu
+                <FileActionsMenu
                     file={file}
                     position={menuPosition}
                     onClose={closeContextMenu}

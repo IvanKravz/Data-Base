@@ -1,14 +1,15 @@
 // components/storage/Breadcrumbs.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  FaArrowUp, 
-  FaHome, 
-  FaFolder, 
-  FaChevronRight,
-  FaChevronLeft
+import {
+    FaArrowUp,
+    FaHome,
+    FaFolder,
+    FaChevronRight,
+    FaChevronLeft
 } from 'react-icons/fa';
 import './styles/Breadcrumbs.css';
 import { storageApi } from '../../api/storage';
+import { useNavigate } from 'react-router-dom';
 
 interface BreadcrumbsProps {
     currentFolder: any | null;
@@ -21,6 +22,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     onNavigateUp,
     onFolderClick
 }) => {
+    const navigate = useNavigate();
     const [path, setPath] = useState<any[]>([]);
 
     useEffect(() => {
@@ -33,19 +35,72 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
     const loadFolderPath = async () => {
         try {
-            const folderPath = await storageApi.getFolderPath(currentFolder.id);
-            setPath(folderPath);
-        } catch (error) {
+            if (!currentFolder) {
+                setPath([]);
+                return;
+            }
+
+            console.log('Loading path for folder ID:', currentFolder.id);
+
+            const response = await storageApi.getFolderPath(currentFolder.id);
+            console.log('folderPath response:', response);
+
+            // Используем поле breadcrumbs из ответа API
+            if (response && response.breadcrumbs && Array.isArray(response.breadcrumbs)) {
+                setPath(response.breadcrumbs);
+            } else if (response && response.path && Array.isArray(response.path)) {
+                // Альтернативное поле path
+                setPath(response.path);
+            } else {
+                console.warn('No breadcrumbs found in response:', response);
+                // Если нет breadcrumbs, создаем минимальный путь из текущей папки
+                if (response && response.current_folder) {
+                    setPath([response.current_folder]);
+                } else {
+                    setPath([]);
+                }
+            }
+        } catch (error: any) {
             console.error('Error loading folder path:', error);
+
+            // Если ошибка 404, создаем путь из текущей папки (если она есть)
+            if (error.response?.status === 404) {
+                console.warn(`Folder path not found for ID ${currentFolder?.id}, using current folder only`);
+                if (currentFolder) {
+                    setPath([currentFolder]);
+                } else {
+                    setPath([]);
+                }
+            } else {
+                setPath([]);
+            }
         }
     };
 
     const handleBreadcrumbClick = (folder: any, index: number) => {
-        // Если кликнули на последний элемент (текущая папка), ничего не делаем
         if (index === path.length - 1) return;
 
-        // Иначе переходим к выбранной папке
-        onFolderClick(folder);
+        // Для корневой папки (первой в пути) просто переходим в нее
+        if (index === 0) {
+            // Если это корневая папка пути, просто навигируем к ней
+            navigate(`/storage/${folder.id}`);
+            return;
+        }
+
+        // Для промежуточных папок формируем путь из всех папок до текущей
+        const folderIndex = path.findIndex(f => f.id === folder.id);
+        const pathIds = path.slice(0, folderIndex + 1).map(f => f.id);
+        
+        // Если только одна папка в пути
+        if (pathIds.length === 1) {
+            navigate(`/storage/${pathIds[0]}`);
+        } else {
+            navigate(`/storage/${pathIds.join('/')}`);
+        }
+    };
+
+    const handleHomeClick = () => {
+        navigate('/storage');
     };
 
     return (
@@ -62,7 +117,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
             <div className="storage-breadcrumbs-path">
                 <button
                     className="storage-breadcrumb-item storage-breadcrumb-home"
-                    onClick={() => onFolderClick(null)}
+                    onClick={handleHomeClick}
                 >
                     <FaHome size={16} />
                     <span>Главная</span>

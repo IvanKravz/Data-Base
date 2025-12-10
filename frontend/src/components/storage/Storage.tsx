@@ -1,5 +1,6 @@
 // components/storage/Storage.tsx
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FileExplorer from './FileExplorer';
 import StorageSidebar from './StorageSidebar';
 import Breadcrumbs from './Breadcrumbs';
@@ -15,17 +16,15 @@ import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface StorageProps {
-    initialFolderId?: number | null;
-    viewMode?: 'list' | 'grid';
-    showSidebar?: boolean;
-}
+const Storage: React.FC = () => {
+    // Получаем параметры маршрута
+    const { folderId, subfolderId } = useParams<{ folderId?: string; subfolderId?: string }>();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-const Storage: React.FC<StorageProps> = ({
-    initialFolderId = null,
-    viewMode = 'grid',
-    showSidebar = true
-}) => {
+    // Определяем текущую папку из параметров маршрута
+    const currentFolderId = subfolderId || folderId || null;
+
     const [currentFolder, setCurrentFolder] = useState<StorageFolder | null>(null);
     const [folders, setFolders] = useState<StorageFolder[]>([]);
     const [files, setFiles] = useState<StorageFile[]>([]);
@@ -39,7 +38,7 @@ const Storage: React.FC<StorageProps> = ({
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [sidebarVisible, setSidebarVisible] = useState(showSidebar);
+    const [sidebarVisible, setSidebarVisible] = useState(true);
 
     const permissions = useStoragePermissions();
 
@@ -51,7 +50,43 @@ const Storage: React.FC<StorageProps> = ({
         }
 
         loadData();
-    }, [currentFolder?.id, viewType, sortBy, sortOrder, activeView]);
+    }, [currentFolderId, viewType, sortBy, sortOrder, activeView]);
+
+    useEffect(() => {
+        // Загружаем информацию о текущей папке
+        if (currentFolderId) {
+            loadCurrentFolder();
+        } else {
+            setCurrentFolder(null);
+        }
+    }, [currentFolderId]);
+
+    const loadCurrentFolder = async () => {
+        if (!currentFolderId) {
+            setCurrentFolder(null);
+            return;
+        }
+
+        try {
+            const folder = await storageApi.getFolder(parseInt(currentFolderId));
+            setCurrentFolder(folder);
+            setError(null); // Сбрасываем ошибку при успешной загрузке
+        } catch (err: any) {
+            console.error('Error loading folder info:', err);
+
+            // НЕ перенаправляем в корень, просто показываем ошибку
+            if (err.response?.status === 404) {
+                setError(`Папка с ID ${currentFolderId} не найдена. Возможно, она была удалена или у вас нет к ней доступа.`);
+            } else {
+                setError('Ошибка при загрузке папки');
+            }
+
+            setCurrentFolder(null);
+
+            // Вместо навигации в корень, можем попробовать загрузить путь к папке из breadcrumbs
+            // Но оставляем пользователя на текущем URL, чтобы он мог увидеть ошибку
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -65,12 +100,12 @@ const Storage: React.FC<StorageProps> = ({
                 case 'explorer':
                     [fetchedFolders, fetchedFiles] = await Promise.all([
                         storageApi.getFolders({
-                            parent_id: currentFolder?.id || null,
+                            parent_id: currentFolderId ? parseInt(currentFolderId) : null,
                             type: viewType,
                             ordering: sortBy === 'name' ? 'name' : '-created_at'
                         }),
                         storageApi.getFiles({
-                            folder_id: currentFolder?.id || null,
+                            folder_id: currentFolderId ? parseInt(currentFolderId) : null,
                             type: viewType,
                             ordering: sortBy === 'name' ? 'name' : '-created_at'
                         })
@@ -151,22 +186,52 @@ const Storage: React.FC<StorageProps> = ({
         });
     };
 
-    const handleFolderClick = (folder: StorageFolder) => {
-        setCurrentFolder(folder);
-        setSelectedItems([]);
+    const handleFolderClick = async (folder: StorageFolder) => {
+        try {
+            // Загружаем информацию о папке
+            const folderInfo = await storageApi.getFolder(folder.id);
+            
+            // Формируем путь на основе информации о родительской папке
+            if (folderInfo.parent_id) {
+                // Если есть родитель, используем вложенный путь
+                navigate(`/storage/${folderInfo.parent_id}/${folder.id}`);
+            } else {
+                // Если нет родителя - это корневая папка
+                navigate(`/storage/${folder.id}`);
+            }
+        } catch (err: any) {
+            console.error('Cannot access folder:', err);
+            
+            if (err.response?.status === 404) {
+                setError(`Папка "${folder.name}" не найдена или была удалена.`);
+            } else if (err.response?.status === 403) {
+                setError(`У вас нет прав доступа к папке "${folder.name}".`);
+            } else {
+                setError(`Ошибка при доступе к папке "${folder.name}": ${err.message}`);
+            }
+            
+            loadData();
+        }
+    };
+    
+    const handleNavigateUp = () => {
+        if (subfolderId) {
+            // Переходим из вложенной папки в родительскую
+            navigate(`/storage/${folderId}`);
+        } else if (folderId) {
+            // Переходим из папки в корень
+            navigate('/storage');
+        }
+        // Если уже в корне, ничего не делаем
     };
 
-    const handleNavigateUp = () => {
-        if (currentFolder?.parent) {
-            storageApi.getFolders({ parent_id: currentFolder.parent })
-                .then(fetchedFolders => {
-                    const parentFolder = fetchedFolders.find(f => f.id === currentFolder.parent);
-                    if (parentFolder) {
-                        setCurrentFolder(parentFolder);
-                    }
-                });
+    const handleBreadcrumbClick = (folder: any | null) => {
+        if (folder === null) {
+            // Клик на "Главная"
+            navigate('/storage');
         } else {
-            setCurrentFolder(null);
+            // Клик на папку в пути - просто навигируем к этой папке
+            navigate(`/storage/${folder.id}`);
         }
     };
 
@@ -174,7 +239,7 @@ const Storage: React.FC<StorageProps> = ({
         try {
             const newFolder = await storageApi.createFolder({
                 name,
-                parent: currentFolder?.id || null,
+                parent: currentFolderId ? parseInt(currentFolderId) : null,
                 folder_type: viewType,
                 color,
                 division: viewType === 'work' ? undefined : null,
@@ -284,6 +349,12 @@ const Storage: React.FC<StorageProps> = ({
         setSidebarVisible(!sidebarVisible);
     };
 
+    const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash') => {
+        setActiveView(view);
+        // При переключении на другие вью сбрасываем выделение
+        setSelectedItems([]);
+    };
+
     if (!permissions.canViewStorage) {
         return (
             <div className="storage-container">
@@ -303,7 +374,7 @@ const Storage: React.FC<StorageProps> = ({
                         <Breadcrumbs
                             currentFolder={currentFolder}
                             onNavigateUp={handleNavigateUp}
-                            onFolderClick={handleFolderClick}
+                            onFolderClick={handleBreadcrumbClick}
                         />
                     </div>
 
@@ -339,7 +410,7 @@ const Storage: React.FC<StorageProps> = ({
                             </button>
                         </div>
 
-                        {permissions.canUploadFiles && (
+                        {permissions.canUploadFiles && activeView === 'explorer' && (
                             <button
                                 className="storage-upload-button-inline"
                                 onClick={() => setIsUploadModalOpen(true)}
@@ -348,7 +419,7 @@ const Storage: React.FC<StorageProps> = ({
                             </button>
                         )}
 
-                        {permissions.canCreateFolders && (
+                        {permissions.canCreateFolders && activeView === 'explorer' && (
                             <button
                                 onClick={() => setIsCreateFolderModalOpen(true)}
                                 className="storage-create-folder-button"
@@ -413,7 +484,7 @@ const Storage: React.FC<StorageProps> = ({
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
                                     onFileClick={(file) => console.log('File clicked:', file)}
-                                    viewMode={viewMode}
+                                    viewMode="grid"
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}
@@ -483,7 +554,7 @@ const Storage: React.FC<StorageProps> = ({
             {sidebarVisible && (
                 <StorageSidebar
                     currentView={activeView}
-                    onViewChange={setActiveView}
+                    onViewChange={handleViewChange}
                     viewType={viewType}
                     onViewTypeChange={setViewType}
                     permissions={permissions}

@@ -109,8 +109,8 @@
 }
 
 .storage-folder-type-badge {
-    padding: 6px 12px;
-    background: #e3f2fd;
+    /* padding: 4px 12px; */
+    background: #ffffff;
     color: #1976d2;
     border-radius: 20px;
     font-size: 12px;

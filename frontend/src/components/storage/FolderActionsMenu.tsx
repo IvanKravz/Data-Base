@@ -11,6 +11,14 @@ interface FolderActionsMenuProps {
     permissions: StoragePermissions;
 }
 
+const INITIAL_MENU_STYLE: React.CSSProperties = {
+    position: 'fixed',
+    left: '-9999px',
+    top: '-9999px',
+    opacity: 0,
+    zIndex: 1001,
+};
+
 const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     folder,
     position,
@@ -21,7 +29,8 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     const [newName, setNewName] = useState(folder.name);
     const [isFavoriting, setIsFavoriting] = useState(false);
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
-    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>(INITIAL_MENU_STYLE);
+    const [isPositioned, setIsPositioned] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const colorOptions = [
@@ -35,6 +44,7 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         { value: '#795548', label: 'Коричневый' },
         { value: '#607D8B', label: 'Серый' },
         { value: '#E91E63', label: 'Розовый' },
+        { value: null, label: 'Сбросить цвет' }, // Опция для сброса цвета
     ];
 
     useEffect(() => {
@@ -63,29 +73,38 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     useEffect(() => {
         if (!menuRef.current) return;
 
-        const rect = menuRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
+        const calculatePosition = () => {
+            const rect = menuRef.current!.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
 
-        let adjustedX = position.x;
-        let adjustedY = position.y;
+            let adjustedX = position.x;
+            let adjustedY = position.y;
 
-        if (rect.right > windowWidth) {
-            adjustedX = position.x - rect.width;
-        }
-        if (rect.bottom > windowHeight) {
-            adjustedY = position.y - rect.height;
-        }
+            if (adjustedX + rect.width > windowWidth) {
+                adjustedX = position.x - rect.width;
+            }
 
-        // Убедимся, что меню не выходит за левую и верхнюю границы
-        adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
-        adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+            if (adjustedY + rect.height > windowHeight) {
+                adjustedY = position.y - rect.height;
+            }
 
-        setMenuStyle({
-            position: 'fixed',
-            left: `${adjustedX}px`,
-            top: `${adjustedY}px`,
-            zIndex: 1001,
+            adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
+            adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+
+            setMenuStyle({
+                position: 'fixed',
+                left: `${adjustedX}px`,
+                top: `${adjustedY}px`,
+                zIndex: 1001,
+                opacity: 1,
+            });
+
+            setIsPositioned(true);
+        };
+
+        requestAnimationFrame(() => {
+            calculatePosition();
         });
     }, [position]);
 
@@ -133,8 +152,9 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         }
     };
 
-    const handleChangeColor = async (color: string) => {
+    const handleChangeColor = async (color: string | null) => {
         try {
+            // Если color === null, сбрасываем цвет
             await storageApi.updateFolder(folder.id, { color });
             folder.color = color;
             setColorPickerOpen(false);
@@ -177,6 +197,17 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         return 'fas fa-folder';
     };
 
+    // Функция для определения контрастного цвета текста
+    const getContrastColor = (hexColor: string) => {
+        if (!hexColor) return '#ffffff';
+        const hex = hexColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness > 128 ? '#1e293b' : '#ffffff';
+    };
+
     const renderMenuItem = (icon: string, text: string, onClick: () => void, disabled = false, danger = false) => (
         <button
             className={`storage-folder-menu-item ${danger ? 'danger' : ''}`}
@@ -191,11 +222,18 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     );
 
     return (
-        <div ref={menuRef} className="storage-folder-actions-menu" style={menuStyle}>
+        <div
+            ref={menuRef}
+            style={menuStyle}
+            className={`storage-folder-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
+        >
             <div className="storage-folder-menu-header">
                 <div
                     className="storage-folder-menu-preview"
-                    style={{ color: folder.color || '#1976D2' }}
+                    style={{
+                        background: folder.color || '#1976D2',
+                        color: folder.color ? getContrastColor(folder.color) : '#ffffff'
+                    }}
                 >
                     <i className={getFolderIcon()}></i>
                 </div>
@@ -282,15 +320,22 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                                     <div className="storage-folder-color-picker">
                                         {colorOptions.map(color => (
                                             <button
-                                                key={color.value}
+                                                key={color.value || 'reset'}
                                                 className="storage-folder-color-option"
                                                 onClick={() => handleChangeColor(color.value)}
                                                 title={color.label}
                                             >
                                                 <div
                                                     className="storage-folder-color-preview"
-                                                    style={{ backgroundColor: color.value }}
-                                                ></div>
+                                                    style={{
+                                                        backgroundColor: color.value || 'transparent',
+                                                        border: !color.value ? '2px dashed #ccc' : 'none'
+                                                    }}
+                                                >
+                                                    {!color.value && (
+                                                        <i className="fas fa-times" style={{ color: '#666', fontSize: '12px' }}></i>
+                                                    )}
+                                                </div>
                                             </button>
                                         ))}
                                     </div>

@@ -11,6 +11,14 @@ interface FileActionsMenuProps {
     permissions: StoragePermissions;
 }
 
+const INITIAL_MENU_STYLE: React.CSSProperties = {
+    position: 'fixed',
+    left: '-9999px',
+    top: '-9999px',
+    opacity: 0,
+    zIndex: 1001,
+};
+
 const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     file,
     position,
@@ -22,7 +30,8 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     const [isSharing, setIsSharing] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isFavoriting, setIsFavoriting] = useState(false);
-    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>(INITIAL_MENU_STYLE);
+    const [isPositioned, setIsPositioned] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -51,29 +60,44 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     useEffect(() => {
         if (!menuRef.current) return;
 
-        const rect = menuRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
+        const calculatePosition = () => {
+            const rect = menuRef.current!.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
 
-        let adjustedX = position.x;
-        let adjustedY = position.y;
+            // Начальная позиция
+            let adjustedX = position.x;
+            let adjustedY = position.y;
 
-        if (rect.right > windowWidth) {
-            adjustedX = position.x - rect.width;
-        }
-        if (rect.bottom > windowHeight) {
-            adjustedY = position.y - rect.height;
-        }
+            // Проверка выхода за правую границу
+            if (adjustedX + rect.width > windowWidth) {
+                adjustedX = position.x - rect.width;
+            }
 
-        // Убедимся, что меню не выходит за левую и верхнюю границы
-        adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
-        adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+            // Проверка выхода за нижнюю границу
+            if (adjustedY + rect.height > windowHeight) {
+                adjustedY = position.y - rect.height;
+            }
 
-        setMenuStyle({
-            position: 'fixed',
-            left: `${adjustedX}px`,
-            top: `${adjustedY}px`,
-            zIndex: 1001,
+            // Убедимся, что меню не выходит за левую и верхнюю границы
+            adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
+            adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
+
+            // Применяем позицию сразу без промежуточных состояний
+            setMenuStyle({
+                position: 'fixed',
+                left: `${adjustedX}px`,
+                top: `${adjustedY}px`,
+                zIndex: 1001,
+                opacity: 1, // Сразу показываем
+            });
+
+            setIsPositioned(true);
+        };
+
+        // Используем requestAnimationFrame для синхронизации с браузером
+        requestAnimationFrame(() => {
+            calculatePosition();
         });
     }, [position]);
 
@@ -184,7 +208,11 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     );
 
     return (
-        <div ref={menuRef} className="storage-file-actions-menu" style={menuStyle}>
+        <div
+            ref={menuRef}
+            style={menuStyle}
+            className={`storage-file-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
+        >
             <div className="storage-file-menu-header">
                 <div className="storage-file-menu-preview">
                     <i className="fas fa-file"></i>
@@ -251,7 +279,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
 
                         {renderMenuItem(
                             isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
-                            isFavoriting ? 'Обработка...' : 
+                            isFavoriting ? 'Обработка...' :
                                 file.is_favorited ? 'Удалить из избранного' : 'Добавить в избранное',
                             handleToggleFavorite,
                             isFavoriting

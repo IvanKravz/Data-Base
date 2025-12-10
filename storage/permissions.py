@@ -49,8 +49,8 @@ class StoragePermission(RoleBasedPermission):
                 # Личные папки - только владелец
                 return obj.created_by == user
             elif obj.folder_type == 'work':
-                # Рабочие папки - проверяем доступ к подразделению
-                return self._check_division_access(user, obj)
+                # Рабочие папки - упрощенная проверка
+                return self._check_work_object_access(user, obj)
                 
         elif hasattr(obj, 'file_type'):
             # Файл
@@ -58,42 +58,64 @@ class StoragePermission(RoleBasedPermission):
                 # Личные файлы - только владелец
                 return obj.uploaded_by == user
             elif obj.file_type == 'work':
-                # Рабочие файлы - проверяем доступ к подразделению
-                return self._check_division_access(user, obj)
+                # Рабочие файлы - упрощенная проверка
+                return self._check_work_object_access(user, obj)
         
         return False
     
-    def _check_division_access(self, user, obj):
-        """Проверяет доступ к объекту на основе подразделения"""
+    def _check_work_object_access(self, user, obj):
+        """Упрощенная проверка доступа к рабочим объектам"""
         from users.permissions_config import ROLE_PERMISSIONS
         
         user_roles = self._get_user_roles(user)
         
-        # Проверяем, есть ли у пользователя роль, которая может видеть все подразделения
+        # Проверяем, есть ли у пользователя роль с доступом ко всему хранилищу
         for role in user_roles:
-            if role in ROLE_PERMISSIONS and ROLE_PERMISSIONS[role].get('can_see_all_divisions', False):
-                return True
-            if role in ROLE_PERMISSIONS and ROLE_PERMISSIONS[role].get('can_see_all_storage', False):
-                return True
+            if role in ROLE_PERMISSIONS:
+                # Доступ ко всему хранилищу
+                if ROLE_PERMISSIONS[role].get('can_see_all_storage', False):
+                    return True
+                # Доступ ко всем подразделениям
+                if ROLE_PERMISSIONS[role].get('can_see_all_divisions', False):
+                    return True
+        
+        # Для пользователей с ролями эксплуатации - всегда разрешаем доступ к рабочим папкам
+        if any(role in ['exploitation_chief', 'exploitation_employee'] for role in user_roles):
+            return True
+        
+        # Проверяем личные объекты (на всякий случай)
+        if hasattr(obj, 'created_by') and obj.created_by == user:
+            return True
+        if hasattr(obj, 'uploaded_by') and obj.uploaded_by == user:
+            return True
         
         # Получаем подразделение пользователя
         user_division = getattr(user, 'division', None)
         if not user_division and hasattr(user, 'employee') and user.employee:
             user_division = getattr(user.employee, 'division', None)
         
-        # Если у пользователя нет подразделения - проверяем личный доступ
-        if not user_division:
-            if hasattr(obj, 'folder_type') and obj.folder_type == 'personal':
-                return obj.created_by == user
-            elif hasattr(obj, 'file_type') and obj.file_type == 'personal':
-                return obj.uploaded_by == user
-            return False
-            
+        # Если у пользователя нет подразделения - разрешаем доступ для эксплуатации
+        if not user_division and any(role in ['exploitation_chief', 'exploitation_employee'] for role in user_roles):
+            return True
+        
         # Проверяем подразделение объекта
         obj_division = getattr(obj, 'division', None)
+        
+        # Если у объекта нет подразделения
         if not obj_division:
+            # Проверяем цепочку родителей
+            if hasattr(obj, 'parent') and obj.parent:
+                return self._check_work_object_access(user, obj.parent)
+            elif hasattr(obj, 'folder') and obj.folder:
+                return self._check_work_object_access(user, obj.folder)
+            # Если это корневой объект без подразделения - разрешаем
+            return True
+        
+        # Если у пользователя нет подразделения, но объект имеет - запрещаем
+        if not user_division:
             return False
             
+        # Проверяем совпадение подразделений
         return user_division.id == obj_division.id
     
     def _get_action(self, view):
@@ -102,6 +124,7 @@ class StoragePermission(RoleBasedPermission):
             # Маппинг кастомных действий на стандартные разрешения
             custom_action_map = {
                 # Папки
+                'path': 'view',  # ДОБАВЛЕНО: action 'path' требует права 'view'
                 'pin': 'change',
                 'contents': 'view',
                 'move': 'change',
@@ -111,6 +134,7 @@ class StoragePermission(RoleBasedPermission):
                 'trash': 'view',
                 'empty_trash': 'delete',
                 'pinned': 'view',
+                'check_access': 'view',
                 
                 # Файлы
                 'download': 'view',

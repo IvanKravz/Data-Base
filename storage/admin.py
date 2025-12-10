@@ -4,7 +4,7 @@ from .models import StorageFolder, StorageFile, FileShareLink, Favorite
 
 @admin.register(StorageFolder)
 class StorageFolderAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent', 'folder_type', 'division', 'subdivision', 'created_by', 'files_count', 'created_at', 'is_deleted')
+    list_display = ('id', 'name', 'parent', 'folder_type', 'division', 'subdivision', 'created_by', 'files_count', 'created_at', 'is_deleted')
     list_filter = ('folder_type', 'division', 'subdivision', 'created_by', 'created_at', 'is_deleted')
     search_fields = ('name',)
     raw_id_fields = ('parent', 'created_by', 'division', 'subdivision')
