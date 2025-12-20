@@ -278,16 +278,6 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         {formatDate(folder.updated_at)}
                     </div>
                 </div>
-
-                <div className="storage-folder-row-actions">
-                    <button
-                        className="storage-folder-action-btn"
-                        onClick={() => setShowActionsMenu(true)}
-                        title="Действия"
-                    >
-                        <FaEllipsisV size={14} />
-                    </button>
-                </div>
             </div>
 
             {showActionsMenu && (

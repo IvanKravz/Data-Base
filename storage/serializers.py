@@ -35,12 +35,13 @@ class StorageFolderSerializer(serializers.ModelSerializer):
         return obj.get_full_path()
     
     def to_representation(self, instance):
-        """Добавляем дополнительную информацию для диагностики"""
+        """Убираем отладочную информацию из продакшена"""
         data = super().to_representation(instance)
         
-        # Добавляем информацию о доступе
+        # УДАЛЯЕМ отладочную информацию или оставляем только для админов
         request = self.context.get('request')
-        if request and request.user:
+        if request and request.user and request.user.is_superuser:
+            # Только для админов оставляем отладочную информацию
             from storage.permissions import HasFolderAccess
             from storage.views import StorageFolderViewSet
             
@@ -52,8 +53,11 @@ class StorageFolderSerializer(serializers.ModelSerializer):
             data['_debug'] = {
                 'has_access': permission.has_object_permission(request, view, instance),
                 'user_id': request.user.id,
-                'user_division': request.user.division.id if hasattr(request.user, 'division') and request.user.division else None,
             }
+        else:
+            # Для обычных пользователей удаляем
+            if '_debug' in data:
+                del data['_debug']
         
         return data
 

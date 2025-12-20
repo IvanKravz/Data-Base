@@ -68,6 +68,12 @@ class StoragePermission(RoleBasedPermission):
         from users.permissions_config import ROLE_PERMISSIONS
         
         user_roles = self._get_user_roles(user)
+
+        # ПРОВЕРКА ДЛЯ ЛИЧНЫХ ОБЪЕКТОВ
+        if hasattr(obj, 'folder_type') and obj.folder_type == 'personal':
+            return obj.created_by == user
+        elif hasattr(obj, 'file_type') and obj.file_type == 'personal':
+            return obj.uploaded_by == user
         
         # Проверяем, есть ли у пользователя роль с доступом ко всему хранилищу
         for role in user_roles:

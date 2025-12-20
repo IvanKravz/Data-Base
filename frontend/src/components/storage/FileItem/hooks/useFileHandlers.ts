@@ -62,12 +62,9 @@ export const useFileHandlers = ({
     const handleDownload = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        
-        console.log('Download clicked for file:', file.name);
 
         // Сначала вызываем переданный обработчик (если есть)
         if (onDownload) {
-            console.log('Calling onDownload callback');
             onDownload();
             return;
         }
@@ -83,7 +80,6 @@ export const useFileHandlers = ({
         }
 
         try {
-            console.log('Downloading from URL:', downloadUrl);
             
             if (isImage) {
                 // Для изображений используем специальную функцию

@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     StorageFolderViewSet, StorageFileViewSet,
-    FileShareLinkViewSet, FavoriteViewSet
+    FileShareLinkViewSet, FavoriteViewSet, get_user_storage_info
 )
 
 router = DefaultRouter()
@@ -17,4 +17,7 @@ urlpatterns = [
     path('share/download/<str:token>/', 
          FileShareLinkViewSet.as_view({'get': 'download_shared'}), 
          name='download-shared'),
+    
+    # Добавляем endpoint для информации о хранилище
+    path('user-storage-info/', get_user_storage_info, name='user-storage-info'),
 ]

@@ -18,13 +18,6 @@ export const useFileIcon = () => {
         const extension = file.extension?.toLowerCase() || file.name?.toLowerCase()?.split('.').pop() || '';
         const size = viewMode === 'grid' ? 28 : 18;
 
-        console.log('getFileIcon:', { 
-            fileType: type, 
-            extension, 
-            viewMode,
-            fileName: file.name 
-        });
-
         // Определяем иконку в зависимости от типа файла
         if (type.includes('pdf') || extension === 'pdf' || file.file_type === 'pdf') {
             return <FaFilePdf size={size} />;

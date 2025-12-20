@@ -162,7 +162,7 @@
 .list-view {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     background: var(--file-explorer-surface);
     border-radius: var(--file-explorer-radius-sm);
     overflow: hidden;

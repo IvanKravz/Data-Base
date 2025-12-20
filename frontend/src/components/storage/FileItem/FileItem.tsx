@@ -49,14 +49,12 @@ const FileItem: React.FC<FileItemProps> = ({
         setShowContextMenu: setShowActionsMenu
     });
 
-    // Создаем новый обработчик контекстного меню для файлов
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (!permissions.canEditItem(file) && !permissions.canDeleteItem(file)) return;
 
-        // Используем точные координаты без дополнительных вычислений
         const { clientX, clientY } = e;
         setMenuPosition({ x: clientX, y: clientY });
         setShowActionsMenu(true);
@@ -64,12 +62,10 @@ const FileItem: React.FC<FileItemProps> = ({
 
     const closeContextMenu = () => setShowActionsMenu(false);
 
-    // Обработчики drag and drop
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', JSON.stringify(file));
         e.dataTransfer.effectAllowed = 'move';
 
-        // Добавляем визуальную обратную связь
         const target = e.currentTarget as HTMLElement;
         target.style.opacity = '0.4';
 

@@ -40,11 +40,8 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                 return;
             }
 
-            console.log('Loading path for folder ID:', currentFolder.id);
-
             const response = await storageApi.getFolderPath(currentFolder.id);
-            console.log('folderPath response:', response);
-
+            
             // Используем поле breadcrumbs из ответа API
             if (response && response.breadcrumbs && Array.isArray(response.breadcrumbs)) {
                 setPath(response.breadcrumbs);

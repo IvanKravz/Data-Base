@@ -1,3 +1,4 @@
+/* components/storage/styles/StorageSidebar.css */
 .storage-sidebar {
     width: 280px;
     height: 100%;
@@ -8,7 +9,7 @@
     border-radius: 0.5rem;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1;
-    flex-shrink: 0; /* Чтобы не сжимался */
+    flex-shrink: 0;
 }
 
 .storage-sidebar-header {
@@ -21,6 +22,7 @@
     font-size: 24px;
     font-weight: 600;
     color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .storage-view-toggle {
@@ -43,7 +45,7 @@
     transition: all 0.3s ease;
 }
 
-.storage-view-toggle-btn:hover {
+.storage-view-toggle-btn:hover:not(:disabled) {
     color: white;
     background: rgba(255, 255, 255, 0.1);
 }
@@ -51,6 +53,12 @@
 .storage-view-toggle-btn.active {
     background: #3498db;
     color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.storage-view-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .storage-sidebar-menu {
@@ -99,7 +107,7 @@
     position: relative;
 }
 
-.storage-menu-item:hover {
+.storage-menu-item:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.1);
     color: white;
 }
@@ -108,7 +116,11 @@
     background: rgba(238, 232, 120, 0.2);
     color: #022a45;
     border-left: 4px solid #c7ba25;
-    /* border-left: none; */
+}
+
+.storage-menu-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .storage-menu-item i {
@@ -152,59 +164,232 @@
     transition: all 0.3s ease;
 }
 
-.storage-empty-trash-btn:hover {
+.storage-empty-trash-btn:hover:not(:disabled) {
     background: rgba(231, 76, 60, 0.3);
     border-color: #e74c3c;
 }
 
-.storage-storage-info {
+.storage-empty-trash-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Блок информации о хранилище */
+.storage-info-section {
+    margin-top: auto;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-info-section-title {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.storage-storage-info {
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    margin: 20px;
+    padding: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.storage-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-bottom: 16px;
 }
 
 .storage-info-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 13px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.storage-info-item:last-child {
+    border-bottom: none;
 }
 
 .storage-info-label {
+    display: flex;
+    /* align-items: center; */
     color: rgba(255, 255, 255, 0.7);
-}
-
-.storage-info-value {
-    color: white;
+    font-size: 13px;
     font-weight: 500;
 }
 
+.storage-info-label i {
+    color: rgba(255, 255, 255, 0.5);
+    width: 16px;
+    /* text-align: center; */
+}
+
+.storage-info-value {
+    font-weight: 600;
+    color: white;
+    font-size: 13px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.storage-info-value.storage-warning {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+/* Прогресс-бар */
+.storage-progress-container {
+    margin: 16px 0;
+}
+
+.storage-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .storage-progress-bar {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    margin-top: 12px;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
     overflow: hidden;
+    position: relative;
+}
+
+.storage-progress-bar.storage-progress-normal .storage-progress-fill {
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+}
+
+.storage-progress-bar.storage-progress-warning .storage-progress-fill {
+    background: linear-gradient(90deg, #FFC107, #FF9800);
+}
+
+.storage-progress-bar.storage-progress-critical .storage-progress-fill {
+    background: linear-gradient(90deg, #F44336, #E91E63);
 }
 
 .storage-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #3498db, #2ecc71);
-    border-radius: 3px;
-    transition: width 0.3s ease;
+    transition: width 0.5s ease-in-out;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Счетчики */
+.storage-counts {
+    display: flex;
+    gap: 20px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.storage-count-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.storage-count-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.storage-count-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.storage-count-number {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    line-height: 1;
+}
+
+.storage-count-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Предупреждения */
+.storage-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease;
+}
+
+.storage-alert-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.2));
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+}
+
+.storage-alert-error {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(233, 30, 99, 0.2));
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+}
+
+.storage-alert i {
+    font-size: 14px;
+    min-width: 16px;
+}
+
+/* Информация о максимальном размере */
+.storage-max-size-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.storage-max-size-info i {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Футер */
 .storage-sidebar-footer {
     padding: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .storage-user-info {
     display: flex;
     align-items: center;
     gap: 12px;
+    position: relative;
 }
 
 .storage-user-avatar {
@@ -226,25 +411,60 @@
 .storage-user-name {
     display: block;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: white;
 }
 
 .storage-user-role {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Изменяем анимацию */
+.storage-quota-warning-icon {
+    color: #f44336;
+    font-size: 18px;
+    animation: pulse 2s infinite;
+}
+
+/* Анимации */
 @keyframes storage-slideIn {
     from {
         opacity: 0;
         transform: translateX(50px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -257,7 +477,7 @@
     .storage-sidebar {
         width: 100%;
         height: auto;
-        max-height: 400px;
+        max-height: 500px;
         order: 2;
         margin-top: 20px;
         border-radius: 8px;
@@ -265,11 +485,44 @@
     }
 
     .storage-sidebar-menu {
-        max-height: 300px;
+        max-height: 350px;
     }
-    
+
     .storage-menu-item.active {
-        border-right: none;
-        border-bottom: 3px solid #3498db;
+        border-left: none;
+        border-bottom: 3px solid #c7ba25;
+    }
+
+    .storage-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .storage-counts {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .storage-count-item {
+        justify-content: flex-start;
+    }
+}
+
+/* Темная тема для контраста */
+@media (prefers-color-scheme: dark) {
+    .storage-sidebar {
+        background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+    }
+
+    .storage-view-toggle-btn.active {
+        background: #3498db;
+    }
+
+    .storage-storage-info {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .storage-count-icon {
+        background: rgba(255, 255, 255, 0.15);
     }
 }

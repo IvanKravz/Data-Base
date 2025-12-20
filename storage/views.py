@@ -15,7 +15,9 @@ from .serializers import (
 )
 from .filters import StorageFileFilter, StorageFolderFilter
 from storage.permissions import HasFolderAccess, HasFileAccess, CanShareFiles, CanEmptyTrash
-
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 class StorageFolderViewSet(viewsets.ModelViewSet):
     queryset = StorageFolder.objects.all()
@@ -41,8 +43,11 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         # Для списковых запросов применяем фильтрацию
         # Фильтрация по типу (личное/рабочее)
         folder_type = self.request.query_params.get('type')
-        if folder_type in ['personal', 'work']:
-            queryset = queryset.filter(folder_type=folder_type)
+        if folder_type == 'personal':
+            # ТОЛЬКО личные папки текущего пользователя
+            queryset = queryset.filter(folder_type='personal', created_by=user)
+        elif folder_type == 'work':
+            queryset = queryset.filter(folder_type='work')
         else:
             # По умолчанию показываем доступные папки
             queryset = queryset.filter(
@@ -81,9 +86,20 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         Получение конкретной папки по ID.
         Отдельно обрабатываем, чтобы не применять фильтры из get_queryset
         """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        try:
+            instance = self.get_object()
+            
+            # ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ ЛИЧНЫХ ПАПОК
+            if instance.folder_type == 'personal' and instance.created_by != request.user:
+                raise Http404("Папка не найдена")
+                
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        except Http404:
+            return Response(
+                {'error': 'Папка не найдена или у вас нет к ней доступа'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     def get_object(self):
         """
@@ -259,10 +275,10 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         """Получить корзину (удаленные папки) с пагинацией"""
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 20))
-        
+    
         deleted_folders = StorageFolder.objects.deleted().filter(
-            Q(created_by=request.user) | 
-            Q(folder_type='work')
+            Q(folder_type='work') | 
+            Q(folder_type='personal', created_by=request.user)  # ТОЛЬКО свои личные
         )
         
         # Применяем пагинацию
@@ -359,8 +375,11 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         
         # Фильтрация по типу
         file_type = self.request.query_params.get('type')
-        if file_type in ['personal', 'work']:
-            queryset = queryset.filter(file_type=file_type)
+        if file_type == 'personal':
+            # ТОЛЬКО личные файлы текущего пользователя
+            queryset = queryset.filter(file_type='personal', uploaded_by=user)
+        elif file_type == 'work':
+            queryset = queryset.filter(file_type='work')
         else:
             # По умолчанию показываем доступные файлы
             queryset = queryset.filter(
@@ -521,8 +540,8 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         page_size = int(request.query_params.get('page_size', 20))
         
         deleted_files = StorageFile.objects.deleted().filter(
-            Q(uploaded_by=request.user) | 
-            Q(file_type='work')
+            Q(file_type='work') | 
+            Q(file_type='personal', uploaded_by=request.user)  # ТОЛЬКО свои личные
         )
         
         # Применяем пагинацию
@@ -621,6 +640,99 @@ class StorageFileViewSet(viewsets.ModelViewSet):
             },
             'by_type': list(by_type),
             'top_extensions': list(by_extension),
+        })
+    
+    @action(detail=False, methods=['get'])
+    def storage_info(self, request):
+        """Получить информацию о хранилище пользователя"""
+        from django.conf import settings
+        
+        user = request.user
+        
+        # Файлы текущего пользователя
+        user_files = StorageFile.objects.filter(uploaded_by=user, is_deleted=False)
+        
+        # Папки текущего пользователя
+        user_folders = StorageFolder.objects.filter(
+            Q(folder_type='personal', created_by=user) |
+            Q(folder_type='work')
+        ).filter(is_deleted=False)
+        
+        # Общее использованное место пользователем
+        total_used = user_files.aggregate(total=Sum('size'))['total'] or 0
+        
+        # По типам
+        personal_used = user_files.filter(file_type='personal').aggregate(total=Sum('size'))['total'] or 0
+        work_used = user_files.filter(file_type='work').aggregate(total=Sum('size'))['total'] or 0
+        
+        # Получаем квоту пользователя из настроек или модели
+        storage_quota = None
+        
+        # Вариант 1: Из модели User
+        if hasattr(user, 'storage_quota') and user.storage_quota:
+            storage_quota = user.storage_quota
+        
+        # Вариант 2: Из настроек Django
+        elif hasattr(settings, 'DEFAULT_STORAGE_QUOTA'):
+            storage_quota = settings.DEFAULT_STORAGE_QUOTA
+        
+        # Вариант 3: Из профиля пользователя (если есть модель Profile)
+        elif hasattr(user, 'profile') and hasattr(user.profile, 'storage_quota'):
+            storage_quota = user.profile.storage_quota
+        
+        # Рассчитываем проценты
+        usage_percentage = 0
+        if storage_quota and total_used > 0:
+            usage_percentage = min((total_used / storage_quota) * 100, 100)
+        
+        # Максимальный размер файла
+        max_file_size = getattr(settings, 'MAX_UPLOAD_SIZE', 100 * 1024 * 1024)  # 100MB по умолчанию
+        
+        # Статистика по типам файлов
+        by_type_stats = user_files.values('mime_type').annotate(
+            count=Count('id'),
+            total_size=Sum('size')
+        ).order_by('-total_size')[:5]
+        
+        by_type = {}
+        for stat in by_type_stats:
+            mime_type = stat['mime_type']
+            if mime_type:
+                main_type = mime_type.split('/')[0] if '/' in mime_type else mime_type
+                if main_type not in by_type:
+                    by_type[main_type] = {
+                        'size': 0,
+                        'count': 0,
+                        'files': []
+                    }
+                by_type[main_type]['size'] += stat['total_size'] or 0
+                by_type[main_type]['count'] += stat['count']
+        
+        return Response({
+            'total_used': total_used,
+            'storage_quota': storage_quota,
+            'max_file_size': max_file_size,
+            'usage_percentage': usage_percentage,
+            'remaining': storage_quota - total_used if storage_quota else None,
+            'by_type': by_type,
+            'breakdown': {
+                'personal': {
+                    'size': personal_used,
+                    'files_count': user_files.filter(file_type='personal').count(),
+                    'folders_count': user_folders.filter(folder_type='personal').count(),
+                },
+                'work': {
+                    'size': work_used,
+                    'files_count': user_files.filter(file_type='work').count(),
+                    'folders_count': user_folders.filter(folder_type='work').count(),
+                }
+            },
+            'summary': {
+                'total_files': user_files.count(),
+                'total_folders': user_folders.count(),
+                'deleted_files': StorageFile.objects.filter(uploaded_by=user, is_deleted=True).count(),
+                'deleted_folders': StorageFolder.objects.filter(created_by=user, is_deleted=True).count(),
+            }
         })
 
 
@@ -780,3 +892,50 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             {'error': 'Укажите folder_id или file_id'},
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_storage_info(request):
+    """Простая функция для получения информации о хранилище"""
+    from django.conf import settings
+    from django.db.models import Sum, Q
+    from .models import StorageFile, StorageFolder
+    
+    user = request.user
+    
+    # Файлы текущего пользователя
+    user_files = StorageFile.objects.filter(uploaded_by=user, is_deleted=False)
+    
+    # Папки текущего пользователя
+    user_folders = StorageFolder.objects.filter(
+        Q(folder_type='personal', created_by=user) |
+        Q(folder_type='work')
+    ).filter(is_deleted=False)
+    
+    # Общее использованное место пользователем
+    total_used = user_files.aggregate(total=Sum('size'))['total'] or 0
+    
+    # Получаем квоту пользователя
+    storage_quota = None
+    if hasattr(user, 'storage_quota') and user.storage_quota:
+        storage_quota = user.storage_quota
+    elif hasattr(settings, 'DEFAULT_STORAGE_QUOTA'):
+        storage_quota = settings.DEFAULT_STORAGE_QUOTA
+    elif hasattr(user, 'profile') and hasattr(user.profile, 'storage_quota'):
+        storage_quota = user.profile.storage_quota
+    
+    # Рассчитываем проценты
+    usage_percentage = 0
+    if storage_quota and total_used > 0:
+        usage_percentage = min((total_used / storage_quota) * 100, 100)
+    
+    return Response({
+        'total_used': total_used,
+        'storage_quota': storage_quota,
+        'usage_percentage': usage_percentage,
+        'remaining': storage_quota - total_used if storage_quota else None,
+        'files_count': user_files.count(),
+        'folders_count': user_folders.count(),
+        'personal_files': user_files.filter(file_type='personal').count(),
+        'work_files': user_files.filter(file_type='work').count(),
+    })

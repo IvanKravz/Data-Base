@@ -69,9 +69,9 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         canAccessNetworks,
         canAccessCommunicationPosts,
         canAccessDivisions,
-        canAccessMap, // Добавляем
-        canAccessStorage, // Добавляем
-        canAccessPage, // Экспортируем напрямую
+        canAccessMap, 
+        canAccessStorage, 
+        canAccessPage, 
         canView,
         canCreate,
         canEdit,

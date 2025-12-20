@@ -161,7 +161,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     };
 
     const handleMove = async () => {
-        console.log('Move file:', file.id);
         onClose();
     };
 
@@ -178,7 +177,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
 
     const handleShare = () => {
         setIsSharing(true);
-        console.log('Share file:', file.id);
         onClose();
     };
 
@@ -192,7 +190,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     };
 
     const handleGetInfo = () => {
-        console.log('File info:', file);
         onClose();
     };
 

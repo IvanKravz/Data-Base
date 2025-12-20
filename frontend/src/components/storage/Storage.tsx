@@ -14,7 +14,7 @@ import TrashView from './TrashView';
 import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid, List } from 'lucide-react';
 
 const Storage: React.FC = () => {
     // Получаем параметры маршрута
@@ -39,6 +39,7 @@ const Storage: React.FC = () => {
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [sidebarVisible, setSidebarVisible] = useState(true);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list'); // Добавлено состояние для переключения вида
 
     const permissions = useStoragePermissions();
 
@@ -82,9 +83,6 @@ const Storage: React.FC = () => {
             }
 
             setCurrentFolder(null);
-
-            // Вместо навигации в корень, можем попробовать загрузить путь к папке из breadcrumbs
-            // Но оставляем пользователя на текущем URL, чтобы он мог увидеть ошибку
         }
     };
 
@@ -349,6 +347,10 @@ const Storage: React.FC = () => {
         setSidebarVisible(!sidebarVisible);
     };
 
+    const toggleViewMode = () => {
+        setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
+    };
+
     const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash') => {
         setActiveView(view);
         // При переключении на другие вью сбрасываем выделение
@@ -409,6 +411,17 @@ const Storage: React.FC = () => {
                                 {sortOrder === 'asc' ? '↑' : '↓'}
                             </button>
                         </div>
+
+                        {/* Кнопка переключения вида отображения */}
+                        {activeView === 'explorer' && (
+                            <button
+                                className="storage-view-toggle-button"
+                                onClick={toggleViewMode}
+                                title={viewMode === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
+                            >
+                                {viewMode === 'grid' ? <List size={20} /> : <Grid size={20} />}
+                            </button>
+                        )}
 
                         {permissions.canUploadFiles && activeView === 'explorer' && (
                             <button
@@ -484,7 +497,7 @@ const Storage: React.FC = () => {
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
                                     onFileClick={(file) => console.log('File clicked:', file)}
-                                    viewMode="grid"
+                                    viewMode={viewMode} // Передаем текущий режим отображения
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}

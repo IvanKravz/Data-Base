@@ -9,21 +9,8 @@ export const useFileImage = (file: any) => {
 
     useEffect(() => {
         const isImage = isImageFile(file);
-        
-        console.log('useFileImage - File:', {
-            name: file.name,
-            isImage,
-            file_type: file.file_type,
-            mime_type: file.mime_type,
-            extension: file.extension,
-            file: file.file,
-            preview_url: file.preview_url,
-            thumbnail_url: file.thumbnail_url,
-            url: file.url
-        });
-        
+ 
         if (!isImage) {
-            console.log('Not an image file, skipping preview');
             setImageLoading(false);
             setImageUrl(null);
             setImageError(false);
@@ -48,8 +35,6 @@ export const useFileImage = (file: any) => {
             }
         }
 
-        console.log('Image URL found:', url);
-
         if (url) {
             setImageLoading(true);
             setImageError(false);
@@ -58,20 +43,17 @@ export const useFileImage = (file: any) => {
             img.src = url;
             
             img.onload = () => {
-                console.log('Image loaded successfully:', url);
                 setImageLoading(false);
                 setImageUrl(url);
                 setImageError(false);
             };
             
             img.onerror = () => {
-                console.log('Image failed to load:', url);
                 setImageLoading(false);
                 setImageUrl(null);
                 setImageError(true);
             };
         } else {
-            console.log('No image URL available');
             setImageLoading(false);
             setImageUrl(null);
             setImageError(true);

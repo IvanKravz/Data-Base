@@ -22,20 +22,10 @@ const FileIcon: React.FC<FileIconProps> = ({
     const { imageUrl, imageLoading, imageError } = useFileImage(file);
     const isImage = isImageFile(file);
 
-    console.log('FileIcon Render:', {
-        fileName: file.name,
-        isImage,
-        imageUrl,
-        imageLoading,
-        imageError,
-        mime_type: file.mime_type,
-        extension: file.extension
-    });
 
     const renderIconContent = () => {
         // Если это изображение и есть URL для превью без ошибок
         if (isImage && imageUrl && !imageError) {
-            console.log('Rendering image preview:', imageUrl);
             return (
                 <>
                     <img
@@ -47,10 +37,8 @@ const FileIcon: React.FC<FileIconProps> = ({
                             transition: 'opacity 0.3s ease'
                         }}
                         loading="lazy"
-                        onLoad={() => console.log('Image loaded in img tag')}
                         onError={(e) => {
-                            console.error('Image failed to load in img tag:', e);
-                            // Если изображение не загрузилось, покажем fallback иконку
+                        console.error('Image failed to load in img tag:', e);
                         }}
                     />
                     {imageLoading && (
@@ -64,7 +52,6 @@ const FileIcon: React.FC<FileIconProps> = ({
 
         // Fallback для изображений (когда нет URL или есть ошибка)
         if (isImage) {
-            console.log('Rendering image fallback icon');
             return (
                 <div className="storage-file-icon-fallback">
                     <div className="storage-file-icon-fallback-icon">
@@ -78,7 +65,6 @@ const FileIcon: React.FC<FileIconProps> = ({
         }
 
         // Для обычных файлов
-        console.log('Rendering regular file icon');
         return (
             <div 
                 className="storage-file-icon-default"

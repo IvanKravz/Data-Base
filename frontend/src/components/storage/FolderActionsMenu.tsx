@@ -165,7 +165,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleMove = async () => {
-        console.log('Move folder:', folder.id);
         onClose();
     };
 
@@ -181,12 +180,10 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleDownload = async () => {
-        console.log('Download folder:', folder.id);
         onClose();
     };
 
     const handleGetInfo = () => {
-        console.log('Folder info:', folder);
         onClose();
     };
 

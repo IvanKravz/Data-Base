@@ -47,9 +47,23 @@
     transition: opacity 0.3s ease;
 }
 
+/* Для режима карточки (grid) показываем чекбокс только при наведении или выборе */
+.storage-folder-card .storage-folder-select {
+    opacity: 0;
+}
+
 .storage-folder-card:hover .storage-folder-select,
 .storage-folder-card.selected .storage-folder-select {
     opacity: 1;
+}
+
+/* Для режима списка (list) чекбокс всегда видим */
+.storage-folder-row .storage-folder-select {
+    opacity: 1;
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .storage-folder-checkbox {
@@ -95,8 +109,15 @@
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 .storage-folder-icon-container {
@@ -118,7 +139,7 @@
 }
 
 .storage-folder-card:hover .storage-folder-icon-gradient {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .storage-folder-icon-gradient.personal {
@@ -168,7 +189,7 @@
     display: flex;
     justify-content: center;
     gap: 4px;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .storage-folder-type-badge {
@@ -198,8 +219,8 @@
     display: grid;
     grid-template-columns: auto auto 1fr auto auto;
     align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
+    gap: 10px;
+    padding: 16px 10px;
     background: white;
     border-radius: 12px;
     border: 1px solid transparent;
@@ -338,6 +359,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -356,7 +378,7 @@
         height: 180px;
         padding: 16px;
     }
-    
+
     .storage-folder-row-info {
         min-width: 160px;
         gap: 16px;
@@ -369,17 +391,17 @@
         height: 170px;
         padding: 12px;
     }
-    
+
     .storage-folder-row {
         grid-template-columns: auto 1fr auto;
         gap: 12px;
         padding: 12px 16px;
     }
-    
+
     .storage-folder-row-info {
         display: none;
     }
-    
+
     .storage-folder-row-meta {
         flex-wrap: wrap;
         gap: 4px;
@@ -393,69 +415,69 @@
         border-color: #334155;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
-    
+
     .storage-folder-card:hover {
         background: #2d3748;
         border-color: #475569;
     }
-    
+
     .storage-folder-card.selected {
         background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%);
         border-color: #3b82f6;
     }
-    
+
     .storage-folder-title,
     .storage-folder-row-title {
         color: #f1f5f9;
     }
-    
+
     .storage-folder-checkbox {
         background: #334155;
         border-color: #475569;
     }
-    
+
     .storage-folder-icon-gradient.personal {
         background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         color: #93c5fd;
     }
-    
+
     .storage-folder-icon-gradient.shared {
         background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
         color: #7dd3fc;
     }
-    
+
     .storage-folder-icon-gradient.pinned {
         background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
         color: #fcd34d;
     }
-    
+
     .storage-folder-icon-gradient.has-subfolders {
         background: linear-gradient(135deg, #065f46 0%, #047857 100%);
         color: #86efac;
     }
-    
+
     .storage-folder-icon-gradient.default {
         background: linear-gradient(135deg, #334155 0%, #475569 100%);
         color: #94a3b8;
     }
-    
+
     .storage-folder-type-badge {
         background: #334155;
         color: #cbd5e1;
     }
-    
+
     .storage-folder-row {
         background: #1e293b;
     }
-    
+
     .storage-folder-row:hover {
         background: #2d3748;
     }
-    
+
     .storage-folder-row.selected {
         background: rgba(59, 130, 246, 0.1);
     }
-    
+
     .storage-folder-action-btn {
         background: #334155;
         border-color: #475569;
