@@ -4,8 +4,8 @@ import './styles/StorageSidebar.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 
 interface StorageSidebarProps {
-    currentView: 'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash';
-    onViewChange: (view: 'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash') => void;
+    currentView: 'explorer' | 'recent' | 'favorites' | 'trash'; // Убрал 'statistics'
+    onViewChange: (view: 'explorer' | 'recent' | 'favorites' | 'trash') => void; // Убрал 'statistics'
     viewType: 'work' | 'personal';
     onViewTypeChange: (type: 'work' | 'personal') => void;
     permissions: StoragePermissions;
@@ -49,18 +49,11 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         { id: 'explorer', icon: 'folder', label: 'Мои файлы' },
         { id: 'recent', icon: 'history', label: 'Недавние' },
         { id: 'favorites', icon: 'star', label: 'Избранное' },
-        { id: 'statistics', icon: 'chart-bar', label: 'Статистика' },
+        // Убрал пункт 'statistics'
         { id: 'trash', icon: 'trash', label: 'Корзина' },
     ];
 
-    const quickFolders = [
-        { id: 'root', icon: 'home', label: 'Главная', count: 0 },
-        { id: 'shared', icon: 'users', label: 'Общий доступ', count: 0 },
-        { id: 'documents', icon: 'file-alt', label: 'Документы', count: 0 },
-        { id: 'images', icon: 'image', label: 'Изображения', count: 0 },
-        { id: 'videos', icon: 'video', label: 'Видео', count: 0 },
-        { id: 'music', icon: 'music', label: 'Музыка', count: 0 },
-    ];
+    // Убрал весь блок quickFolders
 
     // Функция для определения класса прогресс-бара
     const getProgressBarClass = () => {
@@ -139,7 +132,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                     <ul className="storage-menu-list">
                         {menuItems.map(item => {
                             if (item.id === 'trash' && !permissions.canViewTrash) return null;
-                            if (item.id === 'statistics' && !permissions.canViewStatistics) return null;
+                            // Убрал проверку для 'statistics'
 
                             return (
                                 <li key={item.id}>
@@ -160,25 +153,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                     </ul>
                 </div>
 
-                <div className="storage-menu-section">
-                    <h3 className="storage-menu-section-title">Быстрый доступ</h3>
-                    <ul className="storage-menu-list">
-                        {quickFolders.map(folder => (
-                            <li key={folder.id}>
-                                <button
-                                    className="storage-menu-item"
-                                    disabled={!permissions.canViewStorage}
-                                >
-                                    <i className={`fas fa-${folder.icon}`}></i>
-                                    <span>{folder.label}</span>
-                                    {folder.count > 0 && (
-                                        <span className="storage-menu-badge">{folder.count}</span>
-                                    )}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                {/* Убрал весь раздел "Быстрый доступ" */}
 
                 {currentView === 'trash' && permissions.canEmptyTrash && (
                     <div className="storage-trash-actions">

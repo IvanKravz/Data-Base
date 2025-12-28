@@ -18,7 +18,6 @@ export interface StoragePermissions {
     canShareFiles: boolean;
     canViewTrash: boolean;
     canEmptyTrash: boolean;
-    canViewStatistics: boolean;
     canViewAllStorage: boolean;
 
     // Квоты и ограничения
@@ -177,7 +176,6 @@ export const useStoragePermissions = (): StoragePermissions => {
             canShareFiles: false,
             canViewTrash: false,
             canEmptyTrash: false,
-            canViewStatistics: false,
             canViewAllStorage: false,
             storageQuota: null,
             maxFileSize: 50 * 1024 * 1024, // 50MB по умолчанию
@@ -218,7 +216,6 @@ export const useStoragePermissions = (): StoragePermissions => {
         basePermissions.canShareFiles = hasRole('admin') || hasRole('leader');
         basePermissions.canViewTrash = basePermissions.canViewStorage;
         basePermissions.canEmptyTrash = hasRole('admin') || hasRole('leader');
-        basePermissions.canViewStatistics = basePermissions.canViewStorage;
 
         // Права на просмотр всего хранилища
         basePermissions.canViewAllStorage =

@@ -15,7 +15,7 @@
     --file-explorer-error: #ef4444;
     --file-explorer-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --file-explorer-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --file-explorer-radius: 12px;
+    --file-explorer-radius: 0.5rem;
     --file-explorer-radius-sm: 8px;
     --file-explorer-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -26,7 +26,7 @@
     border: 1px solid var(--file-explorer-border);
     border-radius: var(--file-explorer-radius);
     background-color: var(--file-explorer-bg);
-    padding: 24px;
+    padding: 14px;
     transition: none;
     overflow: hidden;
 }

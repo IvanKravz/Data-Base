@@ -68,15 +68,15 @@
 }
 
 .storage-menu-section {
-    margin-bottom: 24px;
+    margin-bottom: 1rem;
 }
 
 .storage-menu-section-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
     margin: 0 20px 12px 20px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 600;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
@@ -176,9 +176,9 @@
 
 /* Блок информации о хранилище */
 .storage-info-section {
-    margin-top: auto;
+    /* margin-top: auto; */
     padding: 20px;
-    background-color: rgba(0, 0, 0, 0.1);
+    /* background-color: rgba(0, 0, 0, 0.1); */
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -485,7 +485,7 @@
     }
 
     .storage-sidebar-menu {
-        max-height: 350px;
+        max-height: 30px;
     }
 
     .storage-menu-item.active {

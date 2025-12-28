@@ -7,14 +7,13 @@ import Breadcrumbs from './Breadcrumbs';
 import UploadButton from './UploadButton';
 import CreateFolderModal from './CreateFolderModal';
 import UploadModal from './UploadModal';
-import StatisticsView from './StatisticsView';
 import RecentFilesView from './RecentFilesView';
 import FavoritesView from './FavoritesView';
 import TrashView from './TrashView';
 import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
-import { ChevronLeft, ChevronRight, Grid, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid, List, Clock, Star, Trash2, FolderOpen } from 'lucide-react';
 
 const Storage: React.FC = () => {
     // Получаем параметры маршрута
@@ -32,14 +31,15 @@ const Storage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [selectedItems, setSelectedItems] = useState<Array<StorageFolder | StorageFile>>([]);
     const [viewType, setViewType] = useState<'work' | 'personal'>('work');
-    const [activeView, setActiveView] = useState<'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash'>('explorer');
+    const [activeView, setActiveView] = useState<'explorer' | 'recent' | 'favorites' | 'trash'>('explorer');
     const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [sidebarVisible, setSidebarVisible] = useState(true);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list'); // Добавлено состояние для переключения вида
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [viewModeRecent, setViewModeRecent] = useState<'grid' | 'list'>('list');
 
     const permissions = useStoragePermissions();
 
@@ -71,11 +71,10 @@ const Storage: React.FC = () => {
         try {
             const folder = await storageApi.getFolder(parseInt(currentFolderId));
             setCurrentFolder(folder);
-            setError(null); // Сбрасываем ошибку при успешной загрузке
+            setError(null);
         } catch (err: any) {
             console.error('Error loading folder info:', err);
 
-            // НЕ перенаправляем в корень, просто показываем ошибку
             if (err.response?.status === 404) {
                 setError(`Папка с ID ${currentFolderId} не найдена. Возможно, она была удалена или у вас нет к ней доступа.`);
             } else {
@@ -83,71 +82,6 @@ const Storage: React.FC = () => {
             }
 
             setCurrentFolder(null);
-        }
-    };
-
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            let fetchedFolders: StorageFolder[] = [];
-            let fetchedFiles: StorageFile[] = [];
-
-            switch (activeView) {
-                case 'explorer':
-                    [fetchedFolders, fetchedFiles] = await Promise.all([
-                        storageApi.getFolders({
-                            parent_id: currentFolderId ? parseInt(currentFolderId) : null,
-                            type: viewType,
-                            ordering: sortBy === 'name' ? 'name' : '-created_at'
-                        }),
-                        storageApi.getFiles({
-                            folder_id: currentFolderId ? parseInt(currentFolderId) : null,
-                            type: viewType,
-                            ordering: sortBy === 'name' ? 'name' : '-created_at'
-                        })
-                    ]);
-                    break;
-
-                case 'recent':
-                    const recentFiles = await storageApi.getRecentFiles();
-                    fetchedFiles = Array.isArray(recentFiles) ? recentFiles : [];
-                    break;
-
-                case 'favorites':
-                    const favorites = await storageApi.getFavorites();
-                    fetchedFolders = Array.isArray(favorites)
-                        ? favorites.filter(f => f?.folder).map(f => f.folder!)
-                        : [];
-                    fetchedFiles = Array.isArray(favorites)
-                        ? favorites.filter(f => f?.file).map(f => f.file!)
-                        : [];
-                    break;
-
-                case 'statistics':
-                    break;
-
-                case 'trash':
-                    [fetchedFolders, fetchedFiles] = await Promise.all([
-                        storageApi.getTrashFolders(),
-                        storageApi.getTrashFiles()
-                    ]);
-                    fetchedFolders = Array.isArray(fetchedFolders) ? fetchedFolders : [];
-                    fetchedFiles = Array.isArray(fetchedFiles) ? fetchedFiles : [];
-                    break;
-            }
-
-            fetchedFolders = sortItems(fetchedFolders) as StorageFolder[];
-            fetchedFiles = sortItems(fetchedFiles) as StorageFile[];
-
-            setFolders(fetchedFolders);
-            setFiles(fetchedFiles);
-        } catch (err: any) {
-            setError(err.message || 'Ошибка при загрузке данных');
-            console.error('Error loading storage data:', err);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -184,11 +118,143 @@ const Storage: React.FC = () => {
         });
     };
 
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            let fetchedFolders: StorageFolder[] = [];
+            let fetchedFiles: StorageFile[] = [];
+
+            switch (activeView) {
+                case 'explorer':
+                    [fetchedFolders, fetchedFiles] = await Promise.all([
+                        storageApi.getFolders({
+                            parent_id: currentFolderId ? parseInt(currentFolderId) : null,
+                            type: viewType,
+                            ordering: sortBy === 'name' ? 'name' : '-created_at'
+                        }),
+                        storageApi.getFiles({
+                            folder_id: currentFolderId ? parseInt(currentFolderId) : null,
+                            type: viewType,
+                            ordering: sortBy === 'name' ? 'name' : '-created_at'
+                        })
+                    ]);
+                    break;
+
+                case 'recent':
+                    console.log('Loading recent files...');
+                    const recentResponse = await storageApi.getRecentFiles({
+                        page: 1,
+                        page_size: 50
+                    });
+
+                    console.log('Recent response:', recentResponse);
+
+                    if (recentResponse && recentResponse.files) {
+                        fetchedFiles = recentResponse.files;
+                    } else if (Array.isArray(recentResponse)) {
+                        fetchedFiles = recentResponse;
+                    } else {
+                        console.warn('Неожиданный формат ответа для недавних файлов:', recentResponse);
+                        fetchedFiles = [];
+                    }
+
+                    // Применяем поиск на клиенте
+                    if (searchQuery.trim()) {
+                        fetchedFiles = fetchedFiles.filter(file => 
+                            file.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                    }
+
+                    // Сортируем на клиенте
+                    fetchedFiles = sortItems(fetchedFiles) as StorageFile[];
+                    console.log(`Loaded ${fetchedFiles.length} recent files`);
+                    break;
+
+                case 'favorites':
+                    const favoritesResponse = await storageApi.getFavorites();
+                    if (favoritesResponse && favoritesResponse.folders && favoritesResponse.files) {
+                        fetchedFolders = favoritesResponse.folders || [];
+                        fetchedFiles = favoritesResponse.files || [];
+                    } else if (Array.isArray(favoritesResponse)) {
+                        fetchedFolders = favoritesResponse
+                            .filter((fav: any) => fav?.folder)
+                            .map((fav: any) => fav.folder);
+                        fetchedFiles = favoritesResponse
+                            .filter((fav: any) => fav?.file)
+                            .map((fav: any) => fav.file);
+                    } else {
+                        fetchedFolders = [];
+                        fetchedFiles = [];
+                    }
+
+                    // Применяем поиск на клиенте
+                    if (searchQuery.trim()) {
+                        fetchedFolders = fetchedFolders.filter(folder => 
+                            folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        fetchedFiles = fetchedFiles.filter(file => 
+                            file.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                    }
+                    break;
+
+                case 'trash':
+                    const [trashFoldersResponse, trashFilesResponse] = await Promise.all([
+                        storageApi.getTrashFolders(),
+                        storageApi.getTrashFiles()
+                    ]);
+
+                    if (trashFoldersResponse && trashFoldersResponse.folders) {
+                        fetchedFolders = trashFoldersResponse.folders;
+                    } else if (Array.isArray(trashFoldersResponse)) {
+                        fetchedFolders = trashFoldersResponse;
+                    } else {
+                        fetchedFolders = [];
+                    }
+
+                    if (trashFilesResponse && trashFilesResponse.files) {
+                        fetchedFiles = trashFilesResponse.files;
+                    } else if (Array.isArray(trashFilesResponse)) {
+                        fetchedFiles = trashFilesResponse;
+                    } else {
+                        fetchedFiles = [];
+                    }
+
+                    // Применяем поиск на клиенте
+                    if (searchQuery.trim()) {
+                        fetchedFolders = fetchedFolders.filter(folder => 
+                            folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        fetchedFiles = fetchedFiles.filter(file => 
+                            file.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                    }
+                    break;
+            }
+
+            // Сортируем элементы (кроме recent, там уже отсортировано)
+            if (activeView !== 'recent') {
+                fetchedFolders = sortItems(fetchedFolders) as StorageFolder[];
+                fetchedFiles = sortItems(fetchedFiles) as StorageFile[];
+            }
+
+            setFolders(fetchedFolders);
+            setFiles(fetchedFiles);
+        } catch (err: any) {
+            console.error('Error loading storage data:', err);
+            setError(err.message || 'Ошибка при загрузке данных');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleFolderClick = async (folder: StorageFolder) => {
         try {
             // Загружаем информацию о папке
             const folderInfo = await storageApi.getFolder(folder.id);
-            
+
             // Формируем путь на основе информации о родительской папке
             if (folderInfo.parent_id) {
                 // Если есть родитель, используем вложенный путь
@@ -199,7 +265,7 @@ const Storage: React.FC = () => {
             }
         } catch (err: any) {
             console.error('Cannot access folder:', err);
-            
+
             if (err.response?.status === 404) {
                 setError(`Папка "${folder.name}" не найдена или была удалена.`);
             } else if (err.response?.status === 403) {
@@ -207,11 +273,11 @@ const Storage: React.FC = () => {
             } else {
                 setError(`Ошибка при доступе к папке "${folder.name}": ${err.message}`);
             }
-            
+
             loadData();
         }
     };
-    
+
     const handleNavigateUp = () => {
         if (subfolderId) {
             // Переходим из вложенной папки в родительскую
@@ -253,7 +319,6 @@ const Storage: React.FC = () => {
 
     const handleUploadFiles = async (uploadedFiles: StorageFile[]) => {
         try {
-            // Просто обновляем состояние, НЕ загружаем снова
             setFiles(prev => [...prev, ...uploadedFiles]);
             setIsUploadModalOpen(false);
         } catch (err: any) {
@@ -324,22 +389,26 @@ const Storage: React.FC = () => {
 
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
-
+        
         if (!query.trim()) {
             loadData();
             return;
         }
 
-        try {
-            const [searchFolders, searchFiles] = await Promise.all([
-                storageApi.searchFolders(query, { type: viewType }),
-                storageApi.searchFiles(query, { type: viewType })
-            ]);
+        if (activeView === 'explorer') {
+            try {
+                const [searchFolders, searchFiles] = await Promise.all([
+                    storageApi.searchFolders(query, { type: viewType }),
+                    storageApi.searchFiles(query, { type: viewType })
+                ]);
 
-            setFolders(searchFolders);
-            setFiles(searchFiles);
-        } catch (err: any) {
-            setError(err.message || 'Ошибка при поиске');
+                setFolders(searchFolders);
+                setFiles(searchFiles);
+            } catch (err: any) {
+                setError(err.message || 'Ошибка при поиске');
+            }
+        } else {
+            loadData();
         }
     };
 
@@ -351,10 +420,42 @@ const Storage: React.FC = () => {
         setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
     };
 
-    const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'statistics' | 'trash') => {
+    const toggleViewModeRecent = () => {
+        setViewModeRecent(prev => prev === 'grid' ? 'list' : 'grid');
+    };
+
+    const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'trash') => {
         setActiveView(view);
-        // При переключении на другие вью сбрасываем выделение
         setSelectedItems([]);
+        if (searchQuery) {
+            setSearchQuery('');
+        }
+    };
+
+    const getViewTitle = () => {
+        switch (activeView) {
+            case 'recent':
+                return 'Недавние файлы';
+            case 'favorites':
+                return 'Избранное';
+            case 'trash':
+                return 'Корзина';
+            default:
+                return null;
+        }
+    };
+
+    const getViewIcon = () => {
+        switch (activeView) {
+            case 'recent':
+                return <Clock size={20} />;
+            case 'favorites':
+                return <Star size={20} />;
+            case 'trash':
+                return <Trash2 size={20} />;
+            default:
+                return <FolderOpen size={20} />;
+        }
     };
 
     if (!permissions.canViewStorage) {
@@ -373,11 +474,27 @@ const Storage: React.FC = () => {
             <div className="storage-main-content">
                 <div className="storage-header">
                     <div className="storage-header-left">
-                        <Breadcrumbs
-                            currentFolder={currentFolder}
-                            onNavigateUp={handleNavigateUp}
-                            onFolderClick={handleBreadcrumbClick}
-                        />
+                        {activeView === 'explorer' ? (
+                            <Breadcrumbs
+                                currentFolder={currentFolder}
+                                onNavigateUp={handleNavigateUp}
+                                onFolderClick={handleBreadcrumbClick}
+                            />
+                        ) : (
+                            <div className="storage-view-header">
+                                <div className="storage-view-icon">
+                                    {getViewIcon()}
+                                </div>
+                                <h2 className="storage-view-title">
+                                    {getViewTitle()}
+                                </h2>
+                                {activeView === 'recent' && files.length > 0 && (
+                                    <span className="storage-view-count">
+                                        {files.length} {files.length === 1 ? 'файл' : files.length < 5 ? 'файла' : 'файлов'}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="storage-header-right">
@@ -394,32 +511,43 @@ const Storage: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="storage-sort-controls">
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
-                                className="storage-sort-select"
-                            >
-                                <option value="date">По дате</option>
-                                <option value="name">По имени</option>
-                                <option value="size">По размеру</option>
-                            </select>
-                            <button
-                                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                                className="storage-sort-order-button"
-                            >
-                                {sortOrder === 'asc' ? '↑' : '↓'}
-                            </button>
-                        </div>
+                        {files.length > 0 && (
+                            <div className="storage-sort-controls">
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as any)}
+                                    className="storage-sort-select"
+                                >
+                                    <option value="date">По дате</option>
+                                    <option value="name">По имени</option>
+                                    <option value="size">По размеру</option>
+                                </select>
+                                <button
+                                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                    className="storage-sort-order-button"
+                                >
+                                    {sortOrder === 'asc' ? '↑' : '↓'}
+                                </button>
+                            </div>
+                        )}
 
-                        {/* Кнопка переключения вида отображения */}
-                        {activeView === 'explorer' && (
+                        {activeView === 'explorer' && files.length > 0 && (
                             <button
                                 className="storage-view-toggle-button"
                                 onClick={toggleViewMode}
                                 title={viewMode === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
                             >
                                 {viewMode === 'grid' ? <List size={20} /> : <Grid size={20} />}
+                            </button>
+                        )}
+
+                        {activeView === 'recent' && files.length > 0 && (
+                            <button
+                                className="storage-view-toggle-button"
+                                onClick={toggleViewModeRecent}
+                                title={viewModeRecent === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
+                            >
+                                {viewModeRecent === 'grid' ? <List size={20} /> : <Grid size={20} />}
                             </button>
                         )}
 
@@ -440,6 +568,15 @@ const Storage: React.FC = () => {
                                 <i className="fas fa-folder-plus"></i> Новая папка
                             </button>
                         )}
+
+                        <button
+                            onClick={loadData}
+                            disabled={loading}
+                            className="storage-refresh-button"
+                            title="Обновить данные"
+                        >
+                            <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`}></i>
+                        </button>
 
                         <button
                             onClick={toggleSidebar}
@@ -497,7 +634,7 @@ const Storage: React.FC = () => {
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
                                     onFileClick={(file) => console.log('File clicked:', file)}
-                                    viewMode={viewMode} // Передаем текущий режим отображения
+                                    viewMode={viewMode}
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}
@@ -509,6 +646,9 @@ const Storage: React.FC = () => {
                             {activeView === 'recent' && (
                                 <RecentFilesView
                                     files={files}
+                                    viewMode={viewModeRecent}
+                                    sortBy={sortBy}
+                                    sortOrder={sortOrder}
                                     onFileClick={(file) => console.log('File clicked:', file)}
                                     permissions={permissions}
                                 />
@@ -521,12 +661,6 @@ const Storage: React.FC = () => {
                                     onFolderClick={handleFolderClick}
                                     onFileClick={(file) => console.log('File clicked:', file)}
                                     permissions={permissions}
-                                />
-                            )}
-
-                            {activeView === 'statistics' && (
-                                <StatisticsView
-                                    onRefresh={() => { }}
                                 />
                             )}
 

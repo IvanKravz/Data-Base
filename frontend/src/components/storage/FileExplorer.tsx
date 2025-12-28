@@ -109,11 +109,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         e.stopPropagation();
         setDragOver(false);
 
-        // Здесь можно обработать перемещение файла/папки
-        if (draggedItem) {
-            console.log('Dropped item:', draggedItem, 'into folder:', currentFolder?.id);
-            // Реализуйте логику перемещения здесь
-        }
+        
     };
 
     const formatTotalSize = (bytes: number): string => {

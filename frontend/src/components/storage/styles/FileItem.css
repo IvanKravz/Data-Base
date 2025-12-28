@@ -110,14 +110,14 @@
     grid-template-columns: 15px 56px 1fr auto auto;
     align-items: center;
     gap: 16px;
-    padding: 10px 16px;
+    padding: 6px 16px;
     background: var(--file-item-bg);
     border-radius: var(--file-item-radius-sm);
     border: 1px solid transparent;
     transition: var(--file-item-transition);
     cursor: pointer;
     margin: 2px 0;
-    min-height: 72px;
+    /* min-height: 72px; */
     position: relative;
 }
 
@@ -158,11 +158,6 @@
     flex-shrink: 0;
 }
 
-.storage-file-list-checkbox:hover {
-    border-color: var(--file-item-primary-light);
-    transform: scale(1.05);
-}
-
 .storage-file-list-checkbox:checked {
     background: var(--file-item-primary);
     border-color: var(--file-item-primary);
@@ -182,8 +177,8 @@
 
 /* Иконка в режиме списка */
 .storage-file-list-icon-wrapper {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -350,8 +345,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     background: linear-gradient(135deg, var(--file-item-surface) 0%, #ffffff 100%);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -578,8 +573,8 @@
     }
     
     .storage-file-list-icon-wrapper {
-        width: 48px;
-        height: 48px;
+        width: 34px;
+        height: 34px;
     }
     
     .storage-file-list-name {
