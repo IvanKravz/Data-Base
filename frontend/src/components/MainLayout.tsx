@@ -7,8 +7,7 @@ import { DivisionDetails } from './divisions/DivisionDetails/DivisionDetails';
 import { PersonnelDetails } from './personnel/PersonnelDetails/PersonnelDetails';
 import { FacilityDetails } from './facilities/FacilityDetails/FacilityDetails';
 import Storage from './storage/Storage';
-import { CabinetSection } from './cabinet/CabinetSection';
-import { UserMenu } from './common/UserMenu';
+import { UserMenu } from './UserMenu/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
 import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
@@ -278,12 +277,6 @@ export function MainLayout() {
           <StorageRoute>
             <Storage />
           </StorageRoute>
-        } />
-
-        <Route path="/cabinet" element={
-          <CabinetRoute>
-            <CabinetSection />
-          </CabinetRoute>
         } />
 
         <Route path="/map" element={

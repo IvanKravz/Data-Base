@@ -8,7 +8,7 @@ import {
     canAccessNetworks,
     canAccessCommunicationPosts,
     canAccessDivisions,
-    canAccessPage, // Добавляем canAccessPage
+    canAccessPage,
     canView,
     canCreate,
     canEdit,

@@ -36,7 +36,7 @@ export interface StorageInfo {
     // Получить информацию о хранилище пользователя
     getStorageInfo: async (): Promise<StorageInfo> => {
       try {
-        const { data } = await api.get('/storage/user-storage-info/'); // Убедитесь, что путь правильный
+        const { data } = await api.get('/storage/user-storage-info/'); 
         return {
           total_used: data.total_used || 0,
           storage_quota: data.storage_quota || null,

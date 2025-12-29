@@ -152,12 +152,6 @@ export function Sidebar({ activeTab, onSetActiveTab, availableTabs }: SidebarPro
       path: '/map',
       model: 'Map'
     },
-    {
-      id: 'cabinet',
-      icon: UserCog,
-      label: 'Кабинет',
-      path: '/cabinet'
-    },
   ];
 
   const filteredMenuItems = menuItems.filter(hasAccessToMenuItem);
