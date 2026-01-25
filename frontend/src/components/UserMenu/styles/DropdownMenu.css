@@ -1,0 +1,83 @@
+/* styles/DropdownMenu.css */
+
+/* Выпадающее меню */
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    right: 0;
+    width: 230px;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 1000;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #374151;
+}
+
+.dropdown-item:hover {
+    background-color: #f9fafb;
+}
+
+.cabinet-item:hover {
+    background: linear-gradient(135deg, #f6f7f9 0%, #f1f5f9 100%);
+}
+
+.dropdown-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #6b7280;
+}
+
+.dropdown-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dropdown-title {
+    font-weight: 500;
+    color: #111827;
+}
+
+.logout-item {
+    color: #dc2626;
+}
+
+.logout-item .dropdown-icon {
+    color: #dc2626;
+}
+
+.logout-item:hover {
+    background-color: #fef2f2;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+}

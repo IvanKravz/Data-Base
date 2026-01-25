@@ -18,7 +18,7 @@ export const facilitiesApi = {
   }): Promise<Facility[]> => {
     // Создаем ключ кэша на основе параметров
     const cacheKey = JSON.stringify(params);
-    
+
     // Проверяем кэш
     if (facilityCache.has(cacheKey)) {
       const cached = facilityCache.get(cacheKey);
@@ -28,13 +28,13 @@ export const facilitiesApi = {
         facilityCache.delete(cacheKey);
       }
     }
-    
+
     // Обрабатываем случай, когда division - массив
     let divisionParam = params?.division;
     if (Array.isArray(divisionParam) && divisionParam.length === 0) {
       divisionParam = undefined;
     }
-    
+
     // Формируем параметры запроса
     const queryParams = {
       ...(divisionParam && { division: Array.isArray(divisionParam) ? divisionParam.join(',') : divisionParam }),
@@ -43,7 +43,7 @@ export const facilitiesApi = {
       ...(params?.search && { search: params.search }),
       ...(typeof params?.is_closed !== 'undefined' && { is_closed: params.is_closed }),
     };
-  
+
     const { data } = await api.get<{ results: Facility[] }>('/facilities/', {
       params: queryParams,
       headers: params?.token ? {
@@ -56,7 +56,7 @@ export const facilitiesApi = {
       data,
       timestamp: Date.now()
     });
-  
+
     return data;
   },
 

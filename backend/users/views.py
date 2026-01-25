@@ -1,4 +1,4 @@
-# views.py
+from datetime import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, filters
 from rest_framework.parsers import MultiPartParser
@@ -9,12 +9,17 @@ from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshV
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from django.db import models
+from django.utils import timezone as django_timezone
+
 
 from users.permissions_config import ROLE_PERMISSIONS
 
-from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion
+# ИСПРАВЛЕНО: убрали дублирующий импорт UserActionLog
+from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion 
+from .logs_models import UserActionLog 
 from .serializers import (
-    EmployeeDictionariesSerializer, UserSerializer, 
+    EmployeeDictionariesSerializer, StorageStatisticsSerializer, UserActionLogSerializer, UserSerializer, 
     TokenObtainPairSerializer, EmployeeSerializer, ShaWorkerDetailsSerializer, 
     ShaEquipmentConclusionSerializer
 )
@@ -69,9 +74,100 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
         # Остальные - только себя
         return queryset.filter(id=self.request.user.id)
     
+    # Логирование создания пользователя
+    def create(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        response = super().create(request, *args, **kwargs)
+        
+        if response.status_code == status.HTTP_201_CREATED:
+            user_data = response.data
+            log_user_action(
+                user=request.user,
+                action='create',
+                module='users',
+                request=request,
+                model_name='User',
+                object_id=user_data.get('id'),
+                object_name=user_data.get('username'),
+                details={'data': user_data}
+            )
+        
+        return response
+    
+    # Логирование обновления пользователя
+    def update(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        old_data = UserSerializer(instance).data
+        
+        response = super().update(request, *args, **kwargs)
+        
+        if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
+            new_data = response.data
+            changed_fields = {}
+            
+            for key in old_data:
+                if key in new_data and old_data[key] != new_data[key]:
+                    changed_fields[key] = {
+                        'old': old_data[key],
+                        'new': new_data[key]
+                    }
+            
+            log_user_action(
+                user=request.user,
+                action='update',
+                module='users',
+                request=request,
+                model_name='User',
+                object_id=instance.id,
+                object_name=instance.username,
+                details={'changed_fields': changed_fields}
+            )
+        
+        return response
+    
+    # Логирование удаления пользователя
+    def destroy(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        user_data = UserSerializer(instance).data
+        
+        response = super().destroy(request, *args, **kwargs)
+        
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            log_user_action(
+                user=request.user,
+                action='delete',
+                module='users',
+                request=request,
+                model_name='User',
+                object_id=instance.id,
+                object_name=instance.username,
+                details={'deleted_data': user_data}
+            )
+        
+        return response
+    
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Возвращает информацию о текущем пользователе"""
+        from .logging_utils import log_user_action
+        
+        # Логируем просмотр профиля
+        log_user_action(
+            user=request.user,
+            action='view',
+            module='users',
+            request=request,
+            model_name='User',
+            object_id=request.user.id,
+            object_name=request.user.username,
+            details={'viewed_profile': True}
+        )
+        
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
@@ -134,6 +230,173 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    # Логирование создания сотрудника
+    def create(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        response = super().create(request, *args, **kwargs)
+        
+        if response.status_code == status.HTTP_201_CREATED:
+            # Логируем создание сотрудника
+            employee_data = response.data
+            log_user_action(
+                user=request.user,
+                action='create',
+                module='employees',
+                request=request,
+                model_name='Employee',
+                object_id=employee_data.get('id'),
+                object_name=employee_data.get('full_name'),
+                details={'data': employee_data}
+            )
+        
+        return response
+    
+    # Логирование обновления сотрудника
+    def update(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        old_data = EmployeeSerializer(instance).data
+        
+        response = super().update(request, *args, **kwargs)
+        
+        if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
+            # Логируем обновление сотрудника
+            new_data = response.data
+            changed_fields = {}
+            
+            # Определяем измененные поля
+            for key in old_data:
+                if key in new_data and old_data[key] != new_data[key]:
+                    changed_fields[key] = {
+                        'old': old_data[key],
+                        'new': new_data[key]
+                    }
+            
+            log_user_action(
+                user=request.user,
+                action='update',
+                module='employees',
+                request=request,
+                model_name='Employee',
+                object_id=instance.id,
+                object_name=instance.full_name,
+                details={
+                    'changed_fields': changed_fields,
+                    'old_data': old_data,
+                    'new_data': new_data
+                }
+            )
+        
+        return response
+    
+    # Логирование частичного обновления сотрудника
+    def partial_update(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        old_data = EmployeeSerializer(instance).data
+        
+        response = super().partial_update(request, *args, **kwargs)
+        
+        if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
+            # Логируем частичное обновление сотрудника
+            new_data = response.data
+            changed_fields = {}
+            
+            # Определяем измененные поля (только те, что были в запросе)
+            for key in request.data:
+                if key in old_data and old_data[key] != new_data.get(key):
+                    changed_fields[key] = {
+                        'old': old_data[key],
+                        'new': new_data.get(key)
+                    }
+            
+            log_user_action(
+                user=request.user,
+                action='update',
+                module='employees',
+                request=request,
+                model_name='Employee',
+                object_id=instance.id,
+                object_name=instance.full_name,
+                details={
+                    'changed_fields': changed_fields,
+                    'request_data': request.data
+                }
+            )
+        
+        return response
+    
+    # Логирование удаления сотрудника
+    def destroy(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        employee_data = EmployeeSerializer(instance).data
+        
+        response = super().destroy(request, *args, **kwargs)
+        
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            # Логируем удаление сотрудника
+            log_user_action(
+                user=request.user,
+                action='delete',
+                module='employees',
+                request=request,
+                model_name='Employee',
+                object_id=instance.id,
+                object_name=instance.full_name,
+                details={'deleted_data': employee_data}
+            )
+        
+        return response
+    
+    # Логирование просмотра деталей сотрудника
+    def retrieve(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        instance = self.get_object()
+        
+        response = super().retrieve(request, *args, **kwargs)
+        
+        # Логируем просмотр деталей сотрудника
+        log_user_action(
+            user=request.user,
+            action='view',
+            module='employees',
+            request=request,
+            model_name='Employee',
+            object_id=instance.id,
+            object_name=instance.full_name,
+            details={'viewed_details': True}
+        )
+        
+        return response
+    
+    # Логирование просмотра списка сотрудников
+    def list(self, request, *args, **kwargs):
+        from .logging_utils import log_user_action
+        
+        response = super().list(request, *args, **kwargs)
+        
+        # Логируем просмотр списка сотрудников
+        log_user_action(
+            user=request.user,
+            action='view',
+            module='employees',
+            request=request,
+            model_name='Employee',
+            details={
+                'list_view': True,
+                'filters': dict(request.query_params),
+                'count': response.data.get('count', len(response.data)) if isinstance(response.data, dict) else len(response.data)
+            }
+        )
+        
+        return response
     
     @action(detail=False, methods=['get'])
     def dictionaries(self, request):
@@ -385,3 +648,184 @@ def error_500(request):
         'message': 'Внутренняя ошибка сервера',
         'status_code': 500
     }, status=500)
+
+class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet для получения логов действий пользователя
+    """
+    serializer_class = UserActionLogSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        # Фильтруем логи текущего пользователя
+        queryset = UserActionLog.objects.filter(user=user)
+        
+        # Фильтрация по действию
+        action = self.request.query_params.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+        
+        # Фильтрация по модулю
+        module = self.request.query_params.get('module')
+        if module:
+            queryset = queryset.filter(module=module)
+        
+        # Фильтрация по типу файла
+        file_type = self.request.query_params.get('file_type')
+        if file_type:
+            queryset = queryset.filter(file_type=file_type)
+        
+        # Фильтрация по месту хранения
+        storage_location = self.request.query_params.get('storage_location')
+        if storage_location:
+            queryset = queryset.filter(storage_location=storage_location)
+        
+        # Фильтрация по дате с
+        date_from = self.request.query_params.get('date_from')
+        if date_from:
+            try:
+                from datetime import datetime
+                date_from = datetime.strptime(date_from, '%Y-%m-%d')
+                queryset = queryset.filter(created_at__date__gte=date_from)
+            except ValueError:
+                pass
+        
+        # Фильтрация по дате по
+        date_to = self.request.query_params.get('date_to')
+        if date_to:
+            try:
+                from datetime import datetime
+                date_to = datetime.strptime(date_to, '%Y-%m-%d')
+                queryset = queryset.filter(created_at__date__lte=date_to)
+            except ValueError:
+                pass
+        
+        # Поиск
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                models.Q(object_name__icontains=search) |
+                models.Q(details__icontains=search) |
+                models.Q(model_name__icontains=search) |
+                models.Q(file_path__icontains=search) |
+                models.Q(action__icontains=search) |
+                models.Q(module__icontains=search)
+            )
+        
+        return queryset.order_by('-created_at')
+    
+    @action(detail=False, methods=['get'], url_path='action-choices')
+    def action_choices(self, request):
+        """Получение списка доступных действий"""
+        return Response({
+            'actions': [{'value': c[0], 'label': c[1]} for c in UserActionLog.ACTION_CHOICES],
+            'modules': [{'value': c[0], 'label': c[1]} for c in UserActionLog.MODULE_CHOICES],
+        })
+    
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Получение статистики по действиям"""
+        user = request.user
+        
+        # Исправлено: используем django.utils.timezone
+        last_30_days = django_timezone.now() - django_timezone.timedelta(days=30)
+        
+        total_actions = UserActionLog.objects.filter(
+            user=user,
+            created_at__gte=last_30_days
+        ).count()
+        
+        actions_by_type = UserActionLog.objects.filter(
+            user=user,
+            created_at__gte=last_30_days
+        ).values('action').annotate(count=models.Count('id')).order_by('-count')
+        
+        actions_by_module = UserActionLog.objects.filter(
+            user=user,
+            created_at__gte=last_30_days
+        ).values('module').annotate(count=models.Count('id')).order_by('-count')
+        
+        last_login = UserActionLog.objects.filter(
+            user=user,
+            action='login'
+        ).order_by('-created_at').first()
+        
+        return Response({
+            'total_actions': total_actions,
+            'actions_by_type': list(actions_by_type),
+            'actions_by_module': list(actions_by_module),
+            'last_login': last_login.created_at if last_login else None,
+        })
+    
+    @action(detail=False, methods=['get'], url_path='storage-stats')
+    def storage_stats(self, request):
+        """Получение статистики по хранилищу"""
+        from .logging_utils import get_storage_statistics
+        
+        days = request.query_params.get('days', 30)
+        try:
+            days = int(days)
+        except ValueError:
+            days = 30
+        
+        stats = get_storage_statistics(request.user, days)
+        serializer = StorageStatisticsSerializer(stats)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='file-types')
+    def file_types(self, request):
+        """Получение списка уникальных типов файлов"""
+        file_types = UserActionLog.objects.filter(
+            user=request.user,
+            file_type__isnull=False
+        ).values_list('file_type', flat=True).distinct().order_by('file_type')
+        
+        return Response(list(file_types))
+    
+    @action(detail=False, methods=['get'], url_path='storage-locations')
+    def storage_locations(self, request):
+        """Получение списка уникальных мест хранения"""
+        locations = UserActionLog.objects.filter(
+            user=request.user,
+            storage_location__isnull=False
+        ).values_list('storage_location', flat=True).distinct().order_by('storage_location')
+        
+        return Response(list(locations))
+    
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """Экспорт логов в CSV"""
+        from django.http import HttpResponse
+        import csv
+        
+        logs = self.get_queryset()
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="user_actions_{django_timezone.now().date()}.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow([
+            'Дата и время', 'Пользователь', 'Действие', 'Модуль', 'Объект',
+            'ID объекта', 'Детали', 'IP адрес', 'Путь к файлу', 'Размер файла',
+            'Тип файла', 'Место хранения'
+        ])
+        
+        for log in logs:
+            writer.writerow([
+                django_timezone.localtime(log.created_at).strftime('%d.%m.%Y %H:%M:%S'),
+                log.user.username,
+                log.get_action_display(),
+                log.get_module_display(),
+                log.object_name or '',
+                log.object_id or '',
+                str(log.details) if log.details else '',
+                log.ip_address or '',
+                log.file_path or '',
+                log.get_file_size_display(),
+                log.file_type or '',
+                log.storage_location or ''
+            ])
+        
+        return response

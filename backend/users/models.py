@@ -3,14 +3,31 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 from django.core.files.storage import default_storage
+import logging
 import os
 import re
 import uuid
-from django.db.models.signals import post_save
+from datetime import datetime
 from django.dispatch import receiver
-from django.core.files.storage import default_storage
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.db.models.signals import post_save, pre_delete
+from .logs_models import UserActionLog
+from threading import local
+_thread_locals = local()
 
+def get_current_request():
+    """Получение текущего запроса из thread local storage"""
+    return getattr(_thread_locals, 'request', None)
+
+def set_current_request(request):
+    """Установка текущего запроса в thread local storage"""
+    _thread_locals.request = request
+
+# Используем относительные импорты
+from .logging_utils import log_user_action, log_storage_action
 from facilities.models import Division, Subdivision
+
+logger = logging.getLogger(__name__)
 
 def employee_photo_path(instance, filename):
     # Очищаем ФИО от недопустимых символов
@@ -649,3 +666,114 @@ def assign_default_role(sender, instance, created, **kwargs):
             instance.groups.add(default_group)
         except Group.DoesNotExist:
             pass
+    
+@receiver(user_logged_in)
+def log_user_login(sender, request, user, **kwargs):
+    """Логирование входа пользователя"""
+    from .logging_utils import log_user_action
+    log_user_action(
+        user=user,
+        action='login',
+        module='auth',
+        request=request,
+        details={'login_type': 'password'}
+    )
+
+@receiver(user_logged_out)
+def log_user_logout(sender, request, user, **kwargs):
+    """Логирование выхода пользователя"""
+    from .logging_utils import log_user_action
+    if user:
+        log_user_action(
+            user=user,
+            action='logout',
+            module='auth',
+            request=request
+        )
+
+@receiver(post_save, sender=User)
+def log_user_changes(sender, instance, created, **kwargs):
+    """Логирование изменений пользователя"""
+    action = 'create' if created else 'update'
+    
+    # Получаем запрос из thread local storage (нужно настроить в middleware)
+    from django.utils.functional import SimpleLazyObject
+    try:
+        from django.utils.deprecation import get_current_request
+        request = get_current_request()
+    except:
+        request = None
+    
+    log_user_action(
+        user=instance,
+        action=action,
+        module='users',
+        request=request,
+        model_name='User',
+        object_id=instance.id,
+        object_name=instance.username,
+        details={
+            'changed_fields': list(kwargs.get('update_fields', [])),
+            'is_staff': instance.is_staff,
+            'is_active': instance.is_active,
+        }
+    )
+
+    
+@receiver(post_save, sender=Employee)
+def log_employee_photo_upload(sender, instance, **kwargs):
+    """Логирование загрузки фотографии сотрудника"""
+    from .logging_utils import log_storage_action
+    
+    # Получаем пользователя из контекста (в реальном приложении нужно передавать)
+    try:
+        from django.utils.functional import SimpleLazyObject
+        from django.utils.deprecation import get_current_request
+        request = get_current_request()
+        user = request.user if request and request.user.is_authenticated else None
+    except:
+        user = None
+    
+    if instance.photo and user:
+        log_storage_action(
+            user=user,
+            action='upload',
+            file_path=instance.photo.name,
+            file_size=instance.photo.size,
+            model_name='Employee',
+            object_id=instance.id,
+            object_name=instance.full_name,
+            details={
+                'field': 'photo',
+                'employee_id': instance.id,
+                'employee_name': instance.full_name,
+            }
+        )
+
+@receiver(pre_delete, sender=Employee)
+def log_employee_photo_delete(sender, instance, **kwargs):
+    """Логирование удаления фотографии сотрудника"""
+    from .logging_utils import log_storage_action
+    
+    try:
+        from django.utils.functional import SimpleLazyObject
+        from django.utils.deprecation import get_current_request
+        request = get_current_request()
+        user = request.user if request and request.user.is_authenticated else None
+    except:
+        user = None
+    
+    if instance.photo and user:
+        log_storage_action(
+            user=user,
+            action='delete',
+            file_path=instance.photo.name,
+            model_name='Employee',
+            object_id=instance.id,
+            object_name=instance.full_name,
+            details={
+                'field': 'photo',
+                'employee_id': instance.id,
+                'employee_name': instance.full_name,
+            }
+        )
