@@ -75,9 +75,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         e.dataTransfer.setData('text/plain', JSON.stringify(item));
         e.dataTransfer.effectAllowed = 'move';
         
-        // Добавляем визуальную обратную связь
         const target = e.target as HTMLElement;
-        target.style.opacity = '0.4';
+        target.style.opacity = '0.6';
     };
 
     const handleDragEnd = (e: React.DragEvent) => {
@@ -95,7 +94,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         e.preventDefault();
         e.stopPropagation();
         
-        // Проверяем, вышли ли мы за пределы элемента
         const relatedTarget = e.relatedTarget as Node;
         const currentTarget = e.currentTarget as Node;
         
@@ -108,8 +106,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         e.preventDefault();
         e.stopPropagation();
         setDragOver(false);
-
-        
     };
 
     const formatTotalSize = (bytes: number): string => {

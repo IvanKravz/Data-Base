@@ -4,8 +4,8 @@ import './styles/StorageSidebar.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 
 interface StorageSidebarProps {
-    currentView: 'explorer' | 'recent' | 'favorites' | 'trash'; // Убрал 'statistics'
-    onViewChange: (view: 'explorer' | 'recent' | 'favorites' | 'trash') => void; // Убрал 'statistics'
+    currentView: 'explorer' | 'recent' | 'favorites' | 'trash';
+    onViewChange: (view: 'explorer' | 'recent' | 'favorites' | 'trash') => void;
     viewType: 'work' | 'personal';
     onViewTypeChange: (type: 'work' | 'personal') => void;
     permissions: StoragePermissions;
@@ -31,7 +31,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         storageQuota: null as number | null,
     });
 
-    // Обновляем статистику при изменении permissions
     useEffect(() => {
         setStorageStats({
             usagePercentage: permissions.usagePercentage || 0,
@@ -46,32 +45,26 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
     }, [permissions]);
 
     const menuItems = [
-        { id: 'explorer', icon: 'folder', label: 'Мои файлы' },
+        { id: 'explorer', icon: 'folder', label: 'Файлы' },
         { id: 'recent', icon: 'history', label: 'Недавние' },
         { id: 'favorites', icon: 'star', label: 'Избранное' },
-        // Убрал пункт 'statistics'
         { id: 'trash', icon: 'trash', label: 'Корзина' },
     ];
 
-    // Убрал весь блок quickFolders
-
-    // Функция для определения класса прогресс-бара
     const getProgressBarClass = () => {
         if (storageStats.isQuotaExceeded) return 'storage-progress-critical';
         if (storageStats.isNearQuota) return 'storage-progress-warning';
-        return 'storage-progress-normal';
+        return '';
     };
 
-    // Функция для отображения оставшегося места
     const renderRemainingStorage = () => {
         if (storageStats.storageQuota && storageStats.remainingStorage !== null) {
             return (
                 <div className="storage-info-item">
                     <span className="storage-info-label">
-                        <div className="fas fa-space-shuttle"></div> Осталось:
+                        <i className="fas fa-space-shuttle"></i> Осталось:
                     </span>
-                    <span className={`storage-info-value ${storageStats.isNearQuota || storageStats.isQuotaExceeded ? 'storage-warning' : ''
-                        }`}>
+                    <span className={`storage-info-value ${storageStats.isNearQuota || storageStats.isQuotaExceeded ? 'storage-warning' : ''}`}>
                         {formatBytes(storageStats.remainingStorage)}
                     </span>
                 </div>
@@ -80,12 +73,11 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         return null;
     };
     
-    // Функция для отображения предупреждений
     const renderStorageAlerts = () => {
         if (storageStats.isQuotaExceeded) {
             return (
                 <div className="storage-alert storage-alert-error">
-                    <div className="fas fa-exclamation-circle"></div>
+                    <i className="fas fa-exclamation-circle"></i>
                     <span>Превышена квота хранилища! Очистите ненужные файлы.</span>
                 </div>
             );
@@ -94,7 +86,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         if (storageStats.isNearQuota) {
             return (
                 <div className="storage-alert storage-alert-warning">
-                    <div className="fas fa-exclamation-triangle"></div>
+                    <i className="fas fa-exclamation-triangle"></i>
                     <span>Хранилище почти заполнено ({storageStats.usagePercentage.toFixed(1)}%)</span>
                 </div>
             );
@@ -102,7 +94,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
 
         return null;
     };
-
 
     return (
         <div className="storage-sidebar">
@@ -132,7 +123,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                     <ul className="storage-menu-list">
                         {menuItems.map(item => {
                             if (item.id === 'trash' && !permissions.canViewTrash) return null;
-                            // Убрал проверку для 'statistics'
 
                             return (
                                 <li key={item.id}>
@@ -152,8 +142,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                         })}
                     </ul>
                 </div>
-
-                {/* Убрал весь раздел "Быстрый доступ" */}
 
                 {currentView === 'trash' && permissions.canEmptyTrash && (
                     <div className="storage-trash-actions">
@@ -175,7 +163,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                         <div className="storage-info-grid">
                             <div className="storage-info-item">
                                 <span className="storage-info-label">
-                                    <div className="fas fa-hdd"></div> Использовано:
+                                    <i className="fas fa-hdd"></i> Использовано:
                                 </span>
                                 <span className="storage-info-value">
                                     {formatBytes(storageStats.usedStorage)}
@@ -185,7 +173,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                             {storageStats.storageQuota && (
                                 <div className="storage-info-item">
                                     <span className="storage-info-label">
-                                        <div className="fas fa-database"></div> Всего:
+                                        <i className="fas fa-database"></i> Всего:
                                     </span>
                                     <span className="storage-info-value">
                                         {formatBytes(storageStats.storageQuota)}
@@ -197,7 +185,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
 
                             <div className="storage-info-item">
                                 <span className="storage-info-label">
-                                    <div className="fas fa-folder"></div> Папок:
+                                    <i className="fas fa-folder"></i> Папок:
                                 </span>
                                 <span className="storage-info-value">
                                     {storageStats.foldersCount}
@@ -206,7 +194,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
 
                             <div className="storage-info-item">
                                 <span className="storage-info-label">
-                                    <div className="fas fa-file"></div> Файлов:
+                                    <i className="fas fa-file"></i> Файлов:
                                 </span>
                                 <span className="storage-info-value">
                                     {storageStats.filesCount}
@@ -257,7 +245,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
 
 const formatBytes = (bytes: number): string => {
     if (bytes === 0 || bytes === null || bytes === undefined) return '0 B';
-    if (bytes < 0) return '-'; // или можно вернуть 0 B
+    if (bytes < 0) return '-';
 
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];

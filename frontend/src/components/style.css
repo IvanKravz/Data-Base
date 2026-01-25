@@ -6,7 +6,7 @@
 
 /* Хедер с градиентом */
 .header {
-  background: linear-gradient(to right, #2563eb, #4f46e5);
+  background: #466cd5;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0 1rem;
   position: fixed;

@@ -68,7 +68,6 @@
 
 .create-employee-button:hover {
   background-color: #3182ce;
-  transform: translateY(-1px);
 }
 
 .personnel-container {

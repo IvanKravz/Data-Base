@@ -3,39 +3,36 @@
 .storage-folder-card {
     position: relative;
     background: white;
-    border-radius: 16px;
-    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
     width: 160px;
-    height: 190px;
+    height: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     padding: 12px 0;
-    will-change: transform;
 }
 
 .storage-folder-card:hover {
-    transform: translateY(-1px);
-    border-color: #e2e8f0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: #4299e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .storage-folder-card.selected {
-    border-color: #3b82f6;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(59, 130, 246, 0.08) 100%);
+    border-color: #4299e1;
+    background: #e6f7ff;
 }
 
 .storage-folder-card-header {
     position: absolute;
-    top: 7px;
-    left: 3px;
-    right: 12px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -44,7 +41,7 @@
 
 .storage-folder-select {
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
 /* Для режима карточки (grid) показываем чекбокс только при наведении или выборе */
@@ -69,18 +66,18 @@
 .storage-folder-checkbox {
     width: 20px;
     height: 20px;
-    border-radius: 6px;
+    border-radius: 4px;
     border: 2px solid #cbd5e1;
     background: white;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     appearance: none;
     position: relative;
 }
 
 .storage-folder-checkbox:checked {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #4299e1;
+    border-color: #4299e1;
 }
 
 .storage-folder-checkbox:checked::after {
@@ -96,7 +93,7 @@
 }
 
 .storage-folder-pin-indicator {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: #ed8936;
     color: white;
     width: 24px;
     height: 24px;
@@ -104,20 +101,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.05);
-    }
 }
 
 .storage-folder-icon-container {
@@ -133,9 +116,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 20px;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .storage-folder-card:hover .storage-folder-icon-gradient {
@@ -143,28 +126,28 @@
 }
 
 .storage-folder-icon-gradient.personal {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1d4ed8;
+    background: #e6f7ff;
+    color: #2c5282;
 }
 
 .storage-folder-icon-gradient.shared {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    background: #f0f9ff;
     color: #0369a1;
 }
 
 .storage-folder-icon-gradient.pinned {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #d97706;
+    background: #fffaf0;
+    color: #d69e2e;
 }
 
 .storage-folder-icon-gradient.has-subfolders {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #059669;
+    background: #f0fff4;
+    color: #38a169;
 }
 
 .storage-folder-icon-gradient.default {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #64748b;
+    background: #f7fafc;
+    color: #718096;
 }
 
 .storage-folder-card-body {
@@ -173,23 +156,23 @@
 }
 
 .storage-folder-title {
-    font-size: 1.1rem;
+    font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #2d3748;
     line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    max-height: 42px;
+    max-height: 40px;
 }
 
 .storage-folder-badges {
     display: flex;
     justify-content: center;
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 .storage-folder-type-badge {
@@ -197,8 +180,8 @@
     font-weight: 500;
     padding: 2px 8px;
     border-radius: 12px;
-    background: #f1f5f9;
-    color: #64748b;
+    background: #edf2f7;
+    color: #718096;
     white-space: nowrap;
 }
 
@@ -220,25 +203,23 @@
     grid-template-columns: auto auto 1fr auto auto;
     align-items: center;
     gap: 10px;
-    padding: 16px 10px;
+    padding: 12px 16px;
     background: white;
-    border-radius: 12px;
+    border-radius: 8px;
     border: 1px solid transparent;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     cursor: pointer;
     margin: 2px 0;
-    will-change: transform;
 }
 
 .storage-folder-row:hover {
-    background: #f8fafc;
+    background: #f7fafc;
     border-color: #e2e8f0;
-    transform: translateX(2px);
 }
 
 .storage-folder-row.selected {
-    background: #eff6ff;
-    border-color: #3b82f6;
+    background: #e6f7ff;
+    border-color: #4299e1;
 }
 
 .storage-folder-row-icon {
@@ -247,7 +228,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 8px;
 }
 
 .storage-folder-row-icon .storage-folder-icon-gradient {
@@ -270,16 +251,16 @@
 
 .storage-folder-row-title {
     margin: 0;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #2d3748;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .storage-folder-row-pin {
-    color: #f59e0b;
+    color: #ed8936;
     display: flex;
     align-items: center;
 }
@@ -288,8 +269,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
-    color: #64748b;
+    font-size: 12px;
+    color: #718096;
 }
 
 .storage-folder-separator {
@@ -308,15 +289,15 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    color: #475569;
+    color: #4a5568;
     min-width: 80px;
 }
 
 .storage-folder-row-date {
-    font-size: 13px;
-    color: #64748b;
+    font-size: 12px;
+    color: #718096;
     min-width: 100px;
 }
 
@@ -338,19 +319,16 @@
     justify-content: center;
     background: white;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    color: #64748b;
+    border-radius: 6px;
+    color: #718096;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.15s ease;
 }
 
 .storage-folder-action-btn:hover {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #4299e1;
+    border-color: #4299e1;
     color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* Анимации */
@@ -359,7 +337,6 @@
         opacity: 0;
         transform: translateY(10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -375,7 +352,7 @@
 @media (max-width: 1024px) {
     .storage-folder-card {
         width: 180px;
-        height: 180px;
+        height: 170px;
         padding: 16px;
     }
 
@@ -388,7 +365,7 @@
 @media (max-width: 768px) {
     .storage-folder-card {
         width: 160px;
-        height: 170px;
+        height: 160px;
         padding: 12px;
     }
 
@@ -405,82 +382,5 @@
     .storage-folder-row-meta {
         flex-wrap: wrap;
         gap: 4px;
-    }
-}
-
-/* Темная тема */
-@media (prefers-color-scheme: dark) {
-    .storage-folder-card {
-        background: #1e293b;
-        border-color: #334155;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .storage-folder-card:hover {
-        background: #2d3748;
-        border-color: #475569;
-    }
-
-    .storage-folder-card.selected {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 100%);
-        border-color: #3b82f6;
-    }
-
-    .storage-folder-title,
-    .storage-folder-row-title {
-        color: #f1f5f9;
-    }
-
-    .storage-folder-checkbox {
-        background: #334155;
-        border-color: #475569;
-    }
-
-    .storage-folder-icon-gradient.personal {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-        color: #93c5fd;
-    }
-
-    .storage-folder-icon-gradient.shared {
-        background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
-        color: #7dd3fc;
-    }
-
-    .storage-folder-icon-gradient.pinned {
-        background: linear-gradient(135deg, #92400e 0%, #b45309 100%);
-        color: #fcd34d;
-    }
-
-    .storage-folder-icon-gradient.has-subfolders {
-        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-        color: #86efac;
-    }
-
-    .storage-folder-icon-gradient.default {
-        background: linear-gradient(135deg, #334155 0%, #475569 100%);
-        color: #94a3b8;
-    }
-
-    .storage-folder-type-badge {
-        background: #334155;
-        color: #cbd5e1;
-    }
-
-    .storage-folder-row {
-        background: #1e293b;
-    }
-
-    .storage-folder-row:hover {
-        background: #2d3748;
-    }
-
-    .storage-folder-row.selected {
-        background: rgba(59, 130, 246, 0.1);
-    }
-
-    .storage-folder-action-btn {
-        background: #334155;
-        border-color: #475569;
-        color: #cbd5e1;
     }
 }

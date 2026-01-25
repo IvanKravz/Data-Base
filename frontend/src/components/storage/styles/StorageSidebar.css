@@ -1,59 +1,60 @@
 /* components/storage/styles/StorageSidebar.css */
 .storage-sidebar {
-    width: 280px;
+    width: 260px;
     height: 100%;
-    background: linear-gradient(180deg, #669dd3 0%, #376998 100%);
-    color: white;
+    background-color: #ffffff;
+    color: #2d3748;
     display: flex;
     flex-direction: column;
-    border-radius: 0.5rem;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
 .storage-sidebar-header {
-    padding: 24px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f7fafc;
+    border-radius: 8px 8px 0 0;
 }
 
 .storage-sidebar-title {
-    margin: 0 0 20px 0;
-    font-size: 24px;
+    margin: 0 0 16px 0;
+    font-size: 18px;
     font-weight: 600;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: #2d3748;
 }
 
 .storage-view-toggle {
     display: flex;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 4px;
+    background-color: #edf2f7;
+    border-radius: 6px;
+    padding: 2px;
 }
 
 .storage-view-toggle-btn {
     flex: 1;
-    padding: 8px 12px;
+    padding: 6px 12px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
+    color: #718096;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.3s ease;
+    border-radius: 4px;
+    transition: all 0.15s ease;
 }
 
 .storage-view-toggle-btn:hover:not(:disabled) {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+    color: #2d3748;
+    background-color: #e2e8f0;
 }
 
 .storage-view-toggle-btn.active {
-    background: #3498db;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;
+    color: #2c5282;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .storage-view-toggle-btn:disabled {
@@ -64,17 +65,17 @@
 .storage-sidebar-menu {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 0;
+    padding: 16px 0;
 }
 
 .storage-menu-section {
-    margin-bottom: 1rem;
+    margin-bottom: 20px;
 }
 
 .storage-menu-section-title {
-    margin: 0 20px 12px 20px;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+    margin: 0 16px 8px 16px;
+    font-size: 12px;
+    color: #718096;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -87,35 +88,36 @@
 }
 
 .storage-menu-list li {
-    margin: 2px 0;
+    margin: 1px 0;
 }
 
 .storage-menu-item {
     width: 100%;
-    padding: 10px 8px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
-    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 500;
     text-align: left;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
     position: relative;
+    white-space: nowrap;
 }
 
 .storage-menu-item:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background-color: #f7fafc;
+    color: #2c5282;
 }
 
 .storage-menu-item.active {
-    background: rgba(238, 232, 120, 0.2);
-    color: #022a45;
-    border-left: 4px solid #c7ba25;
+    background-color: #ebf8ff;
+    color: #2c5282;
+    border-left: 3px solid #4299e1;
 }
 
 .storage-menu-item:disabled {
@@ -124,49 +126,59 @@
 }
 
 .storage-menu-item i {
-    width: 20px;
-    font-size: 16px;
+    width: 16px;
+    font-size: 14px;
+    flex-shrink: 0;
 }
 
-.storage-menu-item span {
+/* Основной текст меню */
+.storage-menu-item > span:not(.storage-menu-badge) {
     flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
 }
 
+/* Бейдж для корзины */
 .storage-menu-badge {
-    background: #e74c3c;
+    background: #e53e3e;
     color: white;
     font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    max-width: 3rem;
+    padding: 2px 6px;
+    border-radius: 0.5rem;
+    min-width: 20px;
     text-align: center;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .storage-trash-actions {
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 8px;
 }
 
 .storage-empty-trash-btn {
     width: 100%;
-    padding: 12px 16px;
-    background: rgba(231, 76, 60, 0.2);
-    color: #e74c3c;
-    border: 1px solid rgba(231, 76, 60, 0.3);
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 10px 16px;
+    background-color: #fed7d7;
+    color: #c53030;
+    border: 1px solid #feb2b2;
+    border-radius: 6px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.15s ease;
 }
 
 .storage-empty-trash-btn:hover:not(:disabled) {
-    background: rgba(231, 76, 60, 0.3);
-    border-color: #e74c3c;
+    background-color: #feb2b2;
+    border-color: #fc8181;
 }
 
 .storage-empty-trash-btn:disabled {
@@ -176,33 +188,32 @@
 
 /* Блок информации о хранилище */
 .storage-info-section {
-    /* margin-top: auto; */
-    padding: 20px;
-    /* background-color: rgba(0, 0, 0, 0.1); */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px;
+    border-top: 1px solid #e2e8f0;
+    background-color: #f7fafc;
+    border-radius: 0 0 8px 8px;
 }
 
 .storage-info-section-title {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 15px;
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 12px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .storage-storage-info {
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    background-color: #ffffff;
+    border-radius: 6px;
     padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    border: 1px solid #e2e8f0;
 }
 
 .storage-info-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4px;
+    gap: 8px;
     margin-bottom: 16px;
 }
 
@@ -210,38 +221,33 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.storage-info-item:last-child {
-    border-bottom: none;
+    padding: 4px 0;
 }
 
 .storage-info-label {
     display: flex;
-    /* align-items: center; */
-    color: rgba(255, 255, 255, 0.7);
+    align-items: center;
+    color: #718096;
     font-size: 13px;
     font-weight: 500;
 }
 
 .storage-info-label i {
-    color: rgba(255, 255, 255, 0.5);
-    width: 16px;
-    /* text-align: center; */
+    margin-right: 6px;
+    color: #a0aec0;
+    width: 14px;
+    text-align: center;
 }
 
 .storage-info-value {
     font-weight: 600;
-    color: white;
+    color: #2d3748;
     font-size: 13px;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .storage-info-value.storage-warning {
-    color: #ffc107;
-    font-weight: bold;
+    color: #d69e2e;
+    font-weight: 600;
 }
 
 /* Прогресс-бар */
@@ -252,224 +258,75 @@
 .storage-progress-labels {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #718096;
 }
 
 .storage-progress-bar {
-    height: 8px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    height: 6px;
+    background-color: #e2e8f0;
+    border-radius: 3px;
     overflow: hidden;
-    position: relative;
-}
-
-.storage-progress-bar.storage-progress-normal .storage-progress-fill {
-    background: linear-gradient(90deg, #4CAF50, #8BC34A);
-}
-
-.storage-progress-bar.storage-progress-warning .storage-progress-fill {
-    background: linear-gradient(90deg, #FFC107, #FF9800);
-}
-
-.storage-progress-bar.storage-progress-critical .storage-progress-fill {
-    background: linear-gradient(90deg, #F44336, #E91E63);
 }
 
 .storage-progress-fill {
     height: 100%;
-    transition: width 0.5s ease-in-out;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: #4299e1;
+    transition: width 0.3s ease;
+    border-radius: 3px;
 }
 
-/* Счетчики */
-.storage-counts {
-    display: flex;
-    gap: 20px;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+.storage-progress-bar.storage-progress-warning .storage-progress-fill {
+    background-color: #ed8936;
 }
 
-.storage-count-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-}
-
-.storage-count-icon {
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.storage-count-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.storage-count-number {
-    font-size: 20px;
-    font-weight: bold;
-    color: white;
-    line-height: 1;
-}
-
-.storage-count-label {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.storage-progress-bar.storage-progress-critical .storage-progress-fill {
+    background-color: #f56565;
 }
 
 /* Предупреждения */
 .storage-alert {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-top: 12px;
     padding: 10px 12px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 500;
-    animation: slideIn 0.3s ease;
 }
 
 .storage-alert-warning {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.2));
-    border: 1px solid rgba(255, 193, 7, 0.3);
-    color: #ffc107;
+    background-color: #fefcbf;
+    border: 1px solid #f6e05e;
+    color: #b7791f;
 }
 
 .storage-alert-error {
-    background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(233, 30, 99, 0.2));
-    border: 1px solid rgba(244, 67, 54, 0.3);
-    color: #f44336;
+    background-color: #fed7d7;
+    border: 1px solid #fc8181;
+    color: #c53030;
 }
 
 .storage-alert i {
     font-size: 14px;
-    min-width: 16px;
 }
 
 /* Информация о максимальном размере */
 .storage-max-size-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
+    border-top: 1px solid #e2e8f0;
+    font-size: 12px;
+    color: #a0aec0;
 }
 
 .storage-max-size-info i {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-/* Футер */
-.storage-sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.storage-user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: relative;
-}
-
-.storage-user-avatar {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.storage-user-details {
-    flex: 1;
-}
-
-.storage-user-name {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: white;
-}
-
-.storage-user-role {
-    display: block;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.storage-quota-warning-icon {
-    color: #f44336;
-    font-size: 18px;
-    animation: pulse 2s infinite;
-}
-
-/* Анимации */
-@keyframes storage-slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(50px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.6;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.6;
-    }
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.storage-sidebar {
-    animation: storage-slideIn 0.3s ease-out;
+    color: #cbd5e0;
 }
 
 /* Адаптивность */
@@ -477,52 +334,12 @@
     .storage-sidebar {
         width: 100%;
         height: auto;
-        max-height: 500px;
         order: 2;
-        margin-top: 20px;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .storage-sidebar-menu {
-        max-height: 30px;
-    }
-
-    .storage-menu-item.active {
-        border-left: none;
-        border-bottom: 3px solid #c7ba25;
+        margin-top: 16px;
     }
 
     .storage-info-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-
-    .storage-counts {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .storage-count-item {
-        justify-content: flex-start;
-    }
-}
-
-/* Темная тема для контраста */
-@media (prefers-color-scheme: dark) {
-    .storage-sidebar {
-        background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
-    }
-
-    .storage-view-toggle-btn.active {
-        background: #3498db;
-    }
-
-    .storage-storage-info {
-        background-color: rgba(0, 0, 0, 0.3);
-    }
-
-    .storage-count-icon {
-        background: rgba(255, 255, 255, 0.15);
+        gap: 12px;
     }
 }

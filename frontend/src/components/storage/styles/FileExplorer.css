@@ -1,23 +1,19 @@
 /* components/storage/styles/FileExplorer.css */
 
 :root {
-    --file-explorer-primary: #3d7ac9;
-    --file-explorer-primary-light: #818cf8;
-    --file-explorer-primary-dark: #4f46e5;
+    --file-explorer-primary: #2c5282;
+    --file-explorer-primary-light: #4299e1;
     --file-explorer-bg: #ffffff;
-    --file-explorer-surface: #f8fafc;
+    --file-explorer-surface: #f7fafc;
     --file-explorer-border: #e2e8f0;
-    --file-explorer-text: #334155;
-    --file-explorer-text-light: #64748b;
-    --file-explorer-text-lighter: #94a3b8;
-    --file-explorer-success: #10b981;
-    --file-explorer-warning: #f59e0b;
-    --file-explorer-error: #ef4444;
-    --file-explorer-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --file-explorer-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --file-explorer-radius: 0.5rem;
-    --file-explorer-radius-sm: 8px;
-    --file-explorer-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --file-explorer-text: #2d3748;
+    --file-explorer-text-light: #718096;
+    --file-explorer-success: #38a169;
+    --file-explorer-warning: #d69e2e;
+    --file-explorer-error: #e53e3e;
+    --file-explorer-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --file-explorer-radius: 8px;
+    --file-explorer-transition: all 0.15s ease;
 }
 
 .file-explorer {
@@ -26,16 +22,13 @@
     border: 1px solid var(--file-explorer-border);
     border-radius: var(--file-explorer-radius);
     background-color: var(--file-explorer-bg);
-    padding: 14px;
-    transition: none;
+    padding: 16px;
     overflow: hidden;
 }
 
 .file-explorer.drag-over {
     border-color: var(--file-explorer-primary);
-    background-color: rgba(99, 102, 241, 0.02);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    transition: none;
+    background-color: #f0f7ff;
 }
 
 /* Панель управления */
@@ -43,25 +36,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid var(--file-explorer-surface);
-    position: sticky;
-    top: 0;
-    background: var(--file-explorer-bg);
-    z-index: 10;
-    backdrop-filter: blur(8px);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--file-explorer-border);
 }
 
 .control-buttons {
     display: flex;
-    gap: 12px;
+    gap: 8px;
 }
 
 .control-button {
-    padding: 10px 20px;
+    padding: 8px 16px;
     border: 1px solid var(--file-explorer-border);
-    border-radius: var(--file-explorer-radius-sm);
+    border-radius: 6px;
     background-color: var(--file-explorer-surface);
     color: var(--file-explorer-text);
     cursor: pointer;
@@ -70,49 +58,39 @@
     transition: var(--file-explorer-transition);
     display: flex;
     align-items: center;
-    gap: 8px;
-    letter-spacing: 0.01em;
+    gap: 6px;
 }
 
 .control-button:hover:not(:disabled) {
-    background-color: #f1f5f9;
+    background-color: #edf2f7;
     border-color: var(--file-explorer-primary-light);
     color: var(--file-explorer-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--file-explorer-shadow);
-}
-
-.control-button:active:not(:disabled) {
-    transform: translateY(0);
 }
 
 .control-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: var(--file-explorer-surface);
 }
 
 .selection-info {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     font-size: 14px;
     color: var(--file-explorer-text-light);
-    font-weight: 500;
 }
 
 .selection-size {
-    padding: 8px 16px;
-    background: linear-gradient(135deg, var(--file-explorer-primary) 0%, var(--file-explorer-primary-light) 100%);
+    padding: 4px 12px;
+    background-color: var(--file-explorer-primary);
     color: white;
-    border-radius: 20px;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+    border-radius: 4px;
+    font-weight: 500;
 }
 
 /* Секции */
 .section {
-    margin-bottom: 40px;
+    margin-bottom: 32px;
 }
 
 .section:last-child {
@@ -122,57 +100,55 @@
 .section-title {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 1.25rem;
+    gap: 8px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--file-explorer-text);
-    margin-bottom: 14px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--file-explorer-surface);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--file-explorer-border);
 }
 
 .section-title .fas {
-    color: var(--file-explorer-warning);
-    font-size: 16px;
-    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2));
+    color: var(--file-explorer-primary);
+    font-size: 14px;
 }
 
-.section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--file-explorer-border), transparent);
-    margin-left: 12px;
+.counter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: var(--file-explorer-primary);
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
 }
 
 .folders-grid-view {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    justify-items: center;
+    gap: 12px;
 }
 
 .files-grid-view {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-    /* gap: 15px; */
-    justify-items: center;
+    gap: 12px;
 }
 
-/* Режимы отображения */
 .list-view {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     background: var(--file-explorer-surface);
-    border-radius: var(--file-explorer-radius-sm);
+    border-radius: 6px;
     overflow: hidden;
     border: 1px solid var(--file-explorer-border);
-}
-
-.grid-view {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 16px;
 }
 
 /* Пустое состояние */
@@ -181,116 +157,70 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 80px 20px;
+    padding: 60px 20px;
     text-align: center;
     color: var(--file-explorer-text-light);
 }
 
 .empty-state-icon {
-    font-size: 72px;
-    color: #e2e8f0;
-    margin-bottom: 24px;
-    opacity: 0.7;
-    position: relative;
-}
-
-.empty-state-icon::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120px;
-    height: 120px;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
-    border-radius: 50%;
+    font-size: 48px;
+    color: var(--file-explorer-border);
+    margin-bottom: 16px;
 }
 
 .empty-state h3 {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     color: var(--file-explorer-text);
-    background: linear-gradient(135deg, var(--file-explorer-text) 0%, var(--file-explorer-text-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .empty-state p {
-    font-size: 15px;
-    margin-bottom: 28px;
-    line-height: 1.6;
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.5;
     max-width: 400px;
-    color: var(--file-explorer-text-lighter);
 }
 
 .empty-state-actions {
     display: flex;
-    gap: 16px;
-    margin-top: 24px;
+    gap: 12px;
+    margin-top: 16px;
 }
 
 .upload-button,
 .create-folder-button {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
-    border-radius: var(--file-explorer-radius-sm);
-    font-size: 15px;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: var(--file-explorer-transition);
     border: none;
     outline: none;
-    position: relative;
-    overflow: hidden;
-}
-
-.upload-button::before,
-.create-folder-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
-}
-
-.upload-button:hover::before,
-.create-folder-button:hover::before {
-    left: 100%;
 }
 
 .upload-button {
-    background: linear-gradient(135deg, var(--file-explorer-primary) 0%, var(--file-explorer-primary-light) 100%);
+    background-color: var(--file-explorer-primary);
     color: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .upload-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-}
-
-.upload-button:active {
-    transform: translateY(0);
+    background-color: var(--file-explorer-primary-light);
 }
 
 .create-folder-button {
-    background: white;
+    background-color: var(--file-explorer-surface);
     color: var(--file-explorer-primary);
-    border: 2px solid var(--file-explorer-border);
-    box-shadow: var(--file-explorer-shadow);
+    border: 1px solid var(--file-explorer-border);
 }
 
 .create-folder-button:hover {
-    background: var(--file-explorer-surface);
+    background-color: #edf2f7;
     border-color: var(--file-explorer-primary-light);
-    transform: translateY(-2px);
-    box-shadow: var(--file-explorer-shadow-lg);
 }
 
 /* Зона перетаскивания */
@@ -304,30 +234,27 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(129, 140, 248, 0.95) 100%);
-    color: white;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: var(--file-explorer-primary);
     z-index: 1000;
     border-radius: var(--file-explorer-radius);
-    animation: fadeIn 0.2s ease;
-    backdrop-filter: blur(8px);
+    border: 2px dashed var(--file-explorer-primary);
 }
 
 .drop-zone .fas {
-    font-size: 72px;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
-    animation: pulse 2s infinite;
+    font-size: 48px;
+    margin-bottom: 16px;
 }
 
 .drop-zone p {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .drop-zone .subtext {
-    font-size: 14px;
-    opacity: 0.9;
+    font-size: 13px;
+    color: var(--file-explorer-text-light);
     font-weight: normal;
 }
 
@@ -336,90 +263,34 @@
     from {
         opacity: 0;
     }
-
     to {
         opacity: 1;
     }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-}
-
-/* Стили для счетчиков */
-.counter-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 8px;
-    background: var(--file-explorer-primary);
-    color: white;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-left: 8px;
 }
 
 /* Адаптивность */
-@media (max-width: 1024px) {
-    .grid-view {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
 @media (max-width: 768px) {
     .file-explorer {
-        padding: 16px;
-        border-radius: var(--file-explorer-radius-sm);
+        padding: 12px;
     }
 
     .controls {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
-        padding-bottom: 16px;
-        margin-bottom: 24px;
+        gap: 12px;
+        margin-bottom: 20px;
     }
 
     .control-buttons {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 
-    .control-button {
-        flex: 1;
-        justify-content: center;
-    }
-
-    .grid-view {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 12px;
-    }
-
-    .section-title {
-        font-size: 1.1rem;
+    .folders-grid-view,
+    .files-grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
     }
 
     .empty-state-actions {
@@ -436,90 +307,15 @@
 
     .selection-info {
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
         width: 100%;
-        align-items: stretch;
-    }
-
-    .selection-size {
-        text-align: center;
-        width: 100%;
+        align-items: flex-start;
     }
 }
 
 @media (max-width: 480px) {
-    .grid-view {
+    .folders-grid-view,
+    .files-grid-view {
         grid-template-columns: repeat(2, 1fr);
     }
-
-    .empty-state-icon {
-        font-size: 56px;
-    }
-
-    .empty-state h3 {
-        font-size: 18px;
-    }
-
-    .empty-state p {
-        font-size: 14px;
-    }
-}
-
-/* Темная тема (опционально) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --file-explorer-bg: #1e293b;
-        --file-explorer-surface: #0f172a;
-        --file-explorer-border: #334155;
-        --file-explorer-text: #f1f5f9;
-        --file-explorer-text-light: #cbd5e1;
-        --file-explorer-text-lighter: #94a3b8;
-    }
-
-    .file-explorer {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    }
-
-    .control-button {
-        background-color: #334155;
-        color: #f1f5f9;
-        border-color: #475569;
-    }
-
-    .control-button:hover:not(:disabled) {
-        background-color: #475569;
-    }
-
-    .create-folder-button {
-        background: #334155;
-        color: #f1f5f9;
-        border-color: #475569;
-    }
-
-    .create-folder-button:hover {
-        background: #475569;
-    }
-
-    .list-view {
-        background: #0f172a;
-    }
-}
-
-/* Стили для скроллбара (опционально) */
-.file-explorer::-webkit-scrollbar {
-    width: 8px;
-}
-
-.file-explorer::-webkit-scrollbar-track {
-    background: var(--file-explorer-surface);
-    border-radius: 4px;
-}
-
-.file-explorer::-webkit-scrollbar-thumb {
-    background: var(--file-explorer-border);
-    border-radius: 4px;
-}
-
-.file-explorer::-webkit-scrollbar-thumb:hover {
-    background: var(--file-explorer-primary-light);
 }

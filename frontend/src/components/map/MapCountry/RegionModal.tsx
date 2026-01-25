@@ -1,6 +1,7 @@
 import React from 'react';
 import Modal from './Modal';
 import './Modal.css';
+import { isAdmin } from '../../../api/utils/permissions';
 
 interface OfficeData {
   id?: string;
@@ -194,9 +195,12 @@ export const RegionModal: React.FC<RegionModalProps> = ({
           )}
 
           <div className="map-modal-actions">
-            <button onClick={onEdit} className="map-modal-edit-btn">
-              Редактировать
-            </button>
+            {/* Показываем кнопку редактирования только для администратора */}
+            {isAdmin() && (
+              <button onClick={onEdit} className="map-modal-edit-btn">
+                Редактировать
+              </button>
+            )}
             <button onClick={onClose} className="map-modal-close-btn">
               Закрыть
             </button>
