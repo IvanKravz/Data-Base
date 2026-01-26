@@ -4,16 +4,16 @@
 .cabinet-info-card {
     display: flex;
     align-items: center;
-    gap: 1rem; /* Уменьшен gap */
-    padding: 1rem; /* Уменьшен padding */
+    gap: 1rem;
+    padding: 1rem;
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 0.75rem; /* Уменьшен радиус */
-    margin-bottom: 1.5rem; /* Уменьшен margin */
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
     border: 1px solid #e2e8f0;
 }
 
 .cabinet-avatar {
-    width: 4rem; /* Уменьшен размер */
+    width: 4rem;
     height: 4rem;
     background: white;
     border-radius: 0.75rem;
@@ -30,7 +30,7 @@
 }
 
 .cabinet-user-name {
-    font-size: 1.25rem; /* Уменьшен шрифт */
+    font-size: 1.25rem;
     font-weight: 600;
     color: #1e293b;
     margin-bottom: 0.25rem;
@@ -39,7 +39,7 @@
 
 .cabinet-user-role {
     color: #64748b;
-    font-size: 0.75rem; /* Уменьшен шрифт */
+    font-size: 0.75rem;
     line-height: 1.4;
 }
 
@@ -47,7 +47,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem; /* Уменьшен padding */
+    padding: 0.5rem 1rem;
     background: #3b82f6;
     color: white;
     border: none;
@@ -57,7 +57,7 @@
     transition: all 0.2s ease;
     flex-shrink: 0;
     white-space: nowrap;
-    font-size: 0.875rem; /* Уменьшен шрифт */
+    font-size: 0.875rem;
 }
 
 .cabinet-edit-btn:hover {
@@ -66,35 +66,68 @@
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
 }
 
-/* Форма редактирования */
+/* Основной контейнер для сетки */
+.profile-grid-container {
+    width: 100%;
+}
+
+/* Сетка с тремя колонками */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+    }
+}
+
+@media (min-width: 1400px) {
+    .profile-grid {
+        grid-template-columns: 1fr 1.2fr 1.8fr;
+        gap: 0.5rem;
+    }
+}
+
+/* Общие стили для всех блоков */
 .cabinet-form-section {
     background: white;
     border-radius: 0.75rem;
     border: 1px solid #e2e8f0;
-    padding: 1rem; /* Уменьшен padding */
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: fit-content;
 }
 
+/* Заголовок секции */
 .form-section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem; /* Уменьшен margin */
+    margin-bottom: 1rem;
+    min-height: 2rem;
 }
 
 .form-section-title {
-    font-size: 1.125rem; /* Уменьшен шрифт */
+    font-size: 1.125rem;
     font-weight: 600;
     color: #1e293b;
+    display: flex;
+    align-items: center;
 }
 
 .form-actions {
     display: flex;
-    gap: 0.5rem; /* Уменьшен gap */
+    gap: 0.5rem;
 }
 
 .form-cancel-btn {
-    padding: 0.5rem 1rem; /* Уменьшен padding */
+    padding: 0.5rem 1rem;
     background: #f1f5f9;
     color: #64748b;
     border: none;
@@ -103,7 +136,7 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
     white-space: nowrap;
-    font-size: 0.875rem; /* Уменьшен шрифт */
+    font-size: 0.875rem;
 }
 
 .form-cancel-btn:hover {
@@ -114,7 +147,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem; /* Уменьшен padding */
+    padding: 0.5rem 1rem;
     background: #10b981;
     color: white;
     border: none;
@@ -123,53 +156,212 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
     white-space: nowrap;
-    font-size: 0.875rem; /* Уменьшен шрифт */
+    font-size: 0.875rem;
 }
 
 .form-save-btn:hover {
     background: #059669;
 }
 
-.form-grid {
+/* Таблица основной информации */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.info-table-row {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.info-table-row:last-child {
+    border-bottom: none;
+}
+
+.info-table-label {
+    padding: 0.75rem 0;
+    width: 45%;
+    vertical-align: top;
+}
+
+.info-table-value {
+    padding: 0.75rem 0;
+    width: 55%;
+}
+
+/* Стили для блока модулей */
+.permissions-modules-section {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+}
+
+.modules-grid {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 1rem; /* Уменьшен gap */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
 }
 
-@media (min-width: 768px) {
-    .form-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.form-field {
+.module-card {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem; /* Уменьшен gap */
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-height: 80px;
+    justify-content: center;
 }
 
+.module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.module-icon-container {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.module-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #3b82f6;
+}
+
+.module-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.2;
+}
+
+/* Стили для блока детальных разрешений */
+.permissions-details-section {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.permissions-table-container {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    margin-top: 0.5rem;
+    flex: 1;
+}
+
+.permissions-table {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+}
+
+.permissions-table thead {
+    background: #f8fafc;
+}
+
+.permissions-table th {
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.permission-row {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.permission-row:last-child {
+    border-bottom: none;
+}
+
+.permission-row:hover {
+    background-color: #f8fafc;
+}
+
+.permission-model {
+    padding: 0.75rem 1rem;
+    vertical-align: top;
+    width: 30%;
+}
+
+.permission-model-name {
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+.permission-actions {
+    padding: 0.75rem 1rem;
+    width: 55%;
+}
+
+.actions-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.action-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #e0f2fe;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: #0369a1;
+    font-weight: 500;
+    border: 1px solid #bae6fd;
+}
+
+.permission-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+/* Остальные стили */
 .form-label-user {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.8125rem; /* Уменьшен шрифт */
+    font-size: 0.8125rem;
     font-weight: 500;
     color: #475569;
     white-space: nowrap;
 }
 
 .form-label-icon {
-    width: 0.875rem; /* Уменьшен размер */
+    width: 0.875rem;
     height: 0.875rem;
     color: #94a3b8;
     flex-shrink: 0;
 }
 
 .form-input {
-    padding: 0.625rem 0.875rem; /* Уменьшен padding */
+    padding: 0.625rem 0.875rem;
     border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
-    font-size: 0.8125rem; /* Уменьшен шрифт */
+    font-size: 0.8125rem;
     transition: all 0.2s ease;
     width: 100%;
 }
@@ -181,139 +373,40 @@
 }
 
 .form-value {
-    padding: 0.625rem 0.875rem; /* Уменьшен padding */
+    padding: 0.625rem 0.875rem;
     background: #f8fafc;
     border-radius: 0.5rem;
-    font-size: 0.8125rem; /* Уменьшен шрифт */
+    font-size: 0.8125rem;
     color: #1e293b;
     border: 1px solid transparent;
-    min-height: 40px; /* Уменьшена высота */
+    min-height: 40px;
     display: flex;
     align-items: center;
-}
-
-/* Системная информация */
-.cabinet-system-info {
-    background: #f8fafc;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    border: 1px solid #e2e8f0;
-}
-
-.system-info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-}
-
-.system-info-item:not(:last-child) {
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.system-info-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    color: #64748b;
-    flex-shrink: 0;
-}
-
-.system-info-label {
-    font-size: 0.8125rem;
-    color: #64748b;
-    margin-bottom: 0.25rem;
-}
-
-.system-info-value {
-    font-weight: 500;
-    color: #1e293b;
-    font-size: 0.8125rem;
-}
-
-.global-view-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-}
-
-.toggle-label {
-    position: relative;
-    display: inline-block;
-    width: 2.75rem;
-    height: 1.375rem;
-    flex-shrink: 0;
-}
-
-.toggle-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #cbd5e1;
-    transition: .4s;
-    border-radius: 1.375rem;
-}
-
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 1rem;
-    width: 1rem;
-    left: 0.1875rem;
-    bottom: 0.1875rem;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-.toggle-input:checked+.toggle-slider {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.toggle-input:checked+.toggle-slider:before {
-    transform: translateX(1.375rem);
-}
-
-.toggle-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.toggle-title {
-    font-weight: 500;
-    color: #1e293b;
-    margin-bottom: 0.125rem;
-    line-height: 1.3;
-    font-size: 0.875rem;
-}
-
-.toggle-description {
-    font-size: 0.75rem;
-    color: #64748b;
-    line-height: 1.3;
 }
 
 /* Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
-    .cabinet-info-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.75rem;
+@media (max-width: 1023px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .info-table-label,
+    .info-table-value {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0;
     }
 
-    .cabinet-user-info {
-        text-align: center;
+    .info-table-row {
+        display: block;
+        padding: 0.5rem 0;
     }
-
+    
+    .modules-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    }
+    
     .form-section-header {
         flex-direction: column;
         align-items: flex-start;
@@ -326,9 +419,9 @@
     }
 }
 
-/* Загрузочное состояние */
-.loading-skeleton {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
+/* Для очень широких экранов */
+@media (min-width: 1600px) {
+    .profile-grid {
+        grid-template-columns: 0.9fr 1fr 1.5fr;
+    }
 }

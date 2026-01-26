@@ -1,8 +1,10 @@
 import logging
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
+import re
 
 logger = logging.getLogger(__name__)
+
 
 class UserActionLoggingMiddleware(MiddlewareMixin):
     """Middleware для автоматического логирования действий пользователя"""
@@ -12,41 +14,18 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
         self.excluded_paths = [
             '/static/', 
             '/media/', 
-            '/api/logs/',
-            '/api/token/',
-            '/api/token/refresh/',
+            '/api/logs/',     
             '/favicon.ico',
             '/admin/',
         ]
-    
-    def process_view(self, request, view_func, view_args, view_kwargs):
-        # Пропускаем анонимных пользователей
-        if not request.user.is_authenticated:
-            return
-        
-        # Проверяем исключенные пути
-        path = request.path
-        if any(path.startswith(excluded) for excluded in self.excluded_paths):
-            return
-        
-        # Импортируем здесь, чтобы избежать циклического импорта
-        from users.logging_utils import log_user_action, log_storage_action
-        
-        # Определяем действие по методу запроса
-        method_action_map = {
+        self.method_action_map = {
             'GET': 'view',
             'POST': 'create',
             'PUT': 'update',
             'PATCH': 'update',
             'DELETE': 'delete',
         }
-        
-        action = method_action_map.get(request.method)
-        if not action:
-            return
-        
-        # Определяем модуль по пути
-        path_module_map = {
+        self.path_module_map = {
             'employees': 'employees',
             'equipment': 'equipment',
             'facilities': 'facilities',
@@ -58,26 +37,68 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
             'storage': 'storage',
             'sha-workers': 'sha_workers',
             'sha-equipment': 'sha_equipment',
-            'auth': 'auth',
+            'token': 'auth',
         }
-        
-        module = 'system'
-        for key, value in path_module_map.items():
-            if f'/{key}/' in request.path or f'/api/{key}/' in request.path:
-                module = value
-                break
-        
-        # Для API запросов получаем ID объекта из URL
-        object_id = None
+    
+    def _is_excluded_path(self, path):
+        """Проверяет, является ли путь исключенным"""
+        return any(path.startswith(excluded) for excluded in self.excluded_paths)
+    
+    def _get_module_from_path(self, path):
+        """Определяет модуль по пути запроса"""
+        for key in self.path_module_map:
+            if f'/{key}/' in path or f'/api/{key}/' in path:
+                return self.path_module_map[key]
+        return 'system'
+    
+    def _get_object_id_from_api_path(self, path):
+        """Извлекает ID объекта из API URL"""
         if request.path.startswith('/api/'):
-            import re
-            # Ищем паттерн /api/module/<id>/
-            pattern = r'/api/(\w+)/(\d+)/?$'
-            match = re.search(pattern, request.path)
-            if match:
-                object_id = match.group(2)
+            match = re.search(r'/api/(\w+)/(\d+)/?$', request.path)
+            return match.group(2) if match else None
+        return None
+    
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        # Пропускаем анонимных пользователей
+        if not request.user.is_authenticated:
+            return
         
-        # Логируем действие
+        # Проверяем исключенные пути
+        if self._is_excluded_path(request.path):
+            return
+        
+        # Обработка logout
+        if 'logout' in request.path.lower():
+            from users.logging_utils import log_user_action
+            
+            try:
+                log_user_action(
+                    user=request.user,
+                    action='logout',
+                    module='auth',
+                    request=request,
+                    details={
+                        'path': request.path,
+                        'method': request.method,
+                        'view': view_func.__name__ if view_func else None,
+                        'source': 'middleware'
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Error logging logout action: {str(e)}")
+            return
+        
+        # Определяем действие по методу запроса
+        action = self.method_action_map.get(request.method)
+        if not action:
+            return
+        
+        # Определяем модуль и логируем действие
+        module = self._get_module_from_path(request.path)
+        object_id = self._get_object_id_from_api_path(request.path)
+        
+        from users.logging_utils import log_user_action
+        
         try:
             log_user_action(
                 user=request.user,
@@ -88,7 +109,8 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
                     'path': request.path,
                     'method': request.method,
                     'view': view_func.__name__ if view_func else None,
-                }
+                },
+                object_id=object_id
             )
         except Exception as e:
             logger.error(f"Error in process_view logging: {str(e)}")

@@ -221,23 +221,6 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
       ));
   }, [objects, selectedObjectId, searchTerm, setPopupRef]);
 
-  if (!mapReady) {
-    return <div className="loading-spinner">Загрузка карты...</div>;
-  }
-
-  // if (objects.length === 0 && mapReady) {
-  //   return (
-  //     <div className="map-page-container">
-  //       <div className="map-header">
-  //         <h1 className="map-title">Карта объектов</h1>
-  //       </div>
-  //       <div className="no-objects-message">
-  //         Нет объектов для отображения
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="map-page-container">
       <div className="map-header">

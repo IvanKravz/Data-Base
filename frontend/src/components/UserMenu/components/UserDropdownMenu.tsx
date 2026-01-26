@@ -2,6 +2,7 @@
 import React from 'react';
 import { Settings, LogOut } from 'lucide-react';
 import '../styles/DropdownMenu.css';
+import { authApi } from '../../../api';
 
 interface UserDropdownMenuProps {
     onClose: () => void;
@@ -9,15 +10,19 @@ interface UserDropdownMenuProps {
 }
 
 export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuProps) {
-    const handleLogout = () => {
+    const handleLogout = async () => {  // ← СДЕЛАТЬ async
         try {
+            // Вызываем серверный logout для инвалидации токена
+            await authApi.logout();
+            // После logout() произойдет очистка localStorage и перенаправление
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Даже при ошибке очищаем localStorage и перенаправляем
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
             localStorage.removeItem('refreshToken');
             sessionStorage.removeItem('appLoaded');
             window.location.href = '/auth';
-        } catch (error) {
-            console.error('Logout error:', error);
         }
     };
 
@@ -39,7 +44,7 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
             <div className="dropdown-divider" />
 
             <button
-                onClick={handleLogout}
+                onClick={handleLogout}  // ← Теперь вызывает authApi.logout()
                 className="dropdown-item logout-item"
             >
                 <LogOut className="dropdown-icon" />

@@ -1,9 +1,9 @@
 // components/ActivityLogsTable.tsx
 import React from 'react';
-import { 
-    Clock, Plus, Edit as EditIcon, Trash2, Upload, 
-    Download as DownloadIcon, Eye, LogOut, ChevronLeft, 
-    ChevronRight 
+import {
+    Clock, Plus, Edit as EditIcon, Trash2, Upload,
+    Download as DownloadIcon, Eye, LogOut, ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { type ActionLog } from '../../api/logs';
 import '../styles/ActivityLogsTable.css';
@@ -22,11 +22,11 @@ interface ActivityLogsTableProps {
     onPageChange: (newPage: number) => void;
 }
 
-export function ActivityLogsTable({ 
-    logs, 
-    isLoadingLogs, 
-    pagination, 
-    onPageChange 
+export function ActivityLogsTable({
+    logs,
+    isLoadingLogs,
+    pagination,
+    onPageChange
 }: ActivityLogsTableProps) {
     const getActionIcon = (action: string) => {
         switch (action) {
@@ -64,6 +64,22 @@ export function ActivityLogsTable({
         if (!text) return '—';
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
+    };
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return 'Нет данных';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch {
+            return 'Неверный формат даты';
+        }
     };
 
     return (
@@ -106,7 +122,7 @@ export function ActivityLogsTable({
                                 <tr key={log.id} className="log-row">
                                     <td className="log-time">
                                         <div className="time-badge">
-                                            {log.formatted_time}
+                                            {formatDate(log.created_at)}
                                         </div>
                                     </td>
                                     <td>

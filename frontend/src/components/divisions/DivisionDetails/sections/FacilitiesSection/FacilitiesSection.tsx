@@ -722,7 +722,7 @@ export function FacilitiesSection() {
 
       {showMap && displayFacilities.length > 0 && activeTab !== 'posts' && (
         <div className="facilities-map-overlay">
-          <Suspense fallback={<div className="loading-spinner">Загрузка карты...</div>}>
+          <Suspense fallback={<div className="loading-spinner"></div>}>
             <LazyMapView
               facilities={mapFacilities}
               searchTerm={mapSearchTerm}

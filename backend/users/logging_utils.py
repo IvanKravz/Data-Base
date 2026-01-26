@@ -124,6 +124,16 @@ def get_user_action_logs(user, days=30, **filters):
     except Exception as e:
         logger.error(f"Error getting user action logs: {str(e)}")
         return UserActionLog.objects.none()
+    
+def log_logout_action(user, request=None):
+    """Специальная функция для логирования выхода"""
+    return log_user_action(
+        user=user,
+        action='logout',
+        module='auth',
+        request=request,
+        details={'logout_type': 'manual'}
+    )
 
 def get_storage_statistics(user, days=30):
     """

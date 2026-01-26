@@ -16,22 +16,22 @@ interface UserPermissions {
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
     const { data } = await api.post('/users/auth/login/', { username, password });
-    
+
     // Сохраняем токены и данные пользователя
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
-    
+
     return data;
   },
 
   register: async (userData: RegisterData): Promise<LoginResponse> => {
     const { data } = await api.post('/users/auth/register/', userData);
-    
+
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
-    
+
     return data;
   },
 
@@ -45,14 +45,32 @@ export const authApi = {
     return data;
   },
 
-  logout: () => {
-    // Полная очистка данных аутентификации
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('module_permissions');
-    sessionStorage.removeItem('appLoaded');
-  },
+  logout: async () => {
+    
+    try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        
+        // Используем правильный путь
+        if (refreshToken) {
+            await api.post('/users/auth/logout/', { refresh: refreshToken }); 
+        }
+    } catch (error) {
+        console.error('FRONTEND: Logout error:', error);
+        // Даже если запрос на сервер не удался, очищаем локальное хранилище
+    } finally {
+        // Полная очистка данных аутентификации
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('module_permissions');
+        
+        // Также очищаем sessionStorage если используется
+        sessionStorage.removeItem('appLoaded');
+        
+        // Перенаправляем на страницу входа
+        window.location.href = '/auth';
+    }
+},
 
   // Метод для получения прав доступа из новой структуры
   getModulePermissions: (): UserPermissions | null => {
@@ -60,12 +78,12 @@ export const authApi = {
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        
+
         // Возвращаем permissions из пользователя
         if (user.permissions) {
           return user.permissions;
         }
-        
+
         // Если permissions нет, создаем базовую структуру из roles
         if (user.roles && Array.isArray(user.roles)) {
           return {
@@ -75,45 +93,45 @@ export const authApi = {
             modules: []
           };
         }
-       
+
       } catch (e) {
         console.error('Error parsing user data:', e);
       }
     }
-    
+
     return null;
   },
-  
+
   // ОБНОВЛЕННЫЙ МЕТОД ДЛЯ ПРОВЕРКИ КОНКРЕТНЫХ ПРАВ
   hasPermission: (module: AppModule, permission: string): boolean => {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
-    
+
     // Маппинг модулей на модели
     const moduleToModelMap: Record<AppModule, string> = {
       'employees': 'Employee',
       'equipment': 'Equipment',
-      'facilities': 'Facility', 
+      'facilities': 'Facility',
       'tasks': 'Task',
       'networks': 'CommunicationNetwork',
       'communicationPosts': 'CommunicationPost'
     };
-    
+
     const modelName = moduleToModelMap[module];
     if (!modelName) return false;
-    
+
     const modelPermissions = permissions.models[modelName];
     if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
-    
+
     // Проверяем наличие конкретного права в массиве
     return modelPermissions.includes(permission);
   },
-  
+
   // Метод для проверки доступа к модулю
   canViewModule: (module: string): boolean => {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
-    
+
     // Маппинг модулей на модели
     const moduleToModelMap: Record<string, string> = {
       'employees': 'Employee',
@@ -123,20 +141,20 @@ export const authApi = {
       'networks': 'CommunicationNetwork',
       'communicationPosts': 'CommunicationPost'
     };
-    
+
     const modelName = moduleToModelMap[module];
     if (!modelName) return false;
-    
+
     const modelPermissions = permissions.models[modelName];
     if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
-    
+
     return modelPermissions.includes('view');
   },
-  
+
   canEditModule: (module: string): boolean => {
     const permissions = authApi.getModulePermissions();
     if (!permissions) return false;
-    
+
     // Маппинг модулей на модели
     const moduleToModelMap: Record<string, string> = {
       'employees': 'Employee',
@@ -146,13 +164,13 @@ export const authApi = {
       'networks': 'CommunicationNetwork',
       'communicationPosts': 'CommunicationPost'
     };
-    
+
     const modelName = moduleToModelMap[module];
     if (!modelName) return false;
-    
+
     const modelPermissions = permissions.models[modelName];
     if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
-    
+
     // Для редактирования проверяем наличие change или edit прав
     return modelPermissions.includes('change') || modelPermissions.includes('edit');
   },
@@ -161,7 +179,7 @@ export const authApi = {
   updateGlobalView: (isGlobalView: boolean): void => {
     const userStr = localStorage.getItem('user');
     if (!userStr) return;
-  
+
     try {
       const user = JSON.parse(userStr);
       user.is_global_view = isGlobalView;

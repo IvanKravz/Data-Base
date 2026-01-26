@@ -10,28 +10,91 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #4f23d6 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: white;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 6px -1px rgba(37, 99, 235, 0.3),
+        0 2px 4px -1px rgba(37, 99, 235, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
 }
 
+/* Эффект переливающегося фона */
+.user-menu-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    transition: left 0.9s ease;
+}
+
+.user-menu-button:hover::before {
+    left: 100%;
+}
+
+/* Основной градиент при наведении */
 .user-menu-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    box-shadow: 
+        0 10px 15px -3px rgba(37, 99, 235, 0.4),
+        0 4px 6px -2px rgba(37, 99, 235, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
-.user-menu-button:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.5);
-    outline-offset: 2px;
+/* Активное состояние */
+.user-menu-button:active {
+    transform: translateY(0);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 2px 4px -1px rgba(37, 99, 235, 0.3),
+        0 1px 2px -1px rgba(37, 99, 235, 0.2),
+        inset 0 0 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Плавное изменение цвета текста */
+.user-menu-button:hover .user-menu-username {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Анимация иконки при наведении */
+.user-menu-button:hover .user-menu-icon {
+    animation: iconFloat 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+/* Анимация стрелки при наведении */
+.user-menu-button:hover .user-menu-arrow {
+    transform: translateY(2px) rotate(0deg);
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.user-menu-button:hover .user-menu-arrow.rotate-180 {
+    transform: translateY(2px) rotate(180deg);
+}
+
+/* Иконки и текст */
 .user-menu-icon {
     width: 1.25rem;
     height: 1.25rem;
+    color: rgba(255, 255, 255, 0.95);
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .user-menu-username {
@@ -39,29 +102,107 @@
     font-size: 0.875rem;
     min-width: 60px;
     text-align: left;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .user-menu-arrow {
     width: 1rem;
     height: 1rem;
-    transition: transform 0.2s ease;
+    color: rgba(255, 255, 255, 0.95);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .rotate-180 {
     transform: rotate(180deg);
 }
 
-/* Анимации */
-@keyframes pulse {
+/* Новые анимации */
+@keyframes iconFloat {
     0%, 100% {
-        opacity: 1;
+        transform: translateY(0);
     }
     50% {
-        opacity: 0.5;
+        transform: translateY(-3px);
     }
 }
 
-/* Утилиты */
+@keyframes buttonGlow {
+    0%, 100% {
+        box-shadow: 
+            0 4px 6px -1px rgba(37, 99, 235, 0.3),
+            0 2px 4px -1px rgba(37, 99, 235, 0.2);
+    }
+    50% {
+        box-shadow: 
+            0 6px 10px -1px rgba(37, 99, 235, 0.4),
+            0 4px 6px -1px rgba(37, 99, 235, 0.3),
+            0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+}
+
+/* Анимация пульсации для загрузки */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(0.98);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+}
+
 .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Эффект для кнопки при фокусе */
+.user-menu-button:focus {
+    outline: none;
+    animation: buttonGlow 2s ease-in-out infinite;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Состояние disabled */
+.user-menu-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+    background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+}
+
+.user-menu-button:disabled:hover {
+    transform: none;
+    background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+    box-shadow: 
+        0 4px 6px -1px rgba(37, 99, 235, 0.3),
+        0 2px 4px -1px rgba(37, 99, 235, 0.2);
+}
+
+.user-menu-button:disabled:hover::before {
+    animation: none;
+    left: -100%;
+}
+
+/* Добавим легкое свечение для дополнительного эффекта */
+.user-menu-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0.7rem;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.user-menu-button:hover::after {
+    opacity: 1;
 }

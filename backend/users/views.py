@@ -1,4 +1,5 @@
-from datetime import timezone
+import logging
+from django.utils import timezone as django_timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, filters
 from rest_framework.parsers import MultiPartParser
@@ -7,15 +8,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from django.db import models
-from django.utils import timezone as django_timezone
+from django.contrib.auth import get_user_model, logout
+from django.http import JsonResponse, HttpResponse
+import csv
 
-
-from users.permissions_config import ROLE_PERMISSIONS
-
-# ИСПРАВЛЕНО: убрали дублирующий импорт UserActionLog
+from .logging_utils import log_user_action
+from .permissions_config import ROLE_PERMISSIONS
 from .models import User, Employee, ShaWorkerDetails, ShaEquipmentConclusion 
 from .logs_models import UserActionLog 
 from .serializers import (
@@ -26,6 +27,7 @@ from .serializers import (
 from .permissions import RoleBasedPermission, IsAdmin
 from .mixins import RoleBasedFilterMixin, UserAccessMixin
 
+logger = logging.getLogger(__name__)
 
 class BaseViewSet(viewsets.ModelViewSet):
     """
@@ -76,8 +78,6 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     
     # Логирование создания пользователя
     def create(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         response = super().create(request, *args, **kwargs)
         
         if response.status_code == status.HTTP_201_CREATED:
@@ -97,8 +97,6 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     
     # Логирование обновления пользователя
     def update(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         old_data = UserSerializer(instance).data
         
@@ -130,8 +128,6 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     
     # Логирование удаления пользователя
     def destroy(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         user_data = UserSerializer(instance).data
         
@@ -154,7 +150,6 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     @action(detail=False, methods=['get'])
     def me(self, request):
         """Возвращает информацию о текущем пользователе"""
-        from .logging_utils import log_user_action
         
         # Логируем просмотр профиля
         log_user_action(
@@ -233,8 +228,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование создания сотрудника
     def create(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         response = super().create(request, *args, **kwargs)
         
         if response.status_code == status.HTTP_201_CREATED:
@@ -255,8 +248,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование обновления сотрудника
     def update(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         old_data = EmployeeSerializer(instance).data
         
@@ -294,8 +285,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование частичного обновления сотрудника
     def partial_update(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         old_data = EmployeeSerializer(instance).data
         
@@ -332,8 +321,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование удаления сотрудника
     def destroy(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         employee_data = EmployeeSerializer(instance).data
         
@@ -356,8 +343,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование просмотра деталей сотрудника
     def retrieve(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         instance = self.get_object()
         
         response = super().retrieve(request, *args, **kwargs)
@@ -378,8 +363,6 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     
     # Логирование просмотра списка сотрудников
     def list(self, request, *args, **kwargs):
-        from .logging_utils import log_user_action
-        
         response = super().list(request, *args, **kwargs)
         
         # Логируем просмотр списка сотрудников
@@ -434,18 +417,75 @@ class ShaEquipmentConclusionViewSet(RoleBasedFilterMixin, BaseViewSet):
 
 
 class TokenObtainPairView(BaseTokenObtainPairView):
-    """
-    View для получения JWT токена
-    """
+    """View для получения JWT токена с логированием"""
     serializer_class = TokenObtainPairSerializer
     permission_classes = [AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            # Получаем username из запроса
+            username = request.data.get('username')
+            try:
+                User = get_user_model()
+                user = User.objects.get(username=username)
+                
+                # Логируем успешный вход
+                log_user_action(
+                    user=user,
+                    action='login',
+                    module='auth',
+                    request=request,
+                    details={'login_type': 'jwt_token'}
+                )
+            except User.DoesNotExist:
+                logger.warning(f"User {username} not found for login logging")
+        
+        return response
 
 
 class TokenRefreshView(BaseTokenRefreshView):
-    """
-    View для обновления JWT токена
-    """
+    """View для обновления JWT токена"""
     permission_classes = [AllowAny]
+    
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            # Логируем обновление токена
+            user = request.user if request.user.is_authenticated else None
+            if user:
+                log_user_action(
+                    user=user,
+                    action='update',
+                    module='auth',
+                    request=request,
+                    details={'action': 'token_refresh'}
+                )
+        
+        return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    """Выход из системы с логированием"""
+    user = request.user
+    
+    # Логируем выход
+    log_user_action(
+        user=user,
+        action='logout',
+        module='auth',
+        request=request,
+        details={'logout_type': 'manual', 'source': 'logout_view'}
+    )
+    
+    # Вызываем стандартный logout
+    logout(request)
+    
+    return Response({'detail': 'Successfully logged out.'}, status=200)
 
 
 class RegisterView(APIView):
@@ -618,8 +658,7 @@ class SystemInfoView(APIView):
                 'total_users': User.objects.count(),
             }
         })
-    
-from django.http import JsonResponse
+
 
 def error_400(request, exception=None):
     return JsonResponse({
@@ -648,6 +687,7 @@ def error_500(request):
         'message': 'Внутренняя ошибка сервера',
         'status_code': 500
     }, status=500)
+
 
 class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -729,7 +769,6 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
         """Получение статистики по действиям"""
         user = request.user
         
-        # Исправлено: используем django.utils.timezone
         last_30_days = django_timezone.now() - django_timezone.timedelta(days=30)
         
         total_actions = UserActionLog.objects.filter(
@@ -797,9 +836,6 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def export(self, request):
         """Экспорт логов в CSV"""
-        from django.http import HttpResponse
-        import csv
-        
         logs = self.get_queryset()
         
         response = HttpResponse(content_type='text/csv')

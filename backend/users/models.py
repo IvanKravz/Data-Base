@@ -1,4 +1,3 @@
-from venv import logger
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
@@ -13,7 +12,9 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db.models.signals import post_save, pre_delete
 from .logs_models import UserActionLog
 from threading import local
+
 _thread_locals = local()
+logger = logging.getLogger(__name__)
 
 def get_current_request():
     """Получение текущего запроса из thread local storage"""
@@ -26,8 +27,6 @@ def set_current_request(request):
 # Используем относительные импорты
 from .logging_utils import log_user_action, log_storage_action
 from facilities.models import Division, Subdivision
-
-logger = logging.getLogger(__name__)
 
 def employee_photo_path(instance, filename):
     # Очищаем ФИО от недопустимых символов
@@ -482,7 +481,7 @@ class Employee(models.Model):
             except Employee.DoesNotExist:
                 pass
 
-    # Автоматически устанавливаем приоритет в зависимости от категории, должности и звания
+        # Автоматически устанавливаем приоритет в зависимости от категории, должности и звания
         if self.category == 'management':
             if self.subcategory == 'chief':
                 self.priority = 100
@@ -649,7 +648,18 @@ def update_employee_photo(sender, instance, created, **kwargs):
                         file_path = os.path.join(dir_path, filename)
                         storage.delete(file_path)
                 
-                ...  # Существующий код для переименования файла
+                # Генерируем новое имя файла
+                new_full_name = re.sub(r'[^\w\s]', '', instance.full_name)
+                new_full_name = new_full_name.replace(' ', '_')
+                new_photo_name = f'employee_photos/{new_full_name}_id_{instance.id}{ext}'
+                
+                # Переименовываем файл
+                if storage.exists(old_photo_name):
+                    with storage.open(old_photo_name) as f:
+                        new_file = storage.save(new_photo_name, f)
+                    storage.delete(old_photo_name)
+                    instance.photo.name = new_photo_name
+                    instance.save(update_fields=['photo'])
         except Exception as e:
             logger.error(f"Ошибка при переименовании фото: {str(e)}")
 
@@ -682,27 +692,28 @@ def log_user_login(sender, request, user, **kwargs):
 @receiver(user_logged_out)
 def log_user_logout(sender, request, user, **kwargs):
     """Логирование выхода пользователя"""
-    from .logging_utils import log_user_action
-    if user:
-        log_user_action(
-            user=user,
-            action='logout',
-            module='auth',
-            request=request
-        )
+    # Комментируем, т.к. логирование происходит в logout_view
+    # from .logging_utils import log_user_action
+    # if user:
+    #     log_user_action(
+    #         user=user,
+    #         action='logout',
+    #         module='auth',
+    #         request=request
+    #     )
+    pass
 
 @receiver(post_save, sender=User)
 def log_user_changes(sender, instance, created, **kwargs):
     """Логирование изменений пользователя"""
     action = 'create' if created else 'update'
     
-    # Получаем запрос из thread local storage (нужно настроить в middleware)
-    from django.utils.functional import SimpleLazyObject
-    try:
-        from django.utils.deprecation import get_current_request
-        request = get_current_request()
-    except:
-        request = None
+    # Получаем запрос из thread local storage
+    request = get_current_request()
+    
+    # Безопасно получаем список измененных полей
+    update_fields = kwargs.get('update_fields')
+    changed_fields = list(update_fields) if update_fields else []
     
     log_user_action(
         user=instance,
@@ -713,7 +724,7 @@ def log_user_changes(sender, instance, created, **kwargs):
         object_id=instance.id,
         object_name=instance.username,
         details={
-            'changed_fields': list(kwargs.get('update_fields', [])),
+            'changed_fields': changed_fields,  # Используем безопасный список
             'is_staff': instance.is_staff,
             'is_active': instance.is_active,
         }
@@ -721,20 +732,15 @@ def log_user_changes(sender, instance, created, **kwargs):
 
     
 @receiver(post_save, sender=Employee)
-def log_employee_photo_upload(sender, instance, **kwargs):
+def log_employee_photo_upload(sender, instance, created, **kwargs):
     """Логирование загрузки фотографии сотрудника"""
     from .logging_utils import log_storage_action
     
-    # Получаем пользователя из контекста (в реальном приложении нужно передавать)
-    try:
-        from django.utils.functional import SimpleLazyObject
-        from django.utils.deprecation import get_current_request
-        request = get_current_request()
-        user = request.user if request and request.user.is_authenticated else None
-    except:
-        user = None
+    # Получаем запрос из thread local storage
+    request = get_current_request()
+    user = request.user if request and request.user.is_authenticated else None
     
-    if instance.photo and user:
+    if instance.photo and user and created:
         log_storage_action(
             user=user,
             action='upload',
@@ -755,13 +761,8 @@ def log_employee_photo_delete(sender, instance, **kwargs):
     """Логирование удаления фотографии сотрудника"""
     from .logging_utils import log_storage_action
     
-    try:
-        from django.utils.functional import SimpleLazyObject
-        from django.utils.deprecation import get_current_request
-        request = get_current_request()
-        user = request.user if request and request.user.is_authenticated else None
-    except:
-        user = None
+    request = get_current_request()
+    user = request.user if request and request.user.is_authenticated else None
     
     if instance.photo and user:
         log_storage_action(

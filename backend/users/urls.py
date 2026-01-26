@@ -6,7 +6,7 @@ from .views import (
     UserViewSet, EmployeeViewSet, ShaWorkerViewSet, ShaEquipmentConclusionViewSet,
     TokenObtainPairView, TokenRefreshView, RegisterView, UserProfileView,
     AvailableModulesView, EmployeeDictionariesView, EmployeePhotoView,
-    SystemInfoView, UserActionLogViewSet
+    SystemInfoView, UserActionLogViewSet, logout_view
 )
 
 router = DefaultRouter()
@@ -15,7 +15,9 @@ router.register(r'employees', EmployeeViewSet, basename='employee')
 router.register(r'sha-workers', ShaWorkerViewSet, basename='shaworker')
 router.register(r'sha-equipment-conclusions', ShaEquipmentConclusionViewSet, basename='shaequipment')
 
-# НЕ регистрируем action-logs через роутер, а создадим явные маршруты
+print("="*60)
+print("DEBUG: Loading urls.py")
+print(f"DEBUG: Importing logout_view from users.views")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -44,6 +46,7 @@ urlpatterns = [
     path('action-logs/storage-stats/', UserActionLogViewSet.as_view({'get': 'storage_stats'}), name='action-logs-storage-stats'),
     path('action-logs/file-types/', UserActionLogViewSet.as_view({'get': 'file_types'}), name='action-logs-file-types'),
     path('action-logs/storage-locations/', UserActionLogViewSet.as_view({'get': 'storage_locations'}), name='action-logs-storage-locations'),
+    path('auth/logout/', logout_view, name='logout'),
     
     # Include router URLs для остальных ресурсов
     path('', include(router.urls)),
