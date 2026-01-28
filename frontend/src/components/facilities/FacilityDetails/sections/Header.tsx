@@ -9,7 +9,7 @@ interface HeaderProps {
   onBack: () => void;
   onEdit?: () => void;
   facility?: Facility;
-  canEdit?: boolean; // Добавляем пропс для управления правами
+  canEdit?: boolean;
 }
 
 export function Header({ title, onBack, onEdit, facility, canEdit = false }: HeaderProps) {
@@ -51,34 +51,36 @@ export function Header({ title, onBack, onEdit, facility, canEdit = false }: Hea
   };
 
   return (
-    <div className="header-container-facility">
-      <div className="header-title-group">
+    <div className="facility-header">
+      <div className="facility-header-main">
         <button
           onClick={onBack}
-          className="header-button"
+          className="facility-btn--icon"
         >
-          <ArrowLeft className="header-icon" />
+          <ArrowLeft size={20} />
         </button>
-        <h1 className="header-title-facility">
-          {title}
-        </h1>
+        <div className="facility-title-container">
+          <h1 className="facility-view-title">
+            {title}
+          </h1>
+        </div>
       </div>
-      <div className="header-actions-group">
+      <div className="facility-header-actions">
         {facility && (
           <button
             onClick={handleExport}
-            className="header-action-button header-action-button-export"
+            className="facility-btn facility-btn--primary"
           >
-            <FileSpreadsheet className="header-action-icon" />
+            <FileSpreadsheet size={16} />
             <span>Экспорт</span>
           </button>
         )}
         {onEdit && canEdit && (
           <button
             onClick={onEdit}
-            className="header-action-button header-action-button-edit"
+            className="facility-btn facility-btn--primary"
           >
-            <Pencil className="header-action-icon" />
+            <Pencil size={16} />
             <span>Редактировать</span>
           </button>
         )}

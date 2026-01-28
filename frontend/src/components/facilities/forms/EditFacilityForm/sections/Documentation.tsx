@@ -10,71 +10,71 @@ interface DocumentationProps {
 
 export function Documentation({ formData, onChange }: DocumentationProps) {
   return (
-    <div className="facility-card-edit">
-      <div className="facility-card-header-edit">
+    <div className="facility-form-edit-card">
+      <div className="facility-form-edit-card-header">
         <FileText size={20} />
-        <h3 className="facility-card-title-edit">Документация</h3>
+        <h3 className="facility-form-edit-card-title">Документация</h3>
       </div>
-      <div className="facility-card-content-edit">
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+      <div className="facility-form-edit-card-content">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Номер акта приемки помещения
             </label>
-            <div className="facility-form-input-container-edit">
-              <FileText className="facility-form-icon-edit" />
+            <div className="facility-form-edit-input-container">
+              <FileText className="facility-form-edit-icon" />
               <input
                 type="text"
                 value={formData.acceptance_act_number || ''}
                 onChange={(e) => onChange({ acceptance_act_number: e.target.value })}
-                className="facility-form-input-edit"
+                className="facility-form-edit-input"
                 placeholder="Введите номер акта"
               />
             </div>
           </div>
 
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Номер акта РИМ
             </label>
-            <div className="facility-form-input-container-edit">
-              <FileText className="facility-form-icon-edit" />
+            <div className="facility-form-edit-input-container">
+              <FileText className="facility-form-edit-icon" />
               <input
                 type="text"
                 value={formData.rim_act_number || ''}
                 onChange={(e) => onChange({ rim_act_number: e.target.value })}
-                className="facility-form-input-edit"
+                className="facility-form-edit-input"
                 placeholder="Введите номер акта"
               />
             </div>
           </div>
 
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Номер акта ввода
             </label>
-            <div className="facility-form-input-container-edit">
-              <FileText className="facility-form-icon-edit" />
+            <div className="facility-form-edit-input-container">
+              <FileText className="facility-form-edit-icon" />
               <input
                 type="text"
                 value={formData.commissioning_act_number || ''}
                 onChange={(e) => onChange({ commissioning_act_number: e.target.value })}
-                className="facility-form-input-edit"
+                className="facility-form-edit-input"
                 placeholder="Введите номер акта"
               />
             </div>
           </div>
 
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Номер разрешения на открытие
             </label>
             <div className="relative">
-              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <FileText className="facility-form-edit-icon" />
               <input
                 type="text"
                 value={formData.opening_permission_number || ''}
                 onChange={(e) => onChange({ opening_permission_number: e.target.value })}
-                className="facility-form-input-edit"
+                className="facility-form-edit-input"
                 placeholder="Введите номер разрешения"
               />
             </div>

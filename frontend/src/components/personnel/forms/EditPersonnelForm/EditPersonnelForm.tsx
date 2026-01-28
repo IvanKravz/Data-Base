@@ -1,6 +1,4 @@
 // EditPersonnelForm.tsx
-// Исправим обработчик отмены
-
 import React, { useState, useEffect } from 'react';
 import { Employee } from '../../../../types';
 import { BasicInformationCard } from './sections/BasicInformationCard';
@@ -156,57 +154,63 @@ export function EditPersonnelForm({
   return (
     <form onSubmit={handleSubmit} className="personnel-edit-form">
       {error && <div className="form-error">{error}</div>}
-      <div className="personnel-edit-grid">
-        <BasicInformationCard
-          formData={formData}
-          onChange={handleChange}
-          token={token}
-        />
-        {(isCreateMode || showDivisionField) && (
-          <AffiliationCard
+      <div className="personnel-edit-content">
+        <div className="personnel-edit-grid">
+          <BasicInformationCard
             formData={formData}
-            divisions={divisions}
             onChange={handleChange}
-            isTopManagement={isTopManagement}
-            showDivisionField={showDivisionField}
-            fixedDivision={fixedDivision}
-            fixedSubdivision={fixedSubdivision}
+            token={token}
           />
-        )}
-        <ContactInformationCard
-          formData={formData}
-          onChange={handleChange}
-        />
-        <DatesCard
-          formData={formData}
-          onChange={handleChange}
-        />
-        <ResponsibilityCard
-          formData={formData}
-          onChange={handleChange}
-        />
-      </div>
-      <div className='personnel-cards-sha-comment'>
-        {formData.is_sha_worker && (
-          <ShaWorkerCard
-            shaWorker={formData.sha_details || {
-              start_date: '',
-              access_level: '1',
-              equipment_conclusions: []
-            }}
-            onChange={handleShaWorkerChange}
-            onAddEquipment={handleAddEquipment}
-            onRemoveEquipment={handleRemoveEquipment}
-            onEquipmentChange={handleEquipmentChange}
+          {(isCreateMode || showDivisionField) && (
+            <AffiliationCard
+              formData={formData}
+              divisions={divisions}
+              onChange={handleChange}
+              isTopManagement={isTopManagement}
+              showDivisionField={showDivisionField}
+              fixedDivision={fixedDivision}
+              fixedSubdivision={fixedSubdivision}
+            />
+          )}
+          <ContactInformationCard
+            formData={formData}
+            onChange={handleChange}
           />
-        )}
-        <CommentsCard
-          description={formData.description || ''}
-          onChange={(description) => handleChange({ description })}
-        />
+          <DatesCard
+            formData={formData}
+            onChange={handleChange}
+          />
+          <ResponsibilityCard
+            formData={formData}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='personnel-cards-sha-comment'>
+          {formData.is_sha_worker && (
+            <ShaWorkerCard
+              shaWorker={formData.sha_details || {
+                start_date: '',
+                access_level: '1',
+                equipment_conclusions: []
+              }}
+              onChange={handleShaWorkerChange}
+              onAddEquipment={handleAddEquipment}
+              onRemoveEquipment={handleRemoveEquipment}
+              onEquipmentChange={handleEquipmentChange}
+            />
+          )}
+          <CommentsCard
+            description={formData.description || ''}
+            onChange={(description) => handleChange({ description })}
+          />
+        </div>
       </div>
 
-      <FormActions onCancel={onCancel} loading={loading} />
+      <FormActions
+        onCancel={onCancel}
+        isEditing={!isCreateMode}
+        isLoading={loading}
+      />
     </form>
   );
 }

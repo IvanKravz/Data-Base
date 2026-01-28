@@ -32,25 +32,23 @@ export function BasicInformation({ formData, onChange }: BasicInformationProps) 
   };
 
   return (
-    <div className="facility-card-edit">
-      <div className="facility-card-header-edit">
+    <div className="facility-form-edit-card">
+      <div className="facility-form-edit-card-header">
         <Building2 size={20} />
-        <h3 className="facility-card-title-edit">Основная информация</h3>
+        <h3 className="facility-form-edit-card-title">Основная информация</h3>
       </div>
-      <div className="facility-card-content-edit">
-        <div className="facility-form-field-edit">
-          <label className="facility-form-label-edit">
+      <div className="facility-form-edit-card-content">
+        <div className="facility-form-edit-field">
+          <label className="facility-form-edit-label">
             Название объекта
           </label>
-          <div className="facility-form-input-container-edit facility-textarea-container">
-            <Building2 className="facility-form-icon-edit" />
-            <textarea
+          <div className="facility-form-edit-input-container facility-form-edit-textarea-container">            <textarea
               ref={nameTextareaRef}
               required
               value={formData.name || ''}
               onChange={handleNameChange}
               onKeyDown={handleKeyDown}
-              className="facility-form-textarea facility-form-input-edit"
+              className="facility-form-edit-textarea facility-form-edit-input"
               placeholder="Введите название объекта"
               rows={1}
               style={{
@@ -65,41 +63,41 @@ export function BasicInformation({ formData, onChange }: BasicInformationProps) 
           </div>
         </div>
 
-        <div className="facility-form-field-edit">
-          <label className="facility-form-label-edit">
+        <div className="facility-form-edit-field">
+          <label className="facility-form-edit-label">
             Адрес
           </label>
           
-          <div className="facility-form-input-container-edit">
-            <MapPin className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container">
+            <MapPin className="facility-form-edit-icon" />
             <input
               type="text"
               required
               value={formData.city || ''}
               onChange={(e) => onChange({ city: e.target.value })}
-              className="facility-form-input-edit"
+              className="facility-form-edit-input"
               placeholder="Город"
             />
           </div>
           
-          <div className="facility-form-input-container-edit" style={{ marginTop: '8px' }}>
-            <MapPin className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container" style={{ marginTop: '8px' }}>
+            <MapPin className="facility-form-edit-icon" />
             <input
               type="text"
               value={formData.street || ''}
               onChange={(e) => onChange({ street: e.target.value })}
-              className="facility-form-input-edit"
+              className="facility-form-edit-input"
               placeholder="Улица"
             />
           </div>
           
-          <div className="facility-form-input-container-edit" style={{ marginTop: '8px' }}>
-            <MapPin className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container" style={{ marginTop: '8px' }}>
+            <MapPin className="facility-form-edit-icon" />
             <input
               type="text"
               value={formData.house_number || ''}
               onChange={(e) => onChange({ house_number: e.target.value })}
-              className="facility-form-input-edit"
+              className="facility-form-edit-input"
               placeholder="Номер дома"
             />
           </div>

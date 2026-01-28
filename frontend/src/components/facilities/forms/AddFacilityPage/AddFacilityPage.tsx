@@ -232,18 +232,18 @@ export function AddFacilityPage() {
     }, [location.state, isGlobalMode, effectiveDivisionId, effectiveSubdivisionId, fromSubdivision, navigate]);
 
     return (
-        <div className="facility-details-container">
-            <div className="facility-edit-header">
+        <div className="facility-add-page-container">
+            <div className="facility-add-page-header">
                 <button
                     onClick={handleBack}
-                    className="back-button facility-btn--icon"
+                    className="facility-add-back-button"
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="facilities-title">Добавление нового объекта</h1>
+                <h1 className="facility-add-page-title">Добавление нового объекта</h1>
             </div>
 
-            <div className="facility-card-edit facility-card--editing">
+            <div className="facility-add-form-wrapper">
                 <EditFacilityForm
                     initialData={initialData}
                     onSubmit={handleSubmit}
@@ -261,7 +261,7 @@ export function AddFacilityPage() {
             </div>
 
             {error && (
-                <div className="text-red-500 p-4 text-center">
+                <div className="facility-add-error-message">
                     {error}
                 </div>
             )}

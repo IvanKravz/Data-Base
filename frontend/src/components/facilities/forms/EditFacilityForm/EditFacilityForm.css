@@ -1,483 +1,479 @@
-/* Основные стили формы */
-.facility-form-edit {
-    display: grid;
-    gap: var(--space-lg);
-    margin-bottom: 1rem;
+/* Основной контейнер формы объектов */
+.facility-form-edit-container {
+  margin: 0 auto;
+  padding-bottom: 40px;
+  width: 100%;
 }
 
-.facility-edit-header {
-    margin-bottom: 2rem;
-    display: flex;
-    gap: 1rem;
-    background: white;
-    padding: 1.2rem 1.2rem 1.2rem;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+/* Форма объектов */
+.facility-form-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
 }
 
-/* Стили карточек */
-.facility-card-edit {
-    background-color: rgb(252, 252, 252);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--gray-200);
-    padding: 1rem;
-    transition: var(--transition);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+/* Контейнер для всех карточек формы объектов */
+.facility-form-edit-content {
+  display: grid;
+  gap: var(--space-lg);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 2rem;
 }
 
-.facility-card-edit:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.facility-card-header-edit {
-    padding: 0.8rem;
-    margin: 0;
-    color: rgb(32, 88, 193);
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    border-bottom: 0.12rem solid rgb(32, 88, 193);
-}
-
-.facility-card-title-edit {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--gray-800);
-    margin: 0;
-}
-
-.facility-card-content-edit {
-    padding: var(--space-lg) 0 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-}
-
-/* Стили для полей ввода */
-.facility-form-field-edit {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    transition: all 0.3s ease-in-out;
-}
-
-.facility-form-field-edit {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.facility-form-label-edit {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--gray-700);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-.facility-form-input-container-edit {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.facility-form-icon-edit {
-    width: 1rem;
-    height: 1rem;
-    color: var(--gray-500);
-    position: absolute;
-    left: var(--space-md);
-    z-index: 1;
-}
-
-.facility-form-input-edit,
-.facility-form-select-edit {
-    width: 100%;
-    padding: var(--space-sm) var(--space-md) var(--space-sm) calc(var(--space-md) * 2 + 1rem);
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    background-color: white;
-    color: var(--gray-800);
-}
-
-.facility-form-input-edit:focus,
-.facility-form-select-edit:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light);
-}
-
-.facility-form-select-edit {
-    appearance: none;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%236b7280"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>');
-    background-position: right 0.5rem center;
-    background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
-    padding-right: 2.5rem;
-    transition: all 0.3s ease-in-out;
-}
-
-.facility-form-select-edit:disabled {
-    background-color: #f9fafb;
-    border-color: #e5e7eb;
-    color: #6b7280;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
-
-.facility-textarea-container {
-    position: relative;
-}
-
-.facility-form-textarea {
-    width: 100%;
-    min-height: 40px;
-    padding: 8px 12px 8px 40px;
-    border: 1px solid var(--gray-300);
-    border-radius: 6px;
-    font-size: 14px;
-    font-family: inherit;
-    line-height: 1.5;
-    resize: none;
-    overflow: hidden;
-    transition: border-color 0.2s;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.facility-form-textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-
-.facility-form-textarea-edit {
-    width: 100%;
-    min-height: 120px;
-    padding: var(--space-sm);
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    resize: vertical;
-    background-color: white;
-    color: var(--gray-800);
-}
-
-.facility-form-textarea-edit:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-light);
-}
-
-/* Стили для управления постами связи */
-.posts-select-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.add-post-controls {
-    display: flex;
-    gap: var(--space-sm);
-    margin-top: var(--space-sm);
-}
-
-.post-input {
-    flex: 1;
-    padding: var(--space-sm);
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-}
-
-.selected-posts-list {
-    margin-top: var(--space-sm);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-}
-
-.selected-post-item {
-    display: flex;
-    align-items: center;
-    background-color: var(--gray-100);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-md);
-    gap: var(--space-xs);
-    font-size: var(--text-sm);
-}
-
-.add-post-button {
-    background-color: rgb(100, 202, 100);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.add-post-button:hover {
-    background-color: rgb(81, 185, 81);
-}
-
-.add-post-button:disabled {
-    background-color: var(--gray-300);
-    cursor: not-allowed;
-}
-
-.remove-post-button {
-    background-color: var(--red-500);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.remove-post-button:hover {
-    background-color: var(--red-600);
-}
-
-.remove-post-button:disabled {
-    background-color: var(--gray-300);
-    cursor: not-allowed;
-}
-
-/* Контейнер для кнопок (добавьте его в форму) */
-.facility-form-footer-edit {
-    /* margin-top:rem; */
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    padding: 1rem;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: center;
-    gap: var(--space-md);
-    z-index: 10;
-}
-
-/* Стили для кнопок */
-.facility-form-footer-button-edit {
-    padding: 0.5rem 1.25rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: var(--radius-md);
-    transition: all 0.2s;
-    cursor: pointer;
-    min-width: 120px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-}
-
-.facility-form-footer-cancel-edit {
-    background-color: white;
-    color: var(--gray-700);
-    border: 1px solid var(--gray-300);
-}
-
-.facility-form-footer-cancel-edit:hover {
-    background-color: var(--gray-50);
-    border-color: var(--gray-400);
-}
-
-.facility-form-footer-submit-edit {
-    background-color: var(--primary);
-    color: white;
-    border: 1px solid var(--primary);
-}
-
-.facility-form-footer-submit-edit:hover {
-    background-color: var(--primary-hover);
-    border-color: var(--primary-hover);
-}
-
-/* Стили для состояния загрузки */
-.facility-form-loading {
-    position: relative;
-    overflow: hidden;
-}
-
-.facility-form-loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.6),
-            transparent);
-    animation: loading-shimmer 1.5s infinite;
-}
-
-@keyframes loading-shimmer {
-    0% {
-        left: -100%;
-    }
-
-    100% {
-        left: 100%;
-    }
-}
-
-/* Стили для скелетона */
-.skeleton-loading {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-    border-radius: 4px;
-}
-
-@keyframes skeleton-pulse {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Индикатор загрузки для select */
-.loading-select {
-    position: relative;
-    color: #6b7280 !important;
-}
-
-.loading-select::before {
-    content: 'Загрузка...';
-    position: absolute;
-    left: calc(var(--space-md) * 2 + 1rem);
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    font-style: italic;
-    z-index: 2;
-}
-
-.loading-select select {
-    color: transparent !important;
-}
-
-
-/* Индикатор загрузки с точками */
-.loading-dots {
-    display: inline-block;
-    position: relative;
-}
-
-.loading-dots::after {
-    content: '...';
-    animation: loading-dots 1.5s infinite;
-}
-
-@keyframes loading-dots {
-
-    0%,
-    20% {
-        content: '.';
-    }
-
-    40% {
-        content: '..';
-    }
-
-    60%,
-    100% {
-        content: '...';
-    }
-}
-
-/* Улучшенный спиннер */
-.spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-
-
-/* Адаптивные стили */
+/* Грид для карточек внутри формы объектов */
 @media (min-width: 2000px) {
-    .facility-form-edit {
-        grid-template-columns: repeat(4, minmax(300px, 1fr));
-    }
+  .facility-form-edit-content {
+    grid-template-columns: repeat(4, minmax(300px, 1fr));
+  }
 }
 
 @media (max-width: 1900px) and (min-width: 1200px) {
-    .facility-form-edit {
-        grid-template-columns: repeat(3, minmax(300px, 1fr));
-    }
+  .facility-form-edit-content {
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+  }
 }
 
 @media (max-width: 1630px) and (min-width: 768px) {
-    .facility-form-edit {
-        grid-template-columns: repeat(2, minmax(300px, 1fr));
-    }
+  .facility-form-edit-content {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+  }
 }
 
 @media (max-width: 1380px) {
-    .facility-form-edit {
-        grid-template-columns: 1fr;
-        padding: var(--space-md);
-    }
+  .facility-form-edit-content {
+    grid-template-columns: 1fr;
+    padding: var(--space-md);
+  }
+}
 
-    .facility-card-edit {
-        padding: var(--space-md);
-    }
+/* Заголовок страницы объектов */
+.facility-form-edit-header {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 1.2rem 1.2rem 1.2rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  flex-wrap: wrap;
+}
 
-    .facility-form-actions-edit {
-        flex-direction: column;
-    }
+/* Карточка объектов */
+.facility-form-edit-card {
+  background-color: rgb(252, 252, 252);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  padding: 1rem;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    .facility-form-button-edit {
-        width: 100%;
-    }
+.facility-form-edit-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Заголовок карточки объектов */
+.facility-form-edit-card-header {
+  padding: 0.8rem;
+  margin: 0;
+  color: rgb(32, 88, 193);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  border-bottom: 0.12rem solid rgb(32, 88, 193);
+}
+
+.facility-form-edit-card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+}
+
+/* Контент карточки объектов */
+.facility-form-edit-card-content {
+  padding: var(--space-lg) 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Стили для полей ввода объектов */
+.facility-form-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  transition: all 0.3s ease-in-out;
+  animation: facilityFadeInUp 0.5s ease-out;
+}
+
+@keyframes facilityFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.facility-form-edit-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.facility-form-edit-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.facility-form-edit-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--gray-500);
+  position: absolute;
+  left: var(--space-md);
+  z-index: 1;
+}
+
+.facility-form-edit-input,
+.facility-form-edit-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md) var(--space-sm) calc(var(--space-md) * 2 + 1rem);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background-color: white;
+  color: var(--gray-800);
+}
+
+.facility-form-edit-input:focus,
+.facility-form-edit-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.facility-form-edit-select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%236b7280"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>');
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.facility-form-edit-select:disabled {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Текстовые области объектов */
+.facility-form-edit-textarea-container {
+  position: relative;
+}
+
+.facility-form-edit-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-sm);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  resize: vertical;
+  background-color: white;
+  color: var(--gray-800);
+}
+
+.facility-form-edit-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Стили для управления постами связи объектов */
+.facility-form-edit-posts-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.facility-form-edit-add-post-controls {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.facility-form-edit-post-input {
+  flex: 1;
+  padding: var(--space-sm);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.facility-form-edit-selected-posts-list {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.facility-form-edit-selected-post-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--gray-100);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+}
+
+.facility-form-edit-add-post-button {
+  background-color: rgb(100, 202, 100);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.facility-form-edit-add-post-button:hover {
+  background-color: rgb(81, 185, 81);
+}
+
+.facility-form-edit-add-post-button:disabled {
+  background-color: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.facility-form-edit-remove-post-button {
+  background-color: var(--red-500);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.facility-form-edit-remove-post-button:hover {
+  background-color: var(--red-600);
+}
+
+.facility-form-edit-remove-post-button:disabled {
+  background-color: var(--gray-300);
+  cursor: not-allowed;
+}
+
+/* Футер формы объектов (фиксированный внизу) */
+.facility-form-edit-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  padding: 1rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  z-index: 10;
+}
+
+/* Стили для кнопок в футере объектов */
+.facility-form-edit-footer-button {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  cursor: pointer;
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  border: 1px solid;
+}
+
+.facility-form-edit-footer-cancel {
+  background-color: white;
+  color: var(--gray-700);
+  border-color: var(--gray-300);
+}
+
+.facility-form-edit-footer-cancel:hover {
+  background-color: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.facility-form-edit-footer-submit {
+  background-color: var(--green-500);
+  color: white;
+  border: 1px solid var(--green-500);
+}
+
+.facility-form-edit-footer-submit:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.facility-form-edit-footer-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.facility-form-edit-footer-submit:disabled:hover {
+  background-color: var(--primary);
+}
+
+/* Стили для состояния загрузки объектов */
+.facility-form-edit-loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.facility-form-edit-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: facilityLoadingShimmer 1.5s infinite;
+}
+
+@keyframes facilityLoadingShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Стили для скелетона объектов */
+.facility-form-edit-skeleton-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: facilitySkeletonPulse 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes facilitySkeletonPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Индикатор загрузки для select объектов */
+.facility-form-edit-loading-select {
+  position: relative;
+  color: #6b7280 !important;
+}
+
+.facility-form-edit-loading-select::before {
+  content: 'Загрузка...';
+  position: absolute;
+  left: calc(var(--space-md) * 2 + 1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-style: italic;
+  z-index: 2;
+}
+
+.facility-form-edit-loading-select select {
+  color: transparent !important;
+}
+
+/* Индикатор загрузки с точками объектов */
+.facility-form-edit-loading-dots {
+  display: inline-block;
+  position: relative;
+}
+
+.facility-form-edit-loading-dots::after {
+  content: '...';
+  animation: facilityLoadingDots 1.5s infinite;
+}
+
+@keyframes facilityLoadingDots {
+  0%,
+  20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60%,
+  100% {
+    content: '...';
+  }
+}
+
+/* Улучшенный спиннер объектов */
+.facility-form-edit-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Адаптивные стили для объектов */
+@media (max-width: 1380px) {
+  .facility-form-edit-card {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .facility-form-edit-container {
+    padding-bottom: 120px;
+  }
+
+  .facility-form-edit-footer {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+
+  .facility-form-edit-footer-button {
+    width: 100%;
+    min-width: auto;
+  }
 }

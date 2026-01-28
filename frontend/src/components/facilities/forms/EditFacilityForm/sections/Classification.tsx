@@ -131,22 +131,22 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
   };
 
   return (
-    <div className="facility-card-edit">
-      <div className="facility-card-header-edit">
+    <div className="facility-form-edit-card">
+      <div className="facility-form-edit-card-header">
         <Tag size={20} />
-        <h3 className="facility-card-title-edit">Классификация</h3>
+        <h3 className="facility-form-edit-card-title">Классификация</h3>
       </div>
-      <div className="facility-card-content-edit">
-        <div className="facility-form-field-edit">
-          <label className="facility-form-label-edit">
+      <div className="facility-form-edit-card-content">
+        <div className="facility-form-edit-field">
+          <label className="facility-form-edit-label">
             Тип объекта
           </label>
-          <div className="facility-form-input-container-edit">
-            <Tag className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container">
+            <Tag className="facility-form-edit-icon" />
             <select
               value={formData.type?.id?.toString() || ''}
               onChange={handleTypeChange}
-              className="facility-form-select-edit"
+              className="facility-form-edit-select"
               disabled={isLoading}
             >
               <option value="">Выберите тип объекта</option>
@@ -160,18 +160,18 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
         </div>
 
         {divisionId && (
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Посты связи
             </label>
 
-            <div className="selected-posts-list">
+            <div className="facility-form-edit-selected-posts-list">
               {(formData.communication_posts || []).map(post => (
-                <div key={post.id} className="selected-post-item">
+                <div key={post.id} className="facility-form-edit-selected-post-item">
                   <span>{post.name}</span>
                   <button
                     type="button"
-                    className="remove-post-button"
+                    className="facility-form-edit-remove-post-button"
                     onClick={() => handleRemovePost(String(post.id))}
                   >
                     <X size={14} />
@@ -180,13 +180,13 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
               ))}
             </div>
 
-            <div className="add-post-controls">
-              <div className="facility-form-input-container-edit" style={{ flex: 1 }}>
-                <Wifi className="facility-form-icon-edit" />
+            <div className="facility-form-edit-add-post-controls">
+              <div className="facility-form-edit-input-container" style={{ flex: 1 }}>
+                <Wifi className="facility-form-edit-icon" />
                 <select
                   value={newPostId}
                   onChange={(e) => setNewPostId(e.target.value)}
-                  className="facility-form-select-edit"
+                  className="facility-form-edit-select"
                   disabled={isLoading || !availablePosts.length}
                 >
                   <option value="">Выберите пост связи</option>
@@ -199,7 +199,7 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
               </div>
               <button
                 type="button"
-                className="add-post-button"
+                className="facility-form-edit-add-post-button"
                 onClick={handleAddPost}
                 disabled={!newPostId}
               >
@@ -228,16 +228,16 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
         )}
 
         {formData.is_closed && (
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Класс
             </label>
-            <div className="facility-form-input-container-edit">
-              <Star className="facility-form-icon-edit" />
+            <div className="facility-form-edit-input-container">
+              <Star className="facility-form-edit-icon" />
               <select
                 value={formData.facility_class || ''}
                 onChange={handleClassChange}
-                className="facility-form-select-edit"
+                className="facility-form-edit-select"
               >
                 <option value="">Выберите класс</option>
                 <option value="1">1 класс</option>

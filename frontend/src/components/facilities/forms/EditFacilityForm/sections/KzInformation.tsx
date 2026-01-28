@@ -10,29 +10,29 @@ interface KzInformationProps {
 
 export function KzInformation({ formData, onChange }: KzInformationProps) {
   return (
-    <div className="facility-card-edit">
-      <div className="facility-card-header-edit">
+    <div className="facility-form-edit-card">
+      <div className="facility-form-edit-card-header">
         <Ruler size={20} />
-        <h3 className="facility-card-title-edit">Информация о КЗ</h3>
+        <h3 className="facility-form-edit-card-title">Информация о КЗ</h3>
       </div>
-      <div className="facility-card-content-edit">
-        <div className="facility-form-field-edit">
-          <label className="facility-form-label-edit">
+      <div className="facility-form-edit-card-content">
+        <div className="facility-form-edit-field">
+          <label className="facility-form-edit-label">
             Размер КЗ
           </label>
-          <div className="facility-form-input-container-edit">
-            <Ruler className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container">
+            <Ruler className="facility-form-edit-icon" />
             <input
               type="text"
               value={formData.kz_size  || ''}
               onChange={(e) => onChange({ kz_size : e.target.value })}
-              className="facility-form-input-edit"
+              className="facility-form-edit-input"
               placeholder="Введите размер КЗ"
             />
           </div>
         </div>
 
-        <div className="facility-form-field-edit">
+        <div className="facility-form-edit-field">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"

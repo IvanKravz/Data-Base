@@ -297,7 +297,7 @@ export function FacilityDetails() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="facilities-title">Редактирование объекта</h1>
+          <h1 className="facility-edit-mode-title">Редактирование объекта</h1>
         </div>
 
         <div className="facility-page-edit">
@@ -325,7 +325,7 @@ export function FacilityDetails() {
             <ArrowLeft size={20} />
           </button>
           <div className="facility-title-container">
-            <h1 className="facilities-title" title={facility.name}>
+            <h1 className="facility-view-title" title={facility.name}>
               {facility.name}
             </h1>
           </div>

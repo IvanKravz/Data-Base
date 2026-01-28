@@ -74,22 +74,22 @@ export function Assignment({
   }, [fixedSubdivision, availableSubdivisions, onChange]);
 
   return (
-    <div className="facility-card-edit">
-      <div className="facility-card-header-edit">
+    <div className="facility-form-edit-card">
+      <div className="facility-form-edit-card-header">
         <Building2 size={20} />
-        <h3 className="facility-card-title-edit">Принадлежность</h3>
+        <h3 className="facility-form-edit-card-title">Принадлежность</h3>
       </div>
-      <div className="facility-card-content-edit">
-        <div className="facility-form-field-edit">
-          <label className="facility-form-label-edit">
+      <div className="facility-form-edit-card-content">
+        <div className="facility-form-edit-field">
+          <label className="facility-form-edit-label">
             Подразделение
           </label>
-          <div className="facility-form-input-container-edit">
-            <Building2 className="facility-form-icon-edit" />
+          <div className="facility-form-edit-input-container">
+            <Building2 className="facility-form-edit-icon" />
             <select
               value={formData.division?.id || ''}
               onChange={handleDivisionChange}
-              className="facility-form-select-edit"
+              className="facility-form-edit-select"
               disabled={isLoading || fixedDivision}
               required
             >
@@ -109,16 +109,16 @@ export function Assignment({
         </div>
 
         {formData.division && availableSubdivisions.length > 0 && (
-          <div className="facility-form-field-edit">
-            <label className="facility-form-label-edit">
+          <div className="facility-form-edit-field">
+            <label className="facility-form-edit-label">
               Отделение
             </label>
-            <div className="facility-form-input-container-edit">
-              <Building2 className="facility-form-icon-edit" />
+            <div className="facility-form-edit-input-container">
+              <Building2 className="facility-form-edit-icon" />
               <select
                 value={formData.subdivision?.id || ''}
                 onChange={handleSubdivisionChange}
-                className="facility-form-select-edit"
+                className="facility-form-edit-select"
                 disabled={isLoading || fixedSubdivision}
               >
                 <option value="">Выберите отделение</option>

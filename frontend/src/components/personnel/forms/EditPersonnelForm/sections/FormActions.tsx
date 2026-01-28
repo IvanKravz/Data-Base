@@ -13,12 +13,12 @@ export function FormActions({
   isLoading = false 
 }: FormActionsProps) {
   return (
-    <div className="personnel-form-footer">
+    <div className="form-actions">
       <button
         type="button"
         onClick={onCancel}
         disabled={isLoading}
-        className="personnel-form-footer-button personnel-form-footer-cancel"
+        className="form-actions-button form-actions-cancel"
       >
         <X size={16} className="mr-2" />
         Отмена
@@ -26,7 +26,7 @@ export function FormActions({
       <button
         type="submit"
         disabled={isLoading}
-        className="personnel-form-footer-button personnel-form-footer-submit"
+        className={`form-actions-button ${isEditing ? 'form-actions-submit' : 'form-actions-create'}`}
       >
         {isLoading ? (
           <Loader2 size={16} className="mr-2 animate-spin" />
@@ -35,7 +35,7 @@ export function FormActions({
         ) : (
           <PlusCircle size={16} className="mr-2" />
         )}
-        {isLoading ? 'Обработка...' : isEditing ? 'Сохранить' : 'Создать'}
+        {isEditing ? 'Сохранить' : 'Создать'}
       </button>
     </div>
   );

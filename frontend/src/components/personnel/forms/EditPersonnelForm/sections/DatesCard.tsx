@@ -42,7 +42,6 @@ export function DatesCard({ formData, onChange }: DatesCardProps) {
           <label className="personnel-form-label">Дата контракта</label>
           <input
             type="date"
-            required
             value={formatDateForInput(formData.contract_date)}
             onChange={(e) => onChange({ contract_date: formatDateForServer(e.target.value) })}
             className="personnel-form-input"

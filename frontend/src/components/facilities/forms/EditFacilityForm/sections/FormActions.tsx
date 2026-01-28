@@ -1,10 +1,11 @@
 import React from 'react';
 import { X, Save, PlusCircle, Loader2 } from 'lucide-react';
+import '../EditFacilityForm.css';
 
 interface FormActionsProps {
   onCancel: () => void;
   isEditing?: boolean;
-  isLoading?: boolean; // Переименовали isSubmitting в isLoading для консистентности
+  isLoading?: boolean;
 }
 
 export function FormActions({ 
@@ -13,12 +14,12 @@ export function FormActions({
   isLoading = false 
 }: FormActionsProps) {
   return (
-    <div className="facility-form-footer-edit">
+    <div className="facility-form-edit-footer">
       <button
         type="button"
         onClick={onCancel}
         disabled={isLoading}
-        className="facility-form-footer-button-edit facility-form-footer-cancel-edit"
+        className="facility-form-edit-footer-button facility-form-edit-footer-cancel"
       >
         <X size={16} className="mr-2" />
         Отмена
@@ -26,7 +27,7 @@ export function FormActions({
       <button
         type="submit"
         disabled={isLoading}
-        className="facility-form-footer-button-edit facility-form-footer-submit-edit"
+        className="facility-form-edit-footer-button facility-form-edit-footer-submit"
       >
         {isLoading ? (
           <Loader2 size={16} className="mr-2 animate-spin" />

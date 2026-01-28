@@ -143,9 +143,9 @@ export function EditFacilityForm({
   // Пока данные загружаются, показываем индикатор загрузки
   if (!isInitialized && isLoadingData) {
     return (
-      <div className="facility-form-edit">
-        <div className="facility-card-edit">
-          <div className="facility-card-content-edit">
+      <div className="facility-form-edit-container">
+        <div className="facility-form-edit-card">
+          <div className="facility-form-edit-card-content">
             <p>Загрузка данных...</p>
           </div>
         </div>
@@ -154,66 +154,71 @@ export function EditFacilityForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="facility-form-edit">
-      <BasicInformation
-        formData={formData}
-        onChange={handleChange}
-        isClosedFacility={formData.is_closed || false}
-      />
-
-      <Assignment
-        formData={formData}
-        onChange={handleChange}
-        divisions={divisions}
-        availableSubdivisions={availableSubdivisions}
-        isLoading={isLoadingData}
-        fixedDivision={fixedDivision}
-        fixedSubdivision={fixedSubdivision}
-      />
-
-      <Classification
-        formData={formData}
-        onChange={handleChange}
-        divisionId={formData.division?.id}
-        subdivisionId={formData.subdivision?.id}
-        facilityTypes={facilityTypes}
-        communicationPosts={communicationPosts} 
-        isLoading={isLoadingData} 
-      />
-
-      {formData.is_closed && (
-        <>
-          <Documentation
+    <div className="facility-form-edit-container">
+      <form onSubmit={handleSubmit} className="facility-form-edit-wrapper">
+        <div className="facility-form-edit-content">
+          <BasicInformation
             formData={formData}
             onChange={handleChange}
+            isClosedFacility={formData.is_closed || false}
           />
-          <KzInformation
+
+          <Assignment
             formData={formData}
             onChange={handleChange}
+            divisions={divisions}
+            availableSubdivisions={availableSubdivisions}
+            isLoading={isLoadingData}
+            fixedDivision={fixedDivision}
+            fixedSubdivision={fixedSubdivision}
           />
-        </>
-      )}
 
-      <div className="facility-card-edit">
-        <div className="facility-card-header-edit">
-          <MessageSquare size={20} />
-          <h3 className="facility-card-title-edit">Комментарии</h3>
-        </div>
-        <div className="facility-card-content-edit">
-          <textarea
-            value={formData.comments || ''}
-            onChange={(e) => handleChange({ comments: e.target.value })}
-            className="facility-form-textarea-edit"
-            placeholder="Добавьте комментарии к объекту..."
+          <Classification
+            formData={formData}
+            onChange={handleChange}
+            divisionId={formData.division?.id}
+            subdivisionId={formData.subdivision?.id}
+            facilityTypes={facilityTypes}
+            communicationPosts={communicationPosts} 
+            isLoading={isLoadingData} 
           />
-        </div>
-      </div>
 
+          {formData.is_closed && (
+            <>
+              <Documentation
+                formData={formData}
+                onChange={handleChange}
+              />
+              <KzInformation
+                formData={formData}
+                onChange={handleChange}
+              />
+            </>
+          )}
+
+          <div className="facility-form-edit-card">
+            <div className="facility-form-edit-card-header">
+              <MessageSquare size={20} />
+              <h3 className="facility-form-edit-card-title">Комментарии</h3>
+            </div>
+            <div className="facility-form-edit-card-content">
+              <textarea
+                value={formData.comments || ''}
+                onChange={(e) => handleChange({ comments: e.target.value })}
+                className="facility-form-edit-textarea"
+                placeholder="Добавьте комментарии к объекту..."
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+      
+      {/* FormActions вынесен за пределы формы, но внутри контейнера */}
       <FormActions
         onCancel={onCancel}
         isEditing={isEditing}
         isLoading={isSubmitting}
       />
-    </form>
+    </div>
   );
 }

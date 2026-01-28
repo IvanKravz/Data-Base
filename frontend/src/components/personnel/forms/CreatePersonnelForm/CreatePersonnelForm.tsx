@@ -84,6 +84,16 @@ export function CreatePersonnelForm() {
     }
   };
 
+  // Добавлен обработчик отмены
+  const handleCancel = () => {
+    // Возвращаемся назад или на страницу с персоналом
+    if (id) {
+      navigate(`/divisions/${id}/personnel`);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <div className="personnel-edit-page">
       <div className="page-title">
@@ -105,6 +115,7 @@ export function CreatePersonnelForm() {
       <EditPersonnelForm
         person={initialEmployee as Employee}
         onSubmit={handleCreate}
+        onCancel={handleCancel} // Добавлен обработчик отмены
         isCreateMode={true}
         fixedDivision={!!fixedDivision}
         fixedSubdivision={!!fixedSubdivision}

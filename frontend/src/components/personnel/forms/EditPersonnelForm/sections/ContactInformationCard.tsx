@@ -21,7 +21,6 @@ export function ContactInformationCard({ formData, onChange }: ContactInformatio
           <label className="personnel-form-label">Личный телефон</label>
           <input
             type="tel"
-            required
             value={formData.personal_phone}
             onChange={(e) => onChange({ personal_phone: e.target.value })}
             className="personnel-form-input"
@@ -32,7 +31,6 @@ export function ContactInformationCard({ formData, onChange }: ContactInformatio
           <label className="personnel-form-label">Рабочий телефон</label>
           <input
             type="tel"
-            required
             value={formData.work_phone}
             onChange={(e) => onChange({ work_phone: e.target.value })}
             className="personnel-form-input"

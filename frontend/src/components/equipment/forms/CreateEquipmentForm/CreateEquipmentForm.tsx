@@ -37,25 +37,25 @@ interface EquipmentCategory {
 
 // Создаем объект прав по умолчанию
 const defaultFieldPermissions = {
-  canEditName: false,
-  canEditCategory: false,
-  canEditModel: false,
-  canEditStatus: false,
-  canEditSoftwareVersion: false,
-  canEditManufacturingDate: false,
-  canEditExploitationDate: false,
-  canEditServiceLife: false,
-  canEditSecretLevel: false,
-  canEditInterestOrgan: false,
-  canEditFreeUse: false,
-  canEditDivision: false,
-  canEditSubdivision: false,
-  canEditAssignedTo: false,
-  canEditFacility: false,
-  canEditComments: false,
-  canEditProductStructure: false,
-  canEditDocuments: false,
-  canEditIdentification: false,
+    canEditName: false,
+    canEditCategory: false,
+    canEditModel: false,
+    canEditStatus: false,
+    canEditSoftwareVersion: false,
+    canEditManufacturingDate: false,
+    canEditExploitationDate: false,
+    canEditServiceLife: false,
+    canEditSecretLevel: false,
+    canEditInterestOrgan: false,
+    canEditFreeUse: false,
+    canEditDivision: false,
+    canEditSubdivision: false,
+    canEditAssignedTo: false,
+    canEditFacility: false,
+    canEditComments: false,
+    canEditProductStructure: false,
+    canEditDocuments: false,
+    canEditIdentification: false,
 };
 
 export function CreateEquipmentForm() {
@@ -66,7 +66,7 @@ export function CreateEquipmentForm() {
 
     // Используем хук для получения прав доступа
     const { canCreate } = useAppPermissions();
-    const fieldPermissions = useEquipmentFieldPermissions(); 
+    const fieldPermissions = useEquipmentFieldPermissions();
 
     const hasCreatePermission = canCreate('equipment');
 
@@ -317,8 +317,8 @@ export function CreateEquipmentForm() {
                         permissions={effectivePermissions} // Передаем permissions
                     />
 
-                    <IdentificationInfo 
-                        formData={formData} 
+                    <IdentificationInfo
+                        formData={formData}
                         onChange={handleChange}
                         permissions={effectivePermissions} // Передаем permissions
                     />
@@ -369,8 +369,10 @@ export function CreateEquipmentForm() {
                 <FormActions
                     onCancel={handleCancel}
                     showDisposeButton={false}
+                    onDispose={undefined}
                     isLoading={isLoading}
-                    hasEditPermission={hasCreatePermission} // Передаем права на создание
+                    hasEditPermission={hasCreatePermission}
+                    isCreating={true} 
                 />
             </form>
         </div>
