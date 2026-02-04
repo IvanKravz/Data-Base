@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { MainLayout } from './components/MainLayout';
 import { AuthPage } from './pages/AuthPage';
-import AccessDenied from './components/errors/AccessDenied';
+import AccessDenied from './components/errors/AccessDenied/AccessDenied';
+import NotFoundPage from './components/errors/NotFoundPage/NotFoundPage';
 import { ErrorBoundary } from './ErrorBoundary';
-// import { NotFoundPage } from './pages/NotFoundPage';
 
 export interface ApiError {
   status: number;
@@ -13,7 +13,7 @@ export interface ApiError {
   url?: string;
   method?: string;
   timestamp?: number;
-  originalStatus?: number; // Добавляем поле для исходного статуса
+  originalStatus?: number;
 }
 
 function AppRouter() {
@@ -27,40 +27,30 @@ function AppRouter() {
     const handleApiError = (event: CustomEvent<ApiError>) => {
       const { status, message, originalStatus, url } = event.detail;
 
-      // Обработка 404 для папок хранилища - НЕ перенаправляем, просто логируем
+      // Обработка 404 для папок хранилища - НЕ перенаправляем
       if (status === 404 && url && url.includes('/storage/folders/')) {
         console.warn('Storage folder not found:', message);
-        // НЕ перенаправляем, компонент Storage сам обработает ошибку
         return;
       }
 
-      // Обработка 404 для конкретных ресурсов как доступ запрещен
+      // Обработка 404 для ресурсов - перенаправляем на страницу 404
       if (status === 404 && url &&
         (url.includes('/facilities/') ||
           url.includes('/equipment/') ||
           url.includes('/personnel/') ||
           url.includes('/employees/') ||
           url.includes('/divisions/'))) {
-        setApiError({ status: 403, message: 'Доступ к ресурсу запрещен', originalStatus: 404 });
-        navigate('/access-denied', { replace: true });
+        setApiError({ status: 404, message: 'Ресурс не найден', originalStatus });
+        navigate('/not-found', { replace: true });
         return;
       }
 
-      // Для 404 при запросе папок не перенаправляем, просто логируем
-      if (status === 404 && url && url.includes('/storage/folders/')) {
-        console.warn('Folder not found:', message);
-        return; // Не перенаправляем, компонент Storage сам обработает
-      }
-
-      // Для критических ошибок перенаправляем на соответствующие страницы
+      // Для 403 - перенаправляем на страницу доступа запрещено
       if (status === 403) {
         setApiError({ status, message });
         navigate('/access-denied', { replace: true });
-      } else if (status === 404) {
-        // Можно показать уведомление или установить состояние для 404 страницы
-        console.warn('Resource not found:', message);
       } else if (status >= 500) {
-        // Для серверных ошибок можно показать глобальное уведомление
+        // Для серверных ошибок
         console.error('Server error:', message);
       }
     };
@@ -88,9 +78,9 @@ function AppRouter() {
     return <AccessDenied />;
   }
 
-  // if (apiError?.status === 404) {
-  //   return <NotFoundPage />;
-  // }
+  if (apiError?.status === 404) {
+    return <NotFoundPage />;
+  }
 
   return (
     <ErrorBoundary>
@@ -101,7 +91,7 @@ function AppRouter() {
           <Route path="/*" element={<MainLayout />} />
         )}
         <Route path="/access-denied" element={<AccessDenied />} />
-        {/* <Route path="/not-found" element={<NotFoundPage />} /> */}
+        <Route path="/not-found" element={<NotFoundPage />} />
         <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/auth'} replace />} />
       </Routes>
     </ErrorBoundary>

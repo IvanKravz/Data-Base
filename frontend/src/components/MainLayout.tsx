@@ -34,9 +34,7 @@ import {
   CommunicationPostsRoute,
   DivisionsRoute,
   StorageRoute,
-  MapRoute,
-  CabinetRoute,
-  ProtectedRoute
+  MapRoute
 } from './ProtectedRoute';
 
 export function MainLayout() {
