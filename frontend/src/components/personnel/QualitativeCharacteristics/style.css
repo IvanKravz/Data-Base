@@ -162,7 +162,7 @@
   display: flex;
 
   flex-direction: column;
-  gap:  0.3rem;
+  gap: 0.3rem;
   padding: 0.2rem;
 }
 
@@ -317,4 +317,21 @@
 .qc-date-display:empty::before {
   content: 'дд-мм-гггг';
   color: var(--text-light);
+}
+
+.qc-date-display.editable {
+  cursor: pointer;
+  background-color: #f9f9f9;
+  border: 1px solid #d1d5db;
+}
+
+.qc-date-display.editable:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.qc-input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
 }

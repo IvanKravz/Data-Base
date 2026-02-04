@@ -32,9 +32,9 @@ interface AppPermissionsContextType {
     canAccessNetworks: (action?: string) => boolean;
     canAccessCommunicationPosts: (action?: string) => boolean;
     canAccessDivisions: (action?: string) => boolean;
-    canAccessMap: (action?: PermissionType) => boolean; // Добавляем
-    canAccessStorage: (action?: PermissionType) => boolean; // Добавляем
-    canAccessPage: (model: string, action?: PermissionType) => boolean; // Экспортируем canAccessPage
+    canAccessMap: (action?: PermissionType) => boolean; 
+    canAccessStorage: (action?: PermissionType) => boolean; 
+    canAccessPage: (model: string, action?: PermissionType) => boolean; 
     canView: (module: any) => boolean;
     canCreate: (module: any) => boolean;
     canEdit: (module: any) => boolean;

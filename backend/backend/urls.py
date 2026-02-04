@@ -8,6 +8,7 @@ from users.views import error_400, error_403, error_404, error_500
 
 urlpatterns = [
     path('api/users/', include('users.urls')),
+    path('api/employees/', include('employees.urls')),
     path('api/equipment/', include('equipment.urls')),
     path('api/facilities/', include('facilities.urls')),
     path('api/tasks/', include('tasks.urls')),

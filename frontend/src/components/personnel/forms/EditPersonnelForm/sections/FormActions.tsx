@@ -16,6 +16,7 @@ export function FormActions({
     <div className="form-actions">
       <button
         type="button"
+        form="personnel-form"
         onClick={onCancel}
         disabled={isLoading}
         className="form-actions-button form-actions-cancel"

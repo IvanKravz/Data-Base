@@ -80,7 +80,6 @@ export function PersonnelList({
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
   const [internalLoading, setInternalLoading] = useState(true);
-
   const isGlobalView = !division;
 
   // Функция для сортировки сотрудников по приоритету

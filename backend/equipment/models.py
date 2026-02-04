@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from employees.models import Employee
 from facilities.models import Division, Facility, Subdivision
-from users.models import Employee
 
 class EquipmentCategory(models.Model):
     value = models.CharField(max_length=20, unique=True, verbose_name='Код категории', null=True)

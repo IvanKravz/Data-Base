@@ -16,7 +16,7 @@ export const employeesApi = {
     const formData = new FormData();
     formData.append('photo', photoFile);
 
-    const { data } = await api.patch(`users/employees/${id}/photo/`, formData, {
+    const { data } = await api.patch(`/employees/${id}/photo/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${token}`,
@@ -27,7 +27,7 @@ export const employeesApi = {
 
   deletePhoto: async (token: string, id: string): Promise<Employee> => {
     try {
-      const { data } = await api.delete<Employee>(`users/employees/${id}/photo/`, {
+      const { data } = await api.delete<Employee>(`/employees/${id}/photo/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -47,7 +47,7 @@ export const employeesApi = {
 
   // Get all personnel with optional filters
   getDictionaries: async (token: string): Promise<EmployeeDictionaries> => {
-    const { data } = await api.get('users/employees/dictionaries/', {
+    const { data } = await api.get('/employees/dictionaries/', {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -63,12 +63,12 @@ export const employeesApi = {
     };
 
     let allEmployees: Employee[] = [];
-    let nextUrl: string | null = 'users/employees/';
+    let nextUrl: string | null = '/employees/';
   
     while (nextUrl) {
       const response = await api.get<{ results: Employee[], next: string | null }>(nextUrl, {
         // Для первого запроса используем параметры, для последующих - не используем, так как nextUrl уже содержит параметры
-        params: nextUrl.includes('users/employees/') ? requestParams : undefined,
+        params: nextUrl.includes('/employees/') ? requestParams : undefined,
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -105,7 +105,7 @@ export const employeesApi = {
 
   // Get person by ID
   getPersonById: async (token: string, id: string): Promise<Employee> => {
-    const { data } = await api.get(`users/employees/${id}/`, {
+    const { data } = await api.get(`/employees/${id}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -118,7 +118,7 @@ export const employeesApi = {
     // Очищаем данные от любого возможного id
     const { id, ...cleanData } = personData as any;
 
-    const { data } = await api.post('users/employees/', cleanData, {
+    const { data } = await api.post('/employees/', cleanData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -129,7 +129,7 @@ export const employeesApi = {
 
   // Update existing person
   updatePerson: async (token: string, id: string, personData: Partial<Employee>) => {
-    const { data } = await api.patch(`users/employees/${id}/`, personData, {
+    const { data } = await api.patch(`/employees/${id}/`, personData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -140,7 +140,7 @@ export const employeesApi = {
 
   // Delete person
   deletePerson: async (token: string, id: string) => {
-    await api.delete(`users/employees/${id}/`, {
+    await api.delete(`/employees/${id}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -166,31 +166,31 @@ export const employeesApi = {
     };
     workStartYear?: string;
   }) => {
-    const response = await api.put(`users/employees/${id}/qualitative/`, data);
+    const response = await api.put(`/employees/${id}/qualitative/`, data);
     return response.data;
   },
 
   // Toggle material responsible status
   toggleMaterialResponsible: async (id: string) => {
-    const { data } = await api.post(`users/employees/${id}/toggle-material-responsible/`);
+    const { data } = await api.post(`/employees/${id}/toggle-material-responsible/`);
     return data;
   },
 
   // Toggle SHA worker status
   toggleShaWorker: async (id: string) => {
-    const { data } = await api.post(`users/employees/${id}/toggle-sha-worker/`);
+    const { data } = await api.post(`/employees/${id}/toggle-sha-worker/`);
     return data;
   },
 
   // Update SHA worker details
   updateShaDetails: async (id: string, shaDetails: Employee['shaDetails']) => {
-    const { data } = await api.put(`users/employees/${id}/sha-details/`, shaDetails);
+    const { data } = await api.put(`/employees/${id}/sha-details/`, shaDetails);
     return data;
   },
 
   // Update person comments
   updateComments: async (personId: string, comments: string) => {
-    const { data } = await api.patch(`users/employees/${personId}/comments/`, {
+    const { data } = await api.patch(`/employees/${personId}/comments/`, {
       comments
     });
     return data;

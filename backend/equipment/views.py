@@ -18,7 +18,7 @@ from .serializers import (
     RoutingTableSerializer,
     VLANSerializer
 )
-from users.models import Employee
+from employees.models import Employee
 from facilities.models import Facility
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend

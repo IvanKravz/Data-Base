@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import StorageFolder, StorageFile, FileShareLink, Favorite
-from users.serializers import UserSerializer, DivisionSerializer, SubdivisionSerializer
+from users.serializers import UserSerializer
+from employees.serializers import DivisionSerializer, SubdivisionSerializer
 
 class StorageFolderSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)

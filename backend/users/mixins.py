@@ -63,9 +63,7 @@ class RoleBasedFilterMixin:
         user = self.request.user
         
         # Получаем подразделение пользователя
-        user_division = getattr(user, 'division', None)
-        if not user_division and hasattr(user, 'employee') and user.employee:
-            user_division = getattr(user.employee, 'division', None)
+        user_division = user.division
         
         # Если у модели есть связь с подразделением и пользователь имеет подразделение
         if hasattr(queryset.model, 'division') and user_division:
@@ -90,10 +88,8 @@ class UserAccessMixin:
 
         user = self.request.user
         
-        # Получаем подразделение пользователя
-        user_division = getattr(user, 'division', None)
-        if not user_division and hasattr(user, 'employee') and user.employee:
-            user_division = getattr(user.employee, 'division', None)
+        # Используем свойство division
+        user_division = user.division
         
         # ПРИОРИТЕТ 1: Если у пользователя есть роли - используем их
         if user.groups.filter(name__startswith='role_').exists():
@@ -103,11 +99,11 @@ class UserAccessMixin:
         if user_division and hasattr(queryset.model, 'division'):
             return queryset.filter(division=user_division)
             
-        # ПРИОРИТЕТ 3: Для обычных пользователей - только свои данные
+        # ПРИОРИТЕТ 3: Если нет подразделения - только свои данные
         if hasattr(queryset.model, 'user'):
             return queryset.filter(user=user)
         elif hasattr(queryset.model, 'employee'):
-            if hasattr(user, 'employee'):
+            if hasattr(user, 'employee') and user.employee:
                 return queryset.filter(employee=user.employee)
                     
         return queryset.none()

@@ -105,9 +105,7 @@ class RoleBasedPermission(permissions.BasePermission):
             return True
         
         # Получаем подразделение пользователя
-        user_division = getattr(user, 'division', None)
-        if not user_division and hasattr(user, 'employee') and user.employee:
-            user_division = getattr(user.employee, 'division', None)
+        user_division = user.division
         
         # Если у пользователя нет подразделения - запрещаем доступ
         if not user_division:

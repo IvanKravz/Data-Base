@@ -13,7 +13,7 @@ import {
 } from './sections';
 import { FormActions } from './sections/FormActions';
 import './style.css';
-import { getPermissions } from '../../../api/utils/permissions';
+import { canAccessPage, canEdit } from '../../../api/utils/permissions';
 
 export function QualitativeCharacteristics() {
   const { id } = useParams<{ id: string }>();
@@ -31,13 +31,18 @@ export function QualitativeCharacteristics() {
   // Получаем состояние навигации
   const navigationState = location.state;
 
-  // Проверка прав доступа для кнопки "Редактировать сотрудника"
+  // Проверка прав доступа для кнопки "Редактировать сотрудника" - используем canAccessPage
   const canEditEmployee = useMemo(() => {
-    const permissions = getPermissions();
-    if (permissions && permissions.employees) {
-      return permissions.employees.can_edit;
-    }
-    return false;
+    // Вариант 1: Использовать canAccessPage для модели Employee
+    return canAccessPage('Employee', 'change');
+
+    // Вариант 2: Использовать canEdit для модуля employees (если так настроено в системе)
+    // return canEdit('employees');
+  }, []);
+
+  // Проверка прав на просмотр
+  const canViewEmployee = useMemo(() => {
+    return canAccessPage('Employee', 'view');
   }, []);
 
   // Загрузка данных сотрудника
@@ -58,8 +63,13 @@ export function QualitativeCharacteristics() {
       }
     };
 
-    fetchEmployee();
-  }, [token, id]);
+    if (canViewEmployee) {
+      fetchEmployee();
+    } else {
+      setError('У вас нет прав для просмотра данных сотрудника');
+      setLoading(false);
+    }
+  }, [token, id, canViewEmployee]);
 
   // Обработчик изменения полей
   const handleFieldChange = (field: keyof Employee, value: string) => {
@@ -72,6 +82,12 @@ export function QualitativeCharacteristics() {
   // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!canEditEmployee) {
+      setError('У вас нет прав для редактирования данных сотрудника');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -104,6 +120,14 @@ export function QualitativeCharacteristics() {
       state: navigationState?.originalState || null
     });
   };
+
+  if (!canViewEmployee) {
+    return (
+      <div className="qc-not-found">
+        <p>У вас нет прав для просмотра качественной характеристики</p>
+      </div>
+    );
+  }
 
   if (loading && !employee) {
     return (
@@ -160,24 +184,29 @@ export function QualitativeCharacteristics() {
             <BasicInfoCard
               formData={formData}
               onChange={handleFieldChange}
+              canEdit={canEditEmployee}
             />
             <WorkExperienceCard
               formData={formData}
               onChange={handleFieldChange}
+              canEdit={canEditEmployee}
             />
             <SecurityClearanceCard
               formData={formData}
               onChange={handleFieldChange}
+              canEdit={canEditEmployee}
             />
             <EducationCard
               formData={formData}
               onChange={handleFieldChange}
+              canEdit={canEditEmployee}
             />
           </div>
 
           <FormActions
             onCancel={() => setIsEditing(false)}
             loading={loading}
+            canEdit={canEditEmployee}
           />
         </form>
       ) : (
@@ -185,6 +214,7 @@ export function QualitativeCharacteristics() {
           <BasicInfoCard
             employee={employee}
             viewMode
+            canEdit={canEditEmployee}
           />
           <WorkExperienceCard
             employee={{
@@ -194,6 +224,7 @@ export function QualitativeCharacteristics() {
               date_end_work: employee.date_end_work
             }}
             viewMode
+            canEdit={canEditEmployee}
           />
           <SecurityClearanceCard
             employee={{
@@ -201,6 +232,7 @@ export function QualitativeCharacteristics() {
               data_state_secrets: employee.data_state_secrets
             }}
             viewMode
+            canEdit={canEditEmployee}
           />
           <EducationCard
             employee={{
@@ -208,6 +240,7 @@ export function QualitativeCharacteristics() {
               year_graduation: employee.year_graduation
             }}
             viewMode
+            canEdit={canEditEmployee}
           />
         </div>
       )}

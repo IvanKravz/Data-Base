@@ -7,9 +7,10 @@ interface BasicInfoCardProps {
   onChange?: (field: keyof Employee, value: string) => void;
   employee?: Employee;
   viewMode?: boolean;
+  canEdit?: boolean;
 }
 
-export function BasicInfoCard({ formData, onChange, employee, viewMode }: BasicInfoCardProps) {
+export function BasicInfoCard({ formData, onChange, employee, viewMode, canEdit = true }: BasicInfoCardProps) {
   const renderField = (label: string, value: string | undefined) => (
     <div className="qc-field">
       <span className="qc-field-label">{label}</span>
@@ -25,9 +26,14 @@ export function BasicInfoCard({ formData, onChange, employee, viewMode }: BasicI
         value={value || ''}
         onChange={(e) => onChange?.(field, e.target.value)}
         className="qc-input"
+        disabled={!canEdit}
       />
     </div>
   );
+
+  if (!viewMode && !canEdit) {
+    return null;
+  }
 
   return (
     <div className="qc-card">

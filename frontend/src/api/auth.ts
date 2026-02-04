@@ -9,7 +9,7 @@ type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks'
 interface UserPermissions {
   roles: string[];
   filters: Record<string, any>;
-  models: Record<string, string[]>; // Например: { Employee: ['view', 'add', 'change', 'delete'] }
+  models: Record<string, string[]>;
   modules: string[];
 }
 

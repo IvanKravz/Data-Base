@@ -53,8 +53,9 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
     
     def _get_object_id_from_api_path(self, path):
         """Извлекает ID объекта из API URL"""
-        if request.path.startswith('/api/'):
-            match = re.search(r'/api/(\w+)/(\d+)/?$', request.path)
+        # ИСПРАВЛЕНИЕ: используем переданный параметр path, а не request.path
+        if path.startswith('/api/'):
+            match = re.search(r'/api/(\w+)/(\d+)/?$', path)
             return match.group(2) if match else None
         return None
     
@@ -95,6 +96,7 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
         
         # Определяем модуль и логируем действие
         module = self._get_module_from_path(request.path)
+        # ИСПРАВЛЕНИЕ: передаем request.path в метод
         object_id = self._get_object_id_from_api_path(request.path)
         
         from users.logging_utils import log_user_action

@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from .models import CommunicationPost, Division, FacilityType, Subdivision, Facility
 from .serializers import CommunicationPostSerializer, DivisionSerializer, FacilityTypeSerializer, SubdivisionSerializer, FacilitySerializer, FacilityStatsSerializer
 from .mixins import DivisionAccessMixin, BaseViewSetMixin
-from users.permissions import RoleBasedPermission  # Исправлен импорт
+from users.permissions import RoleBasedPermission 
 from rest_framework.exceptions import PermissionDenied
 
 class DivisionViewSet(BaseViewSetMixin, viewsets.ModelViewSet):

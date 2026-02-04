@@ -7,30 +7,30 @@ interface WorkExperienceCardProps {
   onChange?: (field: keyof Employee, value: string) => void;
   employee?: Employee;
   viewMode?: boolean;
+  canEdit?: boolean;
 }
 
-export function WorkExperienceCard({ formData, onChange, employee, viewMode }: WorkExperienceCardProps) {
+export function WorkExperienceCard({ formData, onChange, employee, viewMode, canEdit = true }: WorkExperienceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
   const formatDisplayDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '—';
-    
-    // Проверяем формат YYYY-MM-DD
+
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateString.match(isoFormat);
-    
+
     if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`; // DD-MM-YYYY
+      return `${match[3]}-${match[2]}-${match[1]}`;
     }
-    
-    // Если дата уже в формате DD-MM-YYYY, оставляем как есть
+
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     if (displayFormat.test(dateString)) return dateString;
-    
-    return dateString; // Возвращаем как есть, если не распознали формат
+
+    return dateString;
   };
 
   const handleDateClick = (field: keyof Employee) => {
+    if (!canEdit) return;
     setActiveDateField(field);
   };
 
@@ -50,19 +50,17 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode }: W
 
   const formatDateForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return '';
-    
-    // Если дата в формате DD-MM-YYYY
+
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     const displayMatch = dateString.match(displayFormat);
-    
+
     if (displayMatch) {
-      return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`; // YYYY-MM-DD
+      return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`;
     }
-    
-    // Если дата уже в формате YYYY-MM-DD
+
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     if (isoFormat.test(dateString)) return dateString;
-    
+
     return '';
   };
 
@@ -81,11 +79,13 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode }: W
             onBlur={() => setActiveDateField(null)}
             autoFocus
             className="qc-input"
+            disabled={!canEdit}
           />
         ) : (
-          <div 
-            className="qc-input qc-date-display" 
+          <div
+            className={`qc-input qc-date-display ${canEdit ? 'editable' : ''}`}
             onClick={() => handleDateClick(field)}
+            style={{ cursor: canEdit ? 'pointer' : 'default' }}
           >
             {displayValue}
           </div>
@@ -93,6 +93,10 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode }: W
       </div>
     );
   };
+
+  if (!viewMode && !canEdit) {
+    return null;
+  }
 
   return (
     <div className="qc-card">

@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from facilities.models import Division, Subdivision, Facility
-from users.models import Employee
+from employees.models import Employee
 from .models import EquipmentCategory, Equipment, InterestOrgan, ProductStructure
-from users.serializers import EmployeeSerializer
+from employees.serializers import EmployeeSerializer
 from django.apps import apps
 
 class DivisionShortSerializer(serializers.ModelSerializer):

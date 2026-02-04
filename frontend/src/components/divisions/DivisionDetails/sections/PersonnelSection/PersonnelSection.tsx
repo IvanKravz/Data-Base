@@ -466,12 +466,11 @@ export function PersonnelSection() {
           </div>
         )}
 
-        {/* ИСПРАВЛЕНИЕ: Передаем advancedFilters и searchTerm в PersonnelList */}
         <PersonnelList
           selectedDivision={isGlobalView ? 'Все подразделения' : division?.name}
           selectedCategory="all"
           selectedAccessClass="all"
-          searchTerm={searchTerm} // ПЕРЕДАЕМ РЕАЛЬНЫЙ searchTerm
+          searchTerm={searchTerm} 
           division={isExploitationUser ? {
             id: userDivisionId,
             name: stableCurrentUser?.division_info?.name

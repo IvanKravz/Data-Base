@@ -7,9 +7,10 @@ interface SecurityClearanceCardProps {
   onChange?: (field: keyof Employee, value: string) => void;
   employee?: Employee;
   viewMode?: boolean;
+  canEdit?: boolean;
 }
 
-export function SecurityClearanceCard({ formData, onChange, employee, viewMode }: SecurityClearanceCardProps) {
+export function SecurityClearanceCard({ formData, onChange, employee, viewMode, canEdit = true }: SecurityClearanceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
   const formatDisplayDate = (dateString: string | null | undefined): string => {
@@ -37,6 +38,7 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
   };
 
   const handleDateClick = (field: keyof Employee) => {
+    if (!canEdit) return;
     setActiveDateField(field);
   };
 
@@ -63,6 +65,7 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
         value={value || ''}
         onChange={(e) => onChange?.(field, e.target.value)}
         className="qc-input"
+        disabled={!canEdit}
       />
     </div>
   );
@@ -82,11 +85,13 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
             onBlur={() => setActiveDateField(null)}
             autoFocus
             className="qc-input"
+            disabled={!canEdit}
           />
         ) : (
-          <div 
-            className="qc-input qc-date-display" 
+          <div
+            className={`qc-input qc-date-display ${canEdit ? 'editable' : ''}`}
             onClick={() => handleDateClick(field)}
+            style={{ cursor: canEdit ? 'pointer' : 'default' }}
           >
             {displayValue}
           </div>
@@ -94,6 +99,10 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode }
       </div>
     );
   };
+
+  if (!viewMode && !canEdit) {
+    return null;
+  }
 
   return (
     <div className="qc-card">

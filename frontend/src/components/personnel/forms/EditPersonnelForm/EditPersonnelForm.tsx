@@ -206,13 +206,12 @@ export function EditPersonnelForm({
             />
           </div>
         </div>
+        <FormActions
+          onCancel={onCancel}
+          isEditing={!isCreateMode}
+          isLoading={loading}
+        />
       </form>
-      
-      <FormActions
-        onCancel={onCancel}
-        isEditing={!isCreateMode}
-        isLoading={loading}
-      />
     </div>
 
   );
