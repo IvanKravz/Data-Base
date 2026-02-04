@@ -64,70 +64,6 @@ body {
   line-height: 1.5;
 }
 
-/* ===== FORM ACTIONS (ОБНОВЛЕННЫЕ СТИЛИ) ===== */
-.form-actions {
-  margin-top: 1.5rem;
-  background-color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  border-radius: 0.5rem;
-}
-
-.form-actions-button {
-  padding: 0.5rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 0.375rem;
-  transition: all 0.3s ease-in-out;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
-  border: 1px solid transparent;
-}
-
-.form-actions-cancel {
-  background-color: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
-}
-
-.form-actions-cancel:hover {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
-}
-
-.form-actions-submit {
-  background-color: var(--green-500);
-  color: white;
-  border: 1px solid var(--green-500);
-}
-
-.form-actions-submit:hover {
-  background-color: #059669;
-  border-color: #059669;
-}
-
-.form-actions-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.form-actions-create {
-  background-color: var(--green-500);
-  color: white;
-  border: 1px solid var(--green-500);
-}
-
-.form-actions-create:hover {
-  background-color: #059669;
-  border-color: #059669;
-}
-
 /* ===== PERSONNEL FORM STYLES ===== */
 .personnel-edit-form {
   background-color: white;
@@ -138,12 +74,19 @@ body {
   border-radius: var(--radius-lg);
 }
 
+.personnel-form-edit-container {
+  margin: 0 auto;
+  padding-bottom: 40px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
 .personnel-edit-grid {
   padding: 0.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: var(--space-lg);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 /* ===== КАРТА СОТРУДНИКА ===== */
@@ -185,7 +128,7 @@ body {
   padding: var(--space-lg) 0 0 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 /* ===== FORM ELEMENTS ===== */
@@ -398,6 +341,74 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+
+/* ===== FORM ACTIONS (ОБНОВЛЕННЫЕ СТИЛИ) ===== */
+.form-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  padding: 1rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  z-index: 10;
+}
+
+.form-actions-button {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  border: 1px solid transparent;
+}
+
+.form-actions-cancel {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.form-actions-cancel:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.form-actions-submit {
+  background-color: var(--green-500);
+  color: white;
+  border: 1px solid var(--green-500);
+}
+
+.form-actions-submit:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.form-actions-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-actions-create {
+  background-color: var(--green-500);
+  color: white;
+  border: 1px solid var(--green-500);
+}
+
+.form-actions-create:hover {
+  background-color: #059669;
+  border-color: #059669;
 }
 
 /* ===== FORM ERRORS ===== */

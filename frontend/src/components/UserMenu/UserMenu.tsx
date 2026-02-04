@@ -60,6 +60,8 @@ export function UserMenu() {
         }
     };
 
+    console.log('userData', userData)
+
     return (
         <div className="user-menu-container">
             <button

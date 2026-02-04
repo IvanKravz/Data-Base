@@ -384,13 +384,53 @@
     align-items: center;
 }
 
+.module-card {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.15);
+}
+
+.module-card-selected {
+    border-color: #3b82f6 !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.module-selected-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+}
+
+/* Индикатор выбранного модуля */
+.selected-module-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #3b82f6;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: #eff6ff;
+    border-radius: 0.5rem;
+}
+
 /* Адаптивность для мобильных устройств */
 @media (max-width: 1023px) {
     .profile-grid {
         grid-template-columns: 1fr;
         gap: 0.5rem;
     }
-    
+
     .info-table-label,
     .info-table-value {
         display: block;
@@ -402,11 +442,11 @@
         display: block;
         padding: 0.5rem 0;
     }
-    
+
     .modules-grid {
         grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
     }
-    
+
     .form-section-header {
         flex-direction: column;
         align-items: flex-start;

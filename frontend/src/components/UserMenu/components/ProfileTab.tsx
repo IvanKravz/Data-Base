@@ -1,14 +1,35 @@
 // components/ProfileTab.tsx
 import React, { useState } from 'react';
-import { User, Mail, Globe, Calendar, Edit, Check, Shield, Eye, PlusCircle, Edit2, Trash2, Folder, FileText, Map, Users, Building, Network, Server, Briefcase, Target } from 'lucide-react';
+import { 
+  User, Mail, Globe, Calendar, Edit, Check, Shield, 
+  Eye, PlusCircle, Edit2, Trash2, Users, Building, 
+  Network, Server, Briefcase, Target, Wrench, Cpu,
+  MapPin, Layers, Folder, Settings, Database
+} from 'lucide-react';
 import '../styles/ProfileTab.css';
 
 interface ProfileTabProps {
     userData: any;
 }
 
+// Маппинг модулей к соответствующим моделям
+const MODULE_TO_MODELS: Record<string, string[]> = {
+  'equipment': ['Equipment', 'EquipmentCategory'],
+  'networks': ['CommunicationNetwork', 'CommunicationPost'],
+  'divisions': ['Division', 'Subdivision', 'Facility', 'FacilityType'],
+  'tasks': ['Task'],
+  'employees': ['Employee'],
+  'users': ['User'],
+  'storage': ['StorageFile', 'StorageFolder'],
+  'maps': ['Map'],
+  'organs': ['InterestOrgan'],
+  'sha_equipment': ['Equipment', 'EquipmentCategory'],
+  'sha_workers': ['Employee']
+};
+
 export function ProfileTab({ userData }: ProfileTabProps) {
     const [isEditing, setIsEditing] = useState(false);
+    const [selectedModule, setSelectedModule] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({
         email: userData?.email || '',
         division: userData?.division_info?.name || '',
@@ -66,8 +87,9 @@ export function ProfileTab({ userData }: ProfileTabProps) {
     const getModelDisplayName = (model: string) => {
         const modelNames: Record<string, string> = {
             'CommunicationNetwork': 'Коммуникационные сети',
-            'CommunicationPost': 'Коммуникационные посты',
+            'CommunicationPost': 'Посты связи',
             'Division': 'Подразделения',
+            'Subdivision': 'Отделения',
             'Employee': 'Сотрудники',
             'Equipment': 'Оборудование',
             'EquipmentCategory': 'Категории оборудования',
@@ -78,6 +100,7 @@ export function ProfileTab({ userData }: ProfileTabProps) {
             'StorageFile': 'Файлы хранилища',
             'StorageFolder': 'Папки хранилища',
             'Task': 'Задачи',
+            'User': 'Пользователи',
         };
         return modelNames[model] || model;
     };
@@ -109,18 +132,63 @@ export function ProfileTab({ userData }: ProfileTabProps) {
             'divisions': 'Подразделения',
             'tasks': 'Задачи',
             'employees': 'Сотрудники',
+            'users': 'Пользователи',
+            'storage': 'Хранилище',
+            'maps': 'Карты',
+            'organs': 'Органы',
+            'sha_equipment': 'Шатехника',
+            'sha_workers': 'Шаработники',
         };
         return moduleNames[module] || module;
     };
 
     const getModuleIcon = (module: string) => {
         switch (module) {
-            case 'equipment': return <Server className="module-icon" />;
+            case 'equipment':
+            case 'sha_equipment':
+                return <Server className="module-icon" />;
             case 'networks': return <Network className="module-icon" />;
             case 'divisions': return <Building className="module-icon" />;
             case 'tasks': return <Target className="module-icon" />;
-            case 'employees': return <Users className="module-icon" />;
-            default: return <Briefcase className="module-icon" />;
+            case 'employees':
+            case 'sha_workers':
+            case 'users':
+                return <Users className="module-icon" />;
+            case 'storage': return <Folder className="module-icon" />;
+            case 'maps': return <MapPin className="module-icon" />;
+            case 'organs': return <Briefcase className="module-icon" />;
+            default: return <Settings className="module-icon" />;
+        }
+    };
+
+    // Фильтрация модулей для отображения
+    const filteredModules = userData?.permissions?.modules?.filter(
+        (module: string) => module !== 'subdivisions'
+    ) || [];
+
+    // Функция для фильтрации моделей по выбранному модулю
+    const getFilteredModels = () => {
+        if (!selectedModule || !userData?.permissions?.models) {
+            return userData?.permissions?.models || {};
+        }
+        
+        const modelsForModule = MODULE_TO_MODELS[selectedModule] || [];
+        const filtered: Record<string, any> = {};
+        
+        Object.entries(userData.permissions.models).forEach(([model, actions]) => {
+            if (modelsForModule.includes(model)) {
+                filtered[model] = actions;
+            }
+        });
+        
+        return filtered;
+    };
+
+    const handleModuleClick = (module: string) => {
+        if (selectedModule === module) {
+            setSelectedModule(null);
+        } else {
+            setSelectedModule(module);
         }
     };
 
@@ -258,14 +326,30 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                         <Shield className="w-5 h-5 mr-2" />
                                         Доступные модули
                                     </h4>
+                                    {selectedModule && (
+                                        <button
+                                            onClick={() => setSelectedModule(null)}
+                                            className="text-sm text-blue-600 hover:text-blue-800"
+                                        >
+                                            Показать все
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="modules-grid">
-                                    {userData.permissions.modules?.map((module: string, index: number) => (
-                                        <div key={index} className="module-card">
+                                    {filteredModules.map((module: string, index: number) => (
+                                        <div 
+                                            key={index} 
+                                            className={`module-card ${selectedModule === module ? 'module-card-selected' : ''}`}
+                                            onClick={() => handleModuleClick(module)}
+                                            title={`Нажмите для просмотра разрешений модуля "${getModuleDisplayName(module)}"`}
+                                        >
                                             <div className="module-icon-container">
                                                 {getModuleIcon(module)}
                                             </div>
                                             <span className="module-name">{getModuleDisplayName(module)}</span>
+                                            {selectedModule === module && (
+                                                <div className="module-selected-indicator"></div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -275,7 +359,10 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                 <div className="form-section-header">
                                     <h4 className="form-section-title">
                                         <Shield className="w-5 h-5 mr-2" />
-                                        Детальные разрешения
+                                        {selectedModule ? 
+                                            `Детальные разрешения: ${getModuleDisplayName(selectedModule)}` : 
+                                            'Детальные разрешения'
+                                        }
                                     </h4>
                                 </div>
                                 <div className="permissions-table-container">
@@ -287,7 +374,7 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {userData.permissions.models && Object.entries(userData.permissions.models).map(([model, actions]: [string, any], index: number) => (
+                                            {Object.entries(getFilteredModels()).map(([model, actions]: [string, any], index: number) => (
                                                 <tr key={index} className="permission-row">
                                                     <td className="permission-model">
                                                         <div className="permission-model-name">
@@ -306,6 +393,16 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                                     </td>
                                                 </tr>
                                             ))}
+                                            {Object.keys(getFilteredModels()).length === 0 && (
+                                                <tr>
+                                                    <td colSpan={2} className="text-center py-4 text-gray-500">
+                                                        {selectedModule ? 
+                                                            `Нет детальных разрешений для модуля "${getModuleDisplayName(selectedModule)}"` : 
+                                                            'Нет данных о разрешениях'
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
