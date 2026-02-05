@@ -401,3 +401,12 @@ class EquipmentStatsSerializer(serializers.Serializer):
     by_category = serializers.DictField(child=serializers.IntegerField())
     by_status = serializers.DictField(child=serializers.IntegerField())
     by_division = serializers.DictField(child=serializers.IntegerField())
+
+class EquipmentStatisticsSerializer(serializers.Serializer):
+    total_actions = serializers.IntegerField()
+    actions_by_type = serializers.ListField()
+    equipment_by_category = serializers.ListField()
+    equipment_by_status = serializers.ListField()
+    decommission_stats = serializers.DictField()
+    recent_actions = serializers.ListField()
+    modules_summary = serializers.DictField()

@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model, logout
 from django.http import JsonResponse, HttpResponse
 import csv
 
-from .logging_utils import log_user_action
+from users.logging import log_user_action
 from .permissions_config import ROLE_PERMISSIONS
 from .models import User
 from .logs_models import UserActionLog 

@@ -144,7 +144,6 @@ class Equipment(models.Model):
         related_name='equipment_ip_addresses'  
     )
     
-    
     # Disposal information
     disposal_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='№ акта списания')
     disposal_act_date = models.DateField(blank=True, null=True, verbose_name='Дата акта списания')

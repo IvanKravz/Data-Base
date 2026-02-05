@@ -15,12 +15,11 @@ class UserActionLog(models.Model):
         ('upload', 'Загрузка'),
         ('export', 'Экспорт'),
         ('import', 'Импорт'),
-        ('approve', 'Утверждение'),
-        ('reject', 'Отклонение'),
         ('move', 'Перемещение'),
         ('copy', 'Копирование'),
         ('archive', 'Архивирование'),
         ('restore', 'Восстановление'),
+        ('decommission', 'Списание'),
     ]
     
     MODULE_CHOICES = [

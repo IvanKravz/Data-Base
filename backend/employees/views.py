@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from django.db import models
 
-from users.logging_utils import log_user_action
+from users.logging import log_user_action
 from users.permissions import RoleBasedPermission
 from users.mixins import RoleBasedFilterMixin
 from .models import Employee, ShaWorkerDetails, ShaEquipmentConclusion

@@ -10,5 +10,6 @@ urlpatterns = [
     path('shd-equipment/', EquipmentViewSet.as_view({'get': 'shd_equipment'}), name='shd-equipment'),
     path('assigned_to/<int:employee_id>/', EquipmentViewSet.as_view({'get': 'list_by_employee'}), name='equipment-assigned-to'),
     path('interest-organs/', InterestOrganViewSet.as_view({'get': 'list'}), name='interest-organs'),
+    path('equipment-stats/', EquipmentViewSet.as_view({'get': 'equipment_stats'}), name='equipment-stats'),
     path('', include(router.urls)),
 ]
