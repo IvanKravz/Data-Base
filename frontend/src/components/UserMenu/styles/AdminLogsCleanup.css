@@ -1,0 +1,288 @@
+/* styles/AdminLogsCleanup.css */
+.admin-logs-cleanup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    padding: 1rem 1rem;
+    box-sizing: border-box;
+}
+
+.admin-logs-cleanup__title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0a0c10;
+    letter-spacing: -0.01em;
+    text-align: center;
+}
+
+.admin-logs-cleanup__hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 1rem 1.25rem;
+    background: #f9fafb;
+    border-left: 4px solid #b91c1c;
+    border-radius: 0.75rem;
+    color: #1e293b;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    width: auto;
+    max-width: 800px;
+    box-sizing: border-box;
+}
+
+.admin-logs-cleanup__hint svg {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+    color: #b91c1c;
+    opacity: 0.8;
+}
+
+.admin-logs-cleanup__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.admin-logs-cleanup__form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.admin-logs-cleanup__form-group label {
+    flex-shrink: 0;
+    width: 90px;
+    text-align: right;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-top: 0.125rem; /* точное выравнивание по вертикали */
+}
+
+
+.admin-logs-cleanup__select {
+    flex: 1;
+    width: 45%;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    color: #0f172a;
+    background-color: #ffffff;
+    transition: all 0.15s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.125rem;
+}
+
+.admin-logs-cleanup__select:hover {
+    border-color: #94a3b8;
+}
+
+.admin-logs-cleanup__select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.admin-logs-cleanup__select:disabled {
+    background-color: #f8fafc;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+/* Группа радио-кнопок - центрируем */
+.admin-logs-cleanup__period-group {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.25rem 0;
+}
+
+.admin-logs-cleanup__period-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: #334155;
+    cursor: pointer;
+    transition: color 0.1s;
+    white-space: nowrap; /* предотвращаем перенос текста */
+}
+
+.admin-logs-cleanup__period-radio:hover {
+    color: #0f172a;
+}
+
+.admin-logs-cleanup__period-radio input[type="radio"] {
+    appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+}
+
+.admin-logs-cleanup__period-radio input[type="radio"]:checked {
+    border-color: #6366f1;
+    background-color: #6366f1;
+    box-shadow: inset 0 0 0 3px white;
+}
+
+.admin-logs-cleanup__period-radio input[type="radio"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.admin-logs-cleanup__period-radio input[type="radio"]:disabled {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+}
+
+.admin-logs-cleanup__delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1.75rem;
+    background: #dc2626;
+    color: white;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin: 0.5rem auto 0;
+    width: auto;
+    min-width: 180px;
+    max-width: 300px;        /* ← не даём кнопке стать слишком широкой */
+}
+
+.admin-logs-cleanup__delete-btn:hover:not(:disabled) {
+    background: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 14px rgba(185, 28, 28, 0.15);
+}
+
+.admin-logs-cleanup__delete-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.admin-logs-cleanup__delete-btn:disabled {
+    background: #94a3b8;
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.admin-logs-cleanup__delete-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.admin-logs-cleanup__result {
+    margin-top: 1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border-width: 1px;
+    border-style: solid;
+    animation: adminFadeIn 0.2s ease;
+    width: 100%;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;      /* ← центрируем */
+    box-sizing: border-box;
+}
+
+.admin-logs-cleanup__result--success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.admin-logs-cleanup__result--error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+@keyframes adminFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптация под мобильные */
+@media (max-width: 640px) {
+    .admin-logs-cleanup__form-group {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 100%;
+    }
+
+    .admin-logs-cleanup__form-group label {
+        width: auto;
+        text-align: center;
+        padding-top: 0;
+    }
+
+    .admin-logs-cleanup__select,
+    .admin-logs-cleanup__period-group {
+        width: 100%;
+        max-width: 100%;
+        flex: none;
+    }
+
+    .admin-logs-cleanup__period-group {
+        justify-content: center;
+    }
+}

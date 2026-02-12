@@ -10,7 +10,7 @@ interface UserDropdownMenuProps {
 }
 
 export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuProps) {
-    const handleLogout = async () => {  // ← СДЕЛАТЬ async
+    const handleLogout = async () => {  
         try {
             // Вызываем серверный logout для инвалидации токена
             await authApi.logout();

@@ -57,7 +57,7 @@ export const logsApi = {
         actions: Array<{ value: string; label: string }>;
         modules: Array<{ value: string; label: string }>;
     }> => {
-        const response = await api.get('users/action-logs/action-choices/');
+        const response = await api.get('/users/action-logs/action-choices/');
         return response.data;
     },
 
@@ -68,13 +68,13 @@ export const logsApi = {
         actions_by_module: Array<{ module: string; count: number }>;
         last_login: string | null;
     }> => {
-        const response = await api.get('users/action-logs/stats/');
+        const response = await api.get('/users/action-logs/stats/');
         return response.data;
     },
 
     // Получение статистики по хранилищу
     getStorageStats: async (days?: number): Promise<StorageStats> => {
-        const response = await api.get('users/action-logs/storage-stats/', {
+        const response = await api.get('/users/action-logs/storage-stats/', {
             params: { days }
         });
         return response.data;
@@ -82,13 +82,13 @@ export const logsApi = {
 
     // Получение уникальных типов файлов
     getFileTypes: async (): Promise<string[]> => {
-        const response = await api.get('users/action-logs/file-types/');
+        const response = await api.get('/users/action-logs/file-types/');
         return response.data;
     },
 
     // Получение уникальных мест хранения
     getStorageLocations: async (): Promise<string[]> => {
-        const response = await api.get('users/action-logs/storage-locations/');
+        const response = await api.get('/users/action-logs/storage-locations/');
         return response.data;
     },
 
@@ -99,10 +99,21 @@ export const logsApi = {
         date_from?: string;
         date_to?: string;
     }): Promise<Blob> => {
-        const response = await api.get('users/action-logs/export/', {
+        const response = await api.get('/users/action-logs/export/', {
             params,
             responseType: 'blob',
         });
+        return response.data;
+    },  
+    /**
+     * Массовое удаление логов по модулю и периоду.
+     * Доступно только администраторам.
+     */
+    bulkDeleteLogs: async (data: {
+        module: string;
+        period?: '1d' | '3d' | '1w' | '1m' | '3m' | '6m' | '1y';
+    }): Promise<{ message: string; deleted_count: number }> => {
+        const response = await api.post('/users/action-logs/bulk-delete/', data);
         return response.data;
     },
 };
@@ -158,5 +169,6 @@ export const equipmentLogsApi = {
         const allParams = { ...params, object_id: equipmentId, module__in: 'equipment,sha_equipment' };
         const response = await api.get('/users/action-logs/', { params: allParams });
         return response.data;
-    }
+    },
+
 };

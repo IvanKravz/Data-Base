@@ -96,7 +96,7 @@
 }
 
 .cabinet-content {
-    padding: 1rem; /* Уменьшен padding */
+    padding: 1rem; 
 }
 
 .cabinet-tabs {
@@ -109,7 +109,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.25rem; /* Уменьшен padding */
+    padding: 0.875rem 1.25rem; 
     background: none;
     border: none;
     border-bottom: 2px solid transparent;

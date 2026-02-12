@@ -37,6 +37,7 @@ urlpatterns = [
     path('action-logs/storage-stats/', UserActionLogViewSet.as_view({'get': 'storage_stats'}), name='action-logs-storage-stats'),
     path('action-logs/file-types/', UserActionLogViewSet.as_view({'get': 'file_types'}), name='action-logs-file-types'),
     path('action-logs/storage-locations/', UserActionLogViewSet.as_view({'get': 'storage_locations'}), name='action-logs-storage-locations'),
+    path('action-logs/bulk-delete/', UserActionLogViewSet.as_view({'post': 'bulk_delete_logs'}), name='action-logs-bulk-delete'),
     path('auth/logout/', logout_view, name='logout'),
     
     # Include router URLs для остальных ресурсов

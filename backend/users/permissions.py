@@ -169,11 +169,15 @@ class RoleBasedPermission(permissions.BasePermission):
 
 
 class IsAdmin(permissions.BasePermission):
-    """Только для администраторов"""
+    """Только для администраторов (superuser или роль admin)"""
     def has_permission(self, request, view):
-        from .permissions import RoleBasedPermission
-        perm_checker = RoleBasedPermission()
-        return request.user.is_authenticated and (
-            request.user.is_superuser or 
-            perm_checker._user_has_role(request.user, 'admin')
-        )
+        if not request.user.is_authenticated:
+            return False
+        if request.user.is_superuser:
+            return True
+        from .permissions_config import get_role_from_group
+        for group in request.user.groups.all():
+            role = get_role_from_group(group.name)
+            if role == 'admin':
+                return True
+        return False

@@ -5,8 +5,8 @@ import {
     Download as DownloadIcon, Eye, LogOut, ChevronLeft,
     ChevronRight
 } from 'lucide-react';
-import { type ActionLog } from '../../api/logs';
 import '../styles/ActivityLogsTable.css';
+import { ActionLog } from '../../../api/logs';
 
 interface Pagination {
     page: number;
@@ -94,7 +94,7 @@ export function ActivityLogsTable({
             <div className="logs-table-container">
                 {isLoadingLogs ? (
                     <div className="loading-logs">
-                        <div className="loading-spinner"></div>
+                        <div className="loading-spinner-logs"></div>
                         <p>Загрузка действий...</p>
                     </div>
                 ) : !logs || logs.length === 0 ? (

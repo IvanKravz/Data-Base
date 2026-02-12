@@ -1,4 +1,5 @@
 # users/views.py
+from datetime import timedelta
 import logging
 from django.utils import timezone as django_timezone
 from rest_framework import viewsets, status, filters
@@ -12,6 +13,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.db import models
 from django.contrib.auth import get_user_model, logout
 from django.http import JsonResponse, HttpResponse
+from .logging_utils import get_storage_statistics
 import csv
 
 from users.logging import log_user_action
@@ -457,8 +459,7 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'], url_path='storage-stats')
     def storage_stats(self, request):
         """Получение статистики по хранилищу"""
-        from .logging_utils import get_storage_statistics
-        
+       
         days = request.query_params.get('days', 30)
         try:
             days = int(days)
@@ -521,3 +522,62 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
             ])
         
         return response
+    
+    @action(detail=False, methods=['post'], url_path='bulk-delete',
+        permission_classes=[IsAuthenticated, IsAdmin])
+    def bulk_delete_logs(self, request):
+        module = request.data.get('module')
+        period = request.data.get('period')
+        date_from = request.data.get('date_from')
+        date_to = request.data.get('date_to')
+
+        if not module:
+            return Response({'error': 'Поле "module" обязательно.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if period:
+            now = django_timezone.now()                     # <-- используем django_timezone
+            period_map = {
+                '1d': timedelta(days=1),
+                '3d': timedelta(days=3),
+                '1w': timedelta(days=7),
+                '1m': timedelta(days=30),
+                '3m': timedelta(days=90),
+                '6m': timedelta(days=180),
+                '1y': timedelta(days=365),
+            }
+            delta = period_map.get(period)
+            if not delta:
+                return Response({'error': f'Неизвестный период: {period}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            date_from = now - delta
+            date_to = now
+
+        queryset = UserActionLog.objects.filter(module=module)
+        if date_from:
+            queryset = queryset.filter(created_at__gte=date_from)   # <-- точное сравнение
+        if date_to:
+            queryset = queryset.filter(created_at__lte=date_to)
+
+        deleted_count, _ = queryset.delete()
+
+        # Логируем действие администратора (импорт уже есть вверху файла)
+        log_user_action(
+            user=request.user,
+            action='delete',
+            module='system',
+            request=request,
+            model_name='UserActionLog',
+            details={
+                'deleted_count': deleted_count,
+                'module': module,
+                'period': period,
+                'date_from': str(date_from) if date_from else None,
+                'date_to': str(date_to) if date_to else None,
+            }
+        )
+
+        return Response({
+            'message': f'Удалено {deleted_count} записей логов.',
+            'deleted_count': deleted_count
+        }, status=status.HTTP_200_OK)
