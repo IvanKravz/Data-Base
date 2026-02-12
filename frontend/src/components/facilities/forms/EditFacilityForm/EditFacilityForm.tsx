@@ -58,7 +58,7 @@ export function EditFacilityForm({
   useEffect(() => {
     // Если данные еще загружаются, ждем
     if (isLoadingData) return;
-    
+
     // Если уже инициализировали, не делаем повторную инициализацию
     if (isInitialized) return;
 
@@ -77,11 +77,11 @@ export function EditFacilityForm({
   // ИСПРАВЛЕНИЕ: Дополнительный эффект для обновления данных при изменении divisions
   useEffect(() => {
     if (!isInitialized || isLoadingData) return;
-    
+
     // Если divisions загрузились после инициализации, обновляем данные
     if (divisions.length > 0 && initialData.division) {
       const divisionObj = divisions.find(d => String(d.id) === String(initialData.division?.id));
-      const subdivisionObj = initialData.subdivision && divisionObj?.subdivisions 
+      const subdivisionObj = initialData.subdivision && divisionObj?.subdivisions
         ? divisionObj.subdivisions.find(s => String(s.id) === String(initialData.subdivision?.id))
         : null;
 
@@ -179,8 +179,8 @@ export function EditFacilityForm({
             divisionId={formData.division?.id}
             subdivisionId={formData.subdivision?.id}
             facilityTypes={facilityTypes}
-            communicationPosts={communicationPosts} 
-            isLoading={isLoadingData} 
+            communicationPosts={communicationPosts}
+            isLoading={isLoadingData}
           />
 
           {formData.is_closed && (
@@ -211,14 +211,12 @@ export function EditFacilityForm({
             </div>
           </div>
         </div>
+        <FormActions
+          onCancel={onCancel}
+          isEditing={isEditing}
+          isLoading={isSubmitting}
+        />
       </form>
-      
-      {/* FormActions вынесен за пределы формы, но внутри контейнера */}
-      <FormActions
-        onCancel={onCancel}
-        isEditing={isEditing}
-        isLoading={isSubmitting}
-      />
     </div>
   );
 }

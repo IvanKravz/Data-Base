@@ -497,20 +497,20 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset.filter(assigned_to_id=employee_id)
         
-        # Логируем просмотр оборудования по сотруднику
-        from users.logging_utils import log_user_action
-        log_user_action(
-            user=request.user,
-            action='view',
-            module='equipment',
-            request=request,
-            model_name='Equipment',
-            details={
-                'employee_id': employee_id,
-                'viewed_by_assigned_to': True,
-                'equipment_count': queryset.count()
-            }
-        )
+        # # Логируем просмотр оборудования по сотруднику
+        # from users.logging_utils import log_user_action
+        # log_user_action(
+        #     user=request.user,
+        #     action='view',
+        #     module='equipment',
+        #     request=request,
+        #     model_name='Equipment',
+        #     details={
+        #         'employee_id': employee_id,
+        #         'viewed_by_assigned_to': True,
+        #         'equipment_count': queryset.count()
+        #     }
+        # )
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

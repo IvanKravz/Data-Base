@@ -252,19 +252,19 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
         
-        # Логируем просмотр списка сотрудников
-        log_user_action(
-            user=request.user,
-            action='view',
-            module='employees',
-            request=request,
-            model_name='Employee',
-            details={
-                'list_view': True,
-                'filters': dict(request.query_params),
-                'count': response.data.get('count', len(response.data)) if isinstance(response.data, dict) else len(response.data)
-            }
-        )
+        # # Логируем просмотр списка сотрудников
+        # log_user_action(
+        #     user=request.user,
+        #     action='view',
+        #     module='employees',
+        #     request=request,
+        #     model_name='Employee',
+        #     details={
+        #         'list_view': True,
+        #         'filters': dict(request.query_params),
+        #         'count': response.data.get('count', len(response.data)) if isinstance(response.data, dict) else len(response.data)
+        #     }
+        # )
         
         return response
     

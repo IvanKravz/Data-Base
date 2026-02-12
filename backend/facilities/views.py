@@ -10,6 +10,7 @@ from .serializers import CommunicationPostSerializer, DivisionSerializer, Facili
 from .mixins import DivisionAccessMixin, BaseViewSetMixin
 from users.permissions import RoleBasedPermission 
 from rest_framework.exceptions import PermissionDenied
+from users.logging import log_facility_create, log_facility_update, log_facility_delete, log_facility_view
 
 class DivisionViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
@@ -77,6 +78,36 @@ class DivisionViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
             'subdivisions': SubdivisionSerializer(division.subdivisions.all(), many=True).data,
             'facilities': FacilitySerializer(division.facilities.all(), many=True).data
         })
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            instance = Division.objects.get(id=response.data['id'])
+            log_facility_create(request.user, instance, request=request, details={'data': response.data})
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_data = DivisionSerializer(instance).data
+        response = super().update(request, *args, **kwargs)
+        if response.status_code in [200, 201]:
+            log_facility_update(request.user, instance, request=request, old_data=old_data,
+                               details={'changed_fields': self._get_changed_fields(old_data, response.data)})
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        div_data = DivisionSerializer(instance).data
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == 204:
+            log_facility_delete(request.user, instance, request=request, details={'deleted_data': div_data})
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().retrieve(request, *args, **kwargs)
+        log_facility_view(request.user, instance, request=request)
+        return response
 
 class SubdivisionViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
     queryset = Subdivision.objects.all().prefetch_related(
@@ -105,6 +136,36 @@ class SubdivisionViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelVi
             queryset = queryset.filter(division_id=division_id)
             
         return queryset
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            instance = Subdivision.objects.get(id=response.data['id'])   # ✅
+            log_facility_create(request.user, instance, request=request, details={'data': response.data})
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_data = SubdivisionSerializer(instance).data   # ✅
+        response = super().update(request, *args, **kwargs)
+        if response.status_code in [200, 201]:
+            log_facility_update(request.user, instance, request=request, old_data=old_data,
+                               details={'changed_fields': self._get_changed_fields(old_data, response.data)})
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        subdiv_data = SubdivisionSerializer(instance).data   # ✅
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == 204:
+            log_facility_delete(request.user, instance, request=request, details={'deleted_data': subdiv_data})
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().retrieve(request, *args, **kwargs)
+        log_facility_view(request.user, instance, request=request)
+        return response
 
 
 class FacilityViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
@@ -209,6 +270,92 @@ class FacilityViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewS
         facility.save()
         serializer = self.get_serializer(facility)
         return Response(serializer.data)
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == status.HTTP_201_CREATED:
+            try:
+                instance = Facility.objects.get(id=response.data['id'])
+                log_facility_create(
+                    user=request.user,
+                    instance=instance,
+                    request=request,
+                    details={'data': response.data}
+                )
+            except Facility.DoesNotExist:
+                pass
+        return response
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_data = FacilitySerializer(instance).data  # или просто сериализовать
+        
+        response = super().update(request, *args, **kwargs)
+        if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
+            log_facility_update(
+                user=request.user,
+                instance=instance,
+                request=request,
+                old_data=old_data,
+                details={'changed_fields': self._get_changed_fields(old_data, response.data)}
+            )
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        facility_data = FacilitySerializer(instance).data
+        
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            log_facility_delete(
+                user=request.user,
+                instance=instance,
+                request=request,
+                details={'deleted_data': facility_data}
+            )
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().retrieve(request, *args, **kwargs)
+        log_facility_view(
+            user=request.user,
+            instance=instance,
+            request=request
+        )
+        return response
+
+    @action(detail=True, methods=['patch'])
+    def comments(self, request, pk=None):
+        self.check_view_only_restrictions()
+        facility = self.get_object()
+        old_comments = facility.comments
+        new_comments = request.data.get('comments', '')
+        facility.comments = new_comments
+        facility.save()
+        log_facility_update(
+            user=request.user,
+            instance=facility,
+            request=request,
+            details={
+                'field': 'comments',
+                'old_value': old_comments,
+                'new_value': new_comments
+            }
+        )
+        serializer = self.get_serializer(facility)
+        return Response(serializer.data)
+    
+    def _get_changed_fields(self, old_data, new_data):
+        """Вспомогательный метод для определения изменённых полей"""
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {
+                    'old': old_data[key],
+                    'new': new_data[key]
+                }
+        return changed
 
 
 class CommunicationPostViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
@@ -261,9 +408,107 @@ class CommunicationPostViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.M
                 raise PermissionDenied('Нет доступа к этому объекту')
                 
         return obj
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            instance = CommunicationPost.objects.get(id=response.data['id'])
+            log_facility_create(
+                user=request.user,
+                instance=instance,
+                request=request,
+                details={'data': response.data}
+            )
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_data = CommunicationPostSerializer(instance).data
+        response = super().update(request, *args, **kwargs)
+        if response.status_code in [200, 201]:
+            log_facility_update(
+                user=request.user,
+                instance=instance,
+                request=request,
+                old_data=old_data,
+                details={'changed_fields': self._get_changed_fields(old_data, response.data)}
+            )
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        post_data = CommunicationPostSerializer(instance).data   # ✅ исправлено
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == 204:
+            log_facility_delete(
+                user=request.user,
+                instance=instance,
+                request=request,
+                details={'deleted_data': post_data}            # ✅ исправлено
+            )
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().retrieve(request, *args, **kwargs)
+        log_facility_view(
+            user=request.user,
+            instance=instance,
+            request=request
+        )
+        return response
 
 
 class FacilityTypeViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = FacilityType.objects.all()
     serializer_class = FacilityTypeSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == 201:
+            instance = FacilityType.objects.get(id=response.data['id'])
+            log_facility_create(
+                user=request.user,
+                instance=instance,
+                request=request,
+                details={'data': response.data}
+            )
+        return response
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        old_data = FacilityTypeSerializer(instance).data
+        response = super().update(request, *args, **kwargs)
+        if response.status_code in [200, 201]:
+            log_facility_update(
+                user=request.user,
+                instance=instance,
+                request=request,
+                old_data=old_data,
+                details={'changed_fields': self._get_changed_fields(old_data, response.data)}
+            )
+        return response
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        type_data = FacilityTypeSerializer(instance).data      # ✅ исправлено
+        response = super().destroy(request, *args, **kwargs)
+        if response.status_code == 204:
+            log_facility_delete(
+                user=request.user,
+                instance=instance,
+                request=request,
+                details={'deleted_data': type_data}           # ✅ исправлено
+            )
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().retrieve(request, *args, **kwargs)
+        log_facility_view(
+            user=request.user,
+            instance=instance,
+            request=request
+        )
+        return response

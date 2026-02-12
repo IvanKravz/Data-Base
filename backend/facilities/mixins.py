@@ -78,3 +78,14 @@ class BaseViewSetMixin:
     def destroy(self, request, *args, **kwargs):
         self.check_view_only_restrictions()
         return super().destroy(request, *args, **kwargs)
+    
+    def _get_changed_fields(self, old_data, new_data):
+        """Определяет изменённые поля между старыми и новыми данными"""
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {
+                    'old': old_data[key],
+                    'new': new_data[key]
+                }
+        return changed
