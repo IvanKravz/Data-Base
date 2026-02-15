@@ -28,10 +28,11 @@ export const AdminLogsCleanup: React.FC = () => {
 
     useEffect(() => {
         logsApi.getChoices().then(data => {
-            setModules(data.modules);
-            if (data.modules.length > 0) {
-                setSelectedModule(data.modules[0].value);
-            }
+            // Добавляем опцию "Все модули" в начало списка
+            const allModulesOption = { value: 'all', label: 'Все модули' };
+            const modulesWithAll = [allModulesOption, ...data.modules];
+            setModules(modulesWithAll);
+            setSelectedModule(modulesWithAll[0].value); // по умолчанию "Все модули"
         });
     }, []);
 
@@ -41,10 +42,11 @@ export const AdminLogsCleanup: React.FC = () => {
             return;
         }
 
+        const moduleLabel = modules.find(m => m.value === selectedModule)?.label || selectedModule;
+        const periodLabel = PERIODS.find(p => p.value === selectedPeriod)?.label;
+
         const confirmed = window.confirm(
-            `Вы уверены, что хотите удалить логи модуля "${
-                modules.find(m => m.value === selectedModule)?.label || selectedModule
-            }" за последний ${PERIODS.find(p => p.value === selectedPeriod)?.label}?`
+            `Вы уверены, что хотите удалить логи ${moduleLabel === 'Все модули' ? 'ВСЕХ МОДУЛЕЙ' : `модуля "${moduleLabel}"`} за последний ${periodLabel}?`
         );
         if (!confirmed) return;
 
@@ -53,7 +55,7 @@ export const AdminLogsCleanup: React.FC = () => {
 
         try {
             const response = await logsApi.bulkDeleteLogs({
-                module: selectedModule,
+                module: selectedModule, // 'all' или конкретный модуль
                 period: selectedPeriod,
             });
             setResult({ message: response.message, type: 'success' });

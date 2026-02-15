@@ -114,7 +114,7 @@ class FSBOffice(models.Model):
     
     # Контактная информация
     phone_operator = models.CharField(
-        max_length=20,
+        max_length=100,
         verbose_name="Телефон оперативного дежурного",
         # validators=[
         #     RegexValidator(
@@ -125,7 +125,7 @@ class FSBOffice(models.Model):
     )
     
     phone_communication = models.CharField(
-        max_length=20,
+        max_length=100,
         verbose_name="Телефон дежурного по связи",
         # validators=[
         #     RegexValidator(
@@ -136,7 +136,7 @@ class FSBOffice(models.Model):
     )
     
     fax = models.CharField(
-        max_length=20,
+        max_length=100,
         verbose_name="Факс",
         blank=True,
         null=True,

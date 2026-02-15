@@ -523,20 +523,22 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
         
         return response
     
-    @action(detail=False, methods=['post'], url_path='bulk-delete',
-        permission_classes=[IsAuthenticated, IsAdmin])
+    @action(detail=False, methods=['post'], url_path='bulk-delete', permission_classes=[IsAuthenticated, IsAdmin])
     def bulk_delete_logs(self, request):
         module = request.data.get('module')
         period = request.data.get('period')
         date_from = request.data.get('date_from')
         date_to = request.data.get('date_to')
 
-        if not module:
-            return Response({'error': 'Поле "module" обязательно.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        # Если module == 'all' или не передан — удаляем по всем модулям
+        if module and module != 'all':
+            queryset = UserActionLog.objects.filter(module=module)
+        else:
+            queryset = UserActionLog.objects.all()
 
+        # Обработка периода
         if period:
-            now = django_timezone.now()                     # <-- используем django_timezone
+            now = django_timezone.now()
             period_map = {
                 '1d': timedelta(days=1),
                 '3d': timedelta(days=3),
@@ -553,15 +555,14 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
             date_from = now - delta
             date_to = now
 
-        queryset = UserActionLog.objects.filter(module=module)
         if date_from:
-            queryset = queryset.filter(created_at__gte=date_from)   # <-- точное сравнение
+            queryset = queryset.filter(created_at__gte=date_from)
         if date_to:
             queryset = queryset.filter(created_at__lte=date_to)
 
         deleted_count, _ = queryset.delete()
 
-        # Логируем действие администратора (импорт уже есть вверху файла)
+        # Логируем действие администратора
         log_user_action(
             user=request.user,
             action='delete',
@@ -570,7 +571,7 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
             model_name='UserActionLog',
             details={
                 'deleted_count': deleted_count,
-                'module': module,
+                'module': module if module != 'all' else 'all_modules',
                 'period': period,
                 'date_from': str(date_from) if date_from else None,
                 'date_to': str(date_to) if date_to else None,

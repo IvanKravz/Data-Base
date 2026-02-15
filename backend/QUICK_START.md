@@ -26,6 +26,66 @@ python manage.py migrate
 # Создайте суперпользователя
 python manage.py createsuperuser
 # Введите username, email и пароль
+
+
+# Подключитесь к PostgreSQL как суперпользователь
+psql -U postgres
+
+# 1. Создать базу данных uzel (вы уже сделали)
+psql -U postgres -c "CREATE DATABASE uzel;"
+
+# 2. Создать пользователя для Django
+psql -U postgres -c "CREATE USER django_user WITH PASSWORD 'SecurePass!123';"
+
+# 3. Дать пользователю права на базу uzel
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE uzel TO django_user;"
+
+# 4. (Опционально) Разрешить создавать тестовые БД для разработки
+psql -U postgres -c "ALTER USER django_user CREATEDB;"
+
+# Проверьте, что база создалась:
+
+\l # (это покажет список всех баз данных)
+
+# Выйдите из psql:
+
+\q
+
+# Можно выполнить всё одной командой, не заходя в интерактивный режим:
+
+bash
+psql -U postgres -c "CREATE DATABASE uzel;"
+
+CREATE USER your_user WITH PASSWORD 'strong_password';
+
+# Посмотреть список всех пользователей
+psql -U postgres -c "\du"
+
+# Или более детально
+psql -U postgres -c "SELECT usename, usesuper, usecreatedb FROM pg_user;"
+
+# Удалить пользователя (сначала нужно отозвать права)
+psql -U postgres -c "DROP USER IF EXISTS django_equipment_user;"
+
+# Затем создать заново
+psql -U postgres -c "CREATE USER django_equipment_user WITH PASSWORD 'SecurePass!123';"
+
+# Для предоставления прав 
+Подключитесь к PostgreSQL под суперпользователем (например, postgres) и выполните следующие команды для базы данных uzel:
+
+bash
+psql -U postgres -d uzel -c "GRANT CREATE ON SCHEMA public TO django_user;"
+psql -U postgres -d uzel -c "GRANT USAGE ON SCHEMA public TO django_user;"
+
+
+Если вы хотите дать пользователю полный доступ ко всем текущим и будущим таблицам в схеме public, можно также выполнить:
+
+# bash
+# psql -U postgres -d uzel -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO django_user;"
+# psql -U postgres -d uzel -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO django_user;"
+# psql -U postgres -d uzel -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO django_user;"
+# psql -U postgres -d uzel -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO django_user;"
+# Но для первого запуска миграций достаточно первых двух команд.
 ```
 
 ## 3. Запуск сервера
