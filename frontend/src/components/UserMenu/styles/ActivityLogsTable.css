@@ -219,7 +219,7 @@
 
 /* Детали - УЛУЧШЕНА ПРОКРУТКА */
 .details-cell {
-    max-width: 280px;
+    max-width: 380px;
     max-height: 80px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -227,9 +227,9 @@
 
 .details-json {
     font-family: 'Courier New', monospace;
-    font-size: 0.6875rem; /* Уменьшен шрифт */
+    font-size: 0.8rem; 
     background: #f8fafc;
-    padding: 0.375rem; /* Уменьшен padding */
+    padding: 0.375rem; 
     border-radius: 0.375rem;
     margin: 0;
     white-space: pre-wrap;
@@ -240,7 +240,7 @@
 }
 
 .details-text {
-    font-size: 0.8125rem; /* Уменьшен шрифт */
+    font-size: 0.8125rem; 
     color: #64748b;
     line-height: 1.4;
 }

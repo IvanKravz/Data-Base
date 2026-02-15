@@ -67,7 +67,6 @@ export const AdminLogsCleanup: React.FC = () => {
 
     return (
         <div className="admin-logs-cleanup">
-            <h3 className="admin-logs-cleanup__title">Очистка логов</h3>
             <p className="admin-logs-cleanup__hint">
                 <AlertCircle size={16} />
                 Удаление записей необратимо. Доступно только администраторам.

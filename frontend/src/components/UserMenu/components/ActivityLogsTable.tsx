@@ -1,12 +1,14 @@
 // components/ActivityLogsTable.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import {
     Clock, Plus, Edit as EditIcon, Trash2, Upload,
     Download as DownloadIcon, Eye, LogOut, ChevronLeft,
-    ChevronRight
+    ChevronRight, Maximize2
 } from 'lucide-react';
 import '../styles/ActivityLogsTable.css';
 import { ActionLog } from '../../../api/logs';
+import { DetailsModal } from './DetailsModal';
 
 interface Pagination {
     page: number;
@@ -28,6 +30,11 @@ export function ActivityLogsTable({
     pagination,
     onPageChange
 }: ActivityLogsTableProps) {
+    const [selectedLog, setSelectedLog] = useState<ActionLog | null>(null);
+
+    const openDetailsModal = (log: ActionLog) => setSelectedLog(log);
+    const closeDetailsModal = () => setSelectedLog(null);
+
     const getActionIcon = (action: string) => {
         switch (action) {
             case 'create': return <Plus className="w-4 h-4" />;
@@ -150,15 +157,24 @@ export function ActivityLogsTable({
                                     </td>
                                     <td>
                                         <div className="details-cell">
-                                            {log.details && typeof log.details === 'object' ? (
-                                                <pre className="details-json">
-                                                    {JSON.stringify(log.details, null, 2)}
-                                                </pre>
-                                            ) : (
-                                                <span className="details-text">
-                                                    {log.details || '—'}
-                                                </span>
-                                            )}
+                                            <div className="details-content">
+                                                {log.details && typeof log.details === 'object' ? (
+                                                    <pre className="details-json">
+                                                        {JSON.stringify(log.details, null, 2)}
+                                                    </pre>
+                                                ) : (
+                                                    <span className="details-text">
+                                                        {log.details || '—'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <button
+                                                className="details-expand-btn"
+                                                onClick={() => openDetailsModal(log)}
+                                                title="Подробнее"
+                                            >
+                                                <Maximize2 size={14} />
+                                            </button>
                                         </div>
                                     </td>
                                     <td>
@@ -218,6 +234,11 @@ export function ActivityLogsTable({
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
+            )}
+
+            {selectedLog && ReactDOM.createPortal(
+                <DetailsModal log={selectedLog} onClose={closeDetailsModal} />,
+                document.body
             )}
         </div>
     );
