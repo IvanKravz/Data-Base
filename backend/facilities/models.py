@@ -104,6 +104,7 @@ class Subdivision(models.Model):
 class FacilityType(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование типа объекта')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
+    is_closed_type = models.BooleanField(default=False, verbose_name='Закрытый тип')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -197,6 +198,26 @@ class Facility(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
+        # Форматирование города
+        if self.city:
+            city_raw = self.city.strip()
+            # Удаляем возможный префикс "г. " (без учёта регистра)
+            if city_raw.lower().startswith('г. '):
+                city_raw = city_raw[3:].strip()
+            # Приводим первую букву к заглавной, остальные к строчным
+            if city_raw:
+                city_raw = city_raw[0].upper() + city_raw[1:].lower()
+            self.city = 'г. ' + city_raw if city_raw else ''
+
+        # Форматирование улицы
+        if self.street:
+            street_raw = self.street.strip()
+            if street_raw.lower().startswith('ул. '):
+                street_raw = street_raw[4:].strip()
+            if street_raw:
+                street_raw = street_raw[0].upper() + street_raw[1:].lower()
+            self.street = 'ул. ' + street_raw if street_raw else ''
+
         # Автоматически формируем полный адрес при сохранении
         address_parts = []
         if self.city:
@@ -207,9 +228,6 @@ class Facility(models.Model):
             address_parts.append(self.house_number)
         self.address = ', '.join(address_parts) if address_parts else None
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         verbose_name = 'Объект'

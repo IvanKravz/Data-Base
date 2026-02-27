@@ -57,10 +57,9 @@ export const tasksApi = {
       end_date: string;
     }>;
   }, token: string) => {
-    console.log('Sending create task data:', taskData); // Для отладки
-    
+
     const { data } = await api.post('/tasks/', taskData, {
-      headers: { 
+      headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }

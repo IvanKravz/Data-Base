@@ -20,7 +20,7 @@
     border-radius: 0.5rem;
     position: relative;
     z-index: 2;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
@@ -136,7 +136,7 @@
 
 /* === ОСТАЛЬНЫЕ СТИЛИ === */
 .facilities-content {
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .facilities-add-buttons {

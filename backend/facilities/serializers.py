@@ -135,7 +135,7 @@ class DivisionSerializer(serializers.ModelSerializer):
 class FacilityTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FacilityType
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'is_closed_type']
 
 class CommunicationPostSerializer(serializers.ModelSerializer):
     division_name = serializers.CharField(source='division.name', read_only=True)

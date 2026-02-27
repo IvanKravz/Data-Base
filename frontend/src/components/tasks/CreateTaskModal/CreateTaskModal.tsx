@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { TaskForm } from './TaskForm/TaskForm';
 import './style.css';
+import { Task } from '../../../types/tasks';
 
 interface CreateTaskModalProps {
   initialTask?: Task | null;

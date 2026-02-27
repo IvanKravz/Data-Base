@@ -30,19 +30,30 @@ export async function loadGeoJSONData() {
   }
 }
 
-function normalizeStreetName(street: string): string {
-  if (!street) return '';
-  
-  return street
+// Нормализация названия города: удаляем "г. " в начале
+function normalizeCity(city: string): string {
+  return city
     .toLowerCase()
-    .replace(/(улица|ул\.?)\s*/g, '')
-    .replace(/[.,]/g, '')
+    .replace(/^г\.\s*/i, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
+// Нормализация названия улицы: удаляем "ул. ", "улица" в начале
+function normalizeStreet(street: string): string {
+  return street
+    .toLowerCase()
+    .replace(/^(ул\.|улица)\s*/i, '')
+    .replace(/[.,]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Общая нормализация адресной строки: удаляем "г. ", "ул. ", "улица"
 function normalizeAddress(addr: string): string {
   return addr
     .toLowerCase()
+    .replace(/^г\.\s*/i, '')
     .replace(/(улица|ул\.?)\s*/g, '')
     .replace(/[.,]/g, '')
     .replace(/\s+/g, ' ')
@@ -128,11 +139,14 @@ export function geocodeAddress(query: string): GeocodeResult | null {
     return null;
   }
 
-  // Сначала попробуем найти объект по точному совпадению имени
+  // Нормализуем поисковый запрос для сравнения
+  const normalizedQuery = normalizeAddress(query);
+
+  // Сначала попробуем найти объект по точному совпадению имени (нормализованному)
   const nameMatch = geoJSONData.features.find((f: any) => {
     const props = f.properties;
- 
-    return props?.name?.toLowerCase() === query.toLowerCase();
+    const featureName = props?.name || '';
+    return normalizeAddress(featureName) === normalizedQuery;
   });
 
   if (nameMatch) {
@@ -149,12 +163,14 @@ export function geocodeAddress(query: string): GeocodeResult | null {
 
   const searchAddr = buildSearchAddress(query);
 
-  // 1. Если указан город, сначала фильтруем объекты по городу
+  // 1. Если указан город, сначала фильтруем объекты по городу (нормализованному)
   let filteredFeatures = geoJSONData.features;
   if (searchAddr.city) {
+    const normalizedCity = normalizeCity(searchAddr.city);
     filteredFeatures = filteredFeatures.filter((f: any) => {
       if (!f.properties) return false;
-      return normalizeAddress(f.properties['addr:city'] || '') === normalizeAddress(searchAddr.city!);
+      const featureCity = f.properties['addr:city'] || '';
+      return normalizeCity(featureCity) === normalizedCity;
     });
   }
 
@@ -177,13 +193,14 @@ export function geocodeAddress(query: string): GeocodeResult | null {
 
   // 2. Ищем точное совпадение по улице и дому (если указаны)
   if (searchAddr.street && searchAddr.housenumber) {
+    const normalizedStreet = normalizeStreet(searchAddr.street);
+    const normalizedHousenumber = normalizeAddress(searchAddr.housenumber);
     const exactMatch = filteredFeatures.find((f: any) => {
       const props = f.properties;
-      const featureStreet = normalizeStreetName(props['addr:street'] || '');
+      const featureStreet = normalizeStreet(props['addr:street'] || '');
       const featureHousenumber = normalizeAddress(props['addr:housenumber'] || '');
-      
-      return featureStreet === normalizeStreetName(searchAddr.street!) &&
-             featureHousenumber === normalizeAddress(searchAddr.housenumber!);
+      return featureStreet === normalizedStreet &&
+             featureHousenumber === normalizedHousenumber;
     });
 
     if (exactMatch) {
@@ -198,10 +215,11 @@ export function geocodeAddress(query: string): GeocodeResult | null {
 
   // 3. Ищем только по улице (если указана)
   if (searchAddr.street) {
+    const normalizedStreet = normalizeStreet(searchAddr.street);
     const streetMatch = filteredFeatures.find((f: any) => {
       const props = f.properties;
-      const featureStreet = normalizeStreetName(props['addr:street'] || '');
-      return featureStreet === normalizeStreetName(searchAddr.street!);
+      const featureStreet = normalizeStreet(props['addr:street'] || '');
+      return featureStreet === normalizedStreet;
     });
 
     if (streetMatch) {

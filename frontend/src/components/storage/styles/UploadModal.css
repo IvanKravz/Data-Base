@@ -187,6 +187,7 @@
 }
 
 .storage-upload-dropzone-icon {
+    position: absolute;
     font-size: 48px;
     color: #adb5bd;
     margin-bottom: 16px;

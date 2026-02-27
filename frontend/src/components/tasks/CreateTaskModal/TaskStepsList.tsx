@@ -3,9 +3,20 @@ import { Plus, Trash2, Calendar } from 'lucide-react';
 import { TaskStep } from '../../../types/tasks';
 import './style.css';
 
+interface StepFormData {
+  id?: string;
+  name: string;
+  comments: string;
+  startDate: string;
+  endDate: string;
+  is_completed?: boolean;
+  completed_by?: any;
+  completed_at?: string;
+}
+
 interface TaskStepsListProps {
-  steps: Array<Omit<TaskStep, 'isCompleted'> & { id?: string }>;
-  onStepsChange: (steps: Array<Omit<TaskStep, 'isCompleted'> & { id?: string }>) => void;
+  steps: StepFormData[];
+  onStepsChange: (steps: StepFormData[]) => void;
 }
 
 export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
@@ -26,7 +37,8 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
         comments: '', 
         startDate: '', 
         endDate: '',
-        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` // Уникальный временный ID
+        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Уникальный временный ID
+        is_completed: false, 
       }
     ];
     onStepsChange(newSteps);

@@ -19,7 +19,7 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
   const [isLoading, setIsLoading] = useState(false);
   const token = localStorage.getItem('accessToken');
 
-  const CLOSED_FACILITY_TYPES = ['Станция', 'ШД'];
+  // Удалена константа CLOSED_FACILITY_TYPES
 
   useEffect(() => {
     if (!token) return;
@@ -56,7 +56,6 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
           params: { division: divisionId },
           headers: { Authorization: `Bearer ${token}` }
         });
-        ;
         const allPosts = data || [];
         setCommunicationPosts(allPosts);
 
@@ -81,16 +80,16 @@ export function Classification({ formData, onChange, divisionId, subdivisionId }
     const selectedType = facilityTypes.find(t => t.id.toString() === e.target.value);
     
     if (selectedType) {
-      const isClosed = CLOSED_FACILITY_TYPES.includes(selectedType.name);
-      
+      // Используем поле is_closed_type из модели
       onChange({ 
         type: {
           id: selectedType.id,
           name: selectedType.name,
-          description: selectedType.description || ''
+          description: selectedType.description || '',
+          is_closed_type: selectedType.is_closed_type  // сохраняем для полноты
         },
-        is_closed: isClosed,
-        facility_class: isClosed ? formData.facility_class : null
+        is_closed: selectedType.is_closed_type,  // автоматически устанавливаем is_closed
+        facility_class: selectedType.is_closed_type ? formData.facility_class : null
       });
     } else {
       onChange({ 

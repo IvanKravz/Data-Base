@@ -233,14 +233,14 @@ export function AddFacilityPage() {
 
     return (
         <div className="facility-add-page-container">
-            <div className="facility-add-page-header">
+            <div className="facility-edit-header">
                 <button
                     onClick={handleBack}
-                    className="facility-add-back-button"
+                    className="facility-btn--icon"
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="facility-add-page-title">Добавление нового объекта</h1>
+                <h1 className="facility-edit-mode-title">Добавление нового объекта</h1>
             </div>
 
             <div className="facility-add-form-wrapper">

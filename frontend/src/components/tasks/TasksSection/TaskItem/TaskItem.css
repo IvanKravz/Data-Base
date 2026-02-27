@@ -189,7 +189,7 @@
     border-radius: 3px;
     overflow: visible;
     /* Меняем на visible чтобы hover-текст был виден */
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     margin: 0;
     /* Убираем возможные отступы */

@@ -2,49 +2,68 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import dotenv from 'dotenv';
+import { visualizer } from 'rollup-plugin-visualizer';
+import imagemin from 'vite-plugin-imagemin';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Загружаем переменные окружения
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
-  plugins: [react()],
-  // Безопасное использование env переменных
+  plugins: [
+    react(),
+    imagemin({
+      // настройки сжатия изображений
+      gifsicle: { optimizationLevel: 7 },
+      mozjpeg: { quality: 80 },
+      pngquant: { quality: [0.8, 0.9] },
+      svgo: { plugins: [{ removeViewBox: false }] },
+    }),
+    visualizer({ open: true, filename: 'dist/stats.html' }),
+  ],
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
   },
   server: {
     fs: {
-      allow: [
-        path.join(process.cwd(), 'public/tiles'),
-        process.cwd()
-      ]
+      allow: [path.join(process.cwd(), 'public/tiles'), process.cwd()],
     },
-    // Настройки прокси для API (опционально)
+    watch: {
+      ignored: ['**/public/tiles/**'], // не следить за тайлами
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/media': {
         target: process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
-        secure: false
-      }
-    }
+        secure: false,
+      },
+    },
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
+    // include: ['large-library'], // при необходимости
   },
   build: {
-    assetsInlineLimit: 0,
+    assetsInlineLimit: 0, // не инлайнить ассеты
     rollupOptions: {
       output: {
-        assetFileNames: 'assets/[name].[ext]'
-      }
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        manualChunks: {
+          // пример для картографической библиотеки
+          // 'map-vendor': ['leaflet', 'react-leaflet'],
+        },
+      },
     },
-    // Минификация и очистка console.log в production
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -54,6 +73,5 @@ export default defineConfig({
     },
   },
   base: './',
-  // Добавляем поддержку env переменных для клиента
   envPrefix: 'VITE_',
 });

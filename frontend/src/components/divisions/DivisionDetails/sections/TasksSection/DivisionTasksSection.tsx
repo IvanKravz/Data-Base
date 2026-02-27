@@ -382,7 +382,8 @@ export function DivisionTasksSection() {
               name: step.name,
               comments: step.comments || '',
               start_date: step.start_date,
-              end_date: step.end_date
+              end_date: step.end_date,
+              is_completed: step.is_completed
             };
 
             // Добавляем ID только если он не временный и может быть преобразован в число
@@ -412,69 +413,61 @@ export function DivisionTasksSection() {
   };
 
   const toggleTaskStep = async (taskId: string, stepId: string, currentCompleted: boolean) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) throw new Error('Authentication token missing');
-
-      const newCompletedStatus = !currentCompleted;
-
-      // Оптимистичное обновление UI
-      setTasks(prevTasks =>
-        prevTasks.map(task => {
-          if (task.id === taskId) {
-            const updatedSteps = task.steps.map(step =>
-              step.id === stepId
-                ? {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No token');
+      return;
+    }
+  
+    const previousTasks = tasks;
+    const newCompletedStatus = !currentCompleted;
+  
+    // Оптимистичное обновление UI
+    setTasks(prevTasks =>
+      prevTasks.map(task => {
+        if (task.id === taskId) {
+          const updatedSteps = task.steps.map(step =>
+            step.id === stepId
+              ? {
                   ...step,
                   is_completed: newCompletedStatus,
-                  // Временно устанавливаем текущего пользователя как выполнившего
                   completed_by: newCompletedStatus ? currentUser : null,
                   completed_at: newCompletedStatus ? new Date().toISOString() : null
                 }
-                : step
-            );
-
-            const allStepsCompleted = updatedSteps.length > 0 &&
-              updatedSteps.every(step => step.is_completed);
-
-            return {
-              ...task,
-              steps: updatedSteps,
-              is_completed: allStepsCompleted
-            };
-          }
-          return task;
-        })
-      );
-
-      // Вызов API с новым статусом (противоположным текущему)
+              : step
+          );
+          return {
+            ...task,
+            steps: updatedSteps,
+            is_completed: updatedSteps.length > 0 && updatedSteps.every(s => s.is_completed)
+          };
+        }
+        return task;
+      })
+    );
+  
+    try {
       const updatedStep = await tasksApi.updateTaskStep(stepId, newCompletedStatus, token);
-
-      // Обновление состояния с данными с сервера
+      // Синхронизация с ответом сервера
       setTasks(prevTasks =>
         prevTasks.map(task => {
           if (task.id === taskId) {
             const updatedSteps = task.steps.map(step =>
               step.id === stepId ? { ...step, ...updatedStep } : step
             );
-
-            const allStepsCompleted = updatedSteps.length > 0 &&
-              updatedSteps.every(step => step.is_completed);
-
             return {
               ...task,
               steps: updatedSteps,
-              is_completed: allStepsCompleted
+              is_completed: updatedSteps.length > 0 && updatedSteps.every(s => s.is_completed)
             };
           }
           return task;
         })
       );
-
     } catch (error) {
-      console.error('Failed to toggle task step:', error);
-      // В случае ошибки перезагружаем данные для синхронизации
-      // Можно добавить вызов loadTasks() здесь, если у вас есть такая функция
+      console.error('Failed to toggle step:', error);
+      // Откат к предыдущему состоянию
+      setTasks(previousTasks);
     }
   };
 

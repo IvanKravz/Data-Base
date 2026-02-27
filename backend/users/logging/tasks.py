@@ -44,7 +44,7 @@ def log_task_action(user, action, instance, **kwargs):
             'step_id': instance.id,
             'step_name': instance.name,
             'task_id': instance.task.id if instance.task else None,
-            'task_name': instance.task.name if instance.task else None,
+            'task_name': instance.task.title if instance.task else None,
             'is_completed': instance.is_completed,
         })
     

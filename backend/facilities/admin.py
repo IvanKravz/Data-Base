@@ -91,14 +91,14 @@ class DivisionAdmin(admin.ModelAdmin):
 
 @admin.register(FacilityType)
 class FacilityTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'created_at')
-    search_fields = ('name', )
-    list_filter = ('created_at',)
+    list_display = ('name', 'description', 'is_closed_type', 'created_at')
+    search_fields = ('name',)
+    list_filter = ('created_at', 'is_closed_type')  
     readonly_fields = ('created_at', 'updated_at')
     
     fieldsets = (
         (None, {
-            'fields': ('name', 'description')
+            'fields': ('name', 'description', 'is_closed_type') 
         }),
         ('Системная информация', {
             'fields': ('created_at', 'updated_at'),

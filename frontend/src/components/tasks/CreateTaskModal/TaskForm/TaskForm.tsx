@@ -32,13 +32,16 @@ export function TaskForm({
   const [isPrivate, setIsPrivate] = useState(initialTask?.is_private || false);
   const [title, setTitle] = useState(initialTask?.title || '');
   const [category, setCategory] = useState<TaskCategory>(initialTask?.category || 'planned');
-  const [steps, setSteps] = useState<Array<Omit<TaskStep, 'isCompleted'> & { id?: string }>>(
+  const [steps, setSteps] = useState<StepFormData[]>(
     initialTask?.steps.map(step => ({
-      id: step.id,
+      id: step.id ? String(step.id) : undefined,
       name: step.name,
       comments: step.comments || '',
       startDate: step.start_date,
-      endDate: step.end_date
+      endDate: step.end_date,
+      is_completed: step.is_completed,
+      completed_by: step.completed_by,
+      completed_at: step.completed_at
     })) || []
   );
 
@@ -197,10 +200,7 @@ export function TaskForm({
         }))
       };
 
-      console.log('Prepared task data:', taskData);
-
       if (initialTask && onUpdate) {
-        // Для обновления создаем полный объект задачи
         const updatedTaskData: Task = {
           ...initialTask,
           title,
@@ -209,29 +209,22 @@ export function TaskForm({
           subdivision: selectedSubdivisionId ? { id: selectedSubdivisionId, name: '' } : null,
           is_private: isPrivate,
           steps: steps.map(step => {
-            // Создаем базовый объект этапа
             const stepData: any = {
               name: step.name,
               comments: step.comments || '',
               start_date: step.startDate,
               end_date: step.endDate,
-              is_completed: step.is_completed || false
+              is_completed: step.is_completed || false   // передаём текущее значение
             };
-
-            // Добавляем ID только если он не временный и может быть преобразован в число
             if (step.id && !isTempId(step.id) && !isNaN(Number(step.id))) {
-              stepData.id = parseInt(step.id);
+              stepData.id = step.id; // строка
             }
-
             return stepData;
           })
         };
-
-        console.log('Updating task with data:', updatedTaskData);
         await onUpdate(updatedTaskData);
       } else if (onCreate) {
         // Для создания передаем данные в родительский компонент
-        console.log('Creating task with data:', taskData);
         await onCreate(taskData);
       }
 

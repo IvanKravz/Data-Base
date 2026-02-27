@@ -192,8 +192,6 @@ export function ProfileTab({ userData }: ProfileTabProps) {
         }
     };
 
-    console.log('userData', userData);
-
     return (
         <>
             <div className="cabinet-info-card">

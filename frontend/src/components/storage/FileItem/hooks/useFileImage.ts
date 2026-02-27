@@ -9,63 +9,59 @@ export const useFileImage = (file: any) => {
 
     useEffect(() => {
         const isImage = isImageFile(file);
- 
+      
         if (!isImage) {
-            setImageLoading(false);
-            setImageUrl(null);
-            setImageError(false);
-            return;
+          setImageLoading(false);
+          setImageUrl(null);
+          setImageError(false);
+          return;
         }
-
-        // Получаем URL изображения - проверяем все возможные источники
-        let url = null;
-        
-        if (file.preview_url) {
-            url = file.preview_url;
-        } else if (file.thumbnail_url) {
-            url = file.thumbnail_url;
-        } else if (file.url) {
-            url = file.url;
-        } else if (file.file) {
-            // file.file может быть строкой URL или объектом File
-            if (typeof file.file === 'string') {
-                url = file.file;
-            } else if (file.file instanceof File) {
-                url = URL.createObjectURL(file.file);
-            }
+      
+        // Получаем URL изображения
+        let url = file.preview_url || file.thumbnail_url || file.url;
+        if (!url && typeof file.file === 'string') {
+          url = file.file;
         }
-
+      
         if (url) {
-            setImageLoading(true);
-            setImageError(false);
-            
-            const img = new Image();
-            img.src = url;
-            
-            img.onload = () => {
-                setImageLoading(false);
-                setImageUrl(url);
-                setImageError(false);
-            };
-            
-            img.onerror = () => {
-                setImageLoading(false);
-                setImageUrl(null);
-                setImageError(true);
-            };
-        } else {
-            setImageLoading(false);
-            setImageUrl(null);
-            setImageError(true);
-        }
-
-        // Cleanup function
-        return () => {
-            if (url && url.startsWith('blob:')) {
-                URL.revokeObjectURL(url);
+          setImageLoading(true);
+          setImageError(false);
+      
+          const fetchImage = async () => {
+            try {
+              const token = localStorage.getItem('access_token');
+              const headers: HeadersInit = {};
+              if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+              }
+      
+              const response = await fetch(url, { headers, credentials: 'include' });
+              if (!response.ok) throw new Error('Failed to load image');
+      
+              const blob = await response.blob();
+              const objectUrl = URL.createObjectURL(blob);
+              setImageUrl(objectUrl);
+              setImageLoading(false);
+            } catch (error) {
+              setImageError(true);
+              setImageLoading(false);
+              setImageUrl(null);
             }
-        };
-    }, [file]);
+          };
+      
+          fetchImage();
+      
+          return () => {
+            if (imageUrl?.startsWith('blob:')) {
+              URL.revokeObjectURL(imageUrl);
+            }
+          };
+        } else {
+          setImageLoading(false);
+          setImageUrl(null);
+          setImageError(true);
+        }
+      }, [file]);
 
     return { imageUrl, imageLoading, imageError };
 };
