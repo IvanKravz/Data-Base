@@ -25,7 +25,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
     <div className="responsibility-grid">
       <InfoCard title="Информация о ШР">
         <div className="info-card-content relative">
-          <div className="info-item">
+          <div className="info-item-personel">
             <Shield className="info-item-icon text-blue-500" />
             <div>
               <p className="info-item-label">Класс сети</p>
@@ -33,7 +33,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
             </div>
           </div>
 
-          <div className="info-item">
+          <div className="info-item-personel">
             <Calendar className="info-item-icon text-orange-500" />
             <div>
               <p className="info-item-label">Дата начала работы</p>
@@ -44,7 +44,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
           {person.sha_details.equipment_conclusions.length > 0 && (
             <div className="relative">
               <button
-                className="info-item equipment-toggle-button w-full"
+                className="info-item-personel equipment-toggle-button w-full"
                 onClick={toggleEquipmentList}
                 aria-expanded={isEquipmentExpanded}
               >
@@ -68,7 +68,7 @@ export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
                 <div className="equipment-list">
                   {person.sha_details.equipment_conclusions.map((item, index) => (
                     <div key={index} className="equipment-item">
-                      <div className="info-item">
+                      <div className="info-item-personel">
                         <FileText className="info-item-icon text-gray-500" size={16} />
                         <div>
                           <div className="equipment-type">{item.equipment_type}</div>

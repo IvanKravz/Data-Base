@@ -11,7 +11,7 @@ interface InfoItemProps {
 
 export function InfoItem({ icon: Icon, iconColor = 'info-item-icon-blue', label, value }: InfoItemProps) {
   return (
-    <div className="info-item">
+    <div className="info-item-personel">
       {Icon && <Icon className={`info-item-icon ${iconColor}`} />}
       <div>
         {label && <p className="info-item-label">{label}</p>}

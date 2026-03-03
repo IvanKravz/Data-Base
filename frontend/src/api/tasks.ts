@@ -64,6 +64,7 @@ export const tasksApi = {
         'Content-Type': 'application/json'
       }
     });
+    console.log('Created task response:', data);
     return data;
   },
 

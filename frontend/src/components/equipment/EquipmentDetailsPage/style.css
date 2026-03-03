@@ -193,7 +193,7 @@
 }
 
 .equipment-info-item__label {
-  font-size: var(--text-sm);
+  font-size: 1rem;
   color: var(--color-text-light);
   line-height: 1.4;
   font-weight: 500;

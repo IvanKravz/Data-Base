@@ -13,7 +13,7 @@ export function BasicInfo({ facility }: BasicInfoProps) {
   return (
     <InfoCard title="Основная информация">
       <div className="space-y-4">
-        <InfoItem
+        <InfoItem 
           icon={Building2}
           iconColor="text-blue-500"
           label="Название"

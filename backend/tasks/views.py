@@ -34,27 +34,28 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        # Для операций с конкретным объектом не применяем фильтры приватности
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+            return queryset.prefetch_related('steps')
+        
+        # Для списка применяем все фильтры
         division_id = self.request.query_params.get('division')
         subdivision_id = self.request.query_params.get('subdivision')
         show_completed = self.request.query_params.get('show_completed')
-        
         show_only_mine = self.request.query_params.get('show_only_mine', '').lower() == 'true'
         user = self.request.user
         
         if show_only_mine:
-            print("Filtering private tasks for current user")  # Лог фильтрации
             queryset = queryset.filter(is_private=True, created_by=user)
         else:
-            print("Filtering public tasks")  # Лог фильтрации
             queryset = queryset.filter(is_private=False)
         
-        # Общие фильтры
         if division_id:
             queryset = queryset.filter(division_id=division_id)
         if subdivision_id:
             queryset = queryset.filter(subdivision_id=subdivision_id)
         
-        # Фильтрация по завершенности
         if show_completed is not None:
             show_completed = show_completed.lower() == 'true'
             queryset = queryset.annotate(
@@ -63,14 +64,15 @@ class TaskViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(incomplete_steps=0)
             else:
                 queryset = queryset.filter(incomplete_steps__gt=0)
-
+        
         return queryset.prefetch_related('steps')
 
     def create(self, request, *args, **kwargs):
         logger.info(f"Creating task with data: {request.data}")
         response = super().create(request, *args, **kwargs)
         if response.status_code == status.HTTP_201_CREATED:
-            instance = self.get_queryset().get(id=response.data['id'])
+            # Получаем созданный объект напрямую из модели (игнорируем фильтры queryset)
+            instance = Task.objects.get(id=response.data['id'])
             log_task_create(
                 user=request.user,
                 instance=instance,

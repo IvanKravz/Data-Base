@@ -172,6 +172,13 @@
     border-color: rgba(37, 99, 235, 0.2);
 }
 
+.info-item-facility {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+}
+
 .facility-card__title {
     font-size: var(--text-lg);
     font-weight: 600;
