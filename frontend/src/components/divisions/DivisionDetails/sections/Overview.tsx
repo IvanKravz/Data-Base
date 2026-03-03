@@ -86,7 +86,7 @@ export function Overview({ division }: OverviewProps) {
           title="Техника"
           count={loading ? null : division.equipment_count}
           icon={Plug}
-          iconColor="#727fdf"
+          iconColor="#10b981"
           details={[]}
           onClick={() => handleSectionClick('equipment')}
           loading={loading}
@@ -96,7 +96,7 @@ export function Overview({ division }: OverviewProps) {
           title="Объекты"
           count={loading ? null : division.facilities_count}
           icon={Building2}
-          iconColor="#4b974a"
+          iconColor="#888676"
           details={[]}
           onClick={() => handleSectionClick('facilities')}
           loading={loading}

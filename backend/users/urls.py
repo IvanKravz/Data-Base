@@ -1,6 +1,5 @@
 # urls.py - ИСПРАВЛЕННЫЙ с явными маршрутами
 from django.urls import path, include
-from django.contrib import admin
 from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, TokenObtainPairView, TokenRefreshView, RegisterView, UserProfileView,
@@ -15,8 +14,6 @@ print("DEBUG: Loading urls.py")
 print(f"DEBUG: Importing logout_view from users.views")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
     # Authentication
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

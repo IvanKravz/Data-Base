@@ -21,14 +21,14 @@
     width: 18rem;
     position: sticky;
     top: 2rem;
-    height: fit-content;
+    /* height: fit-content; */
 }
 
 .tasks-main-section {
     background-color: white;
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    min-height: 400px;
+    /* min-height: 400px; */
 }
 
 .tasks-empty-state {
@@ -56,9 +56,10 @@
 
 .calendar-view-container {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    height: calc(100vh - 200px);
-    overflow: hidden;
+    grid-template-columns: 1fr 550px;
+    min-height: 600px; 
+    height: auto;    
+    overflow: auto; 
 }
 
 /* Loading styles */

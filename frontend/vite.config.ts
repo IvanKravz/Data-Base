@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import dotenv from 'dotenv';
 import { visualizer } from 'rollup-plugin-visualizer';
-import imagemin from 'vite-plugin-imagemin';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -14,14 +13,10 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 export default defineConfig({
   plugins: [
     react(),
-    imagemin({
-      // настройки сжатия изображений
-      gifsicle: { optimizationLevel: 7 },
-      mozjpeg: { quality: 80 },
-      pngquant: { quality: [0.8, 0.9] },
-      svgo: { plugins: [{ removeViewBox: false }] },
+    visualizer({
+      open: false,        
+      filename: 'dist/stats.html',
     }),
-    visualizer({ open: true, filename: 'dist/stats.html' }),
   ],
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
@@ -64,7 +59,7 @@ export default defineConfig({
         },
       },
     },
-    minify: 'terser',
+    minify: 'esbuild',
     terserOptions: {
       compress: {
         drop_console: true,

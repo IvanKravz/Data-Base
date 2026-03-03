@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { format, isValid } from 'date-fns';
 import Calendar from 'react-calendar';
 import { Task } from '../../../types/tasks';
-import { TaskCategory } from '../../../types/taskCategories';
 import 'react-calendar/dist/Calendar.css';
-import './style.css';
+import './styles/TaskCalendar.css';
 
 interface TaskCalendarProps {
   tasks: Task[];
@@ -41,8 +40,12 @@ export function TaskCalendar({
     return isValid(d) ? d : null;
   };
 
-  // Get tasks for a specific date with their categories
-  const getTasksForDate = (date: Date) => {
+  const handleActiveStartDateChange = ({ activeStartDate }: { activeStartDate: Date }) => {
+    onCalendarStateChange({ date: activeStartDate });
+  };
+
+  // Get tasks for a specific date
+  const getTasksForDate = (date: Date): Task[] => {
     const formattedDate = format(date, 'yyyy-MM-dd');
     return tasks.filter(task =>
       task.steps.some(step => {
@@ -57,28 +60,30 @@ export function TaskCalendar({
     );
   };
 
-  // Group tasks by category for a specific date
-  const getTasksByCategory = (date: Date) => {
-    const tasksOnDate = getTasksForDate(date);
-    return tasksOnDate.reduce((acc, task) => {
-      acc[task.category] = (acc[task.category] || 0) + 1;
-      return acc;
-    }, {} as Record<TaskCategory, number>);
+  // Get tasks for a whole month
+  const getTasksForMonth = (date: Date): Task[] => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0);
+
+    return tasks.filter(task =>
+      task.steps.some(step => {
+        const stepStart = getValidDate(step.start_date);
+        const stepEnd = getValidDate(step.end_date);
+        if (!stepStart || !stepEnd) return false;
+        return stepStart <= endOfMonth && stepEnd >= startOfMonth;
+      })
+    );
   };
 
-  // Get tasks with steps on the selected date
-  const tasksWithStepsOnDate = tasks.filter(task =>
-    task.steps.some(step => {
-      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-      const stepStartDate = getValidDate(step.start_date);
-      const stepEndDate = getValidDate(step.end_date);
-      if (!stepStartDate || !stepEndDate) return false;
-
-      const stepStartDateStr = format(stepStartDate, 'yyyy-MM-dd');
-      const stepEndDateStr = format(stepEndDate, 'yyyy-MM-dd');
-      return selectedDateStr >= stepStartDateStr && selectedDateStr <= stepEndDateStr;
-    })
-  );
+  // Group tasks by category
+  const getCountsByCategory = (taskList: Task[]): Record<string, number> => {
+    return taskList.reduce((acc, task) => {
+      acc[task.category] = (acc[task.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  };
 
   return (
     <div className="tasks-calendar-container">
@@ -92,91 +97,44 @@ export function TaskCalendar({
           </button>
         </div>
         <Calendar
-          key={`${calendarState.view}-${calendarState.date.toISOString()}`}
+          key={`${view}-${selectedDate.toISOString()}`}
           onChange={handleDateChange}
           value={selectedDate}
           view={view}
           onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
           className="tasks-calendar"
+          onActiveStartDateChange={handleActiveStartDateChange}
           tileClassName={({ date }) => {
-            const hasTasksOnDate = getTasksForDate(date).length > 0;
-            return hasTasksOnDate ? 'tasks-calendar-has-events' : '';
+            const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+            return tasksOnDate.length > 0 ? 'tasks-calendar-has-events' : '';
           }}
           tileContent={({ date }) => {
-            const tasksByCategory = getTasksByCategory(date);
-            const hasTasksOnDate = Object.values(tasksByCategory).some(count => count > 0);
+            const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+            if (tasksOnDate.length === 0) return null;
 
-            if (!hasTasksOnDate) return null;
+            const counts = getCountsByCategory(tasksOnDate);
 
             return (
               <div className="tasks-calendar-indicator">
-                {tasksByCategory.urgent > 0 && (
-                  <div className="tasks-calendar-dot tasks-calendar-dot-urgent" />
+                {counts.urgent > 0 && (
+                  <span className="tasks-calendar-count tasks-calendar-count-urgent">
+                    {counts.urgent}
+                  </span>
                 )}
-                {tasksByCategory.planned > 0 && (
-                  <div className="tasks-calendar-dot tasks-calendar-dot-planned" />
+                {counts.planned > 0 && (
+                  <span className="tasks-calendar-count tasks-calendar-count-planned">
+                    {counts.planned}
+                  </span>
                 )}
-                {tasksByCategory.attention > 0 && (
-                  <div className="tasks-calendar-dot tasks-calendar-dot-attention" />
+                {counts.attention > 0 && (
+                  <span className="tasks-calendar-count tasks-calendar-count-attention">
+                    {counts.attention}
+                  </span>
                 )}
               </div>
             );
           }}
         />
-      </div>
-
-      <div className="tasks-calendar-events">
-        <div className="tasks-calendar-events-header">
-          <h3 className="tasks-calendar-events-title">
-            Задачи на {format(selectedDate, 'dd.MM.yyyy')}
-          </h3>
-          <span className="tasks-calendar-events-count">
-            Задач: {tasksWithStepsOnDate.length}
-          </span>
-        </div>
-
-        <div className="tasks-calendar-events-list">
-          {tasksWithStepsOnDate.length > 0 ? (
-            tasksWithStepsOnDate.map(task => {
-              // Определяем класс категории
-              const categoryClass = `tasks-calendar-event-${task.category}`;
-
-              return (
-                <div
-                  key={task.id}
-                  className={`tasks-calendar-event ${categoryClass}`}
-                  onClick={() => onTaskClick(task)}
-                >
-                  <div className="tasks-calendar-event-header">
-                    <div className={`tasks-calendar-event-indicator ${task.category === 'urgent' ? 'tasks-calendar-event-indicator-urgent' :
-                      task.category === 'planned' ? 'tasks-calendar-event-indicator-planned' :
-                        'tasks-calendar-event-indicator-attention'
-                      }`} />
-                    <h4 className="tasks-calendar-event-title">
-                      {task.title}
-                    </h4>
-                  </div>
-                  <div className="tasks-calendar-event-steps">
-                    {task.steps.map((step, index) => (
-                      <div key={step.id} className="tasks-calendar-event-step">
-                        <p className="tasks-calendar-event-step-name">
-                          Этап {index + 1}: {step.name}
-                        </p>
-                        <p className="tasks-calendar-event-step-time">
-                          {format(new Date(step.start_date), 'dd.MM.yyyy')} - {format(new Date(step.end_date), 'dd.MM.yyyy')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <p className="tasks-calendar-no-events">
-              Нет задач на выбранную дату
-            </p>
-          )}
-        </div>
       </div>
     </div>
   );

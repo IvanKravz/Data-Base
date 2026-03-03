@@ -17,7 +17,7 @@ ROLE_PERMISSIONS = {
             'CommunicationNetwork': ['view', 'add', 'change', 'delete'],
             'Task': ['view', 'add', 'change', 'delete'],
             'CommunicationPost': ['view', 'add', 'change', 'delete'],
-            'FacilityType': ['view''add', 'change', 'delete'],
+            'FacilityType': ['view','add', 'change', 'delete'],
             'EquipmentCategory': ['view', 'add', 'change', 'delete'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],

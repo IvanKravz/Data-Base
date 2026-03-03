@@ -418,10 +418,10 @@ export function DivisionTasksSection() {
       console.error('No token');
       return;
     }
-  
+
     const previousTasks = tasks;
     const newCompletedStatus = !currentCompleted;
-  
+
     // Оптимистичное обновление UI
     setTasks(prevTasks =>
       prevTasks.map(task => {
@@ -429,11 +429,11 @@ export function DivisionTasksSection() {
           const updatedSteps = task.steps.map(step =>
             step.id === stepId
               ? {
-                  ...step,
-                  is_completed: newCompletedStatus,
-                  completed_by: newCompletedStatus ? currentUser : null,
-                  completed_at: newCompletedStatus ? new Date().toISOString() : null
-                }
+                ...step,
+                is_completed: newCompletedStatus,
+                completed_by: newCompletedStatus ? currentUser : null,
+                completed_at: newCompletedStatus ? new Date().toISOString() : null
+              }
               : step
           );
           return {
@@ -445,7 +445,7 @@ export function DivisionTasksSection() {
         return task;
       })
     );
-  
+
     try {
       const updatedStep = await tasksApi.updateTaskStep(stepId, newCompletedStatus, token);
       // Синхронизация с ответом сервера
@@ -540,6 +540,7 @@ export function DivisionTasksSection() {
         />
         <TasksCalendarSidebar
           tasks={filteredTasks}
+          selectedDate={calendarState.date}
           onTaskClick={handleEditTask}
           onStepClick={handleStepClick}
         />

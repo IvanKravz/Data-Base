@@ -22,6 +22,23 @@ if [ "$DJANGO_SUPERUSER_USERNAME" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ] && [ "$D
         --email "$DJANGO_SUPERUSER_EMAIL" || true
 fi
 
+if [ "$DJANGO_SUPERUSER_USERNAME" ]; then
+    python manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
+group_name = 'role_admin'
+group, created = Group.objects.get_or_create(name=group_name)
+try:
+    user = User.objects.get(username='$DJANGO_SUPERUSER_USERNAME')
+    user.groups.add(group)
+    print(f"Superuser {user.username} added to group {group_name}")
+except User.DoesNotExist:
+    pass
+EOF
+fi
+
 if [ "$DJANGO_ENV" = "development" ]; then
     exec python manage.py runserver 0.0.0.0:8000
 else
