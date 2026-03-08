@@ -93,6 +93,7 @@ export function CreateEquipmentForm() {
         status: 'in-operation',
         comments: '',
         product_structures: [],
+        is_network: false,
     });
     const [divisions, setDivisions] = useState<Division[]>([]);
     const [personnel, setPersonnel] = useState<any[]>([]);
@@ -221,7 +222,6 @@ export function CreateEquipmentForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form data before send:', formData);
         if (!token) {
             console.error('Токен отсутствует');
             return;
@@ -254,7 +254,6 @@ export function CreateEquipmentForm() {
                 // Исправление: Преобразуем пустую строку в null для secret_level
                 secret_level: formData.secret_level === '' ? null : formData.secret_level,
             };
-            console.log('dataToSend', dataToSend);
 
             await equipmentApi.createEquipment(token, dataToSend);
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -310,6 +309,18 @@ export function CreateEquipmentForm() {
                         permissions={effectivePermissions} // Передаем permissions
                     />
 
+                    <AssignmentInfo
+                        formData={formData}
+                        onChange={handleChange}
+                        availableSubdivisions={getCurrentSubdivisions()}
+                        availablePersonnel={personnel}
+                        divisions={divisions}
+                        isLoading={isLoading}
+                        fixedDivision={!!fixedDivision}
+                        fixedSubdivision={!!fixedSubdivision}
+                        permissions={effectivePermissions} // Передаем permissions
+                    />
+
                     <DocumentsInfo
                         formData={formData}
                         onChange={handleChange}
@@ -339,18 +350,6 @@ export function CreateEquipmentForm() {
                         permissions={effectivePermissions} // Передаем permissions
                     />
 
-                    <AssignmentInfo
-                        formData={formData}
-                        onChange={handleChange}
-                        availableSubdivisions={getCurrentSubdivisions()}
-                        availablePersonnel={personnel}
-                        divisions={divisions}
-                        isLoading={isLoading}
-                        fixedDivision={!!fixedDivision}
-                        fixedSubdivision={!!fixedSubdivision}
-                        permissions={effectivePermissions} // Передаем permissions
-                    />
-
                     <EditCommentsCard
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
@@ -372,7 +371,7 @@ export function CreateEquipmentForm() {
                     onDispose={undefined}
                     isLoading={isLoading}
                     hasEditPermission={hasCreatePermission}
-                    isCreating={true} 
+                    isCreating={true}
                 />
             </form>
         </div>

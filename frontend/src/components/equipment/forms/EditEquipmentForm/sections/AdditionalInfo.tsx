@@ -20,7 +20,7 @@ export function AdditionalInfo({
 }: AdditionalInfoProps) {
     const handleFreeUseChange = (checked: boolean) => {
         if (!permissions?.canEditFreeUse) return; // Используем опциональную цепочку
-        
+
         const newData: Partial<Equipment> = {
             is_free_use: checked,
             // Если снимаем галочку, очищаем номер акта
@@ -44,7 +44,7 @@ export function AdditionalInfo({
             </div>
             <div className="equipment-card-content-edit">
                 <div className="equipment-form-group">
-                    <label className="form-label">Степень секретности</label>
+                    <label className="equipment-form-label">Степень секретности</label>
                     <select
                         value={formData.secret_level || ''}
                         onChange={(e) => handleSecretLevelChange(e.target.value)}
@@ -60,7 +60,7 @@ export function AdditionalInfo({
                 </div>
 
                 <div className="equipment-form-group">
-                    <label className="form-label">В чьих интересах эксплуатируется</label>
+                    <label className="equipment-form-label">В чьих интересах эксплуатируется</label>
                     <select
                         value={formData.interest_organ?.id || ''}
                         onChange={(e) => {
@@ -81,6 +81,30 @@ export function AdditionalInfo({
                     </select>
                 </div>
 
+                {/* Сетевое оборудование */}
+                <div className="equipment-form-group">
+                    <div className="checkbox-container">
+                        <label className="checkbox-label">
+                            <input
+                                type="checkbox"
+                                className="checkbox-input"
+                                checked={formData.is_network || false}
+                                onChange={(e) => {
+                                    if (!permissions?.canEditIsNetwork) return;
+                                    onChange({ is_network: e.target.checked });
+                                }}
+                                disabled={isDisposed || !permissions?.canEditIsNetwork}
+                            />
+                            <span className="checkbox-label-text">Сетевое оборудование</span>
+                        </label>
+                    </div>
+                    {formData.is_network && (
+                        <div className="equipment-form-hint">
+                            Для сетевого оборудования будут доступны дополнительные настройки сетевых интерфейсов, VLAN и IP-адресов.
+                        </div>
+                    )}
+                </div>
+
                 <div className="equipment-form-group">
                     <div className="checkbox-container">
                         <label className="checkbox-label">
@@ -89,7 +113,7 @@ export function AdditionalInfo({
                                 className="checkbox-input"
                                 checked={formData.is_free_use || false}
                                 onChange={(e) => handleFreeUseChange(e.target.checked)}
-                                disabled={isDisposed || !permissions?.canEditFreeUse} // Используем опциональную цепочку
+                                disabled={isDisposed || !permissions?.canEditFreeUse}
                             />
                             <span className="checkbox-label-text">Выдана в безвозмездное пользование</span>
                         </label>
@@ -98,9 +122,9 @@ export function AdditionalInfo({
 
                 {formData.is_free_use && (
                     <div className="equipment-form-group">
-                        <label className="form-label">
-                            Номер акта приема-передачи 
-                            <span style={{color: 'var(--danger)', marginLeft: '4px'}}>*</span>
+                        <label className="equipment-form-label">
+                            Номер акта приема-передачи
+                            <span style={{ color: 'var(--danger)', marginLeft: '4px' }}>*</span>
                         </label>
                         <input
                             type="text"
@@ -108,7 +132,7 @@ export function AdditionalInfo({
                             onChange={(e) => onChange({ free_use_act_number: e.target.value })}
                             className="form-input-edit"
                             placeholder="Введите номер акта"
-                            disabled={isDisposed || !permissions?.canEditFreeUse} // Используем опциональную цепочку
+                            disabled={isDisposed || !permissions?.canEditFreeUse}
                             required
                         />
                     </div>

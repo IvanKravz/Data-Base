@@ -127,14 +127,14 @@ export function AssignmentInfo({
       </div>
       <div className="equipment-card-content-edit">
         {/* Поле Подразделение */}
-        <div className="form-group">
+        <div className="equipment-form-group">
           <label className="equipment-form-label">Подразделение</label>
           <div className="form-input-container">
             <select
               value={formData.division?.id ? String(formData.division.id) : ''}
               onChange={handleDivisionChange}
               className="form-select"
-              disabled={isLoading || fixedDivision || !permissions?.canEditDivision} // Используем опциональную цепочку
+              disabled={isLoading || fixedDivision || !permissions?.canEditDivision} 
             >
               <option value="">Выберите подразделение</option>
               {divisions.map(division => (
@@ -147,13 +147,13 @@ export function AssignmentInfo({
         </div>
 
         {/* Поле Отделение */}
-        <div className="form-group">
+        <div className="equipment-form-group">
           <label className="equipment-form-label">Отделение</label>
           <select
             value={formData.subdivision?.id ? String(formData.subdivision.id) : ''}
             onChange={handleSubdivisionChange}
             className="form-select"
-            disabled={isLoading || !formData.division || fixedSubdivision || !permissions?.canEditSubdivision} // Используем опциональную цепочку
+            disabled={isLoading || !formData.division || fixedSubdivision || !permissions?.canEditSubdivision}
           >
             <option value="">Выберите отделение</option>
             {availableSubdivisions.map(subdivision => (
@@ -165,14 +165,14 @@ export function AssignmentInfo({
         </div>
 
         {/* Поле Ответственный */}
-        <div className="form-group">
+        <div className="equipment-form-group">
           <label className="equipment-form-label">Ответственный</label>
           <div className="form-input-container">
             <select
               value={formData.assigned_to?.id ? String(formData.assigned_to.id) : ''}
               onChange={handlePersonnelChange}
               className="form-select"
-              disabled={isLoading || !formData.division || !permissions?.canEditAssignedTo} // Используем опциональную цепочку
+              disabled={isLoading || !formData.division || !permissions?.canEditAssignedTo}
             >
               <option value="">Не назначен</option>
               {filteredPersonnel.map(person => (
@@ -185,7 +185,7 @@ export function AssignmentInfo({
         </div>
 
         {/* Поле Объект */}
-        <div className="form-group">
+        <div className="equipment-form-group">
           <label className="equipment-form-label">Объект</label>
           <div className="form-input-container">
             <select

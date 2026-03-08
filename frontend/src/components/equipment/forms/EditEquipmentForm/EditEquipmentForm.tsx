@@ -38,7 +38,7 @@ export function EditEquipmentForm({
   const [categories, setCategories] = useState<EquipmentCategory[]>([]);
   const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
   const token = localStorage.getItem('accessToken');
-  
+
   // Используем хук для получения прав доступа
   const permissions = useEquipmentFieldPermissions();
   const hasEditPermission = canEdit('equipment');
@@ -199,6 +199,16 @@ export function EditEquipmentForm({
             permissions={permissions}
           />
 
+          <AssignmentInfo
+            formData={formData}
+            onChange={handleChange}
+            availableSubdivisions={getCurrentSubdivisions()}
+            availablePersonnel={personnel}
+            divisions={divisions}
+            isLoading={isLoading}
+            permissions={permissions}
+          />
+
           <DocumentsInfo
             formData={formData}
             onChange={handleChange}
@@ -206,8 +216,8 @@ export function EditEquipmentForm({
             permissions={permissions}
           />
 
-          <IdentificationInfo 
-            formData={formData} 
+          <IdentificationInfo
+            formData={formData}
             onChange={handleChange}
             permissions={permissions}
           />
@@ -225,16 +235,6 @@ export function EditEquipmentForm({
             onChange={handleChange}
             interestOrgans={interestOrgans}
             isDisposed={formData.status === 'disposed'}
-            permissions={permissions}
-          />
-
-          <AssignmentInfo
-            formData={formData}
-            onChange={handleChange}
-            availableSubdivisions={getCurrentSubdivisions()}
-            availablePersonnel={personnel}
-            divisions={divisions}
-            isLoading={isLoading}
             permissions={permissions}
           />
 

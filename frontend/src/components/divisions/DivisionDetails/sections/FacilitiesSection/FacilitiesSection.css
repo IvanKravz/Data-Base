@@ -49,10 +49,9 @@
 /* === УПРОЩЕННЫЕ ВКЛАДКИ === */
 .facilities-tabs-container {
     background: white;
-    border-radius: 0.5rem;
+    border-radius: 1rem;
     position: relative;
     overflow: hidden;
-    margin-bottom: 1px;
 }
 
 .facilities-tabs {
@@ -116,7 +115,7 @@
     left: 0;
     right: 0;
     position: absolute;
-    height: 3px;
+    height: 2px;
     background-color: #2563eb;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 4;

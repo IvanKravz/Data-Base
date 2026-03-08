@@ -64,7 +64,6 @@ export const tasksApi = {
         'Content-Type': 'application/json'
       }
     });
-    console.log('Created task response:', data);
     return data;
   },
 
@@ -85,8 +84,6 @@ export const tasksApi = {
     if (!id || !/^\d+$/.test(id)) {
       throw new Error(`Invalid task ID format. Expected numeric string, got: ${id}`);
     }
-
-    console.log('Updating task with data:', taskData);
 
     const { data } = await api.patch(`/tasks/${id}/`, taskData, {
       headers: {

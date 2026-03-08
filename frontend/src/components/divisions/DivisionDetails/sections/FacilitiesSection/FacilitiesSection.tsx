@@ -518,6 +518,15 @@ export function FacilitiesSection() {
   // Автоматическое переключение вкладок при отсутствии данных
   useEffect(() => {
     if (!loading) {
+      const hasAnyData = hasAllFacilities || hasOpenFacilities || hasClosedFacilities || hasCommunicationPosts;
+      if (!hasAnyData) return;
+
+      // Если активная вкладка - "posts" и на ней нет данных,
+      // не переключаем (пользователь хочет создать первый пост)
+      if (activeTab === 'posts' && !hasCommunicationPosts) {
+        return;
+      }
+
       const currentTabHasData =
         (activeTab === 'all' && hasAllFacilities) ||
         (activeTab === 'open' && hasOpenFacilities) ||
@@ -572,6 +581,10 @@ export function FacilitiesSection() {
 
   // Проверка прав доступа для кнопки "Добавить пост связи" - ИСПОЛЬЗУЕМ КОНКРЕТНО ДЛЯ COMMUNICATION POSTS
   const canCreateCommunicationPosts = canCreate('communicationPosts');
+
+  const canViewCommunicationPosts = useMemo(() => {
+    return currentUser?.permissions?.models?.CommunicationPost?.includes('view') ?? false;
+  }, [currentUser]);
 
   // Проверка прав доступа для удаления постов связи
   const canDeleteCommunicationPosts = canDelete('communicationPosts');
@@ -655,7 +668,7 @@ export function FacilitiesSection() {
                   Закрытые объекты
                 </button>
               )}
-              {hasCommunicationPosts && (
+              {canViewCommunicationPosts && (
                 <button
                   className={`facilities-tab-button ${activeTab === 'posts' ? 'active' : ''}`}
                   onClick={() => handleTabChange('posts')}
@@ -695,6 +708,7 @@ export function FacilitiesSection() {
               <CommunicationPostsList
                 posts={filteredBySubdivisionPosts}
                 onPostDeleted={handlePostDeleted}
+                onPostUpdated={fetchData}
                 isGlobalView={isGlobalView}
                 searchTerm={debouncedSearchTerm}
                 canDeletePosts={canDeleteCommunicationPosts}

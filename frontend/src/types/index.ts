@@ -70,16 +70,16 @@ export interface Equipment {
   type: string;
   is_closed: boolean;
   open_category?: 'tko' | 'radio' | 'computer' | 'battery' | 'antenna' | 'power' | 'materials' | null;
-  closed_category?: number | null;  // ID of ClosedEquipmentCategory
+  closed_category?: number | null; 
   status: 'in-operation' | 'in-storage' | 'defective' | 'for-disposal' | 'disposed';
   serial_number: string;
   inventory_number: string;
-  manufacturing_date: string;  // ISO date string
-  exploitation_date: string;       // ISO date string
-  division: number;            // ID of Division
-  subdivision?: number | null; // ID of Subdivision
-  facility?: number | null;    // ID of Facility
-  assigned_to?: number | null; // ID of Employee
+  manufacturing_date: string; 
+  exploitation_date: string;      
+  division: number;            
+  subdivision?: number | null; 
+  facility?: number | null;    
+  assigned_to?: number | null; 
   comments?: string | null;
   disposal_act_number?: string | null;
   disposal_act_date?: string | null;
@@ -98,6 +98,7 @@ export interface Equipment {
   secret_level_display?: string;
   is_free_use: boolean;
   free_use_act_number?: string | null;
+  is_network: boolean;
 }
 }
 
@@ -277,6 +278,7 @@ export interface EquipmentFieldPermissions {
   canEditProductStructure: boolean;
   canEditDocuments: boolean;
   canEditIdentification: boolean;
+  canEditIsNetwork: boolean;
 }
 
 export interface LoginResponse {

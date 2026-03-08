@@ -16,9 +16,9 @@ class StorageFolderAdmin(admin.ModelAdmin):
 
 @admin.register(StorageFile)
 class StorageFileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'folder', 'file_type', 'division', 'subdivision', 'size_display', 'mime_type', 'uploaded_by', 'created_at', 'is_deleted')
+    list_display = ('id', 'name', 'folder', 'file_type', 'division', 'subdivision', 'size_display', 'mime_type', 'uploaded_by', 'created_at', 'is_deleted')
     list_filter = ('file_type', 'division', 'subdivision', 'mime_type', 'uploaded_by', 'created_at', 'is_deleted')
-    search_fields = ('name', 'original_name', 'mime_type')
+    search_fields = ('id', 'name', 'original_name', 'mime_type')
     raw_id_fields = ('folder', 'uploaded_by', 'division', 'subdivision')
     list_editable = ('file_type', 'is_deleted')
     

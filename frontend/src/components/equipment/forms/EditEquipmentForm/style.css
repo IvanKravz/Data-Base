@@ -269,6 +269,12 @@ body {
   color: var(--gray-500);
 }
 
+.equipment-form-hint { 
+  margin-top: -1rem;
+  font-size: 0.85rem;
+  color: #666
+}
+
 .comments-preview {
   margin-bottom: 1rem;
   padding: 0.5rem;
@@ -298,9 +304,9 @@ body {
 /* ===== CHECKBOX STYLES ===== */
 .checkbox-container {
   display: flex;
-  align-items: center;
+  /* align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  gap: var(--space-sm); */
 }
 
 .checkbox-label {

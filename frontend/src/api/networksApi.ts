@@ -28,7 +28,6 @@ export const networksApi = {
   },
 
   createNetwork: async (token: string, networkData: Omit<CommunicationNetwork, 'id'>) => {
-    console.log('networkData', networkData)
     const { data } = await api.post('/networks/', networkData, {
       headers: { Authorization: `Bearer ${token}` }
     });

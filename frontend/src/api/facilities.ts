@@ -168,6 +168,13 @@ export const communicationPostsApi = {
     return data;
   },
 
+  getCommunicationPost: async (id: string, token?: string | null) => {
+    const { data } = await api.get(`facilities/communication-posts/${id}/`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+    return data;
+  },
+
   createCommunicationPost: async (postData: {
     name: string;
     division: string;
@@ -178,6 +185,23 @@ export const communicationPostsApi = {
       headers: {
         'Authorization': `Bearer ${token}`,
       }
+    });
+    return data;
+  },
+
+  // Обновление поста связи
+  updateCommunicationPost: async (
+    id: string,
+    postData: {
+      name: string;
+      division: string;
+      subdivision?: string;
+      description?: string;
+    },
+    token?: string | null
+  ) => {
+    const { data } = await api.put(`facilities/communication-posts/${id}/`, postData, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     return data;
   },

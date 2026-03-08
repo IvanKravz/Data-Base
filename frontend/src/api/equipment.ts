@@ -67,7 +67,6 @@ export const equipmentApi = {
           'Content-Type': 'application/json',
         },
       });
-      console.log('response data', response)
       return response.data;
     } catch (error: any) {
       console.error('Error creating equipment:', error.response?.data);
@@ -76,7 +75,6 @@ export const equipmentApi = {
   },
 
   updateEquipment: async (token: string, id: string, equipmentData: Partial<Equipment>) => {
-    console.log('equipmentData', equipmentData)
     const { data } = await api.put(`/equipment/${id}/`, equipmentData, {
       headers: {
         'Authorization': `Bearer ${token}`,

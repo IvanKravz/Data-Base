@@ -24,6 +24,8 @@ const BASE_PERMISSIONS: EquipmentFieldPermissions = {
   canEditProductStructure: false,
   canEditDocuments: false,
   canEditIdentification: false,
+  // Добавлено новое поле
+  canEditIsNetwork: false,
 };
 
 export const useEquipmentFieldPermissions = (): EquipmentFieldPermissions => {
@@ -59,6 +61,8 @@ export const useEquipmentFieldPermissions = (): EquipmentFieldPermissions => {
           canEditFacility: true,
           canEditComments: true,
           canEditProductStructure: true,
+          // Добавлено право на редактирование is_network
+          canEditIsNetwork: true,
         };
       }
 
