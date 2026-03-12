@@ -34,8 +34,10 @@ import {
   CommunicationPostsRoute,
   DivisionsRoute,
   StorageRoute,
-  MapRoute
+  MapRoute,
+  UsersRoute  // импортируем новый маршрут
 } from './ProtectedRoute';
+import { UserManagementPage } from './UserMenu/UserManagementPage/UserManagementPage';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -260,7 +262,7 @@ export function MainLayout() {
           </NetworksRoute>
         } />
 
-        {/* Other Routes - используем специализированные маршруты */}
+        {/* Other Routes */}
         <Route path="/storage" element={
           <StorageRoute>
             <Storage />
@@ -283,7 +285,14 @@ export function MainLayout() {
           </MapRoute>
         } />
 
-        {/* Fallback route - используем абсолютный путь */}
+        {/* Административная страница управления пользователями */}
+        <Route path="/admin/users" element={
+          <UsersRoute>
+            <UserManagementPage />
+          </UsersRoute>
+        } />
+
+        {/* Fallback route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

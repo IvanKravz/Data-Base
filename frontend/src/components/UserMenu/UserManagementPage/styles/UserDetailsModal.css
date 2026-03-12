@@ -1,7 +1,7 @@
-/* styles/CabinetModal.css */
+/* UserDetailsModal.css */
 
-/* Модальное окно кабинета - УВЕЛИЧЕНА ШИРИНА */
-.cabinet-modal-overlay {
+/* Overlay (затемнение) */
+.modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
@@ -12,28 +12,59 @@
     z-index: 9999;
     padding: 0.5rem;
     animation: fadeIn 0.3s ease-out;
-    
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
 }
 
-.cabinet-modal {
+/* Само модальное окно */
+.modal-content-user.user-details-modal {
     background: white;
     border-radius: 1rem;
     width: 100%;
-    height: 100%;
-    max-width: 95vw; /* Увеличена ширина */
+    max-width: 95vw;
     max-height: 95vh;
     overflow-y: auto;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     animation: scaleIn 0.3s ease-out;
+}
+
+.user-details-modal .modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    
+}
+
+/* Иконка в шапке */
+.user-details-modal .modal-title-icon {
+    width: 2rem;
+    height: 2rem;
+    color: white;
+}
+
+/* Заголовок */
+.user-details-modal .modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: white;
+}
+
+/* Подзаголовок */
+.user-details-modal .modal-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    color: white;
 }
 
 @keyframes scaleIn {
@@ -41,45 +72,33 @@
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
     }
 }
 
-.cabinet-header {
+/* Шапка модального окна */
+.user-details-modal .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 1.5rem; /* Уменьшен padding */
-    background: #4b70d6;
+    padding: 1rem 1.5rem;
+    background: #0b4f6c;
+    /* тёмно-синий */
     color: white;
 }
 
-.cabinet-header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.cabinet-title-icon {
-    width: 2rem;
-    height: 2rem;
-}
-
-.cabinet-title {
-    font-size: 1.25rem; /* Уменьшен шрифт */
+.user-details-modal .modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.2;
 }
 
-.cabinet-subtitle {
-    font-size: 0.75rem; /* Уменьшен шрифт */
-    opacity: 0.9;
-    margin-top: 0.25rem;
-}
-
-.cabinet-close-btn {
+/* Кнопка закрытия */
+.user-details-modal .close-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 0.5rem;
@@ -93,25 +112,24 @@
     color: white;
 }
 
-.cabinet-close-btn:hover {
+.user-details-modal .close-btn:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
-.cabinet-content {
-    padding: 1rem; 
-}
-
-.cabinet-tabs {
+/* Панель вкладок */
+.user-details-modal .tabs {
     display: flex;
     border-bottom: 1px solid #e2e8f0;
     background: #f8fafc;
+    padding: 0;
 }
 
-.cabinet-tab {
+/* Вкладки */
+.user-details-modal .tab {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.25rem; 
+    padding: 0.875rem 1.25rem;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -120,64 +138,70 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
-    font-size: 0.875rem; /* Уменьшен шрифт */
+    font-size: 1rem;
 }
 
-.cabinet-tab:hover {
-    color: #4f23d6;
-    background: rgba(79, 35, 214, 0.05);
+.user-details-modal .tab:hover {
+    color: #2a5c9e;
+    /* синий акцент */
+    background: rgba(42, 92, 158, 0.05);
 }
 
-.cabinet-tab.active {
-    color: #4f23d6;
-    border-bottom-color: #4f23d6;
+.user-details-modal .tab.active {
+    color: #2a5c9e;
+    border-bottom-color: #2a5c9e;
     background: white;
 }
 
-/* Скроллбар */
-.cabinet-modal::-webkit-scrollbar {
+/* Контент вкладок */
+.user-details-modal .tab-content {
+    padding: 1rem;
+}
+
+/* Скроллбар для модального окна */
+.user-details-modal::-webkit-scrollbar {
     width: 8px;
 }
 
-.cabinet-modal::-webkit-scrollbar-track {
+.user-details-modal::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 4px;
 }
 
-.cabinet-modal::-webkit-scrollbar-thumb {
+.user-details-modal::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
 }
 
-.cabinet-modal::-webkit-scrollbar-thumb:hover {
+.user-details-modal::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
 
 /* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
-    .cabinet-modal {
+    .modal-content-user.user-details-modal {
         max-width: 98%;
         margin: 0 0.5rem;
     }
 
-    .cabinet-header {
+    .user-details-modal .modal-header {
         padding: 0.875rem 1.25rem;
     }
 
-    .cabinet-content {
+    .user-details-modal .tab-content {
         padding: 0.875rem;
     }
 }
 
 @media (max-width: 480px) {
-    .cabinet-modal {
+    .modal-content-user.user-details-modal {
         max-width: 100%;
         margin: 0;
         border-radius: 0;
         max-height: 100vh;
     }
-    
-    .cabinet-modal-overlay {
+
+    .modal-overlay {
         padding: 0;
     }
 }

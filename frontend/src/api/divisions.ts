@@ -11,6 +11,12 @@ export const divisionsApi = {
     return data;
   },
 
+   // Получить отделения по ID подразделения (предполагается наличие такого эндпоинта)
+   getSubdivisions: async (divisionId: number) => {
+    const { data } = await api.get(`/facilities/subdivisions/?division=${divisionId}`);
+    return data;
+  },
+
   // Get division by ID
   getDivisionById: async (id: string, token: string) => {
     const { data } = await api.get(`/facilities/divisions/${id}/`, {

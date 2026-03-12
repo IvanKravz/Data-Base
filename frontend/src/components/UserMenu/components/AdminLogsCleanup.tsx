@@ -19,7 +19,11 @@ const PERIODS = [
     { value: '1y', label: 'Год' },
 ] as const;
 
-export const AdminLogsCleanup: React.FC = () => {
+interface AdminLogsCleanupProps {
+    userId?: number; // если передан – удаляем логи этого пользователя
+}
+
+export const AdminLogsCleanup: React.FC<AdminLogsCleanupProps> = ({ userId }) => {
     const [modules, setModules] = useState<ModuleChoice[]>([]);
     const [selectedModule, setSelectedModule] = useState<string>('');
     const [selectedPeriod, setSelectedPeriod] = useState<typeof PERIODS[number]['value']>('1m');
@@ -55,8 +59,9 @@ export const AdminLogsCleanup: React.FC = () => {
 
         try {
             const response = await logsApi.bulkDeleteLogs({
-                module: selectedModule, // 'all' или конкретный модуль
+                module: selectedModule,
                 period: selectedPeriod,
+                user_id: userId, // передаём userId
             });
             setResult({ message: response.message, type: 'success' });
         } catch (error: any) {
@@ -71,7 +76,9 @@ export const AdminLogsCleanup: React.FC = () => {
         <div className="admin-logs-cleanup">
             <p className="admin-logs-cleanup__hint">
                 <AlertCircle size={16} />
-                Удаление записей необратимо. Доступно только администраторам.
+                {userId 
+                    ? 'Удаление записей этого пользователя необратимо.' 
+                    : 'Удаление записей необратимо. Доступно только администраторам.'}
             </p>
 
             <div className="admin-logs-cleanup__form">

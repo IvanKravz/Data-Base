@@ -1,15 +1,15 @@
 // components/CabinetModal.tsx
 import React, { useState } from 'react';
-import { User, X, Clock, Database } from 'lucide-react'; // Импортируем иконку для новой вкладки
+import { User, X, Clock, Database } from 'lucide-react';
 import { ProfileTab } from './ProfileTab';
 import { ActivityTab } from './ActivityTab';
-import { AdminLogsCleanup } from './AdminLogsCleanup'; // импортируем компонент
+import { AdminLogsCleanup } from './AdminLogsCleanup';
 import '../styles/CabinetModal.css';
 
 interface CabinetModalProps {
     isOpen: boolean;
     onClose: () => void;
-    userData: any; // данные пользователя, приходят из localStorage
+    userData: any;
 }
 
 export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
@@ -17,7 +17,6 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
 
     if (!isOpen) return null;
 
-    // Проверка, является ли пользователь администратором
     const isAdmin = userData?.is_staff || userData?.roles?.includes('admin');
 
     return (
@@ -55,7 +54,6 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
                         <Clock className="w-4 h-4" />
                         <span>Активность</span>
                     </button>
-                    {/* Вкладка для администратора */}
                     {isAdmin && (
                         <button
                             className={`cabinet-tab ${activeTab === 'admin' ? 'active' : ''}`}
@@ -73,7 +71,6 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
                     ) : activeTab === 'activity' ? (
                         <ActivityTab />
                     ) : (
-                        // Рендерим компонент очистки логов для администратора
                         <AdminLogsCleanup />
                     )}
                 </div>

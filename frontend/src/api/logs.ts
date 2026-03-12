@@ -62,13 +62,13 @@ export const logsApi = {
     },
 
     // Получение статистики
-    getStats: async (): Promise<{
+    getStats: async (params?: { user_id?: number }): Promise<{
         total_actions: number;
         actions_by_type: Array<{ action: string; count: number }>;
         actions_by_module: Array<{ module: string; count: number }>;
         last_login: string | null;
     }> => {
-        const response = await api.get('/users/action-logs/stats/');
+        const response = await api.get('/users/action-logs/stats/', { params });
         return response.data;
     },
 
@@ -104,7 +104,7 @@ export const logsApi = {
             responseType: 'blob',
         });
         return response.data;
-    },  
+    },
     /**
      * Массовое удаление логов по модулю и периоду.
      * Доступно только администраторам.

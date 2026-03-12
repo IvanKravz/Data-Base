@@ -2,6 +2,8 @@ import logging
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 import re
+from django.utils import timezone
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -158,3 +160,17 @@ class UserActionLoggingMiddleware(MiddlewareMixin):
                     logger.error(f"Error logging file download: {str(e)}")
         
         return response
+    
+    
+class UpdateLastLoginMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            now = timezone.now()
+            # Обновляем last_login, если прошло больше 60 секунд с последнего обновления
+            if not request.user.last_login or (now - request.user.last_login) > timedelta(seconds=60):
+                request.user.last_login = now
+                request.user.save(update_fields=['last_login'])
+        return self.get_response(request)

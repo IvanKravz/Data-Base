@@ -1,0 +1,303 @@
+/* UserFormModal.css */
+
+/* Overlay с затемнением и анимацией */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Контейнер модального окна */
+.modal-content-user.user-form-modal {
+    background: white;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Шапка модального окна */
+.user-form-modal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #0b4f6c;
+    /* тёмно-сине-зелёный */
+    color: white;
+    border-radius: 1rem 1rem 0 0;
+}
+
+.user-form-modal .modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-form-modal .modal-title-icon {
+    width: 2rem;
+    height: 2rem;
+    color: white;
+}
+
+.user-form-modal .modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: white;
+}
+
+.user-form-modal .modal-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    color: white;
+}
+
+/* Кнопка закрытия */
+.user-form-modal .close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: white;
+}
+
+.user-form-modal .close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Форма */
+.user-form-modal form {
+    padding: 1.5rem;
+}
+
+/* Группы полей */
+.user-form-modal .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.user-form-modal .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-form-modal label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.user-form-modal label svg {
+    width: 1rem;
+    height: 1rem;
+    color: #6b7280;
+}
+
+.user-form-modal .required {
+    color: #ef4444;
+    margin-left: 0.25rem;
+}
+
+/* Поля ввода и селекты */
+.user-form-modal input,
+.user-form-modal select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: white;
+}
+
+.user-form-modal input:focus,
+.user-form-modal select:focus {
+    outline: none;
+    border-color: #0b4f6c;
+    box-shadow: 0 0 0 3px rgba(11, 79, 108, 0.1);
+}
+
+.user-form-modal input:disabled,
+.user-form-modal select:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Чекбокс */
+.user-form-modal .checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+.user-form-modal .checkbox input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+/* Сообщение об ошибке */
+.user-form-modal .error-message {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    color: #b91c1c;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Кнопки действий */
+.user-form-modal .form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+}
+
+.user-form-modal .btn-primary,
+.user-form-modal .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-form-modal .btn-primary {
+    background: #33b377;
+    color: white;
+    box-shadow: 0 2px 4px rgba(11, 79, 108, 0.2);
+}
+
+.user-form-modal .btn-primary:hover:not(:disabled) {
+    background: #2a9563;
+    box-shadow: 0 4px 8px rgba(11, 79, 108, 0.3);
+}
+
+.user-form-modal .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.user-form-modal .btn-secondary {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.user-form-modal .btn-secondary:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+/* Адаптивность */
+@media (max-width: 640px) {
+    .modal-content-user.user-form-modal {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .modal-overlay {
+        padding: 0;
+    }
+
+    .user-form-modal .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .user-form-modal .modal-header {
+        padding: 1rem;
+    }
+
+    .user-form-modal form {
+        padding: 1rem;
+    }
+
+    .user-form-modal .form-actions {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+    }
+
+    .user-form-modal .btn-primary,
+    .user-form-modal .btn-secondary {
+        width: 100%;
+    }
+}
+
+/* Скроллбар */
+.user-form-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.user-form-modal::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.user-form-modal::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.user-form-modal::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

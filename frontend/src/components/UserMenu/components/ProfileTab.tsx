@@ -1,49 +1,84 @@
 // components/ProfileTab.tsx
-import React, { useState } from 'react';
-import { 
-  User, Mail, Globe, Calendar, Edit, Check, Shield, 
-  Eye, PlusCircle, Edit2, Trash2, Users, Building, 
-  Network, Server, Briefcase, Target, Wrench, Cpu,
-  MapPin, Layers, Folder, Settings, Database
+import React, { useState, useEffect } from 'react';
+import {
+    User, Mail, Globe, Calendar, Edit, Check, Shield,
+    Eye, PlusCircle, Edit2, Trash2, Users, Building,
+    Network, Server, Briefcase, Target, Wrench, Cpu,
+    MapPin, Layers, Folder, Settings, Database
 } from 'lucide-react';
+import { usersApi } from '../../../api/users'; 
 import '../styles/ProfileTab.css';
 
 interface ProfileTabProps {
-    userData: any;
+    userData?: any; // для обратной совместимости (текущий пользователь из localStorage)
+    userId?: number; // если передан – загружаем данные этого пользователя
+    onEdit?: () => void; // колбэк для редактирования (для админа)
 }
 
 // Маппинг модулей к соответствующим моделям
 const MODULE_TO_MODELS: Record<string, string[]> = {
-  'equipment': ['Equipment', 'EquipmentCategory'],
-  'networks': ['CommunicationNetwork', 'CommunicationPost'],
-  'divisions': ['Division', 'Subdivision', 'Facility', 'FacilityType'],
-  'tasks': ['Task'],
-  'employees': ['Employee'],
-  'users': ['User'],
-  'storage': ['StorageFile', 'StorageFolder'],
-  'maps': ['Map'],
-  'organs': ['InterestOrgan'],
-  'sha_equipment': ['Equipment', 'EquipmentCategory'],
-  'sha_workers': ['Employee']
+    'equipment': ['Equipment', 'EquipmentCategory'],
+    'networks': ['CommunicationNetwork', 'CommunicationPost'],
+    'divisions': ['Division', 'Subdivision', 'Facility', 'FacilityType'],
+    'tasks': ['Task'],
+    'employees': ['Employee'],
+    'users': ['User'],
+    'storage': ['StorageFile', 'StorageFolder'],
+    'maps': ['Map'],
+    'organs': ['InterestOrgan'],
+    'sha_equipment': ['Equipment', 'EquipmentCategory'],
+    'sha_workers': ['Employee']
 };
 
-export function ProfileTab({ userData }: ProfileTabProps) {
+export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTabProps) {
+    const [userData, setUserData] = useState(propUserData || null);
+    const [loading, setLoading] = useState(!!userId); // загружаем только если есть userId
     const [isEditing, setIsEditing] = useState(false);
     const [selectedModule, setSelectedModule] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({
-        email: userData?.email || '',
-        division: userData?.division_info?.name || '',
-        subdivision: userData?.division_info?.subdivision?.name || '',
+        email: '',
+        division: '',
+        subdivision: '',
     });
+
+    // Если передан userId, загружаем данные
+    useEffect(() => {
+        if (userId) {
+            usersApi.getUser(userId)
+                .then(res => {
+                    setUserData(res.data);
+                    setEditForm({
+                        email: res.data.email || '',
+                        division: res.data.division_info?.name || '',
+                        subdivision: res.data.division_info?.subdivision?.name || '',
+                    });
+                })
+                .catch(err => console.error('Error loading user:', err))
+                .finally(() => setLoading(false));
+        } else if (propUserData) {
+            // Если данные пришли через пропсы (текущий пользователь)
+            setUserData(propUserData);
+            setEditForm({
+                email: propUserData.email || '',
+                division: propUserData.division_info?.name || '',
+                subdivision: propUserData.division_info?.subdivision?.name || '',
+            });
+            setLoading(false);
+        }
+    }, [userId, propUserData]);
 
     const handleSaveChanges = async () => {
         try {
-            if (userData) {
-                const updatedUser = {
-                    ...userData,
-                    email: editForm.email,
-                };
+            if (userId) {
+                // Сохраняем изменения через API
+                await usersApi.updateUser(userId, { email: editForm.email });
+                // Обновляем локальные данные
+                setUserData({ ...userData, email: editForm.email });
+            } else if (userData) {
+                // Для текущего пользователя сохраняем в localStorage
+                const updatedUser = { ...userData, email: editForm.email };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
+                setUserData(updatedUser);
             }
             setIsEditing(false);
         } catch (error) {
@@ -171,16 +206,16 @@ export function ProfileTab({ userData }: ProfileTabProps) {
         if (!selectedModule || !userData?.permissions?.models) {
             return userData?.permissions?.models || {};
         }
-        
+
         const modelsForModule = MODULE_TO_MODELS[selectedModule] || [];
         const filtered: Record<string, any> = {};
-        
+
         Object.entries(userData.permissions.models).forEach(([model, actions]) => {
             if (modelsForModule.includes(model)) {
                 filtered[model] = actions;
             }
         });
-        
+
         return filtered;
     };
 
@@ -192,6 +227,9 @@ export function ProfileTab({ userData }: ProfileTabProps) {
         }
     };
 
+    if (loading) return <div className="loading">Загрузка профиля...</div>;
+    if (!userData) return <div className="error">Нет данных</div>;
+
     return (
         <>
             <div className="cabinet-info-card">
@@ -201,10 +239,10 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                 <div className="cabinet-user-info">
                     <h3 className="cabinet-user-name">{userData?.username}</h3>
                     <p className="cabinet-user-role">
-                        {userData?.roles?.map(role => getRoleDisplayName(role)).join(', ') || 'Роли не назначены'}
+                        {userData?.roles?.map((role: string) => getRoleDisplayName(role)).join(', ') || 'Роли не назначены'}
                     </p>
                 </div>
-                {!isEditing && (
+                {onEdit && !isEditing && (
                     <button
                         onClick={() => setIsEditing(true)}
                         className="cabinet-edit-btn"
@@ -335,8 +373,8 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                 </div>
                                 <div className="modules-grid">
                                     {filteredModules.map((module: string, index: number) => (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className={`module-card ${selectedModule === module ? 'module-card-selected' : ''}`}
                                             onClick={() => handleModuleClick(module)}
                                             title={`Нажмите для просмотра разрешений модуля "${getModuleDisplayName(module)}"`}
@@ -357,8 +395,8 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                 <div className="form-section-header">
                                     <h4 className="form-section-title">
                                         <Shield className="w-5 h-5 mr-2" />
-                                        {selectedModule ? 
-                                            `Детальные разрешения: ${getModuleDisplayName(selectedModule)}` : 
+                                        {selectedModule ?
+                                            `Детальные разрешения: ${getModuleDisplayName(selectedModule)}` :
                                             'Детальные разрешения'
                                         }
                                     </h4>
@@ -394,8 +432,8 @@ export function ProfileTab({ userData }: ProfileTabProps) {
                                             {Object.keys(getFilteredModels()).length === 0 && (
                                                 <tr>
                                                     <td colSpan={2} className="text-center py-4 text-gray-500">
-                                                        {selectedModule ? 
-                                                            `Нет детальных разрешений для модуля "${getModuleDisplayName(selectedModule)}"` : 
+                                                        {selectedModule ?
+                                                            `Нет детальных разрешений для модуля "${getModuleDisplayName(selectedModule)}"` :
                                                             'Нет данных о разрешениях'
                                                         }
                                                     </td>

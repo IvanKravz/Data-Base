@@ -8,6 +8,9 @@ from .logs_models import UserActionLog
 import os
 from django.utils import timezone as django_timezone
 import logging
+from django.utils import timezone
+from datetime import timedelta
+from users.logging import log_user_action
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +19,23 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         user = self.user
+
+        # Обновляем last_login
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+
+        # Логируем успешный вход
+        request = self.context.get('request')
+        log_user_action(
+            user=user,
+            action='login',
+            module='auth',
+            request=request,
+            details={'login_type': 'jwt_token'}
+        )
+
+        # Добавляем данные пользователя в ответ (как и было)
+        from .serializers import UserSerializer
         serializer = UserSerializer(user)
         data['user'] = serializer.data
         return data
@@ -25,7 +45,9 @@ class UserSerializer(serializers.ModelSerializer):
     roles = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     division_info = serializers.SerializerMethodField()
-    
+    is_online = serializers.SerializerMethodField()
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
     user_division_id = serializers.PrimaryKeyRelatedField(
         queryset=Division.objects.all(),
         source='user_division',
@@ -40,24 +62,47 @@ class UserSerializer(serializers.ModelSerializer):
         allow_null=True,
         write_only=True
     )
-    
+
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'is_staff', 'is_active', 'date_joined',
-            'roles', 'permissions', 'division_info', 'user_division_id', 'user_subdivision_id',
-            'is_global_view' 
+            'id', 'username', 'email', 'password', 'is_staff', 'is_active',
+            'date_joined', 'last_login', 'roles', 'permissions', 'division_info',
+            'user_division_id', 'user_subdivision_id', 'is_global_view', 'is_online',
         ]
-        read_only_fields = ['is_staff', 'is_active', 'date_joined']
-    
+        read_only_fields = ['is_staff', 'is_active', 'date_joined', 'last_login', 'is_online']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().create(validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+    def get_is_online(self, obj):
+        if not obj.last_login:
+            return False
+        return timezone.now() - obj.last_login < timedelta(minutes=5)
+
     def get_roles(self, obj):
         return obj.get_roles()
-    
+
     def get_permissions(self, obj):
         return obj.get_permissions_info()
-    
+
     def get_division_info(self, obj):
-        # Используем свойства division и subdivision
         if obj.division:
             return {
                 'id': obj.division.id,
@@ -68,7 +113,6 @@ class UserSerializer(serializers.ModelSerializer):
                 } if obj.subdivision else None
             }
         return None
-
 
 class UserActionLogSerializer(serializers.ModelSerializer):
     user_username = serializers.CharField(source='user.username', read_only=True)

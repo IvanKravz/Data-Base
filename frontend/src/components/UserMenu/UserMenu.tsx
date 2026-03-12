@@ -1,12 +1,11 @@
 // UserMenu.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, ChevronDown } from 'lucide-react';
 import { CabinetModal } from './components/CabinetModal';
 import { UserDropdownMenu } from './components';
 import './UserMenu.css';
 import './styles/DropdownMenu.css';
 import './styles/CabinetModal.css';
-
 
 interface UserCabinetData {
     id: number;
@@ -21,16 +20,7 @@ interface UserCabinetData {
             name: string;
         };
     };
-    permissions?: {
-        roles: Array<{
-            id: string;
-            name: string;
-            description: string;
-        }>;
-        modules: string[];
-        models: Record<string, string[]>;
-        filters: Record<string, any>;
-    };
+    permissions?: any;
     is_global_view?: boolean;
     date_joined?: string;
     is_staff?: boolean;
@@ -41,9 +31,21 @@ export function UserMenu() {
     const [isCabinetOpen, setIsCabinetOpen] = useState(false);
     const [userData, setUserData] = useState<UserCabinetData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadUserData();
+    }, []);
+
+    // Закрытие при клике вне меню
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const loadUserData = () => {
@@ -60,23 +62,31 @@ export function UserMenu() {
         }
     };
 
+    // Получение инициалов пользователя для аватара
+    const getUserInitials = () => {
+        if (!userData?.username) return '?';
+        return userData.username.charAt(0).toUpperCase();
+    };
+
     return (
-        <div className="user-menu-container">
+        <div className="user-menu-container" ref={menuRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="user-menu-button"
+                className={`user-menu-button ${isOpen ? 'active' : ''}`}
                 aria-label="Меню пользователя"
                 disabled={isLoading}
             >
-                <User className="user-menu-icon" />
-                {isLoading ? (
-                    <span className="user-menu-username animate-pulse">Загрузка...</span>
-                ) : (
-                    <span className="user-menu-username">
-                        {userData?.username || 'Гость'}
-                    </span>
-                )}
-                <ChevronDown className={`user-menu-arrow ${isOpen ? 'rotate-180' : ''}`} />
+                <div className="user-avatar">
+                    {isLoading ? (
+                        <div className="avatar-skeleton" />
+                    ) : (
+                        <span className="avatar-initials">{getUserInitials()}</span>
+                    )}
+                </div>
+                <span className="user-name">
+                    {isLoading ? 'Загрузка...' : userData?.username || 'Гость'}
+                </span>
+                <ChevronDown className={`chevron-icon ${isOpen ? 'rotated' : ''}`} size={18} />
             </button>
 
             {isOpen && (

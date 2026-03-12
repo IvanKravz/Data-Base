@@ -18,7 +18,11 @@ interface ActionChoice {
     label: string;
 }
 
-export function ActivityTab() {
+interface ActivityTabProps {
+    userId?: number; // если передан – показываем логи этого пользователя
+}
+
+export function ActivityTab({ userId }: ActivityTabProps) {
     const [logs, setLogs] = useState<ActionLog[]>([]); 
     const [stats, setStats] = useState<LogStats | null>(null);
     const [isLoadingLogs, setIsLoadingLogs] = useState(false);
@@ -42,9 +46,15 @@ export function ActivityTab() {
 
     useEffect(() => {
         loadActionChoices();
+    }, []);
+
+    useEffect(() => {
         loadLogStats();
+    }, [userId]);
+
+    useEffect(() => {
         loadLogs();
-    }, [filters, pagination.page]);
+    }, [filters, pagination.page, userId]);
 
     const loadActionChoices = async () => {
         try {
@@ -58,7 +68,8 @@ export function ActivityTab() {
 
     const loadLogStats = async () => {
         try {
-            const data = await logsApi.getStats();
+            const params = userId ? { user_id: userId } : {};
+            const data = await logsApi.getStats(params);
             const statsData = data?.data || data;
             setStats(statsData);
         } catch (error) {
@@ -73,6 +84,7 @@ export function ActivityTab() {
                 page: pagination.page,
                 page_size: pagination.page_size,
                 ...filters,
+                user_id: userId, // передаём userId в API
             };
     
             const response = await logsApi.getLogs(params);
@@ -138,7 +150,8 @@ export function ActivityTab() {
 
     const exportLogs = async () => {
         try {
-            const blob = await logsApi.exportLogs(filters);
+            const params = userId ? { ...filters, user_id: userId } : filters;
+            const blob = await logsApi.exportLogs(params);
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;

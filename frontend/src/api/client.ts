@@ -45,8 +45,11 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    // Handle 401 - Unauthorized (token refresh)
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Проверяем, является ли запрос на логин
+    const isLoginRequest = originalRequest.url?.includes('/auth/login/');
+
+    // Handle 401 - Unauthorized (token refresh) - не для логина
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
       originalRequest._retry = true;
 
       try {
@@ -69,8 +72,8 @@ api.interceptors.response.use(
 
       // Generate custom event for global error handling
       window.dispatchEvent(new CustomEvent('apiError', {
-        detail: { 
-          status, 
+        detail: {
+          status,
           message,
           url: originalRequest?.url,
           method: originalRequest?.method
@@ -84,17 +87,17 @@ api.interceptors.response.use(
           console.warn('Access denied:', message);
           // The global handler in AppRouter will catch this
           break;
-        
+
         case 404:
           // Resource not found
           console.warn('Resource not found:', originalRequest?.url);
           break;
-        
+
         case 500:
           // Server error
           console.error('Server error:', message);
           break;
-        
+
         default:
           console.error(`API Error ${status}:`, message);
       }
@@ -102,8 +105,8 @@ api.interceptors.response.use(
       // Network error
       console.error('Network error:', error.request);
       window.dispatchEvent(new CustomEvent('apiError', {
-        detail: { 
-          status: 0, 
+        detail: {
+          status: 0,
           message: 'Ошибка сети. Проверьте подключение к интернету.',
           url: originalRequest?.url
         }

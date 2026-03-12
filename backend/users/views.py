@@ -15,6 +15,8 @@ from django.contrib.auth import get_user_model, logout
 from django.http import JsonResponse, HttpResponse
 from .logging_utils import get_storage_statistics
 import csv
+from rest_framework import filters
+from django.utils import timezone
 
 from users.logging import log_user_action
 from .permissions_config import ROLE_PERMISSIONS
@@ -66,6 +68,8 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'email']
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -169,32 +173,13 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
 
 
 class TokenObtainPairView(BaseTokenObtainPairView):
-    """View для получения JWT токена с логированием"""
     serializer_class = TokenObtainPairSerializer
     permission_classes = [AllowAny]
-    
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        
-        if response.status_code == 200:
-            # Получаем username из запроса
-            username = request.data.get('username')
-            try:
-                User = get_user_model()
-                user = User.objects.get(username=username)
-                
-                # Логируем успешный вход
-                log_user_action(
-                    user=user,
-                    action='login',
-                    module='auth',
-                    request=request,
-                    details={'login_type': 'jwt_token'}
-                )
-            except User.DoesNotExist:
-                logger.warning(f"User {username} not found for login logging")
-        
-        return response
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 
 class TokenRefreshView(BaseTokenRefreshView):
@@ -358,7 +343,16 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         
         # Фильтруем логи текущего пользователя
-        queryset = UserActionLog.objects.filter(user=user)
+        queryset = UserActionLog.objects.all()
+
+        # Админ может видеть логи любого пользователя
+        if user.is_superuser or user.has_role('admin'):
+            user_id = self.request.query_params.get('user_id')
+            if user_id:
+                queryset = queryset.filter(user_id=user_id)
+        else:
+            # Обычный пользователь видит только свои логи
+            queryset = queryset.filter(user=user)
         
         # Фильтрация по действию
         action = self.request.query_params.get('action')
@@ -412,7 +406,7 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
                 models.Q(module__icontains=search)
             )
         
-        return queryset.order_by('-created_at')
+        return queryset
     
     @action(detail=False, methods=['get'], url_path='action-choices')
     def action_choices(self, request):
@@ -424,31 +418,26 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'])
     def stats(self, request):
-        """Получение статистики по действиям"""
-        user = request.user
-        
+        # Получаем базовый queryset с учётом прав доступа (см. get_queryset)
+        queryset = self.get_queryset()
+
+        # Если передан user_id и пользователь имеет права администратора, фильтруем по нему
+        user_id = request.query_params.get('user_id')
+        if user_id and (request.user.is_superuser or request.user.has_role('admin')):
+            queryset = queryset.filter(user_id=user_id)
+
+        # Ограничиваем последними 30 днями (или другим периодом, если нужно)
         last_30_days = django_timezone.now() - django_timezone.timedelta(days=30)
-        
-        total_actions = UserActionLog.objects.filter(
-            user=user,
-            created_at__gte=last_30_days
-        ).count()
-        
-        actions_by_type = UserActionLog.objects.filter(
-            user=user,
-            created_at__gte=last_30_days
-        ).values('action').annotate(count=models.Count('id')).order_by('-count')
-        
-        actions_by_module = UserActionLog.objects.filter(
-            user=user,
-            created_at__gte=last_30_days
-        ).values('module').annotate(count=models.Count('id')).order_by('-count')
-        
-        last_login = UserActionLog.objects.filter(
-            user=user,
-            action='login'
-        ).order_by('-created_at').first()
-        
+        queryset = queryset.filter(created_at__gte=last_30_days)
+
+        total_actions = queryset.count()
+
+        actions_by_type = queryset.values('action').annotate(count=models.Count('id')).order_by('-count')
+        actions_by_module = queryset.values('module').annotate(count=models.Count('id')).order_by('-count')
+
+        # Последний вход (действие login) для выбранного пользователя
+        last_login = queryset.filter(action='login').order_by('-created_at').first()
+
         return Response({
             'total_actions': total_actions,
             'actions_by_type': list(actions_by_type),
@@ -492,11 +481,15 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=False, methods=['get'])
     def export(self, request):
-        """Экспорт логов в CSV"""
+        """Экспорт логов в CSV с поддержкой UTF-8"""
         logs = self.get_queryset()
         
-        response = HttpResponse(content_type='text/csv')
+        # Создаём ответ с правильной кодировкой
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="user_actions_{django_timezone.now().date()}.csv"'
+        
+        # Добавляем BOM для корректного отображения в Excel
+        response.write('\ufeff')
         
         writer = csv.writer(response)
         writer.writerow([

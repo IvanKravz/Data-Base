@@ -47,14 +47,14 @@
 }
 
 /* Основной градиент при наведении */
-.user-menu-button:hover {
+/* .user-menu-button:hover {
     background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
     box-shadow: 
         0 10px 15px -3px rgba(37, 99, 235, 0.4),
         0 4px 6px -2px rgba(37, 99, 235, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.3);
-}
+} */
 
 /* Активное состояние */
 .user-menu-button:active {
@@ -205,4 +205,50 @@
 
 .user-menu-button:hover::after {
     opacity: 1;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+
+/* Имя пользователя */
+.user-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: color 0.3s ease;
+}
+
+.user-menu-button:hover .user-name {
+    color: rgba(255, 255, 255, 1);
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}   
+
+/* Иконка шеврона */
+.chevron-icon {
+    width: 1rem;
+    height: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chevron-icon.rotated {
+    transform: rotate(180deg);
+}
+
+/* Анимация иконки при наведении */
+.user-menu-button:hover .chevron-icon {
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.user-menu-button:hover .chevron-icon:not(.rotated) {
+    animation: iconBounce 1.5s ease-in-out infinite;
 }

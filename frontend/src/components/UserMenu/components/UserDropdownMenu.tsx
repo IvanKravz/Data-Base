@@ -1,8 +1,10 @@
 // components/UserDropdownMenu.tsx
 import React from 'react';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Users, User as UserIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/DropdownMenu.css';
 import { authApi } from '../../../api';
+import { getCurrentUser } from '../../../api/utils/permissions';
 
 interface UserDropdownMenuProps {
     onClose: () => void;
@@ -10,14 +12,15 @@ interface UserDropdownMenuProps {
 }
 
 export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuProps) {
-    const handleLogout = async () => {  
+    const navigate = useNavigate();
+    const user = getCurrentUser();
+    const isAdmin = user?.is_staff || user?.roles?.includes('admin');
+
+    const handleLogout = async () => {
         try {
-            // Вызываем серверный logout для инвалидации токена
             await authApi.logout();
-            // После logout() произойдет очистка localStorage и перенаправление
         } catch (error) {
             console.error('Logout error:', error);
-            // Даже при ошибке очищаем localStorage и перенаправляем
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
             localStorage.removeItem('refreshToken');
@@ -26,28 +29,46 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
         }
     };
 
+    const handleUsersManagement = () => {
+        onClose();
+        navigate('/admin/users');
+    };
+
     return (
-        <div className="user-dropdown-menu">
+        <div className="dropdown-menu">
+            <div className="dropdown-divider" />
+
             <button
                 onClick={() => {
                     onClose();
                     onCabinetOpen();
                 }}
-                className="dropdown-item cabinet-item"
+                className="dropdown-item"
             >
-                <Settings className="dropdown-icon" />
-                <div className="dropdown-text">
-                    <span className="dropdown-title">Личный кабинет</span>
-                </div>
+                <Settings className="dropdown-icon" size={18} />
+                <span>Личный кабинет</span>
             </button>
+
+            {isAdmin && (
+                <>
+                    <div className="dropdown-divider" />
+                    <button
+                        onClick={handleUsersManagement}
+                        className="dropdown-item"
+                    >
+                        <Users className="dropdown-icon" size={18} />
+                        <span>Управление пользователями</span>
+                    </button>
+                </>
+            )}
 
             <div className="dropdown-divider" />
 
             <button
-                onClick={handleLogout}  // ← Теперь вызывает authApi.logout()
+                onClick={handleLogout}
                 className="dropdown-item logout-item"
             >
-                <LogOut className="dropdown-icon" />
+                <LogOut className="dropdown-icon" size={18} />
                 <span>Выйти</span>
             </button>
         </div>
