@@ -1,4 +1,4 @@
-# urls.py - ИСПРАВЛЕННЫЙ с явными маршрутами
+# users/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
@@ -8,10 +8,6 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
-
-print("="*60)
-print("DEBUG: Loading urls.py")
-print(f"DEBUG: Importing logout_view from users.views")
 
 urlpatterns = [
     # Authentication
@@ -37,6 +33,9 @@ urlpatterns = [
     path('action-logs/bulk-delete/', UserActionLogViewSet.as_view({'post': 'bulk_delete_logs'}), name='action-logs-bulk-delete'),
     path('auth/logout/', logout_view, name='logout'),
     
-    # Include router URLs для остальных ресурсов
+    # Новый явный маршрут для получения доступных ролей (простой путь)
+    path('roles/', UserViewSet.as_view({'get': 'available_roles'}), name='user-available-roles'),
+    
+    # Include router URLs для остальных ресурсов (включая users/)
     path('', include(router.urls)),
 ]

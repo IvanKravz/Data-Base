@@ -17,6 +17,8 @@ from .logging_utils import get_storage_statistics
 import csv
 from rest_framework import filters
 from django.utils import timezone
+from .models import RoleGroup
+from .permissions_config import ROLE_PERMISSIONS, get_role_from_group
 
 from users.logging import log_user_action
 from .permissions_config import ROLE_PERMISSIONS
@@ -170,6 +172,28 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
         
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def available_roles(self, request):
+        """
+        Возвращает список всех доступных ролей (групп) с их отображаемыми именами.
+        Доступно только администраторам.
+        """
+        if not (request.user.is_superuser or request.user.has_role('admin')):
+            raise PermissionDenied('Только администраторы могут просматривать список ролей')
+        
+        groups = RoleGroup.objects.all().order_by('name')
+        data = []
+        for group in groups:
+            role_id = get_role_from_group(group.name)
+            if role_id and role_id in ROLE_PERMISSIONS:
+                data.append({
+                    'id': group.id,
+                    'role_id': role_id,
+                    'name': ROLE_PERMISSIONS[role_id]['name'],
+                    'description': ROLE_PERMISSIONS[role_id]['description'],
+                })
+        return Response(data)
 
 
 class TokenObtainPairView(BaseTokenObtainPairView):

@@ -3,7 +3,7 @@ import { X, User, Clock, Database } from 'lucide-react';
 import { usersApi } from '../../../../api/users';
 import { authApi } from '../../../../api/auth'; // Добавляем импорт
 import '../styles/UserDetailsModal.css';
-import { ProfileTab } from '../../components/ProfileTab';
+import { ProfileTab } from '../../components/ProfileTab/ProfileTab';
 import { ActivityTab } from '../../components/ActivityTab';
 import { AdminLogsCleanup } from '../../components/AdminLogsCleanup';
 

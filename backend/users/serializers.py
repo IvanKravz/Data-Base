@@ -11,6 +11,7 @@ import logging
 from django.utils import timezone
 from datetime import timedelta
 from users.logging import log_user_action
+from django.contrib.auth.models import Group
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +64,21 @@ class UserSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    groups = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Group.objects.all(),
+        required=False,
+        write_only=True,
+        help_text='Список ID групп (ролей) пользователя'
+    )
+
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'password', 'is_staff', 'is_active',
             'date_joined', 'last_login', 'roles', 'permissions', 'division_info',
             'user_division_id', 'user_subdivision_id', 'is_global_view', 'is_online',
+            'groups',
         ]
         read_only_fields = ['is_staff', 'is_active', 'date_joined', 'last_login', 'is_online']
         extra_kwargs = {
@@ -86,9 +96,12 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
+        groups = validated_data.pop('groups', None)
         if password:
             user.set_password(password)
             user.save()
+        if groups is not None:
+            user.groups.set(groups)
         return user
 
     def get_is_online(self, obj):

@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import Group
 from django.utils.html import format_html
 from .permissions_config import ROLE_PERMISSIONS, get_role_from_group
-from .models import User
+from .models import User, RoleGroup 
 
 
 class CustomUserAdmin(UserAdmin):
@@ -38,6 +38,12 @@ class CustomUserAdmin(UserAdmin):
         return obj.subdivision.name if obj.subdivision else "-"
     subdivision.short_description = 'Отделение'
 
+    # Переопределяем метод для поля groups, чтобы в виджете выбора отображались русские названия
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "groups":
+            kwargs["queryset"] = RoleGroup.objects.all()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
 
 class CustomGroupAdmin(GroupAdmin):
     list_display = ('name', 'get_role_display_name', 'get_role_description', 'user_count', 'get_available_models')
@@ -45,7 +51,6 @@ class CustomGroupAdmin(GroupAdmin):
     search_fields = ('name',)
     
     def get_role_display_name(self, obj):
-        """Возвращает отображаемое имя роли из ROLE_PERMISSIONS"""
         role = get_role_from_group(obj.name)
         if role and role in ROLE_PERMISSIONS:
             return ROLE_PERMISSIONS[role]['name']
@@ -54,7 +59,6 @@ class CustomGroupAdmin(GroupAdmin):
     get_role_display_name.admin_order_field = 'name'
     
     def get_role_description(self, obj):
-        """Возвращает описание роли из ROLE_PERMISSIONS"""
         role = get_role_from_group(obj.name)
         if role and role in ROLE_PERMISSIONS:
             return ROLE_PERMISSIONS[role]['description']
@@ -62,7 +66,6 @@ class CustomGroupAdmin(GroupAdmin):
     get_role_description.short_description = 'Описание роли'
     
     def get_available_models(self, obj):
-        """Возвращает список доступных моделей для роли"""
         role = get_role_from_group(obj.name)
         if role and role in ROLE_PERMISSIONS:
             models = list(ROLE_PERMISSIONS[role]['models'].keys())
@@ -71,17 +74,15 @@ class CustomGroupAdmin(GroupAdmin):
     get_available_models.short_description = 'Доступные модели'
     
     def user_count(self, obj):
-        # Используем правильное имя связи - custom_user_set
         return obj.custom_user_set.count()
     user_count.short_description = 'Кол-во пользователей'
     
     def get_queryset(self, request):
-        """Оптимизируем запрос для подсчета пользователей"""
-        # Используем правильное имя связи - custom_user_set
         return super().get_queryset(request).prefetch_related('custom_user_set')
 
 
-# Перерегистрируем модели с кастомными админами
+# Перерегистрация групп с использованием прокси-модели
 admin.site.unregister(Group)
-admin.site.register(Group, CustomGroupAdmin)
+admin.site.register(RoleGroup, CustomGroupAdmin)  # регистрируем прокси-модель
+
 admin.site.register(User, CustomUserAdmin)

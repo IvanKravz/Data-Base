@@ -32,7 +32,14 @@ export interface UserUpdateData {
     user_division_id?: number | null;
     user_subdivision_id?: number | null;
     is_active?: boolean;
-    // можно добавить другие поля, если нужно
+    groups?: number[]; // добавляем поле для групп
+}
+
+export interface AvailableRole {
+    id: number;
+    role_id: string;
+    name: string;
+    description: string;
 }
 
 export const usersApi = {
@@ -50,4 +57,7 @@ export const usersApi = {
 
     deleteUser: (id: number) => 
         api.delete(`/users/users/${id}/`),
+
+    getAvailableRoles: () => 
+        api.get<AvailableRole[]>('/users/roles/'),
 };

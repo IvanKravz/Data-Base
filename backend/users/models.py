@@ -8,6 +8,8 @@ from django.dispatch import receiver
 from facilities.models import Division, Subdivision
 import logging
 from threading import local
+from django.contrib.auth.models import Group
+from .permissions_config import ROLE_PERMISSIONS, get_role_from_group
 
 logger = logging.getLogger(__name__)
 
@@ -235,23 +237,42 @@ class User(AbstractUser):
     
     def _get_available_modules(self, models_permissions):
         module_mapping = {
+            # Существующие
             'Employee': 'employees',
-            'ShaWorkerDetails': 'sha_workers',
-            'ShaEquipmentConclusion': 'sha_equipment',
+            'ShaWorkerDetails': 'employees',
+            'ShaEquipmentConclusion': 'employees',  # перенесено из sha_equipment
             'Equipment': 'equipment',
-            'Object': 'objects',
-            'CommunicationNetwork': 'networks',
-            'Task': 'tasks',
-            'User': 'users',
+            'EquipmentCategory': 'equipment',
+            # 'ProductStructure' исключаем
+            'InterestOrgan': 'organs',
             'Division': 'divisions',
-            'Subdivision': 'subdivisions',
+            'Subdivision': 'divisions',
+            'Facility': 'divisions',
+            'FacilityType': 'divisions',
+            'CommunicationPost': 'divisions',  # остаётся здесь
+            'CommunicationNetwork': 'networks',
+            'NetworkMembership': 'networks',
+            'NetworkDirection': 'networks',
+            'VLAN': 'networks',
+            'NetworkInterface': 'networks',
+            'VLANConfiguration': 'networks',
+            'IPAddress': 'networks',
+            'RoutingTable': 'networks',
+            'ACL': 'networks',
+            'IPRange': 'networks',
+            'Task': 'tasks',
+            'TaskStep': 'tasks',
+            'User': 'users',
+            'StorageFolder': 'storage',
+            'StorageFile': 'storage',
+            'FSBOffice': 'maps',  # добавлено
+            # 'Object' – вероятно, имеется в виду Facility, но для безопасности оставим
+            'Object': 'objects',  # если используется
         }
-        
         modules = set()
         for model in models_permissions.keys():
             if model in module_mapping:
                 modules.add(module_mapping[model])
-                
         return list(modules)
     
 
@@ -295,3 +316,22 @@ def employee_photo_path(instance, filename):
     ext = filename.split('.')[-1]
     filename = f'{now().strftime("%Y%m%d%H%M%S")}_{instance.id}.{ext}'
     return os.path.join('employees/photos', filename)
+
+
+class RoleGroup(Group):
+    """
+    Прокси-модель для групп, представляющих роли.
+    Используется в админке для отображения русских названий ролей.
+    """
+    class Meta:
+        proxy = True
+        verbose_name = 'Группа-роль'
+        verbose_name_plural = 'Группы-роли'
+
+    def __str__(self):
+        # Пытаемся получить русское название роли из конфигурации
+        role = get_role_from_group(self.name)
+        if role and role in ROLE_PERMISSIONS:
+            return ROLE_PERMISSIONS[role]['name']
+        # Если группа не является ролью, возвращаем оригинальное имя
+        return self.name

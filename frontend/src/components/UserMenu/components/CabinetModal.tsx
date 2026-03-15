@@ -1,7 +1,7 @@
 // components/CabinetModal.tsx
 import React, { useState } from 'react';
 import { User, X, Clock, Database } from 'lucide-react';
-import { ProfileTab } from './ProfileTab';
+import { ProfileTab } from './ProfileTab/ProfileTab';
 import { ActivityTab } from './ActivityTab';
 import { AdminLogsCleanup } from './AdminLogsCleanup';
 import '../styles/CabinetModal.css';
