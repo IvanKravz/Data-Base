@@ -1,7 +1,8 @@
+// UserDetailsModal.tsx
 import React, { useState, useEffect } from 'react';
 import { X, User, Clock, Database } from 'lucide-react';
 import { usersApi } from '../../../../api/users';
-import { authApi } from '../../../../api/auth'; // Добавляем импорт
+import { authApi } from '../../../../api/auth';
 import '../styles/UserDetailsModal.css';
 import { ProfileTab } from '../../components/ProfileTab/ProfileTab';
 import { ActivityTab } from '../../components/ActivityTab';
@@ -11,14 +12,14 @@ interface UserDetailsModalProps {
     userId: number;
     onClose: () => void;
     onEdit: () => void;
+    onDelete: () => void; // новый проп
 }
 
-export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ userId, onClose, onEdit }) => {
+export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ userId, onClose, onEdit, onDelete }) => {
     const [activeTab, setActiveTab] = useState<'profile' | 'activity' | 'admin'>('profile');
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // Получаем данные текущего пользователя (администратора)
     const currentUser = authApi.getCurrentUser();
     const isCurrentUserAdmin = currentUser?.is_staff || currentUser?.roles?.includes('admin');
 
@@ -49,7 +50,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ userId, onCl
                     <button className={`tab ${activeTab === 'activity' ? 'active' : ''}`} onClick={() => setActiveTab('activity')}>
                         <Clock size={16} /> Активность
                     </button>
-                    {/* Показываем вкладку только если текущий пользователь - администратор */}
                     {isCurrentUserAdmin && (
                         <button className={`tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>
                             <Database size={16} /> Очистка логов
@@ -58,7 +58,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ userId, onCl
                 </div>
 
                 <div className="tab-content">
-                    {activeTab === 'profile' && <ProfileTab userId={userId} onEdit={onEdit} />}
+                    {activeTab === 'profile' && (
+                        <ProfileTab
+                            userId={userId}
+                            onEdit={onEdit}
+                            onDelete={onDelete} // передаём в ProfileTab
+                        />
+                    )}
                     {activeTab === 'activity' && <ActivityTab userId={userId} />}
                     {activeTab === 'admin' && <AdminLogsCleanup userId={userId} />}
                 </div>

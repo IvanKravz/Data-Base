@@ -43,21 +43,32 @@ export interface AvailableRole {
 }
 
 export const usersApi = {
-    getUsers: (params?: any) => 
+    getUsers: (params?: any) =>
         api.get<User[]>('/users/users/', { params }),
 
-    getUser: (id: number) => 
+    getUser: (id: number) =>
         api.get<User>(`/users/users/${id}/`),
 
-    createUser: (data: UserCreateData) => 
+    createUser: (data: UserCreateData) =>
         api.post<User>('/users/users/', data),
 
-    updateUser: (id: number, data: UserUpdateData) => 
+    updateUser: (id: number, data: UserUpdateData) =>
         api.patch<User>(`/users/users/${id}/`, data),
 
-    deleteUser: (id: number) => 
+    deleteUser: (id: number) =>
         api.delete(`/users/users/${id}/`),
 
-    getAvailableRoles: () => 
+    getAvailableRoles: () =>
         api.get<AvailableRole[]>('/users/roles/'),
+
+    /**Смена пароля текущим пользователем (требуется старый пароль)
+     */
+    changePassword: (data: { old_password: string; new_password: string }) =>
+        api.post('/users/change-password/', data),
+
+    /**
+     * Установка нового пароля для другого пользователя (администратором)
+     */
+    setUserPassword: (userId: number, password: string) =>
+        api.patch(`/users/users/${userId}/`, { password }),
 };

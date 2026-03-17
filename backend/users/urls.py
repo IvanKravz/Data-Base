@@ -33,7 +33,7 @@ urlpatterns = [
     path('action-logs/bulk-delete/', UserActionLogViewSet.as_view({'post': 'bulk_delete_logs'}), name='action-logs-bulk-delete'),
     path('auth/logout/', logout_view, name='logout'),
     
-    # Новый явный маршрут для получения доступных ролей (простой путь)
+    # Явный маршрут для получения доступных ролей (простой путь) – оставляем
     path('roles/', UserViewSet.as_view({'get': 'available_roles'}), name='user-available-roles'),
     
     # Include router URLs для остальных ресурсов (включая users/)

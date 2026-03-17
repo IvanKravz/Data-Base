@@ -73,18 +73,24 @@ export function ActivityFilters({
                         <Filter className="filter-icon" />
                         Действие
                     </label>
-                    <select
-                        value={filters.action}
-                        onChange={(e) => onFilterChange('action', e.target.value)}
-                        className="filter-select"
-                    >
-                        <option value="">Все действия</option>
-                        {actionChoices.map((choice) => (
-                            <option key={choice.value} value={choice.value}>
-                                {choice.label}
-                            </option>
-                        ))}
-                    </select>
+                    {actionChoices.length > 0 ? (
+                        <select
+                            value={filters.action}
+                            onChange={(e) => onFilterChange('action', e.target.value)}
+                            className="filter-select"
+                        >
+                            <option value="">Все действия</option>
+                            {actionChoices.map((choice) => (
+                                <option key={choice.value} value={choice.value}>
+                                    {choice.label}
+                                </option>
+                            ))}
+                        </select>
+                    ) : (
+                        <select disabled className="filter-select">
+                            <option>Нет доступных действий</option>
+                        </select>
+                    )}
                 </div>
 
                 <div className="filter-field">

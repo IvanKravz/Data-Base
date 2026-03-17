@@ -1,3 +1,5 @@
+/* UserTable.css (дополнения) */
+
 .user-table-container {
     background: white;
     border-radius: 8px;
@@ -25,9 +27,41 @@
     border-bottom: 1px solid #e9ecef;
 }
 
-.user-table tbody tr:hover {
+.user-table tbody tr:hover:not(.group-header-row) {
     background-color: #f1f3f5;
     cursor: pointer;
+}
+
+/* Строка заголовка группы */
+.group-header-row {
+    background-color: #e9ecef;
+    cursor: pointer;
+}
+
+.group-header-row td {
+    padding: 8px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #ced4da;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.group-header svg {
+    color: #495057;
+}
+
+.group-title {
+    color: #212529;
+}
+
+.group-count {
+    color: #6c757d;
+    font-weight: normal;
+    margin-left: 4px;
 }
 
 .status-badge {

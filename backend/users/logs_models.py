@@ -23,21 +23,17 @@ class UserActionLog(models.Model):
     ]
     
     MODULE_CHOICES = [
+        ('auth', 'Аутентификация'),
+        ('users', 'Пользователи'),
         ('employees', 'Сотрудники'),
         ('equipment', 'Оборудование'),
-        ('facilities', 'Объекты'),
-        ('tasks', 'Задачи'),
-        ('networks', 'Сети связи'),
-        ('users', 'Пользователи'),
         ('divisions', 'Подразделения'),
-        ('subdivisions', 'Отделения'),
-        ('auth', 'Аутентификация'),
-        ('system', 'Система'),
+        ('networks', 'Сети связи'),
+        ('tasks', 'Задачи'),
         ('storage', 'Хранилище'),
-        ('sha_workers', 'ШаРаботники'),
-        ('sha_equipment', 'ШаОборудование'),
-        ('reports', 'Отчеты'),
-        ('settings', 'Настройки'),
+        ('maps', 'Карты'),
+        ('organs', 'Органы'),
+        ('system', 'Система'),
     ]
     
     user = models.ForeignKey(

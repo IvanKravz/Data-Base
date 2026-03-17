@@ -194,6 +194,42 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
                     'description': ROLE_PERMISSIONS[role_id]['description'],
                 })
         return Response(data)
+    
+    @action(detail=False, methods=['post'], url_path='change-password')
+    def change_password(self, request):
+        """Смена пароля текущим пользователем (с проверкой старого пароля)"""
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response(
+                {'error': 'Необходимо указать старый и новый пароль'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(old_password):
+            return Response(
+                {'error': 'Неверный старый пароль'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+
+        # Логируем действие
+        log_user_action(
+            user=user,
+            action='update',
+            module='users',
+            request=request,
+            model_name='User',
+            object_id=user.id,
+            object_name=user.username,
+            details={'action': 'password_change'}
+        )
+
+        return Response({'status': 'ok'})
 
 
 class TokenObtainPairView(BaseTokenObtainPairView):

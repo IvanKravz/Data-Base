@@ -1,10 +1,11 @@
+// UserManagementPage.tsx
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Search, Filter } from 'lucide-react';
 import { UserTable } from './components/UserTable';
 import { UserDetailsModal } from './components/UserDetailsModal';
 import { UserFormModal } from './components/UserFormModal';
 import './styles/UserManagementPage.css';
-import { usersApi, User } from '../../../api/users';
+import { usersApi, User, AvailableRole } from '../../../api/users';
 import { SearchBar } from '../../../components/common/SearchBar';
 import { useDebounce } from './hooks/useDebounce';
 
@@ -18,6 +19,26 @@ export const UserManagementPage: React.FC = () => {
     const [filters, setFilters] = useState({ search: '', role: '' });
     const [pagination, setPagination] = useState({ page: 1, total: 0, pageSize: 20 });
     const debouncedSearch = useDebounce(filters.search, 300);
+
+    // Список доступных ролей для группировки и отображения
+    const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([]);
+    const [rolesLoading, setRolesLoading] = useState(false);
+
+    // Загрузка списка ролей при монтировании
+    useEffect(() => {
+        const loadRoles = async () => {
+            setRolesLoading(true);
+            try {
+                const response = await usersApi.getAvailableRoles();
+                setAvailableRoles(response.data);
+            } catch (error) {
+                console.error('Failed to load roles', error);
+            } finally {
+                setRolesLoading(false);
+            }
+        };
+        loadRoles();
+    }, []);
 
     useEffect(() => {
         // Сброс страницы при изменении фильтров
@@ -34,10 +55,9 @@ export const UserManagementPage: React.FC = () => {
             const params = {
                 page: pagination.page,
                 page_size: pagination.pageSize,
-                search: debouncedSearch, // должно быть именно search
+                search: debouncedSearch,
                 role: filters.role,
             };
-            console.log('Request params:', params); // для отладки
             const response = await usersApi.getUsers(params);
             setUsers(response.data.results || response.data);
             setPagination(prev => ({ ...prev, total: response.data.count || 0 }));
@@ -89,22 +109,23 @@ export const UserManagementPage: React.FC = () => {
             </div>
 
             <div className="filters-bar">
-                    <SearchBar
-                        searchTerm={filters.search}
-                        setSearchTerm={(value) => setFilters({ ...filters, search: value })}
-                        placeholder="Поиск по имени или email"
-                    />
+                <SearchBar
+                    searchTerm={filters.search}
+                    setSearchTerm={(value) => setFilters({ ...filters, search: value })}
+                    placeholder="Поиск по имени или email"
+                />
                 {/* можно добавить фильтр по ролям */}
             </div>
 
             <UserTable
                 users={users}
-                loading={loading}
+                loading={loading || rolesLoading}
                 onView={handleViewUser}
                 onEdit={handleEditUser}
                 onDelete={handleDeleteUser}
                 pagination={pagination}
                 onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+                availableRoles={availableRoles} // передаём список ролей
             />
 
             {isDetailsModalOpen && selectedUserId && (
@@ -113,9 +134,14 @@ export const UserManagementPage: React.FC = () => {
                     onClose={() => setIsDetailsModalOpen(false)}
                     onEdit={() => {
                         setIsDetailsModalOpen(false);
-                        // после закрытия деталей открываем форму редактирования
                         const user = users.find(u => u.id === selectedUserId);
                         if (user) handleEditUser(user);
+                    }}
+                    onDelete={() => {
+                        if (selectedUserId) {
+                            handleDeleteUser(selectedUserId);
+                            setIsDetailsModalOpen(false);
+                        }
                     }}
                 />
             )}

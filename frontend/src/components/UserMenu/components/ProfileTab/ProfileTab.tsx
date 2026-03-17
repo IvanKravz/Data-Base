@@ -7,16 +7,30 @@ import {
     MapPin, Layers, Folder, Settings, Database
 } from 'lucide-react';
 import { usersApi, AvailableRole } from '../../../../api/users';
+import { divisionsApi } from '../../../../api/divisions';
 import { UserInfoCard } from './UserInfoCard';
 import { RoleEditor } from './RoleEditor';
 import { PermissionsModules } from './PermissionsModules';
 import { PermissionsDetails } from './PermissionsDetails';
+import { ChangePasswordModal } from './ChangePasswordModal';
 import '../../styles/ProfileTab.css';
 
 interface ProfileTabProps {
     userData?: any;
     userId?: number;
     onEdit?: () => void;
+    onDelete?: () => void;
+}
+
+interface Division {
+    id: number;
+    name: string;
+}
+
+interface Subdivision {
+    id: number;
+    name: string;
+    division: number;
 }
 
 interface ModuleSubsection {
@@ -60,10 +74,8 @@ const MODULE_SECTIONS: Record<string, ModuleSubsection[]> = {
     ],
 };
 
-// Список основных модулей для отображения в плитках
 const MAIN_MODULES = Object.keys(MODULE_SECTIONS);
 
-// Построение обратного маппинга модель -> модуль
 const buildModelToModuleMap = (): Record<string, string> => {
     const map: Record<string, string> = {};
     Object.entries(MODULE_SECTIONS).forEach(([module, sections]) => {
@@ -77,7 +89,6 @@ const buildModelToModuleMap = (): Record<string, string> => {
 };
 const MODEL_TO_MODULE = buildModelToModuleMap();
 
-// Порядок сортировки ролей (как в permissions_config.py)
 const ROLE_ORDER = [
     'admin',
     'leader',
@@ -91,22 +102,26 @@ const ROLE_ORDER = [
     'exploitation_employee'
 ];
 
-export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTabProps) {
+export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }: ProfileTabProps) {
     const [userData, setUserData] = useState(propUserData || null);
     const [loading, setLoading] = useState(!!userId);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedModule, setSelectedModule] = useState<string | null>(null);
+    const [divisions, setDivisions] = useState<Division[]>([]);
+    const [subdivisions, setSubdivisions] = useState<Subdivision[]>([]);
+    const [loadingDivisions, setLoadingDivisions] = useState(false);
     const [editForm, setEditForm] = useState({
         email: '',
-        division: '',
-        subdivision: '',
+        user_division_id: null as number | null,
+        user_subdivision_id: null as number | null,
     });
 
-    // Состояния для редактирования ролей
     const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([]);
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
     const [loadingRoles, setLoadingRoles] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
+    // Загрузка данных пользователя
     useEffect(() => {
         if (userId) {
             usersApi.getUser(userId)
@@ -114,8 +129,8 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                     setUserData(res.data);
                     setEditForm({
                         email: res.data.email || '',
-                        division: res.data.division_info?.name || '',
-                        subdivision: res.data.division_info?.subdivision?.name || '',
+                        user_division_id: res.data.division_info?.id ? Number(res.data.division_info.id) : null,
+                        user_subdivision_id: res.data.division_info?.subdivision?.id ? Number(res.data.division_info.subdivision.id) : null,
                     });
                 })
                 .catch(err => console.error('Error loading user:', err))
@@ -124,20 +139,19 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
             setUserData(propUserData);
             setEditForm({
                 email: propUserData.email || '',
-                division: propUserData.division_info?.name || '',
-                subdivision: propUserData.division_info?.subdivision?.name || '',
+                user_division_id: propUserData.division_info?.id ? Number(propUserData.division_info.id) : null,
+                user_subdivision_id: propUserData.division_info?.subdivision?.id ? Number(propUserData.division_info.subdivision.id) : null,
             });
             setLoading(false);
         }
     }, [userId, propUserData]);
 
-    // Загрузка доступных ролей при входе в режим редактирования (только для другого пользователя)
+    // Загрузка доступных ролей
     useEffect(() => {
         if (isEditing && userId) {
             setLoadingRoles(true);
             usersApi.getAvailableRoles()
                 .then(res => {
-                    // Сортируем роли согласно порядку из конфига
                     const sorted = [...res.data].sort((a, b) => {
                         const indexA = ROLE_ORDER.indexOf(a.role_id);
                         const indexB = ROLE_ORDER.indexOf(b.role_id);
@@ -155,7 +169,29 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
         }
     }, [isEditing, userId]);
 
-    // Инициализация выбранных ролей из userData.roles при загрузке availableRoles
+    // Загрузка подразделений при входе в режим редактирования
+    useEffect(() => {
+        if (isEditing && userId) {
+            setLoadingDivisions(true);
+            divisionsApi.getDivisions()
+                .then(data => setDivisions(data))
+                .catch(err => console.error('Ошибка загрузки подразделений:', err))
+                .finally(() => setLoadingDivisions(false));
+        }
+    }, [isEditing, userId]);
+
+    // Загрузка отделений при выборе подразделения
+    useEffect(() => {
+        if (editForm.user_division_id) {
+            divisionsApi.getSubdivisions(editForm.user_division_id)
+                .then(data => setSubdivisions(data))
+                .catch(err => console.error('Ошибка загрузки отделений:', err));
+        } else {
+            setSubdivisions([]);
+        }
+    }, [editForm.user_division_id]);
+
+    // Инициализация выбранных ролей из userData.roles
     useEffect(() => {
         if (availableRoles.length > 0 && userData?.roles) {
             const roleIds = availableRoles
@@ -167,13 +203,16 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
 
     const handleSaveChanges = async () => {
         try {
-            const updateData: any = { email: editForm.email };
+            const updateData: any = {
+                email: editForm.email,
+                user_division_id: editForm.user_division_id,
+                user_subdivision_id: editForm.user_subdivision_id,
+            };
             if (selectedRoleIds.length > 0) {
                 updateData.groups = selectedRoleIds;
             }
             if (userId) {
                 await usersApi.updateUser(userId, updateData);
-                // Перезагружаем данные пользователя
                 const res = await usersApi.getUser(userId);
                 setUserData(res.data);
             } else if (userData) {
@@ -305,17 +344,14 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
         }
     };
 
-    // Фильтруем модули: оставляем только основные
     const filteredModules = (userData?.permissions?.modules || [])
         .filter((module: string) => MAIN_MODULES.includes(module));
 
-    // Получить список моделей для выбранного модуля
     const getModelsForModule = (moduleKey: string): string[] => {
         const sections = MODULE_SECTIONS[moduleKey] || [];
         return sections.flatMap(section => section.models);
     };
 
-    // Фильтровать модели по выбранному модулю
     const getFilteredModels = () => {
         if (!selectedModule || !userData?.permissions?.models) {
             return userData?.permissions?.models || {};
@@ -330,7 +366,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
         return filtered;
     };
 
-    // Группировка моделей по модулям для отображения всех разрешений
     const groupedByModule = useMemo(() => {
         if (!userData?.permissions?.models) return {};
         const models = userData.permissions.models;
@@ -353,8 +388,21 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
     };
 
     const handleRoleChange = (roleId: number) => {
-        // Если эта роль уже выбрана – снимаем выбор, иначе выбираем её одну
         setSelectedRoleIds(prev => prev.includes(roleId) ? [] : [roleId]);
+    };
+
+    const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value ? Number(e.target.value) : null;
+        setEditForm(prev => ({
+            ...prev,
+            user_division_id: value,
+            user_subdivision_id: null,
+        }));
+    };
+
+    const handleSubdivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value ? Number(e.target.value) : null;
+        setEditForm(prev => ({ ...prev, user_subdivision_id: value }));
     };
 
     if (loading) return <div className="loading">Загрузка профиля...</div>;
@@ -370,8 +418,24 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                 username={userData.username}
                 rolesDisplay={rolesDisplay}
                 onEdit={() => setIsEditing(true)}
+                onDelete={onDelete}
+                onPasswordChange={() => setIsPasswordModalOpen(true)}
                 showEditButton={!!onEdit && !isEditing}
+                showDeleteButton={!!onDelete && !isEditing}
+                showPasswordButton={!!userId}  
             />
+
+            {isPasswordModalOpen && (
+                <ChangePasswordModal
+                    userId={userId}  // если userId есть, то это администратор смотрит другого
+                    username={userData.username}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onSuccess={() => {
+                        // Можно показать уведомление (например, toast)
+                        console.log('Пароль успешно изменён');
+                    }}
+                />
+            )}
 
             <div className="profile-grid-container">
                 <div className="profile-grid">
@@ -387,8 +451,8 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                                                 setIsEditing(false);
                                                 setEditForm({
                                                     email: userData?.email || '',
-                                                    division: userData?.division_info?.name || '',
-                                                    subdivision: userData?.division_info?.subdivision?.name || '',
+                                                    user_division_id: userData?.division_info?.id ? Number(userData.division_info.id) : null,
+                                                    user_subdivision_id: userData?.division_info?.subdivision?.id ? Number(userData.division_info.subdivision.id) : null,
                                                 });
                                             }}
                                             className="form-cancel-btn"
@@ -413,7 +477,23 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                                             </label>
                                         </td>
                                         <td className="info-table-value">
-                                            <div className="form-value">{userData?.division_info?.name || 'Не назначено'}</div>
+                                            {isEditing && userId ? (
+                                                <select
+                                                    value={editForm.user_division_id || ''}
+                                                    onChange={handleDivisionChange}
+                                                    disabled={loadingDivisions}
+                                                    className="form-select-user"
+                                                >
+                                                    <option value="">Не выбрано</option>
+                                                    {divisions.map(div => (
+                                                        <option key={div.id} value={div.id}>{div.name}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <div className="form-value">
+                                                    {userData?.division_info?.name || 'Не назначено'}
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                     <tr className="info-table-row">
@@ -424,7 +504,23 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                                             </label>
                                         </td>
                                         <td className="info-table-value">
-                                            <div className="form-value">{userData?.division_info?.subdivision?.name || 'Не назначено'}</div>
+                                            {isEditing && userId ? (
+                                                <select
+                                                    value={editForm.user_subdivision_id || ''}
+                                                    onChange={handleSubdivisionChange}
+                                                    disabled={!editForm.user_division_id || subdivisions.length === 0}
+                                                    className="form-select-user"
+                                                >
+                                                    <option value="">Не выбрано</option>
+                                                    {subdivisions.map(sub => (
+                                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <div className="form-value">
+                                                    {userData?.division_info?.subdivision?.name || 'Не назначено'}
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                     <tr className="info-table-row">
@@ -474,7 +570,7 @@ export function ProfileTab({ userData: propUserData, userId, onEdit }: ProfileTa
                         )}
                     </div>
 
-                    {/* Средняя колонка: модули (без редактора ролей) */}
+                    {/* Средняя колонка: модули */}
                     <div className="profile-middle-column">
                         <PermissionsModules
                             modules={filteredModules}

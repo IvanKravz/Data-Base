@@ -216,7 +216,8 @@ ROLE_PERMISSIONS = {
     'exploitation_chief': {
     'name': 'Начальник подразделения эксплуатации',
     'models': {
-        'Division': ['view'], 
+        'Division': ['view'],
+        'Subdivision': ['view'],  
         'Employee': ['view'],
         'Equipment': ['view'],
         'Facility': ['view'],
@@ -243,6 +244,7 @@ ROLE_PERMISSIONS = {
         'name': 'Сотрудник подразделения эксплуатации',
         'models': {
             'Division': ['view'],
+            'Subdivision': ['view'],
             'Employee': ['view'],
             'Equipment': ['view', 'change'],
             'Facility': ['view'],
