@@ -37,7 +37,7 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
         comments: '', 
         startDate: '', 
         endDate: '',
-        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Уникальный временный ID
+        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         is_completed: false, 
       }
     ];
@@ -73,38 +73,36 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
   return (
     <div className="task-steps-container">
       <div className="task-steps-header">
-        <h3 className="task-steps-title">
-          Этапы выполнения задачи
-        </h3>
+        <h3 className="task-steps-title">Этапы выполнения задачи</h3>
       </div>
 
       <div className="task-steps-list">
         {steps.map((step, index) => (
           <div 
-            key={step.id || `step-${index}`} // Используем ID этапа или индекс как ключ
+            key={step.id || `step-${index}`}
             className={`task-step-card ${newStepIndex === index ? 'task-step-card-new' : ''}`}
           >
             <button
               type="button"
               onClick={() => handleRemoveStep(index)}
               className="task-step-delete-btn"
+              aria-label={`Удалить этап ${index + 1}`}
             >
               <Trash2 className="h-4 w-4" />
             </button>
 
             <div className="task-step-header">
-              <div className="task-step-number">
-                {index + 1}
-              </div>
-              <h3 className="task-step-title">Этап {index + 1}</h3>
+              <div className="task-step-number">{index + 1}</div>
+              <h4 className="task-step-title">Этап {index + 1}</h4>
             </div>
 
             <div className="task-step-content">
               <div className="task-step-field">
-                <label className="task-form-label">
+                <label className="task-form-label" htmlFor={`step-name-${index}`}>
                   Название этапа
                 </label>
                 <input
+                  id={`step-name-${index}`}
                   type="text"
                   required
                   value={step.name}
@@ -115,25 +113,28 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
               </div>
 
               <div className="task-step-field">
-                <label className="task-form-label">
+                <label className="task-form-label" htmlFor={`step-comments-${index}`}>
                   Комментарий
                 </label>
                 <textarea
+                  id={`step-comments-${index}`}
                   value={step.comments}
                   onChange={(e) => handleStepChange(index, 'comments', e.target.value)}
                   className="task-form-input"
                   placeholder="Добавьте комментарий к этапу"
+                  rows={3}
                 />
               </div>
 
               <div className="task-step-dates-grid">
                 <div className="task-step-date-field">
-                  <label className="task-form-label-date">
+                  <label className="task-form-label" htmlFor={`step-start-${index}`}>
                     Дата начала
                   </label>
                   <div className="task-step-date-input-container">
                     <Calendar className="task-step-date-icon" />
                     <input
+                      id={`step-start-${index}`}
                       type="date"
                       required
                       value={formatDateForInput(step.startDate)}
@@ -148,12 +149,13 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
                 </div>
                 
                 <div className="task-step-date-field">
-                  <label className="task-form-label-date">
+                  <label className="task-form-label" htmlFor={`step-end-${index}`}>
                     Дата окончания
                   </label>
                   <div className="task-step-date-input-container">
                     <Calendar className="task-step-date-icon" />
                     <input
+                      id={`step-end-${index}`}
                       type="date"
                       required
                       value={formatDateForInput(step.endDate)}

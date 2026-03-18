@@ -10,52 +10,37 @@ interface TaskCategorySelectorProps {
 
 export function TaskCategorySelector({ category, onChange }: TaskCategorySelectorProps) {
   const getCategoryStyle = (cat: TaskCategory) => {
-    const baseClasses = "task-category-btn transition-all duration-200 flex items-center gap-2 px-4 py-3 rounded-lg border-2 font-medium text-sm";
-    
-    const activeClasses = {
-      urgent: "bg-red-50 border-red-200 text-red-700 shadow-sm",
-      planned: "bg-blue-50 border-blue-200 text-blue-700 shadow-sm",
-      attention: "bg-amber-50 border-amber-200 text-amber-700 shadow-sm"
-    };
-
-    const inactiveClasses = {
-      urgent: "bg-white border-gray-200 text-gray-700 hover:bg-red-50 hover:border-red-100",
-      planned: "bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-100",
-      attention: "bg-white border-gray-200 text-gray-700 hover:bg-amber-50 hover:border-amber-100"
-    };
-
-    return category === cat 
-      ? `${baseClasses} ${activeClasses[cat]}`
-      : `${baseClasses} ${inactiveClasses[cat]}`;
+    const baseClasses = "task-category-btn";
+    const activeClass = {
+      urgent: 'urgent-active',
+      planned: 'planned-active',
+      attention: 'attention-active'
+    }[cat];
+    return category === cat ? `${baseClasses} ${activeClass}` : baseClasses;
   };
 
   const getIconColor = (cat: TaskCategory) => {
-    return category === cat 
-      ? {
-          urgent: "text-red-600",
-          planned: "text-blue-600",
-          attention: "text-amber-600"
-        }[cat]
-      : "text-gray-500";
+    return category === cat ? 'currentColor' : '#6b7280';
   };
 
   return (
-    <div className='modal-task-category'>
+    <div className="modal-task-category">
       <label className="task-form-label">Категория</label>
-      <div className="grid grid-cols-1 gap-2">
+      <div className="task-category-grid">
         {(Object.entries(taskCategories) as [TaskCategory, { label: string }][]).map(([value, { label }]) => (
           <button
             key={value}
             type="button"
-            onClick={() => onChange(value as TaskCategory)}
-            className={getCategoryStyle(value as TaskCategory)}
+            onClick={() => onChange(value)}
+            className={getCategoryStyle(value)}
+            aria-pressed={category === value}
           >
-            <span className={getIconColor(value as TaskCategory)}>
-              {value === 'urgent' && <AlertTriangle className="h-4 w-4" />}
-              {value === 'planned' && <Clock className="h-4 w-4" />}
-              {value === 'attention' && <AlertCircle className="h-4 w-4" />}
+            <span className="task-category-icon">
+              {value === 'urgent' && <AlertTriangle size={18} color={getIconColor(value)} />}
+              {value === 'planned' && <Clock size={18} color={getIconColor(value)} />}
+              {value === 'attention' && <AlertCircle size={18} color={getIconColor(value)} />}
             </span>
-            <span className="text-left">{label}</span>
+            <span>{label}</span>
           </button>
         ))}
       </div>

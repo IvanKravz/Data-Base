@@ -6,12 +6,11 @@ import { TaskCategorySelector } from './TaskCategorySelector';
 import { divisionsApi } from '../../../../api';
 import '../style.css';
 import { TaskCategory } from '../../../../types/taskCategories';
-import { TaskStep } from '../../../../types/tasks';
 
 interface TaskFormProps {
   initialTask?: Task | null;
   divisionId?: string;
-  restrictedDivisionId?: string | null; // Новый пропс
+  restrictedDivisionId?: string | null;
   restrictedSubdivisionId?: string | null;
   onSuccess: () => void;
   onError: (error: string) => void;
@@ -22,7 +21,7 @@ interface TaskFormProps {
 export function TaskForm({
   initialTask,
   divisionId,
-  restrictedDivisionId, // Принимаем новый пропс
+  restrictedDivisionId,
   restrictedSubdivisionId,
   onSuccess,
   onError,
@@ -46,17 +45,12 @@ export function TaskForm({
   );
 
   const [divisions, setDivisions] = useState<any[]>([]);
-
-  // Инициализируем selectedDivisionId с учетом restrictedDivisionId
   const [selectedDivisionId, setSelectedDivisionId] = useState(
     initialTask?.division?.id || restrictedDivisionId || divisionId || ''
   );
-
-  // Инициализируем selectedSubdivisionId с учетом restrictedSubdivisionId
   const [selectedSubdivisionId, setSelectedSubdivisionId] = useState<string | null>(
     initialTask?.subdivision?.id || restrictedSubdivisionId || null
   );
-
   const [currentSubdivisions, setCurrentSubdivisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +64,6 @@ export function TaskForm({
       try {
         const divisionsData = await divisionsApi.getDivisions(token);
 
-        // Если есть ограничение по подразделению, фильтруем список только до этого подразделения
         let filteredDivisions = divisionsData;
         if (restrictedDivisionId) {
           filteredDivisions = divisionsData.filter(
@@ -84,7 +77,6 @@ export function TaskForm({
         if (divisionToLoad) {
           const division = filteredDivisions.find(d => d.id == divisionToLoad);
           if (division?.subdivisions) {
-            // Если есть ограничение по отделению, фильтруем список только до этого отделения
             let filteredSubdivisions = division.subdivisions;
             if (restrictedSubdivisionId) {
               filteredSubdivisions = division.subdivisions.filter(
@@ -93,7 +85,6 @@ export function TaskForm({
             }
             setCurrentSubdivisions(filteredSubdivisions);
 
-            // Автоматически выбираем ограниченное отделение, если оно доступно
             if (restrictedSubdivisionId && !initialTask) {
               const restrictedSubdivisionExists = division.subdivisions.some(
                 (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
@@ -114,16 +105,12 @@ export function TaskForm({
   }, [initialTask, divisionId, restrictedDivisionId, restrictedSubdivisionId, onError]);
 
   const handleDivisionChange = (divisionId: string) => {
-    // Если есть ограничение по подразделению, не позволяем менять его
-    if (restrictedDivisionId) {
-      return;
-    }
+    if (restrictedDivisionId) return;
 
     setSelectedDivisionId(divisionId);
     const division = divisions.find(d => d.id == divisionId);
 
     if (division?.subdivisions) {
-      // Если есть ограничение по отделению, фильтруем список только до этого отделения
       let filteredSubdivisions = division.subdivisions;
       if (restrictedSubdivisionId) {
         filteredSubdivisions = division.subdivisions.filter(
@@ -132,7 +119,6 @@ export function TaskForm({
       }
       setCurrentSubdivisions(filteredSubdivisions);
 
-      // Автоматически выбираем ограниченное отделение, если оно доступно
       if (restrictedSubdivisionId) {
         const restrictedSubdivisionExists = division.subdivisions.some(
           (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
@@ -146,14 +132,11 @@ export function TaskForm({
       setCurrentSubdivisions([]);
     }
 
-    // Сбрасываем выбор отделения только если нет ограничения
     if (!restrictedSubdivisionId && initialTask?.division?.id !== divisionId) {
       setSelectedSubdivisionId(null);
     }
   };
 
-  // Остальной код остается без изменений...
-  // Функция для проверки, является ли ID временным
   const isTempId = (id: string | undefined): boolean => {
     return !id || id.toString().startsWith('temp-');
   };
@@ -166,7 +149,6 @@ export function TaskForm({
       return;
     }
 
-    // Валидация этапов
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       if (!step.name.trim()) {
@@ -214,17 +196,16 @@ export function TaskForm({
               comments: step.comments || '',
               start_date: step.startDate,
               end_date: step.endDate,
-              is_completed: step.is_completed || false   // передаём текущее значение
+              is_completed: step.is_completed || false
             };
             if (step.id && !isTempId(step.id) && !isNaN(Number(step.id))) {
-              stepData.id = step.id; // строка
+              stepData.id = step.id;
             }
             return stepData;
           })
         };
         await onUpdate(updatedTaskData);
       } else if (onCreate) {
-        // Для создания передаем данные в родительский компонент
         await onCreate(taskData);
       }
 
@@ -241,9 +222,10 @@ export function TaskForm({
     <form onSubmit={handleSubmit} className="task-form">
       <div className="task-form-section">
         <div className="task-form-basicinfo">
-          <div>
-            <label className="task-form-label">Название задачи</label>
+          <div className="task-form-field">
+            <label htmlFor="task-title" className="task-form-label">Название задачи</label>
             <input
+              id="task-title"
               type="text"
               required
               value={title}
@@ -259,7 +241,7 @@ export function TaskForm({
             onChange={handleDivisionChange}
             isLoading={isLoading}
             onDivisionChange={handleDivisionChange}
-            restrictedDivisionId={restrictedDivisionId} // Передаем в DivisionSelector
+            restrictedDivisionId={restrictedDivisionId}
           />
 
           <SubdivisionSelector
@@ -272,18 +254,15 @@ export function TaskForm({
           />
         </div>
 
-        <TaskCategorySelector
-          category={category}
-          onChange={setCategory}
-        />
+        <TaskCategorySelector category={category} onChange={setCategory} />
       </div>
+
       <div className="task-form-section">
-        <label className="task-form-label">
+        <label className="task-privacy-checkbox">
           <input
             type="checkbox"
             checked={isPrivate}
             onChange={(e) => setIsPrivate(e.target.checked)}
-            className="mr-2"
           />
           Приватная задача (видна только вам)
         </label>

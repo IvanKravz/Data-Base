@@ -7,7 +7,7 @@ import { Task } from '../../../types/tasks';
 interface CreateTaskModalProps {
   initialTask?: Task | null;
   divisionId?: string;
-  restrictedDivisionId?: string | null; // Новый пропс
+  restrictedDivisionId?: string | null;
   restrictedSubdivisionId?: string | null;
   onClose: () => void;
   onCreate?: (task: Omit<Task, 'id'>) => void;
@@ -17,7 +17,7 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({
   initialTask,
   divisionId,
-  restrictedDivisionId, // Принимаем новый пропс
+  restrictedDivisionId,
   restrictedSubdivisionId,
   onClose,
   onCreate,
@@ -30,7 +30,7 @@ export function CreateTaskModal({
     <div className="task-modal">
       <div className="task-modal-content">
         <div className="task-modal-header">
-          <div>
+          <div className="task-modal-header-left">
             <h2 className="task-modal-title">
               {isEditMode ? 'Редактирование задачи' : 'Новая задача'}
             </h2>
@@ -40,22 +40,20 @@ export function CreateTaskModal({
                 : 'Создайте новую задачу и добавьте этапы её выполнения'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="task-modal-close-btn"
-          >
-            <X className="h-6 w-6" />
+          <button onClick={onClose} className="task-modal-close-btn" aria-label="Закрыть">
+            <X className="task-modal-close-icon" />
           </button>
         </div>
 
         {error && (
-          <div className="task-error-alert">
-            <div className="flex-1">{error}</div>
+          <div className="task-error-alert" role="alert">
+            <div className="task-error-alert-content">{error}</div>
             <button
               onClick={() => setError(null)}
               className="task-error-alert-close"
+              aria-label="Закрыть уведомление"
             >
-              <X className="h-4 w-4" />
+              <X className="task-error-alert-close-icon" />
             </button>
           </div>
         )}
@@ -64,7 +62,7 @@ export function CreateTaskModal({
           <TaskForm
             initialTask={initialTask}
             divisionId={divisionId}
-            restrictedDivisionId={restrictedDivisionId} // Передаем в TaskForm
+            restrictedDivisionId={restrictedDivisionId}
             restrictedSubdivisionId={restrictedSubdivisionId}
             onSuccess={onClose}
             onError={setError}

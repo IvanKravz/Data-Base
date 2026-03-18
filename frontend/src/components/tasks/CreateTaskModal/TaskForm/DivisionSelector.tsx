@@ -12,7 +12,7 @@ interface DivisionSelectorProps {
   onChange: (divisionId: string) => void;
   isLoading: boolean;
   onDivisionChange: (divisionId: string) => void;
-  restrictedDivisionId?: string | null; // Новый пропс
+  restrictedDivisionId?: string | null;
 }
 
 export function DivisionSelector({
@@ -21,16 +21,13 @@ export function DivisionSelector({
   onChange,
   isLoading,
   onDivisionChange,
-  restrictedDivisionId // Принимаем новый пропс
+  restrictedDivisionId
 }: DivisionSelectorProps) {
-  // Если есть ограничение по подразделению, показываем специальное сообщение вместо выпадающего списка
   if (restrictedDivisionId) {
     const restrictedDivision = divisions.find(div => div.id === restrictedDivisionId);
     return (
       <div className="task-form-field">
-        <label className="task-form-label">
-          Подразделение
-        </label>
+        <label className="task-form-label">Подразделение</label>
         <div className="restricted-division-info">
           <span className="restricted-division-text">
             {restrictedDivision?.name || 'Ваше подразделение'}
@@ -39,11 +36,7 @@ export function DivisionSelector({
             (доступно только ваше подразделение)
           </span>
         </div>
-        <input
-          type="hidden"
-          value={restrictedDivisionId}
-          onChange={() => {}} // Пустая функция для подавления предупреждений
-        />
+        <input type="hidden" value={restrictedDivisionId} onChange={() => {}} />
       </div>
     );
   }

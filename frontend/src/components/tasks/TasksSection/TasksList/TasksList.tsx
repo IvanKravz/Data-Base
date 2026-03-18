@@ -72,7 +72,7 @@ export function TasksList({
       // Добавляем задачу в соответствующее отделение
       acc[divisionId].subdivisions[subdivisionId].tasks.push(task);
     }
-    
+
     return acc;
   }, {} as GroupedTasks);
 
@@ -120,7 +120,7 @@ export function TasksList({
     <div className="tasks-list">
       {Object.keys(groupedTasks).map(divisionId => {
         const divisionGroup = groupedTasks[divisionId];
-        const divisionTasksCount = divisionGroup.noSubdivisionTasks.length + 
+        const divisionTasksCount = divisionGroup.noSubdivisionTasks.length +
           Object.values(divisionGroup.subdivisions)
             .reduce((total, sub) => total + sub.tasks.length, 0);
         const isDivisionExpanded = expandedDivisions[divisionId] === undefined ? true : expandedDivisions[divisionId];
@@ -134,7 +134,7 @@ export function TasksList({
           <div key={divisionId} className="tasks-division-group">
             {/* Показываем заголовок подразделения только если подразделений больше одного */}
             {showDivisionHeader && (
-              <div 
+              <div
                 className="tasks-division-header"
                 onClick={() => toggleDivision(divisionId)}
               >
@@ -158,7 +158,7 @@ export function TasksList({
                 {/* Задачи без отделения - показываем сверху */}
                 {hasNoSubdivisionTasks && (
                   <div className="tasks-no-subdivision-group">
-                    <div 
+                    <div
                       className="tasks-no-subdivision-header"
                       onClick={(e) => toggleNoSubdivision(divisionId, e)}
                     >
@@ -178,13 +178,14 @@ export function TasksList({
                     </div>
                     {isNoSubdivisionExpanded && (
                       <div className="tasks-no-subdivision-list">
-                        {divisionGroup.noSubdivisionTasks.map((task) => (
+                        {divisionGroup.noSubdivisionTasks.map((task, index) => (
                           <TaskItem
                             key={task.id}
                             task={task}
                             onEditTask={onEditTask}
                             onDeleteTask={onDeleteTask}
                             onToggleStep={onToggleStep}
+                            index={index + 1}
                           />
                         ))}
                       </div>
@@ -196,10 +197,10 @@ export function TasksList({
                 {Object.keys(divisionGroup.subdivisions).map(subdivisionId => {
                   const subdivisionGroup = divisionGroup.subdivisions[subdivisionId];
                   const isSubdivisionExpanded = expandedSubdivisions[divisionId]?.[subdivisionId] === undefined ? true : expandedSubdivisions[divisionId]?.[subdivisionId];
-                  
+
                   return (
                     <div key={subdivisionId} className="tasks-subdivision-group">
-                      <div 
+                      <div
                         className="tasks-subdivision-header"
                         onClick={(e) => toggleSubdivision(divisionId, subdivisionId, e)}
                       >
@@ -219,13 +220,14 @@ export function TasksList({
                       </div>
                       {isSubdivisionExpanded && (
                         <div className="tasks-subdivision-list">
-                          {subdivisionGroup.tasks.map((task) => (
+                          {subdivisionGroup.tasks.map((task, index) => (
                             <TaskItem
                               key={task.id}
                               task={task}
                               onEditTask={onEditTask}
                               onDeleteTask={onDeleteTask}
                               onToggleStep={onToggleStep}
+                              index={index + 1}
                             />
                           ))}
                         </div>
