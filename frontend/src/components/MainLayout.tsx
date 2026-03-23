@@ -1,6 +1,6 @@
 // MainLayout.tsx
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from './Layout';
 import { MainContent } from './MainContent';
 import { DivisionDetails } from './divisions/DivisionDetails/DivisionDetails';
@@ -35,9 +35,10 @@ import {
   DivisionsRoute,
   StorageRoute,
   MapRoute,
-  UsersRoute  // импортируем новый маршрут
+  UsersRoute
 } from './ProtectedRoute';
 import { UserManagementPage } from './UserMenu/UserManagementPage/UserManagementPage';
+import { useAppPermissions } from '../api/utils/AppPermissionsContext';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<string>('divisions');
@@ -49,8 +50,19 @@ export function MainLayout() {
     tasks: 'list'
   });
   const navigate = useNavigate();
+  const location = useLocation();
+  const {
+    canAccessDivisions,
+    canAccessPersonnel,
+    canAccessEquipment,
+    canAccessFacilities,
+    canAccessTasks,
+    canAccessNetworks,
+    canAccessMap,
+    canAccessStorage
+  } = useAppPermissions();
 
-  // Автоматический редирект для начальника эксплуатации и сотрудника эксплуатации
+  // Автоматический редирект для эксплуатационников на их подразделение
   useEffect(() => {
     const user = getCurrentUser();
     const divisionId = user?.division_info?.id;
@@ -61,6 +73,34 @@ export function MainLayout() {
     }
   }, [navigate]);
 
+  // Компонент для корневого маршрута: если есть доступ к подразделениям — показываем список, иначе редирект на первый доступный модуль
+  const RootRedirect = () => {
+    const hasDivisionAccess = canAccessDivisions();
+
+    if (hasDivisionAccess) {
+      return (
+        <MainContent
+          activeTab={activeTab}
+          viewTypes={viewTypes}
+          onSetActiveTab={setActiveTab}
+          onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
+          onSelectDivision={() => {}}
+        />
+      );
+    }
+
+    // Нет доступа к подразделениям — редирект на первый доступный модуль
+    if (canAccessPersonnel()) return <Navigate to="/personnel" replace />;
+    if (canAccessEquipment()) return <Navigate to="/equipment" replace />;
+    if (canAccessFacilities()) return <Navigate to="/facilities" replace />;
+    if (canAccessTasks()) return <Navigate to="/tasks" replace />;
+    if (canAccessNetworks()) return <Navigate to="/networks" replace />;
+    if (canAccessMap()) return <Navigate to="/map" replace />;
+    if (canAccessStorage()) return <Navigate to="/storage" replace />;
+
+    return <Navigate to="/access-denied" replace />;
+  };
+
   return (
     <Layout
       activeTab={activeTab}
@@ -68,18 +108,11 @@ export function MainLayout() {
       userMenu={<UserMenu />}
     >
       <Routes>
-        {/* Main Routes */}
-        <Route path="/" element={
-          <DivisionsRoute>
-            <MainContent
-              activeTab={activeTab}
-              viewTypes={viewTypes}
-              onSetActiveTab={setActiveTab}
-              onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
-              onSelectDivision={() => { }}
-            />
-          </DivisionsRoute>
-        } />
+        {/* Корневой маршрут: список подразделений или редирект */}
+        <Route path="/" element={<RootRedirect />} />
+
+        {/* Редирект со старого пути /divisions на корень */}
+        <Route path="/divisions" element={<Navigate to="/" replace />} />
 
         {/* Global Routes (без привязки к подразделению) */}
         <Route path="/personnel" element={

@@ -32,6 +32,11 @@ export const tasksApi = {
     return data;
   },
 
+  getAvailableDivisions: async () => {
+    const { data } = await api.get('/tasks/available-divisions/');
+    return data; // { divisions: [], subdivisions: [] }
+  },
+
   getIncompleteTasksCount: async (options: { subdivisionId?: string; divisionId?: string } = {}) => {
     const params: Record<string, string> = {};
     if (options.subdivisionId) {

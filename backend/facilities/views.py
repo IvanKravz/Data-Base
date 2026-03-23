@@ -11,8 +11,9 @@ from .mixins import DivisionAccessMixin, BaseViewSetMixin
 from users.permissions import RoleBasedPermission 
 from rest_framework.exceptions import PermissionDenied
 from users.logging import log_facility_create, log_facility_update, log_facility_delete, log_facility_view
+from users.mixins import RoleBasedFilterMixin
 
-class DivisionViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
+class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
         'subdivisions',
         'facilities'
@@ -23,29 +24,7 @@ class DivisionViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        
-        # Админы, суперпользователи и руководители видят все
-        if (user.is_superuser or 
-            (hasattr(user, 'has_role') and user.has_role('admin')) or 
-            (hasattr(user, 'has_role') and user.has_role('leader')) or 
-            (hasattr(user, 'has_role') and user.has_role('deputy_director'))):
-            return super().get_queryset()
-            
-        # Роли эксплуатации видят только свое подразделение
-        if ((hasattr(user, 'has_role') and user.has_role('exploitation_chief')) or
-            (hasattr(user, 'has_role') and user.has_role('exploitation_employee'))):
-            user_division = getattr(user, 'division', None)
-            if user_division:
-                return Division.objects.filter(id=user_division.id)
-            return Division.objects.none()
-            
-        # Обычные пользователи видят только свое подразделение
-        user_division = getattr(user, 'division', None)
-        if user_division:
-            return Division.objects.filter(id=user_division.id)
-            
-        return Division.objects.none()
+        return super().get_queryset()
 
     @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
@@ -122,19 +101,8 @@ class SubdivisionViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelVi
     def get_queryset(self):
         queryset = super().get_queryset()
         division_id = self.request.query_params.get('division')
-        
-        # Дополнительная фильтрация по division из query params
         if division_id:
-            user = self.request.user
-            
-            # Проверяем, имеет ли пользователь доступ к запрашиваемому подразделению
-            if not (user.is_superuser or (hasattr(user, 'has_role') and user.has_role('admin'))):
-                user_division = getattr(user, 'division', None)
-                if user_division and int(division_id) != user_division.id:
-                    raise PermissionDenied('Нет доступа к запрашиваемому подразделению')
-                    
             queryset = queryset.filter(division_id=division_id)
-            
         return queryset
     
     def create(self, request, *args, **kwargs):
@@ -168,28 +136,19 @@ class SubdivisionViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelVi
         return response
 
 
-class FacilityViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
+class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Facility.objects.all()
     serializer_class = FacilitySerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        # Сначала получаем queryset из DivisionAccessMixin
         queryset = super().get_queryset()
-        
-        # ЯВНАЯ ФИЛЬТРАЦИЯ для ролей эксплуатации - ВАЖНО!
-        user = self.request.user
-        if ((hasattr(user, 'has_role') and 
-             (user.has_role('exploitation_chief') or user.has_role('exploitation_employee')))):
-            user_division = getattr(user, 'division', None)
-            if user_division:
-                queryset = queryset.filter(division=user_division)
-        
-        # Дополнительные фильтры
-        subdivision = self.request.query_params.get('subdivision', None)
-        facility_type = self.request.query_params.get('type', None)
-        facility_class = self.request.query_params.get('class', None)
-        search = self.request.query_params.get('search', None)
+
+        # Фильтры по параметрам запроса
+        subdivision = self.request.query_params.get('subdivision')
+        facility_type = self.request.query_params.get('type')
+        facility_class = self.request.query_params.get('class')
+        search = self.request.query_params.get('search')
         is_closed = self.request.query_params.get('is_closed')
 
         if subdivision:
@@ -206,7 +165,6 @@ class FacilityViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewS
                 Q(house_number__icontains=search) |
                 Q(address__icontains=search)
             )
-
         if is_closed in ['true', 'false']:
             queryset = queryset.filter(is_closed=is_closed == 'true')
 
@@ -358,42 +316,25 @@ class FacilityViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewS
         return changed
 
 
-class CommunicationPostViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
+class CommunicationPostViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = CommunicationPost.objects.all()
     serializer_class = CommunicationPostSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
-        
-        # ЯВНАЯ ФИЛЬТРАЦИЯ для ролей эксплуатации
-        user = self.request.user
-        if ((hasattr(user, 'has_role') and 
-             (user.has_role('exploitation_chief') or user.has_role('exploitation_employee')))):
-            user_division = getattr(user, 'division', None)
-            if user_division:
-                queryset = queryset.filter(division=user_division)
-        
-        # Дополнительные фильтры
         division = self.request.query_params.get('division')
         facility_id = self.request.query_params.get('facility')
 
         if division:
             queryset = queryset.filter(division_id=division)
-        
         if facility_id:
             try:
                 facility = Facility.objects.get(id=facility_id)
-                # Проверяем доступ к facility
-                user = self.request.user
-                if not (user.is_superuser or (hasattr(user, 'has_role') and user.has_role('admin'))):
-                    user_division = getattr(user, 'division', None)
-                    if user_division and facility.division != user_division:
-                        raise PermissionDenied('Нет доступа к этому объекту')
+                # Проверка доступа к facility не нужна, т.к. миксин уже отфильтрует
                 queryset = queryset.filter(division=facility.division)
             except Facility.DoesNotExist:
                 pass
-        
         return queryset
 
     def get_object(self):

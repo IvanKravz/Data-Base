@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import CommunicationNetwork, VLAN, NetworkDirection, NetworkInterface, IPAddress, IPRange, NetworkMembership, VLANConfiguration, RoutingTable, ACL
+from users.mixins import RoleBasedFilterMixin
 from .serializers import (
     CommunicationNetworkSerializer,
     NetworkDirectionBulkCreateSerializer,
@@ -24,7 +25,7 @@ from users.logging.networks import (
 )
 
 
-class CommunicationNetworkViewSet(viewsets.ModelViewSet):
+class CommunicationNetworkViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = CommunicationNetwork.objects.all().prefetch_related(
         'memberships__division',

@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from django_filters.rest_framework import DjangoFilterBackend
 from django.apps import apps
+from users.mixins import RoleBasedFilterMixin
 
 from users.permissions import RoleBasedPermission
 from users.logging.equipment import (
@@ -123,18 +124,13 @@ class InterestOrganViewSet(viewsets.ModelViewSet):
         return response
 
 
-class EquipmentViewSet(viewsets.ModelViewSet):
+class EquipmentViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     queryset = Equipment.objects.select_related(
         'division', 'subdivision', 'facility', 'assigned_to', 'category'
     ).prefetch_related(
-        'product_structures', 
-        'net_interfaces',
-        'net_interfaces__ip_addresses',
-        'vlans',
-        'routing_table',
-        'acls',
-        'category',
-        'networkmembership_set__network', 
+        'product_structures', 'net_interfaces', 'net_interfaces__ip_addresses',
+        'vlans', 'routing_table', 'acls', 'category',
+        'networkmembership_set__network'
     ).annotate(
         network_interfaces_count=Count('net_interfaces'),
         ip_addresses_count=Count('net_interfaces__ip_addresses')
@@ -146,64 +142,32 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
+        # Получаем отфильтрованный по правам queryset из миксина
         queryset = super().get_queryset()
-        
-        # Для администраторов и суперпользователей показываем все оборудование
-        if self.request.user.is_staff or self.request.user.is_superuser:
-            return queryset
-        
-        # Используем RoleBasedPermission для проверки прав
-        permission_checker = RoleBasedPermission()
-        
-        # Проверяем, может ли пользователь видеть все подразделения
-        user_roles = permission_checker._get_user_roles(self.request.user)
-        can_see_all = any(
-            role in ['admin', 'leader', 'deputy_director'] or
-            ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
-            for role in user_roles
-        )
-        
-        # Если пользователь не может видеть все подразделения, фильтруем по его подразделению
-        if not can_see_all:
-            user_division = getattr(self.request.user, 'division', None)
-            if not user_division and hasattr(self.request.user, 'employee') and self.request.user.employee:
-                user_division = getattr(self.request.user.employee, 'division', None)
-                
-            if user_division:
-                queryset = queryset.filter(division=user_division)
-            else:
-                # Если у пользователя нет подразделения и он не может видеть все - пустой результат
-                queryset = queryset.none()
-        
-        # Остальная логика фильтрации (поиск, категории и т.д.)
-        division = self.request.query_params.get('division', None)
-        category = self.request.query_params.get('category', None)
-        status_filter = self.request.query_params.get('status', None)
-        type_filter = self.request.query_params.get('type', None)
-        search = self.request.query_params.get('search', None)
-        facility = self.request.query_params.get('facility', None)
-        is_network = self.request.query_params.get('is_network', None)
+
+        # Применяем фильтры по параметрам запроса (без фильтрации по подразделению пользователя)
+        division = self.request.query_params.get('division')
+        category = self.request.query_params.get('category')
+        status_filter = self.request.query_params.get('status')
+        type_filter = self.request.query_params.get('type')
+        search = self.request.query_params.get('search')
+        facility = self.request.query_params.get('facility')
+        is_network = self.request.query_params.get('is_network')
 
         if division:
             queryset = queryset.filter(division=division)
-
         if category:
             queryset = queryset.filter(category__value=category)
-
         if status_filter:
             queryset = queryset.filter(status=status_filter)
-
         if type_filter == 'open':
             queryset = queryset.filter(is_closed=False)
         elif type_filter == 'closed':
             queryset = queryset.filter(is_closed=True)
-
         if facility:
             queryset = queryset.filter(facility=facility)
-
         if is_network:
             queryset = queryset.filter(is_network=is_network.lower() == 'true')
-
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |

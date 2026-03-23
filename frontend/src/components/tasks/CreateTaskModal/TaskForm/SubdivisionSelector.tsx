@@ -12,7 +12,6 @@ interface SubdivisionSelectorProps {
   onChange: (subdivisionId: string | null) => void;
   isLoading: boolean;
   hasDivision: boolean;
-  restrictedSubdivisionId?: string | null;
 }
 
 export function SubdivisionSelector({
@@ -21,32 +20,26 @@ export function SubdivisionSelector({
   onChange,
   isLoading,
   hasDivision,
-  restrictedSubdivisionId
 }: SubdivisionSelectorProps) {
   if (!hasDivision || subdivisions.length === 0) return null;
 
-  if (restrictedSubdivisionId) {
-    const restrictedSubdivision = subdivisions.find(sub => sub.id === restrictedSubdivisionId);
+  // Если доступно только одно отделение – показываем disabled select
+  if (subdivisions.length === 1) {
+    const singleSubdivision = subdivisions[0];
     return (
       <div className="task-form-field">
         <label className="task-form-label">Отделение</label>
-        <div className="restricted-subdivision-info">
-          <span className="restricted-subdivision-text">
-            {restrictedSubdivision?.name || 'Ваше отделение'}
-          </span>
-          <span className="restricted-subdivision-note">
-            (доступно только ваше отделение)
-          </span>
-        </div>
-        <input type="hidden" value={restrictedSubdivisionId} onChange={() => {}} />
+        <select
+          id="subdivision-select"
+          value={singleSubdivision.id}
+          disabled
+          className="task-form-select task-form-select-disabled"
+        >
+          <option value={singleSubdivision.id}>{singleSubdivision.name}</option>
+        </select>
       </div>
     );
   }
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    onChange(value === '' ? null : value);
-  };
 
   return (
     <div className="task-form-field">
@@ -56,7 +49,7 @@ export function SubdivisionSelector({
       <select
         id="subdivision-select"
         value={selectedSubdivisionId || ''}
-        onChange={handleChange}
+        onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
         disabled={isLoading}
         className="task-form-select"
         aria-busy={isLoading}

@@ -98,6 +98,7 @@ const ROLE_ORDER = [
     'hr_section_1_1',
     'tech_section_1_1',
     'employee_section_1_2',
+    'tech_section_1_3',
     'exploitation_chief',
     'exploitation_employee'
 ];

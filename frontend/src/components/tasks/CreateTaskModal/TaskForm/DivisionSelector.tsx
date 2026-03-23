@@ -11,8 +11,6 @@ interface DivisionSelectorProps {
   selectedDivisionId: string;
   onChange: (divisionId: string) => void;
   isLoading: boolean;
-  onDivisionChange: (divisionId: string) => void;
-  restrictedDivisionId?: string | null;
 }
 
 export function DivisionSelector({
@@ -20,32 +18,24 @@ export function DivisionSelector({
   selectedDivisionId,
   onChange,
   isLoading,
-  onDivisionChange,
-  restrictedDivisionId
 }: DivisionSelectorProps) {
-  if (restrictedDivisionId) {
-    const restrictedDivision = divisions.find(div => div.id === restrictedDivisionId);
+  // Если доступно только одно подразделение – показываем disabled select
+  if (divisions.length === 1) {
+    const singleDivision = divisions[0];
     return (
       <div className="task-form-field">
         <label className="task-form-label">Подразделение</label>
-        <div className="restricted-division-info">
-          <span className="restricted-division-text">
-            {restrictedDivision?.name || 'Ваше подразделение'}
-          </span>
-          <span className="restricted-division-note">
-            (доступно только ваше подразделение)
-          </span>
-        </div>
-        <input type="hidden" value={restrictedDivisionId} onChange={() => {}} />
+        <select
+          id="division-select"
+          value={singleDivision.id}
+          disabled
+          className="task-form-select task-form-select-disabled"
+        >
+          <option value={singleDivision.id}>{singleDivision.name}</option>
+        </select>
       </div>
     );
   }
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    onChange(value);
-    onDivisionChange(value);
-  };
 
   return (
     <div className="task-form-field">
@@ -55,7 +45,7 @@ export function DivisionSelector({
       <select
         id="division-select"
         value={selectedDivisionId}
-        onChange={handleChange}
+        onChange={(e) => onChange(e.target.value)}
         disabled={isLoading}
         className="task-form-select"
         required

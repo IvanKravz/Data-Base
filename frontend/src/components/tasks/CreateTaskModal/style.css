@@ -1,679 +1,704 @@
 /* ===== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ===== */
 :root {
-    --color-primary: #2563eb;
-    --color-primary-hover: #1d4ed8;
-    --color-danger: #ef4444;
-    --color-danger-hover: #dc2626;
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
-    --color-gray-50: #f9fafb;
-    --color-gray-100: #f3f4f6;
-    --color-gray-200: #e5e7eb;
-    --color-gray-300: #d1d5db;
-    --color-gray-400: #9ca3af;
-    --color-gray-500: #6b7280;
-    --color-gray-600: #4b5563;
-    --color-gray-700: #374151;
-    --color-gray-800: #1f2937;
-    --color-gray-900: #dadbdb;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --border-radius: 1rem;
-    --border-radius-sm: 0.5rem;
-    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #dadbdb;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --border-radius: 1rem;
+  --border-radius-sm: 0.5rem;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО ===== */
+.task-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: taskModalFadeIn 0.2s ease-out;
+}
+
+@keyframes taskModalFadeIn {
+  from {
+    opacity: 0;
   }
-  
-  /* ===== МОДАЛЬНОЕ ОКНО ===== */
-  .task-modal {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
-    animation: taskModalFadeIn 0.2s ease-out;
+
+  to {
+    opacity: 1;
   }
-  
-  @keyframes taskModalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+}
+
+.task-modal-content {
+  background-color: white;
+  border-radius: var(--border-radius);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  animation: taskModalScaleIn 0.3s ease-out;
+}
+
+@keyframes taskModalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  
-  .task-modal-content {
-    background-color: white;
-    border-radius: var(--border-radius);
-    width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-xl);
-    animation: taskModalScaleIn 0.3s ease-out;
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
-  
-  @keyframes taskModalScaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+}
+
+/* ===== ЗАГОЛОВОК МОДАЛКИ ===== */
+.task-modal-header {
+  position: sticky;
+  top: 0;
+  background-color: #0b4f6cdd;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 1.1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.task-modal-header-left {
+  flex: 1;
+}
+
+.task-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  line-height: 1.2;
+  margin: 0 0 0.25rem 0;
+}
+
+.task-modal-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.task-modal-close-btn {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--border-radius-sm);
+  background: var(--color-gray-100);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-gray-600);
+  transition: var(--transition);
+}
+
+.task-modal-close-btn:hover {
+  background: var(--color-gray-200);
+  color: var(--color-gray-900);
+  transform: scale(1.05);
+}
+
+.task-modal-close-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ===== УВЕДОМЛЕНИЕ ОБ ОШИБКЕ ===== */
+.task-error-alert {
+  margin: 1.5rem 2rem 0;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: var(--border-radius-sm);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  animation: taskErrorSlideIn 0.2s ease-out;
+}
+
+@keyframes taskErrorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  
-  /* ===== ЗАГОЛОВОК МОДАЛКИ ===== */
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-error-alert-content {
+  color: #b91c1c;
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.task-error-alert-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #b91c1c;
+  transition: var(--transition);
+}
+
+.task-error-alert-close:hover {
+  background: #fee2e2;
+}
+
+.task-error-alert-close-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ===== КОНТЕЙНЕР ФОРМЫ ===== */
+.task-form-container {
+  padding: 1.2rem;
+  background: #e6e7e886;
+}
+
+/* ===== ФОРМА ===== */
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.task-form-section {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.task-form-basicinfo {
+  flex: 2;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal-task-category {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Поля ввода */
+.task-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.task-form-input,
+.task-form-select,
+.task-step-input,
+.task-step-textarea,
+.task-step-date-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  color: var(--color-gray-500);
+  background-color: white;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.task-form-input:hover,
+.task-form-select:hover,
+.task-step-input:hover,
+.task-step-textarea:hover,
+.task-step-date-input:hover {
+  border-color: var(--color-gray-400);
+}
+
+.task-form-input:focus,
+.task-form-select:focus,
+.task-step-input:focus,
+.task-step-textarea:focus,
+.task-step-date-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.task-form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* ===== ИНФОРМАЦИЯ ОБ ОГРАНИЧЕНИЯХ ===== */
+.restricted-division-info,
+.restricted-subdivision-info {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  /* flex-direction: column; */
+  gap: 0.25rem;
+}
+
+.restricted-division-text,
+.restricted-subdivision-text {
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.restricted-division-note,
+.restricted-subdivision-note {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+/* ===== КАТЕГОРИИ ЗАДАЧ ===== */
+.task-category-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-category-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: var(--transition);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background-color: white;
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.task-category-btn:hover {
+  border-color: var(--color-gray-300);
+  background-color: var(--color-gray-50);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Активные состояния */
+.task-category-btn.urgent-active {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.task-category-btn.planned-active {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-color: #60a5fa;
+  color: #1e3a8a;
+}
+
+.task-category-btn.attention-active {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+/* ===== ЧЕКБОКС ПРИВАТНОСТИ ===== */
+.task-privacy-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--color-gray-700);
+  cursor: pointer;
+}
+
+.task-privacy-checkbox input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--color-primary);
+  border-radius: 4px;
+}
+
+/* ===== СПИСОК ЭТАПОВ ===== */
+.task-steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.task-steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-gray-200);
+  /* padding-bottom: 0.5rem; */
+}
+
+.task-steps-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0;
+}
+
+.task-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Карточка этапа */
+.task-step-card {
+  position: relative;
+  padding: 1.5rem;
+  background-color: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.task-step-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-md);
+}
+
+.task-step-card-new {
+  animation: taskStepAppear 0.3s ease-out;
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, #eff6ff, white);
+}
+
+@keyframes taskStepAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-step-delete-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 2;
+}
+
+.task-step-delete-btn:hover {
+  background: #fee2e2;
+  transform: scale(1.1);
+}
+
+.task-step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.task-step-number {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), #1e40af);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.task-step-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0;
+}
+
+.task-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.task-step-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-step-dates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.task-step-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-step-date-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.task-step-date-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--color-gray-400);
+  width: 1.2rem;
+  height: 1.2rem;
+  pointer-events: none;
+}
+
+.task-step-date-input {
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+}
+
+/* Пустое состояние этапов */
+.task-steps-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-gray-50);
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--border-radius);
+  text-align: center;
+  gap: 1rem;
+}
+
+.task-step-add-first-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-primary), #1e40af);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.task-step-add-first-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.task-step-add-first-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Кнопка добавления нового этапа (последняя) */
+.task-step-add-last-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: white;
+  border: 1px dashed var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-gray-600);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.task-step-add-last-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: #eff6ff;
+}
+
+.task-step-add-last-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ===== ПОДВАЛ ФОРМЫ ===== */
+.task-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-gray-200);
+  margin-top: 0.5rem;
+}
+
+.task-form-cancel-btn,
+.task-form-submit-btn {
+  padding: 0.75rem 2rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+}
+
+.task-form-cancel-btn {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-300);
+}
+
+.task-form-cancel-btn:hover {
+  background-color: var(--color-gray-200);
+  border-color: var(--color-gray-400);
+}
+
+.task-form-submit-btn {
+  background: linear-gradient(135deg, var(--color-primary), #1e40af);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.task-form-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.task-form-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.task-form-select:disabled,
+.task-form-select-disabled {
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-500);
+  cursor: not-allowed;
+  opacity: 0.8;
+  border-color: var(--color-gray-200);
+  background-image: none;
+  /* убираем стрелку, чтобы не вводило в заблуждение */
+}
+
+.task-form-select:disabled:hover,
+.task-form-select-disabled:hover {
+  border-color: var(--color-gray-200);
+  background-color: var(--color-gray-50);
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 768px) {
   .task-modal-header {
-    position: sticky;
-    top: 0;
-    background-color: #0b4f6cdd;
-    border-bottom: 1px solid var(--color-gray-200);
-    padding: 1.1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    z-index: 10;
+    padding: 1.25rem;
   }
-  
-  .task-modal-header-left {
-    flex: 1;
-  }
-  
+
   .task-modal-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-gray-900);
-    line-height: 1.2;
-    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
   }
-  
+
   .task-modal-subtitle {
-    font-size: 0.875rem;
-    color: var(--color-gray-900);
-    margin: 0;
+    font-size: 0.8rem;
   }
-  
+
   .task-modal-close-btn {
-    flex-shrink: 0;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--border-radius-sm);
-    background: var(--color-gray-100);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--color-gray-600);
-    transition: var(--transition);
-  }
-  
-  .task-modal-close-btn:hover {
-    background: var(--color-gray-200);
-    color: var(--color-gray-900);
-    transform: scale(1.05);
-  }
-  
-  .task-modal-close-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-  
-  /* ===== УВЕДОМЛЕНИЕ ОБ ОШИБКЕ ===== */
-  .task-error-alert {
-    margin: 1.5rem 2rem 0;
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
-    border-radius: var(--border-radius-sm);
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    animation: taskErrorSlideIn 0.2s ease-out;
-  }
-  
-  @keyframes taskErrorSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .task-error-alert-content {
-    color: #b91c1c;
-    font-size: 0.875rem;
-    flex: 1;
-  }
-  
-  .task-error-alert-close {
-    flex-shrink: 0;
     width: 2rem;
     height: 2rem;
-    border-radius: var(--border-radius-sm);
-    background: transparent;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #b91c1c;
-    transition: var(--transition);
   }
-  
-  .task-error-alert-close:hover {
-    background: #fee2e2;
-  }
-  
-  .task-error-alert-close-icon {
-    width: 1rem;
-    height: 1rem;
-  }
-  
-  /* ===== КОНТЕЙНЕР ФОРМЫ ===== */
+
   .task-form-container {
-    padding: 1.2rem;
-    background: #e6e7e886;
+    padding: 1.25rem;
   }
-  
-  /* ===== ФОРМА ===== */
-  .task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
+
   .task-form-section {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-  }
-  
-  .task-form-basicinfo {
-    flex: 2;
-    min-width: 280px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-  
-  .modal-task-category {
-    flex: 1;
-    min-width: 200px;
-  }
-  
-  /* Поля ввода */
-  .task-form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .task-form-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-gray-700);
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-  
-  .task-form-input,
-  .task-form-select,
-  .task-step-input,
-  .task-step-textarea,
-  .task-step-date-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--color-gray-300);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.95rem;
-    color: var(--color-gray-500);
-    background-color: white;
-    transition: var(--transition);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .task-form-input:hover,
-  .task-form-select:hover,
-  .task-step-input:hover,
-  .task-step-textarea:hover,
-  .task-step-date-input:hover {
-    border-color: var(--color-gray-400);
-  }
-  
-  .task-form-input:focus,
-  .task-form-select:focus,
-  .task-step-input:focus,
-  .task-step-textarea:focus,
-  .task-step-date-input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-  }
-  
-  .task-form-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1rem;
-    padding-right: 2.5rem;
-  }
-  
-  /* ===== ИНФОРМАЦИЯ ОБ ОГРАНИЧЕНИЯХ ===== */
-  .restricted-division-info,
-  .restricted-subdivision-info {
-    padding: 0.75rem 1rem;
-    background-color: var(--color-gray-50);
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--border-radius-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .restricted-division-text,
-  .restricted-subdivision-text {
-    font-weight: 500;
-    color: var(--color-gray-700);
-  }
-  
-  .restricted-division-note,
-  .restricted-subdivision-note {
-    font-size: 0.75rem;
-    color: var(--color-gray-500);
-  }
-  
-  /* ===== КАТЕГОРИИ ЗАДАЧ ===== */
-  .task-category-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .task-category-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1rem;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.95rem;
-    font-weight: 500;
-    border: 1px solid transparent;
-    transition: var(--transition);
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    background-color: white;
-    border-color: var(--color-gray-200);
-    color: var(--color-gray-700);
-  }
-  
-  .task-category-btn:hover {
-    border-color: var(--color-gray-300);
-    background-color: var(--color-gray-50);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-  
-  /* Активные состояния */
-  .task-category-btn.urgent-active {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    border-color: #f87171;
-    color: #b91c1c;
-  }
-  
-  .task-category-btn.planned-active {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    border-color: #60a5fa;
-    color: #1e3a8a;
-  }
-  
-  .task-category-btn.attention-active {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border-color: #fbbf24;
-    color: #92400e;
-  }
-  
-  /* ===== ЧЕКБОКС ПРИВАТНОСТИ ===== */
-  .task-privacy-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    color: var(--color-gray-700);
-    cursor: pointer;
-  }
-  
-  .task-privacy-checkbox input[type="checkbox"] {
-    width: 1.2rem;
-    height: 1.2rem;
-    accent-color: var(--color-primary);
-    border-radius: 4px;
-  }
-  
-  /* ===== СПИСОК ЭТАПОВ ===== */
-  .task-steps-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .task-steps-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--color-gray-200);
-    /* padding-bottom: 0.5rem; */
-  }
-  
-  .task-steps-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-gray-800);
-    margin: 0;
-  }
-  
-  .task-steps-list {
-    display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
-  
-  /* Карточка этапа */
-  .task-step-card {
-    position: relative;
-    padding: 1.5rem;
-    background-color: white;
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
-  }
-  
-  .task-step-card:hover {
-    border-color: var(--color-gray-300);
-    box-shadow: var(--shadow-md);
-  }
-  
-  .task-step-card-new {
-    animation: taskStepAppear 0.3s ease-out;
-    border-color: var(--color-primary);
-    background: linear-gradient(135deg, #eff6ff, white);
-  }
-  
-  @keyframes taskStepAppear {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .task-step-delete-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--border-radius-sm);
-    background: transparent;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-danger);
-    cursor: pointer;
-    transition: var(--transition);
-    z-index: 2;
-  }
-  
-  .task-step-delete-btn:hover {
-    background: #fee2e2;
-    transform: scale(1.1);
-  }
-  
-  .task-step-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
-  }
-  
-  .task-step-number {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), #1e40af);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  
-  .task-step-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-gray-800);
-    margin: 0;
-  }
-  
-  .task-step-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-  
-  .task-step-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
+
   .task-step-dates-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr;
   }
-  
-  .task-step-date-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .task-step-date-input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  .task-step-date-icon {
-    position: absolute;
-    left: 1rem;
-    color: var(--color-gray-400);
-    width: 1.2rem;
-    height: 1.2rem;
-    pointer-events: none;
-  }
-  
-  .task-step-date-input {
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-  }
-  
-  /* Пустое состояние этапов */
-  .task-steps-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 2rem;
-    background-color: var(--color-gray-50);
-    border: 2px dashed var(--color-gray-300);
-    border-radius: var(--border-radius);
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .task-step-add-first-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--color-primary), #1e40af);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow-md);
-  }
-  
-  .task-step-add-first-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-  
-  .task-step-add-first-icon {
-    width: 1rem;
-    height: 1rem;
-  }
-  
-  /* Кнопка добавления нового этапа (последняя) */
-  .task-step-add-last-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background-color: white;
-    border: 1px dashed var(--color-gray-300);
-    border-radius: var(--border-radius-sm);
-    color: var(--color-gray-600);
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    width: 100%;
-  }
-  
-  .task-step-add-last-btn:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background-color: #eff6ff;
-  }
-  
-  .task-step-add-last-icon {
-    width: 1rem;
-    height: 1rem;
-  }
-  
-  /* ===== ПОДВАЛ ФОРМЫ ===== */
+
   .task-form-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-gray-200);
-    margin-top: 0.5rem;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
   }
-  
+
   .task-form-cancel-btn,
   .task-form-submit-btn {
-    padding: 0.75rem 2rem;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    border: none;
+    width: 100%;
+    padding: 0.75rem 1rem;
   }
-  
-  .task-form-cancel-btn {
-    background-color: var(--color-gray-100);
-    color: var(--color-gray-700);
-    border: 1px solid var(--color-gray-300);
+
+  .task-step-card {
+    padding: 1.25rem;
   }
-  
-  .task-form-cancel-btn:hover {
-    background-color: var(--color-gray-200);
-    border-color: var(--color-gray-400);
-  }
-  
-  .task-form-submit-btn {
-    background: linear-gradient(135deg, var(--color-primary), #1e40af);
-    color: white;
-    box-shadow: var(--shadow-md);
-  }
-  
-  .task-form-submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-  
-  .task-form-submit-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  /* ===== АДАПТИВНОСТЬ ===== */
-  @media (max-width: 768px) {
-    .task-modal-header {
-      padding: 1.25rem;
-    }
-  
-    .task-modal-title {
-      font-size: 1.25rem;
-    }
-  
-    .task-modal-subtitle {
-      font-size: 0.8rem;
-    }
-  
-    .task-modal-close-btn {
-      width: 2rem;
-      height: 2rem;
-    }
-  
-    .task-form-container {
-      padding: 1.25rem;
-    }
-  
-    .task-form-section {
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-  
-    .task-step-dates-grid {
-      grid-template-columns: 1fr;
-    }
-  
-    .task-form-footer {
-      flex-direction: column-reverse;
-      gap: 0.75rem;
-    }
-  
-    .task-form-cancel-btn,
-    .task-form-submit-btn {
-      width: 100%;
-      padding: 0.75rem 1rem;
-    }
-  
-    .task-step-card {
-      padding: 1.25rem;
-    }
-  }
+}

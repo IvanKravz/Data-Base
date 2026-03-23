@@ -7,8 +7,6 @@ import { Task } from '../../../types/tasks';
 interface CreateTaskModalProps {
   initialTask?: Task | null;
   divisionId?: string;
-  restrictedDivisionId?: string | null;
-  restrictedSubdivisionId?: string | null;
   onClose: () => void;
   onCreate?: (task: Omit<Task, 'id'>) => void;
   onUpdate?: (task: Task) => void;
@@ -17,8 +15,6 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({
   initialTask,
   divisionId,
-  restrictedDivisionId,
-  restrictedSubdivisionId,
   onClose,
   onCreate,
   onUpdate
@@ -62,8 +58,6 @@ export function CreateTaskModal({
           <TaskForm
             initialTask={initialTask}
             divisionId={divisionId}
-            restrictedDivisionId={restrictedDivisionId}
-            restrictedSubdivisionId={restrictedSubdivisionId}
             onSuccess={onClose}
             onError={setError}
             onCreate={onCreate}

@@ -109,6 +109,7 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
           {/* Верхняя часть: бейдж, заголовок, даты и действия */}
           <div className="tasks-item-header">
             <div className="tasks-badge-wrapper">
+            {task.is_private && <Lock size={18} className="tasks-private-icon" />}
               <span className={`tasks-badge ${badgeClass}`}>{badgeText}</span>
               {isCreatorLeader && (
                 <Crown className="tasks-creator-crown" size={16} title="Создано руководителем" />
@@ -150,7 +151,7 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
           <div className="tasks-title-row">
             <h3 className="tasks-item-title">
               {task.title}
-              {task.is_private && <Lock size={14} className="tasks-private-icon" />}
+
             </h3>
 
           </div>

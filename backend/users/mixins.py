@@ -7,6 +7,11 @@ class RoleBasedFilterMixin:
     Миксин для фильтрации данных на основе ролей
     """
 
+class RoleBasedFilterMixin:
+    """
+    Миксин для фильтрации данных на основе ролей
+    """
+
     def get_queryset(self):
         queryset = super().get_queryset()
         
@@ -19,7 +24,24 @@ class RoleBasedFilterMixin:
             
         model_name = self.queryset.model.__name__
         
-        # ПРИОРИТЕТ 1: Если пользователь имеет роли - используем фильтры ролей
+        # Получаем роли пользователя
+        user_roles = self._get_user_roles()
+        
+        # Проверяем, может ли пользователь видеть все подразделения
+        can_see_all_divisions = any(
+            ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
+            for role in user_roles
+        )
+        
+        # Если пользователь может видеть все подразделения, не применяем фильтры по подразделению
+        if can_see_all_divisions:
+            # Применяем только фильтры из ролей (если есть)
+            role_filters = self._get_role_filters(model_name)
+            if role_filters:
+                queryset = queryset.filter(**role_filters)
+            return queryset
+        
+        # ПРИОРИТЕТ 1: Если есть роли - используем фильтры ролей
         if self._user_has_roles():
             role_filters = self._get_role_filters(model_name)
             if role_filters:
@@ -41,6 +63,12 @@ class RoleBasedFilterMixin:
         perm_checker = RoleBasedPermission()
         return perm_checker._user_has_role(self.request.user, role_name)
 
+    def _get_user_roles(self):
+        """Получает роли пользователя"""
+        from .permissions import RoleBasedPermission
+        perm_checker = RoleBasedPermission()
+        return perm_checker._get_user_roles(self.request.user)
+
     def _get_role_filters(self, model_name):
         """Получает фильтры из конфигурации ролей"""
         from .permissions import RoleBasedPermission
@@ -53,7 +81,6 @@ class RoleBasedFilterMixin:
             if role in ROLE_PERMISSIONS and 'filters' in ROLE_PERMISSIONS[role]:
                 role_filters = ROLE_PERMISSIONS[role]['filters']
                 if model_name in role_filters:
-                    # Объединяем фильтры из всех ролей пользователя
                     filters.update(role_filters[model_name])
                     
         return filters

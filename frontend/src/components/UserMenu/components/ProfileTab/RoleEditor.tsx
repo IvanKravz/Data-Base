@@ -4,9 +4,9 @@ import { AvailableRole } from '../../../../api/users';
 
 interface RoleEditorProps {
     availableRoles: AvailableRole[];
-    selectedRoleIds: number[]; // теперь будет массив с 0 или 1 элементом
+    selectedRoleIds: number[]; // будет массив с 0 или 1 элементом
     loading: boolean;
-    onChange: (roleId: number) => void; // теперь передаём только id
+    onChange: (roleId: number) => void; //  передаём только id
 }
 
 export const RoleEditor: React.FC<RoleEditorProps> = ({

@@ -3,14 +3,14 @@ import { TaskStepsList } from '../TaskStepsList';
 import { DivisionSelector } from './DivisionSelector';
 import { SubdivisionSelector } from './SubdivisionSelector';
 import { TaskCategorySelector } from './TaskCategorySelector';
-import { divisionsApi } from '../../../../api';
+import { tasksApi } from '../../../../api/tasks';
 import '../style.css';
 import { TaskCategory } from '../../../../types/taskCategories';
 
 interface TaskFormProps {
   initialTask?: Task | null;
   divisionId?: string;
-  restrictedDivisionId?: string | null;
+  restrictedDivisionId?: string | null; // сохраняем для совместимости, но не используем
   restrictedSubdivisionId?: string | null;
   onSuccess: () => void;
   onError: (error: string) => void;
@@ -46,93 +46,70 @@ export function TaskForm({
 
   const [divisions, setDivisions] = useState<any[]>([]);
   const [selectedDivisionId, setSelectedDivisionId] = useState(
-    initialTask?.division?.id || restrictedDivisionId || divisionId || ''
+    initialTask?.division?.id || divisionId || ''
   );
   const [selectedSubdivisionId, setSelectedSubdivisionId] = useState<string | null>(
-    initialTask?.subdivision?.id || restrictedSubdivisionId || null
+    initialTask?.subdivision?.id || null
   );
-  const [currentSubdivisions, setCurrentSubdivisions] = useState<any[]>([]);
+  const [availableSubdivisions, setAvailableSubdivisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-
-    const fetchDivisions = async () => {
+    const fetchAvailableDivisions = async () => {
       setIsLoading(true);
       try {
-        const divisionsData = await divisionsApi.getDivisions(token);
+        const data = await tasksApi.getAvailableDivisions();
+        setDivisions(data.divisions);
+        setAvailableSubdivisions(data.subdivisions);
 
-        let filteredDivisions = divisionsData;
-        if (restrictedDivisionId) {
-          filteredDivisions = divisionsData.filter(
-            (div: any) => div.id.toString() === restrictedDivisionId.toString()
+        // Если есть начальное значение (при редактировании), проверяем, что оно в списке
+        if (initialTask?.division?.id) {
+          const divisionExists = data.divisions.some(d => d.id == initialTask.division.id);
+          if (divisionExists) {
+            setSelectedDivisionId(initialTask.division.id);
+            const filteredSubdivisions = data.subdivisions.filter(
+              s => s.division_id == initialTask.division.id
+            );
+            setAvailableSubdivisions(filteredSubdivisions);
+            if (initialTask.subdivision?.id) {
+              setSelectedSubdivisionId(initialTask.subdivision.id);
+            } else if (filteredSubdivisions.length === 1) {
+              // Если у задачи нет отделения, но в списке одно, выбираем его
+              setSelectedSubdivisionId(filteredSubdivisions[0].id);
+            }
+          } else {
+            setSelectedDivisionId('');
+          }
+        } else if (data.divisions.length === 1 && !initialTask) {
+          // Если только одно подразделение доступно, выбираем его автоматически
+          const firstDivision = data.divisions[0];
+          setSelectedDivisionId(firstDivision.id);
+          const filteredSubdivisions = data.subdivisions.filter(
+            s => s.division_id == firstDivision.id
           );
-        }
-
-        setDivisions(filteredDivisions);
-
-        const divisionToLoad = initialTask?.division?.id || restrictedDivisionId || divisionId;
-        if (divisionToLoad) {
-          const division = filteredDivisions.find(d => d.id == divisionToLoad);
-          if (division?.subdivisions) {
-            let filteredSubdivisions = division.subdivisions;
-            if (restrictedSubdivisionId) {
-              filteredSubdivisions = division.subdivisions.filter(
-                (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
-              );
-            }
-            setCurrentSubdivisions(filteredSubdivisions);
-
-            if (restrictedSubdivisionId && !initialTask) {
-              const restrictedSubdivisionExists = division.subdivisions.some(
-                (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
-              );
-              if (restrictedSubdivisionExists) {
-                setSelectedSubdivisionId(restrictedSubdivisionId);
-              }
-            }
+          setAvailableSubdivisions(filteredSubdivisions);
+          // Если есть только одно отделение, выбираем его автоматически
+          if (filteredSubdivisions.length === 1) {
+            setSelectedSubdivisionId(filteredSubdivisions[0].id);
           }
         }
       } catch (error) {
-        onError('Не удалось загрузить список подразделений');
+        onError('Не удалось загрузить доступные подразделения');
       } finally {
         setIsLoading(false);
       }
     };
-    fetchDivisions();
-  }, [initialTask, divisionId, restrictedDivisionId, restrictedSubdivisionId, onError]);
+    fetchAvailableDivisions();
+  }, [initialTask, divisionId, onError]);
 
   const handleDivisionChange = (divisionId: string) => {
-    if (restrictedDivisionId) return;
-
     setSelectedDivisionId(divisionId);
-    const division = divisions.find(d => d.id == divisionId);
-
-    if (division?.subdivisions) {
-      let filteredSubdivisions = division.subdivisions;
-      if (restrictedSubdivisionId) {
-        filteredSubdivisions = division.subdivisions.filter(
-          (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
-        );
-      }
-      setCurrentSubdivisions(filteredSubdivisions);
-
-      if (restrictedSubdivisionId) {
-        const restrictedSubdivisionExists = division.subdivisions.some(
-          (sub: any) => sub.id.toString() === restrictedSubdivisionId.toString()
-        );
-        if (restrictedSubdivisionExists) {
-          setSelectedSubdivisionId(restrictedSubdivisionId);
-          return;
-        }
-      }
+    const filtered = availableSubdivisions.filter(s => s.division_id == divisionId);
+    setAvailableSubdivisions(filtered);
+    if (filtered.length === 1) {
+      setSelectedSubdivisionId(filtered[0].id);
     } else {
-      setCurrentSubdivisions([]);
-    }
-
-    if (!restrictedSubdivisionId && initialTask?.division?.id !== divisionId) {
       setSelectedSubdivisionId(null);
     }
   };
@@ -218,6 +195,15 @@ export function TaskForm({
     }
   };
 
+  // Если список подразделений пуст и загрузка завершена, показываем сообщение
+  if (!isLoading && divisions.length === 0) {
+    return (
+      <div className="task-form-empty">
+        <p>У вас нет прав на создание задач в этом разделе.</p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="task-form">
       <div className="task-form-section">
@@ -240,17 +226,14 @@ export function TaskForm({
             selectedDivisionId={selectedDivisionId}
             onChange={handleDivisionChange}
             isLoading={isLoading}
-            onDivisionChange={handleDivisionChange}
-            restrictedDivisionId={restrictedDivisionId}
           />
 
           <SubdivisionSelector
-            subdivisions={currentSubdivisions}
+            subdivisions={availableSubdivisions}
             selectedSubdivisionId={selectedSubdivisionId}
             onChange={(id) => setSelectedSubdivisionId(id)}
             isLoading={isLoading}
             hasDivision={!!selectedDivisionId}
-            restrictedSubdivisionId={restrictedSubdivisionId}
           />
         </div>
 

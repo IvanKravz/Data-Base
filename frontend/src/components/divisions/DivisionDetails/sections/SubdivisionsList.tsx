@@ -1,15 +1,18 @@
+// components/divisions/DivisionDetails/sections/SubdivisionsList.tsx
 import React, { useEffect, useState } from 'react';
 import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { Division } from '../../../../types';
 import './style.css';
 import { useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../../../api/tasks';
+import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 
 interface SubdivisionsListProps {
   division: Division;
 }
 
 export function SubdivisionsList({ division }: SubdivisionsListProps) {
+  const { canAccessPersonnel, canAccessEquipment, canAccessFacilities, canAccessTasks } = useAppPermissions();
   const navigate = useNavigate();
   const subdivisions = division.subdivisions || [];
   const [tasksCounts, setTasksCounts] = useState<Record<string, number>>({});
@@ -42,9 +45,7 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
     const path = subdivisionId
       ? `/divisions/${division.id}/${section}?subdivision=${subdivisionId}`
       : `/divisions/${division.id}/${section}`;
-  
-    // ИСПРАВЛЕНИЕ: Находим подразделение по ID для получения имени
-    const targetSubdivision = subdivisionId 
+    const targetSubdivision = subdivisionId
       ? subdivisions.find(sub => sub.id === subdivisionId)
       : null;
 
@@ -53,25 +54,12 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
         activeTab: 'all',
         subdivisionId: subdivisionId,
         divisionId: division.id,
-        subdivisionName: targetSubdivision?.name, // Используем найденное подразделение
-        // ДОБАВЛЕНО: Передаем флаг, что переходим из контекста отделения
+        subdivisionName: targetSubdivision?.name,
         fromSubdivision: !!subdivisionId
       }
     });
   };
 
-  // ДОБАВЛЕНО: Обработчик клика по подразделению (не по отделению)
-  const handleDivisionSectionClick = (section: string) => {
-    navigate(`/divisions/${division.id}/${section}`, {
-      state: {
-        activeTab: 'all',
-        divisionId: division.id,
-        divisionName: division.name,
-        fromSubdivision: false // Явно указываем, что НЕ из отделения
-      }
-    });
-  };
-  
   if (subdivisions.length === 0) {
     return null;
   }
@@ -87,59 +75,67 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
             </div>
 
             <div className="division-subdivision-metrics">
-              <div
-                className="division-metric-item"
-                onClick={() => handleSectionClick('personnel', subdivision.id)}
-              >
-                <div className="division-metric-icon-container">
-                  <Users className="division-metric-icon" />
+              {canAccessPersonnel() && (
+                <div
+                  className="division-metric-item"
+                  onClick={() => handleSectionClick('personnel', subdivision.id)}
+                >
+                  <div className="division-metric-icon-container">
+                    <Users className="division-metric-icon" />
+                  </div>
+                  <div className="division-metric-info">
+                    <span className="division-metric-label">Сотрудники</span>
+                    <span className="division-metric-value">{subdivision.employees_count}</span>
+                  </div>
                 </div>
-                <div className="division-metric-info">
-                  <span className="division-metric-label">Сотрудники</span>
-                  <span className="division-metric-value">{subdivision.employees_count}</span>
-                </div>
-              </div>
+              )}
 
-              <div
-                className="division-metric-item"
-                onClick={() => handleSectionClick('equipment', subdivision.id)}
-              >
-                <div className="division-metric-icon-container">
-                  <Plug className="division-metric-icon" />
+              {canAccessEquipment() && (
+                <div
+                  className="division-metric-item"
+                  onClick={() => handleSectionClick('equipment', subdivision.id)}
+                >
+                  <div className="division-metric-icon-container">
+                    <Plug className="division-metric-icon" />
+                  </div>
+                  <div className="division-metric-info">
+                    <span className="division-metric-label">Техника</span>
+                    <span className="division-metric-value">{subdivision.equipment_count}</span>
+                  </div>
                 </div>
-                <div className="division-metric-info">
-                  <span className="division-metric-label">Техника</span>
-                  <span className="division-metric-value">{subdivision.equipment_count}</span>
-                </div>
-              </div>
+              )}
 
-              <div
-                className="division-metric-item"
-                onClick={() => handleSectionClick('facilities', subdivision.id)}
-              >
-                <div className="division-metric-icon-container">
-                  <Building2 className="division-metric-icon" />
+              {canAccessFacilities() && (
+                <div
+                  className="division-metric-item"
+                  onClick={() => handleSectionClick('facilities', subdivision.id)}
+                >
+                  <div className="division-metric-icon-container">
+                    <Building2 className="division-metric-icon" />
+                  </div>
+                  <div className="division-metric-info">
+                    <span className="division-metric-label">Объекты</span>
+                    <span className="division-metric-value">{subdivision.facilities_count}</span>
+                  </div>
                 </div>
-                <div className="division-metric-info">
-                  <span className="division-metric-label">Объекты</span>
-                  <span className="division-metric-value">{subdivision.facilities_count}</span>
-                </div>
-              </div>
+              )}
 
-              <div
-                className="division-metric-item"
-                onClick={() => handleSectionClick('tasks', subdivision.id)}
-              >
-                <div className="division-metric-icon-container">
-                  <ListTodo className="division-metric-icon" />
+              {canAccessTasks() && (
+                <div
+                  className="division-metric-item"
+                  onClick={() => handleSectionClick('tasks', subdivision.id)}
+                >
+                  <div className="division-metric-icon-container">
+                    <ListTodo className="division-metric-icon" />
+                  </div>
+                  <div className="division-metric-info">
+                    <span className="division-metric-label">Задачи</span>
+                    <span className="division-metric-value">
+                      {loading ? '...' : tasksCounts[subdivision.id] || 0}
+                    </span>
+                  </div>
                 </div>
-                <div className="division-metric-info">
-                  <span className="division-metric-label">Задачи</span>
-                  <span className="division-metric-value">
-                    {loading ? '...' : tasksCounts[subdivision.id] || 0}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ))}
