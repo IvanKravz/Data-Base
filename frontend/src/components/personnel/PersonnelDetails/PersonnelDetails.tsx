@@ -16,7 +16,6 @@ import './style.css'
 import { PhotoCard } from './sections/PhotoCard';
 import { Employee } from '../../../types';
 import { EditPersonnelForm } from '../forms/EditPersonnelForm';
-import { canEdit, getPermissions } from '../../../api/utils/permissions';
 
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
@@ -26,12 +25,18 @@ export function PersonnelDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
   const { personnel, loading, error } = useSelector((state: RootState) => state.personnel);
   const person = personnel.find(p => p.id == id);
   const token = localStorage.getItem('accessToken');
 
   const isGlobalView = authApi.getGlobalView();
-  const canEditEmployee = canEdit('employees');
+
+  const canEditEmployee = useMemo(() => 
+    permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
+  const canViewEquipment = useMemo(() => 
+    permissions?.models?.Equipment?.includes('view') ?? false, [permissions]);
 
   // Получаем состояние навигации
   const navigationState = location.state;
@@ -93,9 +98,8 @@ export function PersonnelDetails() {
   }
 
   const handleBack = () => {
-    // Используем сохраненное состояние навигации если есть
     if (navigationState?.from) {
-      navigate(navigationState.from, { 
+      navigate(navigationState.from, {
         state: {
           divisionId: navigationState.divisionId,
           subdivisionId: navigationState.subdivisionId,
@@ -104,7 +108,6 @@ export function PersonnelDetails() {
         }
       });
     } else {
-      // Запасной вариант - возврат по истории
       navigate(-1);
     }
   };
@@ -113,9 +116,8 @@ export function PersonnelDetails() {
     if (token && id) {
       await employeesApi.deletePerson(token, id);
 
-      // Используем ту же логику что и в handleBack
       if (navigationState?.from) {
-        navigate(navigationState.from, { 
+        navigate(navigationState.from, {
           state: {
             divisionId: navigationState.divisionId,
             subdivisionId: navigationState.subdivisionId,
@@ -140,18 +142,14 @@ export function PersonnelDetails() {
     setShowDeleteModal(true);
   };
 
-  // Функция перехода в режим редактирования
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  // Функция перехода на страницу качественной характеристики
   const handleGoToQualitative = () => {
     navigate(`/personnel/${id}/qualitative`, {
       state: {
-        // Явно указываем откуда пришли - с этой страницы сотрудника
         from: `/personnel/${id}`,
-        // Сохраняем оригинальное состояние для возврата в список
         originalState: navigationState
       }
     });
@@ -210,7 +208,9 @@ export function PersonnelDetails() {
         <CommentsInfo person={person} />
       </div>
 
-      <AssignedEquipment person={person} id={id} />
+      {canViewEquipment && (
+        <AssignedEquipment person={person} id={id} hasAccess={canViewEquipment} />
+      )}
 
       {showDeleteModal && (
         <DeleteConfirmationModal

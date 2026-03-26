@@ -1,7 +1,8 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
 import Modal from './Modal';
 import './Modal.css';
-import { isAdmin } from '../../../api/utils/permissions';
 
 interface OfficeData {
   id?: string;
@@ -29,6 +30,7 @@ interface RegionModalProps {
   onSave: () => void;
   onCancel: () => void;
   onInputChange: (field: keyof OfficeData, value: string) => void;
+  onNumberInputChange?: (field: 'latitude' | 'longitude', value: string) => void;
 }
 
 export const RegionModal: React.FC<RegionModalProps> = ({
@@ -42,8 +44,14 @@ export const RegionModal: React.FC<RegionModalProps> = ({
   onSave,
   onCancel,
   onInputChange,
+  onNumberInputChange,
 }) => {
-  
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
+  // Проверяем, есть ли у пользователя право на изменение модели InterestOrgan
+  const canEditInterestOrgan = permissions?.models?.InterestOrgan?.includes('change') ?? false;
+
   if (!isOpen || !selectedRegion || !editingData) {
     return null;
   }
@@ -195,8 +203,7 @@ export const RegionModal: React.FC<RegionModalProps> = ({
           )}
 
           <div className="map-modal-actions">
-            {/* Показываем кнопку редактирования только для администратора */}
-            {isAdmin() && (
+            {canEditInterestOrgan && (
               <button onClick={onEdit} className="map-modal-edit-btn">
                 Редактировать
               </button>

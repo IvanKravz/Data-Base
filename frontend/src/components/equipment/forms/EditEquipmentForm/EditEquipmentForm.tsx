@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { Division, Equipment, EquipmentCategory } from '../../../../types';
 import { BasicInformation } from './sections/BasicInformation';
 import { IdentificationInfo } from './sections/IdentificationInfo';
@@ -13,7 +15,6 @@ import { DocumentsInfo } from './sections/DocumentsInfo';
 import { ProductStructureEditor } from './sections/ProductStructureEditor';
 import { AdditionalInfo } from './sections/AdditionalInfo';
 import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
-import { canEdit } from '../../../../api/utils/permissions';
 
 interface EditEquipmentFormProps {
   initialData: Equipment;
@@ -27,6 +28,12 @@ export function EditEquipmentForm({
   onSubmit,
   onCancel,
 }: EditEquipmentFormProps) {
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
+  const hasEditPermission = useMemo(() => 
+    permissions?.models?.Equipment?.includes('change') ?? false, [permissions]);
+
   const [formData, setFormData] = useState<Partial<Equipment>>({
     ...initialData,
     comments: initialData.comments || '',
@@ -39,12 +46,9 @@ export function EditEquipmentForm({
   const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
   const token = localStorage.getItem('accessToken');
 
-  // Используем хук для получения прав доступа
-  const permissions = useEquipmentFieldPermissions();
-  const hasEditPermission = canEdit('equipment');
+  const permissionsFields = useEquipmentFieldPermissions();
 
-  // Вычисляем isClosedEquipment на основе выбранной категории
-  const isClosedEquipment = React.useMemo(() => {
+  const isClosedEquipment = useMemo(() => {
     if (formData.category) {
       if (typeof formData.category === 'object' && 'is_closed' in formData.category) {
         return formData.category.is_closed;
@@ -58,7 +62,6 @@ export function EditEquipmentForm({
   useEffect(() => {
     const fetchAllData = async () => {
       if (!token) return;
-
       setIsLoading(true);
       try {
         const [divisionsData, categoriesData, organsData] = await Promise.all([
@@ -66,15 +69,11 @@ export function EditEquipmentForm({
           equipmentApi.getEquipmentCategories(token),
           equipmentApi.getInterestOrgans(token),
         ]);
-
         setDivisions(divisionsData);
         setCategories(categoriesData);
         setInterestOrgans(organsData);
-
         if (formData.division?.id) {
-          const personnelData = await employeesApi.getPersonnel(token, {
-            division: formData.division.id,
-          });
+          const personnelData = await employeesApi.getPersonnel(token, { division: formData.division.id });
           setPersonnel(personnelData);
         }
       } catch (error) {
@@ -83,18 +82,14 @@ export function EditEquipmentForm({
         setIsLoading(false);
       }
     };
-
     fetchAllData();
   }, [token, formData.division?.id]);
 
   const handleChange = async (data: Partial<Equipment>) => {
-    if (!hasEditPermission) return; // Запрещаем изменения без прав
-
+    if (!hasEditPermission) return;
     const newFormData = { ...formData, ...data };
-
     if (data.category && data.category !== formData.category) {
       let newIsClosed = false;
-
       if (typeof data.category === 'object' && 'is_closed' in data.category) {
         newIsClosed = data.category.is_closed;
       } else {
@@ -103,18 +98,13 @@ export function EditEquipmentForm({
         );
         newIsClosed = categoryObj ? categoryObj.is_closed : false;
       }
-
       newFormData.is_closed = newIsClosed;
     }
-
     setFormData(newFormData);
-
     if (data.division?.id && data.division.id !== formData.division?.id && token) {
       setIsLoading(true);
       try {
-        const personnelData = await employeesApi.getPersonnel(token, {
-          division: data.division.id,
-        });
+        const personnelData = await employeesApi.getPersonnel(token, { division: data.division.id });
         setPersonnel(personnelData);
       } catch (error) {
         console.error('Ошибка загрузки персонала:', error);
@@ -131,11 +121,7 @@ export function EditEquipmentForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !hasEditPermission) {
-      console.error('Токен отсутствует или нет прав на редактирование');
-      return;
-    }
-
+    if (!token || !hasEditPermission) return;
     const dataToSend = {
       ...formData,
       category: formData.category ? {
@@ -150,7 +136,6 @@ export function EditEquipmentForm({
       interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
       product_structures: formData.product_structures || []
     };
-
     try {
       setIsLoading(true);
       await onSubmit(dataToSend);
@@ -182,7 +167,7 @@ export function EditEquipmentForm({
 
   const getCurrentSubdivisions = () => {
     if (!formData.division?.id) return [];
-    const division = divisions.find((d) => d.id === formData.division?.id);
+    const division = divisions.find(d => d.id === formData.division?.id);
     return division?.subdivisions || [];
   };
 
@@ -196,9 +181,8 @@ export function EditEquipmentForm({
             isClosedEquipment={isClosedEquipment}
             isDisposed={formData.status === 'disposed'}
             equipmentCategories={categories}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <AssignmentInfo
             formData={formData}
             onChange={handleChange}
@@ -206,42 +190,37 @@ export function EditEquipmentForm({
             availablePersonnel={personnel}
             divisions={divisions}
             isLoading={isLoading}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <DocumentsInfo
             formData={formData}
             onChange={handleChange}
             isDisposed={formData.status === 'disposed'}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <IdentificationInfo
             formData={formData}
             onChange={handleChange}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <DatesInfo
             formData={formData}
             onChange={handleChange}
             serviceLife={formData.service_life}
             onServiceLifeChange={(value) => handleChange({ service_life: value })}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <AdditionalInfo
             formData={formData}
             onChange={handleChange}
             interestOrgans={interestOrgans}
             isDisposed={formData.status === 'disposed'}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
-
           <EditCommentsCard
             comments={formData.comments || ''}
             onChange={(value) => handleChange({ comments: value })}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
         </div>
         <div className="equipment-form-structure">
@@ -249,10 +228,9 @@ export function EditEquipmentForm({
             productStructures={formData.product_structures || []}
             onChange={handleStructureChange}
             isDisposed={formData.status === 'disposed'}
-            permissions={permissions}
+            permissions={permissionsFields}
           />
         </div>
-
         <FormActions
           onCancel={onCancel}
           showDisposeButton={formData.status !== 'disposed' && hasEditPermission}
@@ -260,13 +238,9 @@ export function EditEquipmentForm({
           hasEditPermission={hasEditPermission}
         />
       </form>
-
       {showDisposalModal && (
         <DisposalModal
-          onConfirm={(disposalInfo) => {
-            handleDispose(disposalInfo);
-            setShowDisposalModal(false);
-          }}
+          onConfirm={handleDispose}
           onCancel={() => setShowDisposalModal(false)}
         />
       )}

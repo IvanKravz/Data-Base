@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { Building2, MapPin, Shield, Star, Trash2, LocateFixed } from 'lucide-react';
 import { Facility } from '../../../../types';
-import { hasPermission } from '../../../../api/utils/permissions'; // Используем общую функцию проверки прав
 import './style.css';
 
 interface GridViewProps {
@@ -29,9 +30,9 @@ export function GridView({
   facilityClassFilter
 }: GridViewProps) {
   const navigate = useNavigate();
-  
-  // Проверяем конкретное право на удаление
-  const hasDeletePermission = hasPermission('facilities', 'delete');
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+  const hasDeletePermission = permissions?.models?.Facility?.includes('delete') ?? false;
 
   const handleCardClick = (facility: Facility) => {
     const currentSearchParams = new URLSearchParams(window.location.search);
@@ -52,20 +53,12 @@ export function GridView({
     const classFilter = currentSearchParams.get('class');
     const viewFilter = currentSearchParams.get('view');
 
-    if (typeFilter) {
-      params.append('type', typeFilter);
-    }
-    if (classFilter) {
-      params.append('class', classFilter);
-    }
-    if (viewFilter) {
-      params.append('view', viewFilter);
-    }
+    if (typeFilter) params.append('type', typeFilter);
+    if (classFilter) params.append('class', classFilter);
+    if (viewFilter) params.append('view', viewFilter);
 
     const queryString = params.toString();
-    if (queryString) {
-      facilityUrl += `?${queryString}`;
-    }
+    if (queryString) facilityUrl += `?${queryString}`;
 
     navigate(facilityUrl, { state });
   };
@@ -94,7 +87,6 @@ export function GridView({
                   <LocateFixed className="h-5 w-5" />
                 </button>
               )}
-              {/* Показываем кнопку удаления только если есть право 'delete' */}
               {hasDeletePermission && (
                 <button
                   onClick={(e) => {

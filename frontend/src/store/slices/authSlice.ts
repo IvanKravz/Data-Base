@@ -1,13 +1,29 @@
+// store/slices/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+interface UserPermissions {
+  roles: string[];
+  filters: Record<string, any>;
+  models: Record<string, string[]>;
+  modules: string[];
+}
+
 interface User {
-  id: string;
+  id: string | number;
+  username: string;
   email: string;
-  name: string;
-  position: string;
-  department: string;
-  division: string;
-  subdivision?: string;
+  is_staff: boolean;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+  is_online: boolean;
+  roles: string[];
+  permissions: UserPermissions;
+  division_info?: {
+    id: number;
+    name: string;
+    subdivision?: { id: number; name: string };
+  };
   is_global_view: boolean;
 }
 
@@ -50,7 +66,6 @@ const authSlice = createSlice({
       state.error = null;
       state.loading = false;
     },
-    // ДОБАВЛЯЕМ ДЕЙСТВИЕ ДЛЯ ОБНОВЛЕНИЯ РЕЖИМА ПРОСМОТРА
     updateGlobalView: (state, action: PayloadAction<boolean>) => {
       if (state.user) {
         state.user.is_global_view = action.payload;

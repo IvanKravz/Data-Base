@@ -1,6 +1,7 @@
 // PersonnelList.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Division, Employee } from '../../../types';
 import { TableView } from './views/TableView';
@@ -76,6 +77,11 @@ export function PersonnelList({
   const [selectedOfficerFilter, setSelectedOfficerFilter] = useState<'all' | 'with_management' | 'without_management'>('all');
   const [selectedAccessClass, setSelectedAccessClass] = useState<'all' | '1' | '2'>('all');
   const [searchParams] = useSearchParams();
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+  const hasEditPermission = useMemo(() => 
+    permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
 
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
@@ -158,10 +164,9 @@ export function PersonnelList({
     fetchData();
   }, [division, token, externalPersonnel, dispatch]);
 
-  // УБИРАЕМ ВСЮ ДУБЛИРУЮЩУЮ ФИЛЬТРАЦИЮ - оставляем только фильтрацию по категориям
+  // Фильтрация по категориям (вкладкам)
   const filteredPersonnel = useMemo(() => {
     const filtered = basePersonnel.filter(person => {
-      // ТОЛЬКО фильтры по категориям (вкладкам)
       let matchesCategory = true;
       
       switch (activeFilter) {
@@ -201,19 +206,16 @@ export function PersonnelList({
       return matchesCategory;
     });
 
-    // Сортируем отфильтрованный список
     return sortEmployeesByPriority(filtered);
   }, [
     basePersonnel,
     activeFilter,
     selectedOfficerFilter,
     selectedAccessClass
-    // УБРАНЫ: searchTerm, advancedFilters
   ]);
 
   // Функция для получения данных о штатной численности
   const getStaffCount = (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
-    // В глобальном режиме показываем общую штатную численность и фактическое количество
     if (isGlobalView) {
       const counts = {
         all: {
@@ -402,7 +404,6 @@ export function PersonnelList({
           />
         </div>
 
-        {/* Показываем штатную информацию всегда */}
         <div className="selected-subdivision-title">
           <div className="title-row">
             <div className="staff-info">
@@ -419,6 +420,7 @@ export function PersonnelList({
           personnel={filteredPersonnel}
           onPersonClick={handlePersonClick}
           onDelete={handleDelete}
+          hasEditPermission={hasEditPermission}
         />
 
         {filteredPersonnel.length === 0 && (

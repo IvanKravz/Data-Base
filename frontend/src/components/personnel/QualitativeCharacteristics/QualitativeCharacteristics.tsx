@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../../store/store';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { updatePerson } from '../../../store/slices/personnelSlice';
 import { Employee } from '../../../types';
@@ -13,7 +14,6 @@ import {
 } from './sections';
 import { FormActions } from './sections/FormActions';
 import './style.css';
-import { canAccessPage, canEdit } from '../../../api/utils/permissions';
 
 export function QualitativeCharacteristics() {
   const { id } = useParams<{ id: string }>();
@@ -28,22 +28,15 @@ export function QualitativeCharacteristics() {
 
   const token = localStorage.getItem('accessToken');
 
-  // Получаем состояние навигации
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
+  const canViewEmployee = useMemo(() => 
+    permissions?.models?.Employee?.includes('view') ?? false, [permissions]);
+  const canEditEmployee = useMemo(() => 
+    permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
+
   const navigationState = location.state;
-
-  // Проверка прав доступа для кнопки "Редактировать сотрудника" - используем canAccessPage
-  const canEditEmployee = useMemo(() => {
-    // Вариант 1: Использовать canAccessPage для модели Employee
-    return canAccessPage('Employee', 'change');
-
-    // Вариант 2: Использовать canEdit для модуля employees (если так настроено в системе)
-    // return canEdit('employees');
-  }, []);
-
-  // Проверка прав на просмотр
-  const canViewEmployee = useMemo(() => {
-    return canAccessPage('Employee', 'view');
-  }, []);
 
   // Загрузка данных сотрудника
   useEffect(() => {
@@ -52,8 +45,6 @@ export function QualitativeCharacteristics() {
         setLoading(true);
         const data = await employeesApi.getPersonById(token, id);
         setEmployee(data);
-
-        // Сохраняем данные как есть (в формате YYYY-MM-DD)
         setFormData(data);
       } catch (err) {
         setError('Не удалось загрузить данные сотрудника');
@@ -71,15 +62,10 @@ export function QualitativeCharacteristics() {
     }
   }, [token, id, canViewEmployee]);
 
-  // Обработчик изменения полей
   const handleFieldChange = (field: keyof Employee, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -93,13 +79,11 @@ export function QualitativeCharacteristics() {
 
     try {
       if (employee) {
-        // Отправляем данные как есть (в формате YYYY-MM-DD)
         const updatedPerson = await employeesApi.updatePerson(
           token,
           employee.id,
           formData as Employee
         );
-
         dispatch(updatePerson(updatedPerson));
         setIsEditing(false);
         setEmployee(updatedPerson);
@@ -112,10 +96,7 @@ export function QualitativeCharacteristics() {
     }
   };
 
-  // Исправляем обработчик возврата
   const handleBack = () => {
-    // Всегда возвращаемся на страницу сотрудника
-    // Используем явный путь вместо navigate(-1)
     navigate(`/personnel/${id}`, {
       state: navigationState?.originalState || null
     });

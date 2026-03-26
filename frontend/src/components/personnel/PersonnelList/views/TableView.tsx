@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Employee } from '../../../../types';
 import { Trash2, Shield, ClipboardList, CircleUserRound, ChevronDown, ChevronRight } from 'lucide-react';
-import { canEdit } from '../../../../api/utils/permissions';
 import './style.css';
 
 interface TableViewProps {
@@ -11,16 +10,14 @@ interface TableViewProps {
   onPersonClick: (person: Employee) => void; 
   onDelete: (id: string) => void;
   divisionName: string;
+  hasEditPermission: boolean; // получаем из родителя
 }
 
-export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps) {
+export function TableView({ personnel, onPersonClick, onDelete, divisionName, hasEditPermission }: TableViewProps) {
   
   // Состояния для отслеживания свернутых/развернутых разделов
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
-  
-  // Проверяем права на редактирование сотрудников
-  const hasEditPermission = canEdit('employees');
 
   // Функция для переключения состояния подразделения
   const toggleDivision = (divisionId: string) => {
@@ -62,22 +59,19 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
 
   // Группируем сотрудников по подразделениям и отделениям
   const groupedData = personnel.reduce((acc, person) => {
-    // ИЗМЕНЕНИЕ: Руководство определяется только по категории, независимо от наличия подразделения
     const isManagement = person.category === 'management';
     
     if (isManagement) {
       if (!acc.management) {
         acc.management = {
           groupName: 'Руководство',
-          groupOrder: -1, // Самый высокий приоритет
+          groupOrder: -1,
           employees: []
         };
       }
       acc.management.employees.push(person);
     } else {
-      // Для не-руководства проверяем наличие подразделения
       if (!person.division) {
-        // Если у сотрудника нет подразделения, пропускаем его
         return acc;
       }
       
@@ -119,30 +113,26 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
         subdivisionOrder: number;
         employees: Employee[];
       }>;
+      sortedSubdivisionIds?: string[];
     }>
   });
 
-  // Сортируем сотрудников внутри групп
   if (groupedData.management) {
     groupedData.management.employees = sortEmployeesInGroup(groupedData.management.employees);
   }
 
-  // Сортируем подразделения по order
   const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) => {
     return groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder;
   });
 
-  // Для каждого подразделения сортируем отделения по order
   sortedDivisionIds.forEach(divisionId => {
     const division = groupedData.divisions[divisionId];
     const subdivisionIds = Object.keys(division.subdivisions);
     subdivisionIds.sort((a, b) => {
       return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
     });
-    // Сохраняем отсортированный массив отделений в подразделении
     division.sortedSubdivisionIds = subdivisionIds;
     
-    // Сортируем сотрудников внутри каждого отделения
     subdivisionIds.forEach(subdivisionId => {
       division.subdivisions[subdivisionId].employees = sortEmployeesInGroup(
         division.subdivisions[subdivisionId].employees
@@ -161,18 +151,16 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
             <th className="table-header-cell">Подразделение</th>
             <th className="table-header-cell">Телефон</th>
             <th className="table-header-cell">Класс сети/ Форма ГТ</th>
-            {/* Условный рендеринг столбца "Действия" */}
             {hasEditPermission && (
               <th className="table-header-cell text-right">Действия</th>
             )}
           </tr>
         </thead>
         <tbody className="table-body">
-          {/* Сначала отображаем руководство */}
+          {/* Руководство */}
           {groupedData.management && groupedData.management.employees.length > 0 && (
             <React.Fragment>
               <tr className="division-header-row management-header">
-                {/* Используем colSpan в зависимости от наличия прав */}
                 <td colSpan={hasEditPermission ? 7 : 6} className="personnel-division-header-cell">
                   {groupedData.management.groupName}
                 </td>
@@ -218,9 +206,7 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                     </div>
                   </td>
                   <td className="table-cell">
-                    <div className="text-sm text-gray-900">
-                      {person.rank || '—'}
-                    </div>
+                    <div className="text-sm text-gray-900">{person.rank || '—'}</div>
                   </td>
                   <td className="table-cell">
                     <div className="text-sm text-gray-900">
@@ -230,12 +216,8 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                     </div>
                   </td>
                   <td className="table-cell">
-                    <div className="text-sm text-gray-900">
-                      {person.division?.name || '—'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {person.subdivision?.name || ''}
-                    </div>
+                    <div className="text-sm text-gray-900">{person.division?.name || '—'}</div>
+                    <div className="text-xs text-gray-500">{person.subdivision?.name || ''}</div>
                   </td>
                   <td className="table-cell">
                     <div className="text-sm text-gray-900">
@@ -249,7 +231,6 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                       {person.form_state_secrets || '—'}
                     </div>
                   </td>
-                  {/* Условный рендеринг ячейки с действиями */}
                   {hasEditPermission && (
                     <td className="table-cell text-right">
                       <button
@@ -268,16 +249,14 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
             </React.Fragment>
           )}
 
-          {/* Затем отображаем подразделения с отделениями */}
+          {/* Подразделения с отделениями */}
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
             
             return (
               <React.Fragment key={divisionId}>
-                {/* Заголовок подразделения */}
                 <tr className="division-header-row">
-                  {/* Используем colSpan в зависимости от наличия прав */}
                   <td colSpan={hasEditPermission ? 7 : 6} className="personnel-division-header-cell">
                     <div className="division-header-content">
                       <button 
@@ -291,7 +270,6 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                   </td>
                 </tr>
                 
-                {/* Отделения внутри подразделения (показываем только если подразделение не свернуто) */}
                 {!isDivisionCollapsed && division.sortedSubdivisionIds.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
                   const subdivisionKey = `${divisionId}-${subdivisionId}`;
@@ -299,10 +277,8 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                   
                   return (
                     <React.Fragment key={subdivisionId}>
-                      {/* Заголовок отделения (если есть сотрудники) */}
                       {subdivision.employees.length > 0 && (
                         <tr className="subdivision-header-row">
-                          {/* Используем colSpan в зависимости от наличия прав */}
                           <td colSpan={hasEditPermission ? 7 : 6} className="personnel-subdivision-header-cell">
                             <div className="subdivision-header-content">
                               <button 
@@ -317,7 +293,6 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                         </tr>
                       )}
                       
-                      {/* Сотрудники отделения (показываем только если отделение не свернуто) */}
                       {!isSubdivisionCollapsed && subdivision.employees.map((person) => (
                         <tr
                           key={person.id}
@@ -359,9 +334,7 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                             </div>
                           </td>
                           <td className="table-cell">
-                            <div className="text-sm text-gray-900">
-                              {person.rank || '—'}
-                            </div>
+                            <div className="text-sm text-gray-900">{person.rank || '—'}</div>
                           </td>
                           <td className="table-cell">
                             <div className="text-sm text-gray-900">
@@ -371,12 +344,8 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                             </div>
                           </td>
                           <td className="table-cell">
-                            <div className="text-sm text-gray-900">
-                              {person.division?.name || '—'}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {person.subdivision?.name || ''}
-                            </div>
+                            <div className="text-sm text-gray-900">{person.division?.name || '—'}</div>
+                            <div className="text-xs text-gray-500">{person.subdivision?.name || ''}</div>
                           </td>
                           <td className="table-cell">
                             <div className="text-sm text-gray-900">
@@ -390,7 +359,6 @@ export function TableView({ personnel, onPersonClick, onDelete }: TableViewProps
                               {person.form_state_secrets || '—'}
                             </div>
                           </td>
-                          {/* Условный рендеринг ячейки с действиями */}
                           {hasEditPermission && (
                             <td className="table-cell text-right">
                               <button

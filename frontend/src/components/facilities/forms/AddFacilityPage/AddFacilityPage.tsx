@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { EditFacilityForm } from '../EditFacilityForm/EditFacilityForm';
 import { facilitiesApi, divisionsApi, communicationPostsApi } from '../../../../api';
 import { useDispatch } from 'react-redux';
 import { addFacility } from '../../../../store/slices/facilitiesSlice';
 import { Facility } from '../../../../types';
-import { getCurrentUser, isExploitationChief, isExploitationEmployee } from '../../../../api/utils/permissions';
 
 export function AddFacilityPage() {
     const { id: divisionId } = useParams<{ id: string }>();
@@ -15,6 +16,10 @@ export function AddFacilityPage() {
     const dispatch = useDispatch();
     const token = localStorage.getItem('accessToken');
 
+    const user = useSelector((state: RootState) => state.auth.user);
+    const isExploitationUser = useMemo(() => 
+        user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [divisions, setDivisions] = useState<any[]>([]);
@@ -22,7 +27,6 @@ export function AddFacilityPage() {
     const [communicationPosts, setCommunicationPosts] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    // Получаем данные из состояния навигации
     const navigationState = location.state as {
         divisionId?: string;
         subdivisionId?: string;
@@ -31,43 +35,30 @@ export function AddFacilityPage() {
         fromSubdivision?: boolean;
     } | undefined;
 
-    // Получаем данные текущего пользователя с useMemo
-    const currentUser = useMemo(() => getCurrentUser(), []);
-    const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
-
-    // Получаем subdivisionId из state навигации или из search params
     const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
     const subdivisionIdFromUrl = searchParams.get('subdivision');
     const subdivisionIdFromState = navigationState?.subdivisionId;
     const preSelectedSubdivision = subdivisionIdFromState || subdivisionIdFromUrl;
-
-    // Получаем флаг fromSubdivision из state
     const fromSubdivision = navigationState?.fromSubdivision || false;
 
-    // Определяем эффективные значения для подразделения и отделения
     const effectiveDivisionId = useMemo(() => {
-        // Приоритеты: divisionId из URL > divisionId из state > подразделение пользователя
         return divisionId ||
             navigationState?.divisionId ||
-            (isExploitationUser && currentUser?.division_info?.id ? currentUser.division_info.id : null);
-    }, [divisionId, navigationState?.divisionId, isExploitationUser, currentUser]);
+            (isExploitationUser && user?.division_info?.id ? user.division_info.id : null);
+    }, [divisionId, navigationState?.divisionId, isExploitationUser, user]);
 
     const effectiveSubdivisionId = useMemo(() => {
-        // Приоритеты: subdivisionId из state > subdivisionId из URL > отделение пользователя
         return preSelectedSubdivision ||
-            (isExploitationUser && !preSelectedSubdivision && currentUser?.division_info?.subdivision?.id ?
-                currentUser.division_info.subdivision.id : null);
-    }, [preSelectedSubdivision, isExploitationUser, currentUser]);
+            (isExploitationUser && !preSelectedSubdivision && user?.division_info?.subdivision?.id ?
+                user.division_info.subdivision.id : null);
+    }, [preSelectedSubdivision, isExploitationUser, user]);
 
-    // Определяем, находимся ли мы в глобальном режиме
     const isGlobalMode = useMemo(() => !divisionId && !isExploitationUser, [divisionId, isExploitationUser]);
 
-    // Упрощаем логику фиксированных значений
     const fixedDivision = useMemo(() => !!effectiveDivisionId, [effectiveDivisionId]);
     const fixedSubdivision = useMemo(() => !!effectiveSubdivisionId && fromSubdivision,
         [effectiveSubdivisionId, fromSubdivision]);
 
-    // Централизованная загрузка всех данных как в технике
     useEffect(() => {
         const fetchAllData = async () => {
           if (!token) {
@@ -79,14 +70,6 @@ export function AddFacilityPage() {
             setIsLoadingData(true);
             setError(null);
       
-            // Проверяем доступность методов API
-            if (!facilitiesApi.getFacilityTypes) {
-              throw new Error('getFacilityTypes method not available');
-            }
-            if (!communicationPostsApi.getCommunicationPosts) {
-              throw new Error('getCommunicationPosts method not available');
-            }
-      
             const [divisionsData, facilityTypesData, communicationPostsData] = await Promise.all([
               divisionsApi.getDivisions({ token }),
               facilitiesApi.getFacilityTypes(token),
@@ -97,7 +80,7 @@ export function AddFacilityPage() {
             setFacilityTypes(facilityTypesData);
             setCommunicationPosts(communicationPostsData);
             
-          } catch (err) {
+          } catch (err: any) {
             console.error('Ошибка при загрузке данных:', err);
             setError(`Ошибка загрузки данных: ${err.message}`);
           } finally {
@@ -108,18 +91,13 @@ export function AddFacilityPage() {
         fetchAllData();
       }, [token]);
 
-    // Правильно формируем initialData с объектами подразделения и отделения
     const initialData = useMemo(() => {
-        // Находим объект подразделения по ID
         const divisionObj = effectiveDivisionId && divisions.length > 0
             ? divisions.find(d => String(d.id) === String(effectiveDivisionId))
             : null;
-
-        // Находим объект отделения по ID
         const subdivisionObj = effectiveSubdivisionId && divisionObj && divisionObj.subdivisions
             ? divisionObj.subdivisions.find(s => String(s.id) === String(effectiveSubdivisionId))
             : null;
-
         return {
             name: '',
             division: divisionObj || null,
@@ -159,7 +137,7 @@ export function AddFacilityPage() {
 
             dispatch(addFacility(newFacility));
 
-            // Навигация после создания с учетом контекста
+            // Навигация после создания
             if (location.state?.from === 'facilities-section') {
                 const backState = {
                     divisionId: location.state.divisionId,
@@ -167,7 +145,6 @@ export function AddFacilityPage() {
                     activeTab: location.state.activeTab,
                     fromSubdivision: location.state.fromSubdivision
                 };
-
                 if (isGlobalMode) {
                     navigate('/facilities', { state: backState });
                 } else if (effectiveDivisionId) {
@@ -206,7 +183,6 @@ export function AddFacilityPage() {
                 activeTab: location.state.activeTab,
                 fromSubdivision: location.state.fromSubdivision
             };
-
             if (isGlobalMode) {
                 navigate('/facilities', { state: backState });
             } else if (effectiveDivisionId) {
@@ -234,10 +210,7 @@ export function AddFacilityPage() {
     return (
         <div className="facility-add-page-container">
             <div className="facility-edit-header">
-                <button
-                    onClick={handleBack}
-                    className="facility-btn--icon"
-                >
+                <button onClick={handleBack} className="facility-btn--icon">
                     <ArrowLeft size={20} />
                 </button>
                 <h1 className="facility-edit-mode-title">Добавление нового объекта</h1>

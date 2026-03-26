@@ -183,9 +183,7 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
               <ListTodo size={16} />
               <span>Этапы</span>
             </button>
-          </div>
-
-          {/* Кнопка раскрытия дополнительной информации */}
+                      {/* Кнопка раскрытия дополнительной информации */}
           <button
             className="tasks-details-toggle"
             onClick={() => setDetailsExpanded(!detailsExpanded)}
@@ -193,6 +191,9 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
             <span>Подробнее</span>
             {detailsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
+          </div>
+
+
 
           {/* Блок дополнительной информации (раскрывающийся) */}
           {detailsExpanded && (

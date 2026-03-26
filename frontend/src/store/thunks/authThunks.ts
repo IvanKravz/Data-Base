@@ -1,3 +1,4 @@
+// store/thunks/authThunks.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/auth';
 import { setUser, setLoading, setError, clearAuthState } from '../slices/authSlice';
@@ -5,8 +6,8 @@ import { setUser, setLoading, setError, clearAuthState } from '../slices/authSli
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ username, password }: { username: string; password: string }, { dispatch }) => {
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
       const data = await authApi.login(username, password);
       dispatch(setUser(data.user));
       return data;
@@ -37,8 +38,8 @@ export const registerUser = createAsyncThunk(
     department: string;
     division: string;
   }, { dispatch }) => {
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
       const data = await authApi.register(userData);
       dispatch(setUser(data.user));
       return data;
@@ -64,8 +65,8 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { dispatch }) => {
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
       authApi.logout();
       dispatch(clearAuthState());
     } catch (error) {
@@ -79,13 +80,17 @@ export const logoutUser = createAsyncThunk(
 export const checkAuth = createAsyncThunk(
   'auth/check',
   async (_, { dispatch }) => {
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
-      const user = localStorage.getItem('user');
-      if (user) {
-        dispatch(setUser(JSON.parse(user)));
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        dispatch(setUser(user));
+      } else {
+        dispatch(clearAuthState());
       }
     } catch (error) {
+      console.error('checkAuth error', error);
       authApi.logout();
       dispatch(clearAuthState());
     } finally {

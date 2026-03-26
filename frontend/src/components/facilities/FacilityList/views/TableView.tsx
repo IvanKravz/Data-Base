@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { Facility } from '../../../../types';
 import { Trash2, LocateFixed, ChevronDown, ChevronRight } from 'lucide-react';
-import { hasPermission } from '../../../../api/utils/permissions';
 import './style.css';
 
 interface TableViewProps {
@@ -29,99 +30,75 @@ export function TableView({
   facilityClassFilter
 }: TableViewProps) {
   const navigate = useNavigate();
-  
-  // Состояния для отслеживания свернутых/развернутых разделов
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
+  const hasViewPermission = useMemo(() => 
+    permissions?.models?.Facility?.includes('view') ?? false, [permissions]);
+  const hasChangePermission = useMemo(() => 
+    permissions?.models?.Facility?.includes('change') ?? false, [permissions]);
+  const hasDeletePermission = useMemo(() => 
+    permissions?.models?.Facility?.includes('delete') ?? false, [permissions]);
+
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
-  
-  // Проверяем конкретные права
-  const hasViewPermission = hasPermission('facilities', 'view');
-  const hasChangePermission = hasPermission('facilities', 'change');
-  const hasDeletePermission = hasPermission('facilities', 'delete');
-  
-  const hasClosedFacilities = facilities.some(f => f.is_closed);
 
-  // Определяем, нужно ли показывать столбец действий
+  const hasClosedFacilities = facilities.some(f => f.is_closed);
   const shouldShowActions = hasChangePermission || hasDeletePermission || onLocate;
 
-  // Функция для переключения состояния подразделения
   const toggleDivision = (divisionId: string) => {
-    const newCollapsed = new Set(collapsedDivisions);
-    if (newCollapsed.has(divisionId)) {
-      newCollapsed.delete(divisionId);
-    } else {
-      newCollapsed.add(divisionId);
-    }
-    setCollapsedDivisions(newCollapsed);
+    setCollapsedDivisions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(divisionId)) newSet.delete(divisionId);
+      else newSet.add(divisionId);
+      return newSet;
+    });
   };
 
-  // Функция для переключения состояния отделения
   const toggleSubdivision = (divisionId: string, subdivisionId: string) => {
     const key = `${divisionId}-${subdivisionId}`;
-    const newCollapsed = new Set(collapsedSubdivisions);
-    if (newCollapsed.has(key)) {
-      newCollapsed.delete(key);
-    } else {
-      newCollapsed.add(key);
-    }
-    setCollapsedSubdivisions(newCollapsed);
+    setCollapsedSubdivisions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) newSet.delete(key);
+      else newSet.add(key);
+      return newSet;
+    });
   };
 
   const sortFacilitiesInGroup = (facilitiesList: Facility[]): Facility[] => {
-    return [...facilitiesList].sort((a, b) => {
-      return a.name.localeCompare(b.name);
-    });
+    return [...facilitiesList].sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const groupedData = facilities.reduce((acc, facility) => {
     if (!facility.division) {
       if (!acc.noDivision) {
-        acc.noDivision = {
-          groupName: 'Объекты без подразделения',
-          groupOrder: -1,
-          facilities: []
-        };
+        acc.noDivision = { groupName: 'Объекты без подразделения', groupOrder: -1, facilities: [] };
       }
       acc.noDivision.facilities.push(facility);
     } else {
       const divisionId = facility.division.id;
       const divisionName = facility.division.name;
       const divisionOrder = facility.division.order || 9999;
-
       const subdivisionId = facility.subdivision?.id || 'no-subdivision';
       const subdivisionName = facility.subdivision?.name || 'Без отделения';
       const subdivisionOrder = facility.subdivision?.order || 9999;
 
       if (!acc.divisions[divisionId]) {
-        acc.divisions[divisionId] = {
-          divisionName,
-          divisionOrder,
-          subdivisions: {}
-        };
+        acc.divisions[divisionId] = { divisionName, divisionOrder, subdivisions: {} };
       }
-
       if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
-        acc.divisions[divisionId].subdivisions[subdivisionId] = {
-          subdivisionName,
-          subdivisionOrder,
-          facilities: []
-        };
+        acc.divisions[divisionId].subdivisions[subdivisionId] = { subdivisionName, subdivisionOrder, facilities: [] };
       }
-
       acc.divisions[divisionId].subdivisions[subdivisionId].facilities.push(facility);
     }
-
     return acc;
   }, {
     noDivision: null as { groupName: string; groupOrder: number; facilities: Facility[] } | null,
     divisions: {} as Record<string, {
       divisionName: string;
       divisionOrder: number;
-      subdivisions: Record<string, {
-        subdivisionName: string;
-        subdivisionOrder: number;
-        facilities: Facility[];
-      }>;
+      subdivisions: Record<string, { subdivisionName: string; subdivisionOrder: number; facilities: Facility[] }>;
+      sortedSubdivisionIds?: string[];
     }>
   });
 
@@ -129,59 +106,40 @@ export function TableView({
     groupedData.noDivision.facilities = sortFacilitiesInGroup(groupedData.noDivision.facilities);
   }
 
-  const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) => {
-    return groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder;
-  });
+  const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) =>
+    groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder
+  );
 
   sortedDivisionIds.forEach(divisionId => {
     const division = groupedData.divisions[divisionId];
     const subdivisionIds = Object.keys(division.subdivisions);
-    subdivisionIds.sort((a, b) => {
-      return division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder;
-    });
+    subdivisionIds.sort((a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder);
     division.sortedSubdivisionIds = subdivisionIds;
-
-    subdivisionIds.forEach(subdivisionId => {
-      division.subdivisions[subdivisionId].facilities = sortFacilitiesInGroup(
-        division.subdivisions[subdivisionId].facilities
-      );
+    subdivisionIds.forEach(subId => {
+      division.subdivisions[subId].facilities = sortFacilitiesInGroup(division.subdivisions[subId].facilities);
     });
   });
 
   const handleRowClick = (facility: Facility) => {
     const currentSearchParams = new URLSearchParams(window.location.search);
-
     const state: any = {
       from: 'facilities-section',
-      divisionId: divisionId,
-      subdivisionId: subdivisionId,
-      activeTab: activeTab,
-      filterType: filterType,
-      facilityClassFilter: facilityClassFilter
+      divisionId,
+      subdivisionId,
+      activeTab,
+      filterType,
+      facilityClassFilter
     };
-
     let facilityUrl = `/facilities/${facility.id}`;
     const params = new URLSearchParams();
-
     const typeFilter = currentSearchParams.get('type');
     const classFilter = currentSearchParams.get('class');
     const viewFilter = currentSearchParams.get('view');
-
-    if (typeFilter) {
-      params.append('type', typeFilter);
-    }
-    if (classFilter) {
-      params.append('class', classFilter);
-    }
-    if (viewFilter) {
-      params.append('view', viewFilter);
-    }
-
+    if (typeFilter) params.append('type', typeFilter);
+    if (classFilter) params.append('class', classFilter);
+    if (viewFilter) params.append('view', viewFilter);
     const queryString = params.toString();
-    if (queryString) {
-      facilityUrl += `?${queryString}`;
-    }
-
+    if (queryString) facilityUrl += `?${queryString}`;
     navigate(facilityUrl, { state });
   };
 
@@ -189,85 +147,47 @@ export function TableView({
     if (!showDifferentFields) {
       return (
         <>
-          <td className="facility-table-cell facility-table-cell-primary">
-            {facility.name}
-          </td>
-          <td className="facility-table-cell">
-            {facility.type?.name || '-'}
-          </td>
+          <td className="facility-table-cell facility-table-cell-primary">{facility.name}</td>
+          <td className="facility-table-cell">{facility.type?.name || '-'}</td>
           {hasClosedFacilities && (
-            <td className="facility-table-cell">
-              {facility.is_closed ? `${facility.facility_class} класс` : '-'}
-            </td>
+            <td className="facility-table-cell">{facility.is_closed ? `${facility.facility_class} класс` : '-'}</td>
           )}
-          <td className="facility-table-cell">
-            {facility.address}
-          </td>
+          <td className="facility-table-cell">{facility.address}</td>
           <td className="facility-table-cell">
             <div className="facility-division-container">
-              <div className="facility-division-name">
-                {facility.division_name || '-'}
-              </div>
-              {facility.subdivision_name && (
-                <div className="facility-subdivision-name">
-                  {facility.subdivision_name}
-                </div>
-              )}
+              <div className="facility-division-name">{facility.division_name || '-'}</div>
+              {facility.subdivision_name && <div className="facility-subdivision-name">{facility.subdivision_name}</div>}
             </div>
           </td>
         </>
       );
     }
-
     return (
       <>
-        <td className="facility-table-cell facility-table-cell-primary">
-          {facility.name}
-        </td>
-        <td className="facility-table-cell">
-          {facility.type?.name || '-'}
-        </td>
-        <td className="facility-table-cell">
-          {facility.facility_class ? `${facility.facility_class} класс` : '-'}
-        </td>
-        <td className="facility-table-cell">
-          {facility.communication_posts?.map(post => post.name).join(', ') || '-'}
-        </td>
-        <td className="facility-table-cell">
-          {facility.address}
-        </td>
+        <td className="facility-table-cell facility-table-cell-primary">{facility.name}</td>
+        <td className="facility-table-cell">{facility.type?.name || '-'}</td>
+        <td className="facility-table-cell">{facility.facility_class ? `${facility.facility_class} класс` : '-'}</td>
+        <td className="facility-table-cell">{facility.communication_posts?.map(post => post.name).join(', ') || '-'}</td>
+        <td className="facility-table-cell">{facility.address}</td>
         <td className="facility-table-cell">
           <div className="facility-division-container">
-            <div className="facility-division-name">
-              {facility.division_name || '-'}
-            </div>
-            {facility.subdivision_name && (
-              <div className="facility-subdivision-name">
-                {facility.subdivision_name}
-              </div>
-            )}
+            <div className="facility-division-name">{facility.division_name || '-'}</div>
+            {facility.subdivision_name && <div className="facility-subdivision-name">{facility.subdivision_name}</div>}
           </div>
         </td>
-        <td className="facility-table-cell">
-          {facility.inn || '-'}
-        </td>
+        <td className="facility-table-cell">{facility.inn || '-'}</td>
       </>
     );
   };
 
   const renderHeader = () => {
     const headers = [];
-
     if (!showDifferentFields) {
       headers.push(
         <th key="name" className="facility-table-header">Наименование</th>,
         <th key="type" className="facility-table-header">Тип</th>
       );
-      
-      if (hasClosedFacilities) {
-        headers.push(<th key="class" className="facility-table-header">Класс</th>);
-      }
-      
+      if (hasClosedFacilities) headers.push(<th key="class" className="facility-table-header">Класс</th>);
       headers.push(
         <th key="address" className="facility-table-header">Адрес</th>,
         <th key="division" className="facility-table-header">Подразделение</th>
@@ -283,53 +203,29 @@ export function TableView({
         <th key="inn" className="facility-table-header">ИНН</th>
       );
     }
-
-    // Добавляем столбец "Действия" в renderHeader, если нужно
     if (shouldShowActions) {
-      headers.push(
-        <th key="actions" className="facility-table-header facility-table-cell-actions">
-          Действия
-        </th>
-      );
+      headers.push(<th key="actions" className="facility-table-header facility-table-cell-actions">Действия</th>);
     }
-
     return headers;
   };
 
   const getColspan = () => {
     let baseColspan = showDifferentFields ? 7 : (hasClosedFacilities ? 5 : 4);
-    // Добавляем 1 если есть столбец действий
     return baseColspan + (shouldShowActions ? 1 : 0);
   };
 
   const renderActions = (facility: Facility) => {
     if (!shouldShowActions) return null;
-
     return (
       <td className="facility-table-cell facility-table-cell-actions">
         <div className="facility-action-buttons">
           {onLocate && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onLocate(facility);
-              }}
-              className="facility-locate-btn"
-              aria-label="Найти на карте"
-            >
+            <button onClick={(e) => { e.stopPropagation(); onLocate(facility); }} className="facility-locate-btn" aria-label="Найти на карте">
               <LocateFixed className="h-5 w-5" />
             </button>
           )}
-          {/* Показываем кнопку удаления только если есть право 'delete' */}
           {hasDeletePermission && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(facility.id);
-              }}
-              className="facility-delete-btn"
-              aria-label="Удалить объект"
-            >
+            <button onClick={(e) => { e.stopPropagation(); onDelete(facility.id); }} className="facility-delete-btn" aria-label="Удалить объект">
               <Trash2 className="h-5 w-4" />
             </button>
           )}
@@ -342,67 +238,48 @@ export function TableView({
     <div className="facility-table-container">
       <table className="facility-table">
         <thead>
-          <tr>
-            {renderHeader()}
-          </tr>
+          <tr>{renderHeader()}</tr>
         </thead>
         <tbody>
           {groupedData.noDivision && (
             <React.Fragment>
               <tr className="division-header-row no-division-header">
-                <td colSpan={getColspan()} className="facility-division-header-cell">
-                  {groupedData.noDivision.groupName}
-                </td>
+                <td colSpan={getColspan()} className="facility-division-header-cell">{groupedData.noDivision.groupName}</td>
               </tr>
               {groupedData.noDivision.facilities.map((facility) => (
-                <tr
-                  key={facility.id}
-                  className="facility-table-row no-division-row"
-                  onClick={() => handleRowClick(facility)}
-                >
+                <tr key={facility.id} className="facility-table-row no-division-row" onClick={() => handleRowClick(facility)}>
                   {renderRowContent(facility)}
                   {renderActions(facility)}
                 </tr>
               ))}
             </React.Fragment>
           )}
-
           {sortedDivisionIds.map(divisionId => {
             const division = groupedData.divisions[divisionId];
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
-
             return (
               <React.Fragment key={divisionId}>
                 <tr className="division-header-row">
                   <td colSpan={getColspan()} className="facility-division-header-cell">
                     <div className="division-header-content">
-                      <button 
-                        className="collapse-button"
-                        onClick={() => toggleDivision(divisionId)}
-                      >
+                      <button className="collapse-button" onClick={() => toggleDivision(divisionId)}>
                         {isDivisionCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                       </button>
                       <span>{division.divisionName}</span>
                     </div>
                   </td>
                 </tr>
-
-                {/* Отделения внутри подразделения (показываем только если подразделение не свернуто) */}
-                {!isDivisionCollapsed && division.sortedSubdivisionIds.map(subdivisionId => {
+                {!isDivisionCollapsed && division.sortedSubdivisionIds!.map(subdivisionId => {
                   const subdivision = division.subdivisions[subdivisionId];
                   const subdivisionKey = `${divisionId}-${subdivisionId}`;
                   const isSubdivisionCollapsed = collapsedSubdivisions.has(subdivisionKey);
-
                   return (
                     <React.Fragment key={subdivisionId}>
                       {subdivision.facilities.length > 0 && (
                         <tr className="subdivision-header-row">
                           <td colSpan={getColspan()} className="facility-subdivision-header-cell">
                             <div className="subdivision-header-content">
-                              <button 
-                                className="collapse-button"
-                                onClick={() => toggleSubdivision(divisionId, subdivisionId)}
-                              >
+                              <button className="collapse-button" onClick={() => toggleSubdivision(divisionId, subdivisionId)}>
                                 {isSubdivisionCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                               </button>
                               <span>{subdivision.subdivisionName}</span>
@@ -410,14 +287,8 @@ export function TableView({
                           </td>
                         </tr>
                       )}
-
-                      {/* Объекты отделения (показываем только если отделение не свернуто) */}
                       {!isSubdivisionCollapsed && subdivision.facilities.map((facility) => (
-                        <tr
-                          key={facility.id}
-                          className="facility-table-row"
-                          onClick={() => handleRowClick(facility)}
-                        >
+                        <tr key={facility.id} className="facility-table-row" onClick={() => handleRowClick(facility)}>
                           {renderRowContent(facility)}
                           {renderActions(facility)}
                         </tr>

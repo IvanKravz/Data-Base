@@ -2,14 +2,18 @@
 import { BrowserRouter } from 'react-router-dom';
 import AppRouter from './AppRouter';
 import { AppPermissionsProvider } from './api/utils/AppPermissionsContext';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { checkAuth } from './store/thunks/authThunks';
 
 const App = () => {
-  return (
-    <BrowserRouter
-      future={{
-        v7_relativeSplatPath: true,
-      }}
-    >
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuth());
+  }, [dispatch]);
+   return (
+    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
       <AppPermissionsProvider>
         <AppRouter />
       </AppPermissionsProvider>

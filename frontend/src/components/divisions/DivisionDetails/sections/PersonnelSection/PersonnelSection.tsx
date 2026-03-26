@@ -1,12 +1,13 @@
 // PersonnelSection.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft, Plus, Filter } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../store/store';
 import { PersonnelList } from '../../../../personnel/PersonnelList/PersonnelList';
 import { SearchBar } from '../../../../common/SearchBar';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { authApi, divisionsApi, employeesApi } from '../../../../../api';
 import './PersonnelSection.css';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canCreate } from '../../../../../api/utils/permissions';
 import { PersonnelAdvancedSearchModal } from '../../../../personnel/forms/PersonnelAdvancedSearchModal/PersonnelAdvancedSearchModal';
 
 interface PersonnelAdvancedSearchFilters {
@@ -31,143 +32,92 @@ export function PersonnelSection() {
   const [subdivisionName, setSubdivisionName] = useState('');
   const [personnel, setPersonnel] = useState([]);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-
-  // Новое состояние для расширенных фильтров
   const [advancedFilters, setAdvancedFilters] = useState<PersonnelAdvancedSearchFilters>({
     ranks: [],
     positions: [],
     divisions: [],
-    subdivisions: [], 
+    subdivisions: [],
     networkClasses: [],
     gtForms: []
   });
 
-  // Получаем данные текущего пользователя
-  const currentUser = getCurrentUser();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
 
-  // Стабилизированные значения
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
-  const stableCurrentUser = useMemo(() => currentUser, [JSON.stringify(currentUser)]);
 
-  // Мемоизируем вычисления типов пользователей
-  const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
-  const isChief = useMemo(() => isExploitationChief(), []);
-
-  // Для эксплуатационных пользователей отключаем глобальный режим
+  const isExploitationUser = useMemo(() => user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
+  const isChief = useMemo(() => user?.roles?.includes('exploitation_chief'), [user]);
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
 
-  // Получаем ID подразделения пользователя
-  const userDivisionId = useMemo(() => {
-    if (!stableCurrentUser?.division_info) return null;
-    return stableCurrentUser.division_info.id;
-  }, [stableCurrentUser]);
-
-  // Получаем ID отделения пользователя
+  const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
   const userSubdivisionId = useMemo(() => {
-    if (!stableCurrentUser?.division_info || isChief) return null;
-    return stableCurrentUser.division_info.subdivision?.id || null;
-  }, [stableCurrentUser, isChief]);
+    if (!user?.division_info || isChief) return null;
+    return user.division_info.subdivision?.id ?? null;
+  }, [user, isChief]);
 
-  // Функция для очистки всех фильтров
+  const canCreateEmployee = useMemo(() => permissions?.models?.Employee?.includes('add') ?? false, [permissions]);
+
   const handleClearFilters = useCallback(() => {
     setSearchTerm('');
-    setAdvancedFilters({
-      ranks: [],
-      positions: [],
-      divisions: [],
-      subdivisions: [],
-      networkClasses: [],
-      gtForms: []
-    });
+    setAdvancedFilters({ ranks: [], positions: [], divisions: [], subdivisions: [], networkClasses: [], gtForms: [] });
   }, []);
 
-  // Обработчик изменения расширенных фильтров
   const handleAdvancedFilterChange = useCallback((filterType: keyof PersonnelAdvancedSearchFilters, values: any) => {
-    setAdvancedFilters(prev => ({
-      ...prev,
-      [filterType]: values
-    }));
+    setAdvancedFilters(prev => ({ ...prev, [filterType]: values }));
   }, []);
 
-  // Мемоизированная функция загрузки данных
   const fetchData = useCallback(async () => {
     if (!stableToken) return;
-
     try {
       setLoading(true);
       setError(null);
 
       if (isGlobalView) {
-        // Глобальный режим - загружаем всех сотрудников
         const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
         setPersonnel(allPersonnel);
         authApi.updateGlobalView(true);
       } else if (isExploitationUser) {
-        // Режим для эксплуатационных пользователей
         authApi.updateGlobalView(false);
-
         if (!userDivisionId) {
           setError('У вашей учетной записи не назначено подразделение');
           return;
         }
-
         const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
-
         const data = await divisionsApi.getDivisionById(userDivisionId, stableToken);
         setDivision(data);
-
-        // Устанавливаем название отделения если есть
         if (targetSubdivisionId) {
           const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === targetSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
-
-        // Загружаем всех сотрудников и фильтруем
         const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
-
-        const filteredPersonnel = allPersonnel.filter(person => {
+        const filtered = allPersonnel.filter(person => {
           const matchesDivision = person.division?.id?.toString() === userDivisionId.toString();
-
-          if (targetSubdivisionId) {
-            return matchesDivision && person.subdivision?.id?.toString() === targetSubdivisionId.toString();
-          }
-
+          if (targetSubdivisionId) return matchesDivision && person.subdivision?.id?.toString() === targetSubdivisionId.toString();
           return matchesDivision;
         });
-
-        setPersonnel(filteredPersonnel);
+        setPersonnel(filtered);
       } else {
-        // Стандартный режим подразделения
         if (!id) return;
-
         authApi.updateGlobalView(false);
-
         const data = await divisionsApi.getDivisionById(id, stableToken);
         setDivision(data);
-
-        // Устанавливаем название отделения если есть
         if (stableSubdivisionId) {
           const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === stableSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
-
         const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
-        const filteredPersonnel = allPersonnel.filter(person => {
+        const filtered = allPersonnel.filter(person => {
           const matchesDivision = person.division?.id?.toString() === id.toString();
-
-          if (stableSubdivisionId) {
-            return matchesDivision && person.subdivision?.id?.toString() === stableSubdivisionId.toString();
-          }
-
+          if (stableSubdivisionId) return matchesDivision && person.subdivision?.id?.toString() === stableSubdivisionId.toString();
           return matchesDivision;
         });
-
-        setPersonnel(filteredPersonnel);
+        setPersonnel(filtered);
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -177,127 +127,65 @@ export function PersonnelSection() {
     }
   }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
 
-  // Основной эффект загрузки данных
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Логика фильтрации для отделения
   const filterBySubdivision = useCallback((items: any[]) => {
-    // Для сотрудника эксплуатации не фильтруем по отделению - показываем весь персонал подразделения
-    if (isExploitationUser && !id) {
-      return items;
-    }
-
-    // Для обычных случаев
+    if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-
-    return items.filter(item =>
-      item.subdivision?.id?.toString() === stableSubdivisionId.toString()
-    );
+    return items.filter(item => item.subdivision?.id?.toString() === stableSubdivisionId.toString());
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  // Фильтрация по всем критериям
   const filterPersonnel = useCallback((items: any[]) => {
     let filtered = items;
-  
-    // Расширенная фильтрация по поисковому запросу
     if (searchTerm) {
-      const term = searchTerm.toLowerCase().trim(); // нормализуем поисковый запрос
+      const term = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(person => {
-        // Нормализуем все строки для поиска
-        const fullName = `${person.full_name || ''}`.toLowerCase().trim();
-        const personalNumber = person.personal_number?.toString().toLowerCase().trim() || '';
-        const phoneNumberWork = person.work_phone?.toLowerCase().trim() || '';
-        const phoneNumberPersonal = person.personal_phone?.toLowerCase().trim() || '';
-        const rank = person.rank?.toLowerCase().trim() || '';
-        const position = person.position?.toLowerCase().trim() || '';
-        const divisionName = person.division?.name?.toLowerCase().trim() || '';
-        const subdivisionName = person.subdivision?.name?.toLowerCase().trim() || '';
-  
-        return fullName.includes(term) ||
-          personalNumber.includes(term) ||
-          phoneNumberWork.includes(term) ||
-          phoneNumberPersonal.includes(term) ||
-          rank.includes(term) ||
-          position.includes(term) ||
-          divisionName.includes(term) ||
-          subdivisionName.includes(term);
+        const fullName = (person.full_name || '').toLowerCase().trim();
+        const personalNumber = (person.personal_number?.toString() || '').toLowerCase().trim();
+        const phoneWork = (person.work_phone || '').toLowerCase().trim();
+        const phonePersonal = (person.personal_phone || '').toLowerCase().trim();
+        const rank = (person.rank || '').toLowerCase().trim();
+        const position = (person.position || '').toLowerCase().trim();
+        const divisionName = (person.division?.name || '').toLowerCase().trim();
+        const subdivisionName = (person.subdivision?.name || '').toLowerCase().trim();
+        return fullName.includes(term) || personalNumber.includes(term) || phoneWork.includes(term) ||
+          phonePersonal.includes(term) || rank.includes(term) || position.includes(term) ||
+          divisionName.includes(term) || subdivisionName.includes(term);
       });
     }
-
-    // Остальная логика расширенных фильтров остается без изменений
-    if (advancedFilters.ranks.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.ranks.some(rank =>
-          person.rank?.toLowerCase().includes(rank.toLowerCase())
-        )
-      );
+    if (advancedFilters.ranks.length) {
+      filtered = filtered.filter(person => advancedFilters.ranks.some(r => person.rank?.toLowerCase().includes(r.toLowerCase())));
     }
-
-    if (advancedFilters.positions.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.positions.some(position =>
-          person.position?.toLowerCase().includes(position.toLowerCase())
-        )
-      );
+    if (advancedFilters.positions.length) {
+      filtered = filtered.filter(person => advancedFilters.positions.some(p => person.position?.toLowerCase().includes(p.toLowerCase())));
     }
-
-    if (advancedFilters.divisions.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.divisions.some(division =>
-          person.division?.name?.toLowerCase().includes(division.toLowerCase())
-        )
-      );
+    if (advancedFilters.divisions.length) {
+      filtered = filtered.filter(person => advancedFilters.divisions.some(d => person.division?.name?.toLowerCase().includes(d.toLowerCase())));
     }
-
-    if (advancedFilters.subdivisions.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.subdivisions.some(subdivision =>
-          person.subdivision?.name?.toLowerCase().includes(subdivision.toLowerCase())
-        )
-      );
+    if (advancedFilters.subdivisions.length) {
+      filtered = filtered.filter(person => advancedFilters.subdivisions.some(s => person.subdivision?.name?.toLowerCase().includes(s.toLowerCase())));
     }
-
-    if (advancedFilters.networkClasses.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.networkClasses.some(networkClass => {
-          const personAccessLevel = person.sha_details?.access_level?.toString();
-          return personAccessLevel === networkClass;
-        })
-      );
+    if (advancedFilters.networkClasses.length) {
+      filtered = filtered.filter(person => advancedFilters.networkClasses.some(nc => person.sha_details?.access_level?.toString() === nc));
     }
-
-    if (advancedFilters.gtForms.length > 0) {
-      filtered = filtered.filter(person =>
-        advancedFilters.gtForms.some(gtForm => {
-          const personGtForm = person.form_state_secrets;
-          return personGtForm === gtForm;
-        })
-      );
+    if (advancedFilters.gtForms.length) {
+      filtered = filtered.filter(person => advancedFilters.gtForms.some(gf => person.form_state_secrets === gf));
     }
-
     return filtered;
   }, [searchTerm, advancedFilters]);
 
-
-  // Фильтруем персонал по отделению и фильтрам
   const displayedPersonnel = useMemo(() => {
     const bySubdivision = filterBySubdivision(personnel);
     return filterPersonnel(bySubdivision);
   }, [personnel, filterBySubdivision, filterPersonnel]);
 
   const handleBack = useCallback(() => {
-    if (isGlobalView) {
-      navigate('/');
-    } else {
-      if (stableSubdivisionId) {
-        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
-      } else {
-        navigate(`/divisions/${id}`);
-      }
-    }
+    if (isGlobalView) navigate('/');
+    else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
+    else navigate(`/divisions/${id}`);
   }, [isGlobalView, navigate, id, stableSubdivisionId]);
 
   const onCreateEmployee = useCallback(() => {
@@ -308,43 +196,24 @@ export function PersonnelSection() {
       divisionName: division?.name,
       subdivisionName: subdivisionName
     };
-
     navigate(`/personnel/create`, { state });
   }, [navigate, id, stableSubdivisionId, location.pathname, location.search, division?.name, subdivisionName]);
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
-      const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
+      const divisionName = user?.division_info?.name || 'Ваше подразделение';
       return `Личный состав: ${divisionName}`;
     }
-
-    if (isGlobalView) {
-      return 'Личный состав: Все подразделения';
-    }
-
+    if (isGlobalView) return 'Личный состав: Все подразделения';
     return `Личный состав: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
 
-  const handleSearchTermChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
+  const handleSearchTermChange = useCallback((term: string) => setSearchTerm(term), []);
 
-  // Проверка прав доступа для кнопки "Добавить сотрудника"
-  const canCreateEmployee = canCreate('employees');
+  const hasActiveAdvancedFilters = useMemo(() => Object.values(advancedFilters).some(filters => filters.length > 0), [advancedFilters]);
 
-  // Проверка наличия активных расширенных фильтров
-  const hasActiveAdvancedFilters = useMemo(() =>
-    Object.values(advancedFilters).some(filters => filters.length > 0),
-    [advancedFilters]
-  );
-
-  if (loading) {
-    return <div className="flex justify-center py-12">Загрузка данных...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  if (loading) return <div className="flex justify-center py-12">Загрузка данных...</div>;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <>
@@ -358,10 +227,7 @@ export function PersonnelSection() {
           {getHeaderTitle()}
         </h3>
         {canCreateEmployee && (
-          <button
-            onClick={onCreateEmployee}
-            className="create-employee-button"
-          >
+          <button onClick={onCreateEmployee} className="create-employee-button">
             <Plus size={16} />
             <span>Создать сотрудника</span>
           </button>
@@ -371,93 +237,76 @@ export function PersonnelSection() {
       <div className="personnel-container">
         <div className="personnel-search-container">
           <div className="search-bar-with-filters">
-            <SearchBar
-              searchTerm={searchTerm}
-              setSearchTerm={handleSearchTermChange}
-              placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, личному номеру..."
-            />
-            <button
-              className={`advanced-filter-button ${showAdvancedSearch ? 'active' : ''}`}
-              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-            >
+            <SearchBar searchTerm={searchTerm} setSearchTerm={handleSearchTermChange} placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, личному номеру..." />
+            <button className={`advanced-filter-button ${showAdvancedSearch ? 'active' : ''}`} onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}>
               <Filter size={18} />
               {hasActiveAdvancedFilters && <span className="filter-indicator"></span>}
             </button>
           </div>
-
-          {/* Выпадающая панель расширенного поиска */}
           {showAdvancedSearch && (
-            <PersonnelAdvancedSearchModal
-              isOpen={showAdvancedSearch}
-              filters={advancedFilters}
-              onFilterChange={handleAdvancedFilterChange}
-              onClose={() => setShowAdvancedSearch(false)}
-              onClearFilters={handleClearFilters}
-              personnel={personnel}
-            />
+            <PersonnelAdvancedSearchModal isOpen={showAdvancedSearch} filters={advancedFilters} onFilterChange={handleAdvancedFilterChange} onClose={() => setShowAdvancedSearch(false)} onClearFilters={handleClearFilters} personnel={personnel} />
           )}
         </div>
 
-        {/* Отображение активных фильтров */}
         {hasActiveAdvancedFilters && (
           <div className="active-filters">
             <div className="active-filters-tags">
-              {advancedFilters.ranks.map((rank, index) => (
-                <span key={`rank-${index}`} className="filter-tag">
+              {advancedFilters.ranks.map((rank, idx) => (
+                <span key={`rank-${idx}`} className="filter-tag">
                   Звание: {rank}
                   <button onClick={() => {
                     const newRanks = [...advancedFilters.ranks];
-                    newRanks.splice(index, 1);
+                    newRanks.splice(idx, 1);
                     handleAdvancedFilterChange('ranks', newRanks);
                   }}>×</button>
                 </span>
               ))}
-              {advancedFilters.positions.map((position, index) => (
-                <span key={`position-${index}`} className="filter-tag">
-                  Должность: {position}
+              {advancedFilters.positions.map((pos, idx) => (
+                <span key={`pos-${idx}`} className="filter-tag">
+                  Должность: {pos}
                   <button onClick={() => {
                     const newPositions = [...advancedFilters.positions];
-                    newPositions.splice(index, 1);
+                    newPositions.splice(idx, 1);
                     handleAdvancedFilterChange('positions', newPositions);
                   }}>×</button>
                 </span>
               ))}
-              {advancedFilters.divisions.map((division, index) => (
-                <span key={`division-${index}`} className="filter-tag">
-                  Подразделение: {division}
+              {advancedFilters.divisions.map((div, idx) => (
+                <span key={`div-${idx}`} className="filter-tag">
+                  Подразделение: {div}
                   <button onClick={() => {
                     const newDivisions = [...advancedFilters.divisions];
-                    newDivisions.splice(index, 1);
+                    newDivisions.splice(idx, 1);
                     handleAdvancedFilterChange('divisions', newDivisions);
                   }}>×</button>
                 </span>
               ))}
-              {advancedFilters.subdivisions.map((subdivision, index) => (
-                <span key={`subdivision-${index}`} className="filter-tag">
-                  Отделение: {subdivision}
+              {advancedFilters.subdivisions.map((sub, idx) => (
+                <span key={`sub-${idx}`} className="filter-tag">
+                  Отделение: {sub}
                   <button onClick={() => {
                     const newSubdivisions = [...advancedFilters.subdivisions];
-                    newSubdivisions.splice(index, 1);
+                    newSubdivisions.splice(idx, 1);
                     handleAdvancedFilterChange('subdivisions', newSubdivisions);
                   }}>×</button>
                 </span>
               ))}
-              {advancedFilters.networkClasses.map((networkClass, index) => (
-                <span key={`network-${index}`} className="filter-tag">
-                  Класс сети: {networkClass}
+              {advancedFilters.networkClasses.map((nc, idx) => (
+                <span key={`nc-${idx}`} className="filter-tag">
+                  Класс сети: {nc}
                   <button onClick={() => {
                     const newNetworkClasses = [...advancedFilters.networkClasses];
-                    newNetworkClasses.splice(index, 1);
+                    newNetworkClasses.splice(idx, 1);
                     handleAdvancedFilterChange('networkClasses', newNetworkClasses);
                   }}>×</button>
                 </span>
               ))}
-              {advancedFilters.gtForms.map((gtForm, index) => (
-                <span key={`gtform-${index}`} className="filter-tag">
-                  Форма ГТ: {gtForm}
+              {advancedFilters.gtForms.map((gf, idx) => (
+                <span key={`gf-${idx}`} className="filter-tag">
+                  Форма ГТ: {gf}
                   <button onClick={() => {
                     const newGtForms = [...advancedFilters.gtForms];
-                    newGtForms.splice(index, 1);
+                    newGtForms.splice(idx, 1);
                     handleAdvancedFilterChange('gtForms', newGtForms);
                   }}>×</button>
                 </span>
@@ -470,16 +319,13 @@ export function PersonnelSection() {
           selectedDivision={isGlobalView ? 'Все подразделения' : division?.name}
           selectedCategory="all"
           selectedAccessClass="all"
-          searchTerm={searchTerm} 
-          division={isExploitationUser ? {
-            id: userDivisionId,
-            name: stableCurrentUser?.division_info?.name
-          } : division}
+          searchTerm={searchTerm}
+          division={isExploitationUser ? { id: userDivisionId, name: user?.division_info?.name } : division}
           personnel={displayedPersonnel}
           loading={loading}
           divisionId={id}
           subdivisionId={stableSubdivisionId}
-          advancedFilters={advancedFilters} // ПЕРЕДАЕМ ФИЛЬТРЫ
+          advancedFilters={advancedFilters}
         />
       </div>
     </>

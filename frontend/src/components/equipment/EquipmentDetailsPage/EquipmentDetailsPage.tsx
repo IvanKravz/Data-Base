@@ -5,7 +5,7 @@ import { RootState } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
-import { equipmentApi, authApi } from '../../../api'; // Добавим authApi
+import { equipmentApi, authApi } from '../../../api';
 import './style.css';
 import {
   Header,
@@ -23,7 +23,6 @@ import { EditEquipmentForm } from '../forms/EditEquipmentForm';
 import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
 import { NetworkInfo } from './sections/NetworkInfo';
 import { AdditionalInfo } from './sections/AdditionalInfo';
-import { canDelete, canEdit } from '../../../api/utils/permissions';
 
 export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,19 +35,23 @@ export function EquipmentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Получаем режим просмотра из authApi
+  // Получаем пользователя из Redux
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
+  // Проверка прав через Redux
+  const canEditEquipment = useMemo(() => 
+    permissions?.models?.Equipment?.includes('change') ?? false, [permissions]);
+  const canDeleteEquipment = useMemo(() => 
+    permissions?.models?.Equipment?.includes('delete') ?? false, [permissions]);
+
   const isGlobalView = authApi.getGlobalView();
   const location = useLocation();
-
-  // Проверка прав доступа для кнопки "Редактировать технику"
-  const canEditEquipment = canEdit('equipment');
-  const canDeleteEquipment = canDelete('equipment');
 
   useEffect(() => {
     const fetchEquipment = async () => {
       try {
         if (!id || !token) return;
-
         const data = await equipmentApi.getEquipmentById(token, id);
         setEquipment(data);
       } catch (err) {
@@ -58,69 +61,36 @@ export function EquipmentDetailsPage() {
         setLoading(false);
       }
     };
-
     fetchEquipment();
   }, [id, token]);
 
-  // Обновляем логику возврата в зависимости от режима просмотра
-
   const handleBack = () => {
     const state = location.state;
-
-    // Если есть состояние из предыдущей страницы
     if (state?.from === 'equipment-section') {
       let backUrl = state.divisionId
         ? `/divisions/${state.divisionId}/equipment`
         : `/equipment`;
-
-      // Добавляем параметры если они есть
       const params = new URLSearchParams();
-      if (state.subdivisionId) {
-        params.append('subdivision', state.subdivisionId);
-      }
-
+      if (state.subdivisionId) params.append('subdivision', state.subdivisionId);
       const queryString = params.toString();
-      if (queryString) {
-        backUrl += `?${queryString}`;
-      }
-
-      // ВАЖНО: Передаем активную вкладку обратно
-      navigate(backUrl, {
-        state: {
-          activeTab: state.activeTab // Сохраняем активную вкладку
-        }
-      });
-    }
-    // Стандартная логика с сохранением активной вкладки
-    else if (isGlobalView) {
-      navigate(`/equipment`, {
-        state: {
-          activeTab: location.state?.activeTab || 'all'
-        }
-      });
+      if (queryString) backUrl += `?${queryString}`;
+      navigate(backUrl, { state: { activeTab: state.activeTab } });
+    } else if (isGlobalView) {
+      navigate(`/equipment`, { state: { activeTab: location.state?.activeTab || 'all' } });
     } else if (equipment?.division?.id) {
       let backUrl = `/divisions/${equipment.division.id}/equipment`;
-      if (equipment.subdivision?.id) {
-        backUrl += `?subdivision=${equipment.subdivision.id}`;
-      }
-      navigate(backUrl, {
-        state: {
-          activeTab: location.state?.activeTab || 'all'
-        }
-      });
+      if (equipment.subdivision?.id) backUrl += `?subdivision=${equipment.subdivision.id}`;
+      navigate(backUrl, { state: { activeTab: location.state?.activeTab || 'all' } });
     } else {
       navigate(-1);
     }
   };
 
-  // Остальной код остается без изменений
   const handleUpdate = async (updatedEquipment: Partial<Equipment>) => {
     if (!equipment?.id || !token) return;
-
     try {
       setLoading(true);
-
-      const updatedData = await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
+      await equipmentApi.updateEquipment(token, equipment.id, updatedEquipment);
       const fullUpdatedData = await equipmentApi.getEquipmentById(token, equipment.id);
       dispatch(updateEquipment(fullUpdatedData));
       setEquipment(fullUpdatedData);
@@ -133,40 +103,21 @@ export function EquipmentDetailsPage() {
     }
   };
 
-  // Остальной код компонента остается без изменений
-  if (loading) {
-    return <div className="equipment-loading">Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div className="equipment-error">{error}</div>;
-  }
-
-  if (!equipment) {
-    return (
-      <div className="equipment-not-found">
-        <p>Техника не найдена</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="equipment-loading">Загрузка...</div>;
+  if (error) return <div className="equipment-error">{error}</div>;
+  if (!equipment) return <div className="equipment-not-found"><p>Техника не найдена</p></div>;
 
   if (isEditing) {
     return (
       <div className="equipment-details-container">
         <div className="page-header">
           <div className="equipment-header-left">
-            <button
-              onClick={() => setIsEditing(false)}
-              className="equipment-btn--icon"
-            >
+            <button onClick={() => setIsEditing(false)} className="equipment-btn--icon">
               <ArrowLeft size={20} />
             </button>
-            <h2 className="equipment-edit-header-title">
-              Редактирование техники
-            </h2>
+            <h2 className="equipment-edit-header-title">Редактирование техники</h2>
           </div>
         </div>
-
         <div className="equipment-card--edit">
           <EditEquipmentForm
             initialData={equipment}
@@ -204,10 +155,7 @@ export function EquipmentDetailsPage() {
 
       {equipment.network_memberships.length > 0 && <NetworkInfo equipment={equipment} />}
       {equipment.is_network && (
-        <NetworkConfigBlock
-          equipment={equipment}
-          token={token}
-        />
+        <NetworkConfigBlock equipment={equipment} token={token} />
       )}
 
       {equipment.status === 'disposed' && (
@@ -222,16 +170,18 @@ export function EquipmentDetailsPage() {
         />
       )}
 
-      {showDeleteModal && <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onConfirm={() => {
-          dispatch(deleteEquipment(equipment.id));
-          handleBack();
-        }}
-        onCancel={() => setShowDeleteModal(false)}
-        title="Удаление техники"
-        message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
-      />}
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onConfirm={() => {
+            dispatch(deleteEquipment(equipment.id));
+            handleBack();
+          }}
+          onCancel={() => setShowDeleteModal(false)}
+          title="Удаление техники"
+          message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store/store';
 import { Equipment } from '../../../../types';
 import { BasicInformation } from '../EditEquipmentForm/sections/BasicInformation';
 import { IdentificationInfo } from '../EditEquipmentForm/sections/IdentificationInfo';
@@ -60,20 +62,20 @@ const defaultFieldPermissions = {
 
 export function CreateEquipmentForm() {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>(); // id будет undefined в глобальном режиме
+    const { id } = useParams<{ id: string }>();
     const location = useLocation();
     const token = localStorage.getItem('accessToken');
 
-    // Используем хук для получения прав доступа
-    const { canCreate } = useAppPermissions();
+    // Получаем пользователя из Redux
+    const user = useSelector((state: RootState) => state.auth.user);
+    const permissions = user?.permissions;
+
+    const hasCreatePermission = useMemo(() => 
+        permissions?.models?.Equipment?.includes('add') ?? false, [permissions]);
+
     const fieldPermissions = useEquipmentFieldPermissions();
-
-    const hasCreatePermission = canCreate('equipment');
-
-    // Используем permissions или значение по умолчанию
     const effectivePermissions = fieldPermissions || defaultFieldPermissions;
 
-    // Получаем данные из состояния навигации
     const navigationState = location.state as {
         divisionId?: string;
         subdivisionId?: string;
@@ -84,11 +86,8 @@ export function CreateEquipmentForm() {
     } | undefined;
 
     const isClosedEquipment = navigationState?.isClosed || false;
-
-    // Определяем, находимся ли мы в глобальном режиме (без id подразделения)
     const isGlobalMode = !id;
 
-    // Убираем начальную установку formData - будет в useEffect
     const [formData, setFormData] = useState<Partial<Equipment>>({
         status: 'in-operation',
         comments: '',
@@ -101,11 +100,9 @@ export function CreateEquipmentForm() {
     const [categories, setCategories] = useState<EquipmentCategory[]>([]);
     const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
 
-    // Определяем фиксированные значения отдельно
     const fixedDivision = navigationState?.divisionId
         ? { id: navigationState.divisionId, name: navigationState.divisionName || '' }
         : null;
-
     const fixedSubdivision = navigationState?.subdivisionId && navigationState.fromSubdivision
         ? { id: navigationState.subdivisionId, name: navigationState.subdivisionName || '' }
         : null;
@@ -113,7 +110,6 @@ export function CreateEquipmentForm() {
     useEffect(() => {
         const fetchAllData = async () => {
             if (!token) return;
-
             setIsLoading(true);
             try {
                 const [divisionsData, categoriesData, organsData] = await Promise.all([
@@ -121,76 +117,45 @@ export function CreateEquipmentForm() {
                     equipmentApi.getEquipmentCategories(token),
                     equipmentApi.getInterestOrgans(token),
                 ]);
-
                 setDivisions(divisionsData);
                 setCategories(categoriesData);
                 setInterestOrgans(organsData);
 
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Определяем divisionId для использования
                 const divisionIdToUse = id || navigationState?.divisionId;
-
                 if (divisionIdToUse) {
-                    // ИСПРАВЛЕНИЕ: Правильно находим подразделение (учитываем, что id могут быть строкой или числом)
-                    const division = divisionsData.find(d =>
-                        String(d.id) === String(divisionIdToUse)
-                    );
-
+                    const division = divisionsData.find(d => String(d.id) === String(divisionIdToUse));
                     if (division) {
-                        // Загрузка персонала для выбранного подразделения
-                        const personnelData = await employeesApi.getPersonnel(token, {
-                            division: divisionIdToUse,
-                        });
+                        const personnelData = await employeesApi.getPersonnel(token, { division: divisionIdToUse });
                         setPersonnel(personnelData);
-
-                        // Создаем обновленные данные формы
                         const updatedFormData: Partial<Equipment> = {
                             status: 'in-operation',
                             comments: '',
                             product_structures: [],
                             division: { id: division.id, name: division.name }
                         };
-
-                        // Установка отделения если передано и мы в контексте отделения
                         if (navigationState?.subdivisionId && navigationState.fromSubdivision && division.subdivisions) {
-                            // ИСПРАВЛЕНИЕ: Правильно находим отделение
-                            const subdivision = division.subdivisions.find(s =>
-                                String(s.id) === String(navigationState.subdivisionId)
-                            );
-                            if (subdivision) {
-                                updatedFormData.subdivision = {
-                                    id: subdivision.id,
-                                    name: subdivision.name
-                                };
-                            }
+                            const subdivision = division.subdivisions.find(s => String(s.id) === String(navigationState.subdivisionId));
+                            if (subdivision) updatedFormData.subdivision = { id: subdivision.id, name: subdivision.name };
                         }
-
                         setFormData(updatedFormData);
-                    } else {
-                        console.warn('Division not found:', divisionIdToUse);
                     }
                 }
-                // В глобальном режиме не устанавливаем подразделение по умолчанию
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-
         fetchAllData();
-    }, [token, id]); // Убраны лишние зависимости
+    }, [token, id, navigationState]);
 
     const handleChange = async (data: Partial<Equipment>) => {
         const newFormData = { ...formData, ...data };
         setFormData(newFormData);
-
-        // Загружаем персонал только если изменилось подразделение и оно не фиксировано
         if (data.division?.id && data.division.id !== formData.division?.id && token && !fixedDivision) {
             setIsLoading(true);
             try {
-                const personnelData = await employeesApi.getPersonnel(token, {
-                    division: data.division.id,
-                });
+                const personnelData = await employeesApi.getPersonnel(token, { division: data.division.id });
                 setPersonnel(personnelData);
             } catch (error) {
                 console.error('Ошибка загрузки персонала:', error);
@@ -204,35 +169,25 @@ export function CreateEquipmentForm() {
         handleChange({ product_structures: structures });
     };
 
-    // Обработчик отмены для глобального режима
     const handleCancel = () => {
         if (id) {
-            // Режим подразделения - возвращаемся к списку техники подразделения
-            // ВАЖНОЕ ИЗМЕНЕНИЕ: Учитываем наличие subdivisionId для возврата в контекст отделения
             if (navigationState?.subdivisionId) {
                 navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
             } else {
                 navigate(`/divisions/${id}/equipment`);
             }
         } else {
-            // Глобальный режим - возвращаемся к глобальному списку техники
             navigate('/equipment');
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token) {
-            console.error('Токен отсутствует');
-            return;
-        }
-
-        // Проверка обязательных полей
+        if (!token) return;
         if (!formData.division) {
             alert('Пожалуйста, выберите подразделение');
             return;
         }
-
         try {
             setIsLoading(true);
             const dataToSend = {
@@ -251,14 +206,10 @@ export function CreateEquipmentForm() {
                 assigned_to_id: formData.assigned_to ? formData.assigned_to.id : null,
                 interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
                 product_structures: formData.product_structures || [],
-                // Исправление: Преобразуем пустую строку в null для secret_level
                 secret_level: formData.secret_level === '' ? null : formData.secret_level,
             };
-
             await equipmentApi.createEquipment(token, dataToSend);
             await new Promise(resolve => setTimeout(resolve, 100));
-
-            // ВАЖНОЕ ИЗМЕНЕНИЕ: Навигация после создания с учетом subdivisionId
             if (id) {
                 if (navigationState?.subdivisionId) {
                     navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
@@ -270,9 +221,7 @@ export function CreateEquipmentForm() {
             }
         } catch (error: any) {
             console.error('Ошибка создания техники:', error);
-            if (error.response?.data) {
-                console.error('Детали ошибки:', error.response.data);
-            }
+            if (error.response?.data) console.error('Детали ошибки:', error.response.data);
         } finally {
             setIsLoading(false);
         }
@@ -280,11 +229,10 @@ export function CreateEquipmentForm() {
 
     const getCurrentSubdivisions = () => {
         if (!formData.division?.id) return [];
-        const division = divisions.find((d) => String(d.id) === String(formData.division?.id));
+        const division = divisions.find(d => String(d.id) === String(formData.division?.id));
         return division?.subdivisions || [];
     };
 
-    // Фильтруем категории в зависимости от типа оборудования, но всегда включаем категорию SHD
     const currentCategories = categories.filter(cat =>
         isClosedEquipment ? cat.is_closed : !cat.is_closed || cat.value === 'shd'
     );
@@ -306,9 +254,8 @@ export function CreateEquipmentForm() {
                         isClosedEquipment={isClosedEquipment}
                         isDisposed={false}
                         equipmentCategories={currentCategories}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <AssignmentInfo
                         formData={formData}
                         onChange={handleChange}
@@ -318,51 +265,45 @@ export function CreateEquipmentForm() {
                         isLoading={isLoading}
                         fixedDivision={!!fixedDivision}
                         fixedSubdivision={!!fixedSubdivision}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <DocumentsInfo
                         formData={formData}
                         onChange={handleChange}
                         isDisposed={false}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <IdentificationInfo
                         formData={formData}
                         onChange={handleChange}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <DatesInfo
                         formData={formData}
                         onChange={handleChange}
                         serviceLife={formData.service_life}
                         onServiceLifeChange={(value) => handleChange({ service_life: value })}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <AdditionalInfo
                         formData={formData}
                         onChange={handleChange}
                         interestOrgans={interestOrgans}
                         isDisposed={false}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                     <EditCommentsCard
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
-
                 </div>
                 <div className="equipment-form-structure">
                     <ProductStructureEditor
                         productStructures={formData.product_structures || []}
                         onChange={handleStructureChange}
                         isDisposed={false}
-                        permissions={effectivePermissions} // Передаем permissions
+                        permissions={effectivePermissions}
                     />
                 </div>
                 <FormActions

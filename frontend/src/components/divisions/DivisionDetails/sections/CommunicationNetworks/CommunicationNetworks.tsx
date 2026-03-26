@@ -1,6 +1,8 @@
 // CommunicationNetworks.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../store/store';
 import './CommunicationNetworks.css';
 import { Network } from '../../../../../types';
 import NetworksTable from '../../../../networks/NetworksTable/NetworksTable';
@@ -8,7 +10,6 @@ import NetworkDetails from '../../../../networks/NetworkDetails/NetworkDetails';
 import NetworkVisualization from '../../../../networks/NetworkVisualization/NetworkVisualization';
 import { networksApi } from '../../../../../api/networksApi';
 import { Header } from '../../../../networks/Header/Header';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canEdit, canCreate } from '../../../../../api/utils/permissions';
 import { divisionsApi } from '../../../../../api/divisions';
 
 const CommunicationNetworks: React.FC = () => {
@@ -27,28 +28,22 @@ const CommunicationNetworks: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [division, setDivision] = useState<any>(null);
 
-  // Получаем данные текущего пользователя
-  const currentUser = getCurrentUser();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
 
-  // Мемоизируем вычисления типов пользователей
-  const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
-  const isChief = useMemo(() => isExploitationChief(), []);
+  // Проверка прав
+  const canEditNetworks = useMemo(() => 
+    permissions?.models?.CommunicationNetwork?.includes('change') ?? false, [permissions]);
+  const canCreateNetworks = useMemo(() => 
+    permissions?.models?.CommunicationNetwork?.includes('add') ?? false, [permissions]);
 
-  // Для эксплуатационных пользователей отключаем глобальный режим
+  const isExploitationUser = useMemo(() => 
+    user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
+  const isChief = useMemo(() => user?.roles?.includes('exploitation_chief'), [user]);
+
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
 
-  // Получаем ID подразделения пользователя
-  const userDivisionId = useMemo(() => {
-    if (!currentUser?.division_info) return null;
-    return currentUser.division_info.id;
-  }, [currentUser]);
-
-  // Проверка прав доступа для редактирования сетей
-  const canEditNetworks = canEdit('networks');
-
-  // Проверка прав доступа для создания сетей
-  const canCreateNetworks = canCreate('networks');
-
+  const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
 
   // Функция загрузки данных
   const fetchData = useCallback(async () => {
@@ -59,29 +54,21 @@ const CommunicationNetworks: React.FC = () => {
       setError(null);
 
       if (isGlobalView) {
-        // Глобальный режим - загружаем все сети
         const allNetworks = await networksApi.getNetworks(token);
         setNetworks(allNetworks);
       } else if (isExploitationUser) {
-        // Режим для эксплуатационных пользователей - загружаем все сети подразделения
         if (!userDivisionId) {
           setError('У вашей учетной записи не назначено подразделение');
           return;
         }
-
         const divisionData = await divisionsApi.getDivisionById(userDivisionId, token);
         setDivision(divisionData);
-
-        // Загружаем все сети подразделения (без фильтрации по отделению)
         const divisionNetworks = await networksApi.getNetworks(token, userDivisionId);
         setNetworks(divisionNetworks);
       } else {
-        // Стандартный режим подразделения
         if (!id) return;
-
         const divisionData = await divisionsApi.getDivisionById(id, token);
         setDivision(divisionData);
-
         const divisionNetworks = await networksApi.getNetworks(token, id);
         setNetworks(divisionNetworks);
       }
@@ -93,7 +80,6 @@ const CommunicationNetworks: React.FC = () => {
     }
   }, [token, isGlobalView, isExploitationUser, userDivisionId, id]);
 
-  // Основной эффект загрузки данных
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -118,16 +104,13 @@ const CommunicationNetworks: React.FC = () => {
     fetchNetworkData();
   }, [selectedNetwork, token]);
 
-  // Обработчик удаления сети
   const handleDeleteNetwork = async (networkId: string) => {
     if (!token) return;
 
     if (window.confirm('Вы уверены, что хотите удалить эту сеть? Это действие нельзя отменить.')) {
       try {
         await networksApi.deleteNetwork(token, networkId);
-        // Обновляем список сетей после удаления
         fetchData();
-        // Если удаленная сеть была выбрана, сбрасываем выбор
         if (selectedNetwork?.id === networkId) {
           setSelectedNetwork(null);
         }
@@ -149,31 +132,22 @@ const CommunicationNetworks: React.FC = () => {
   const handleNavigateToManagement = () => {
     if (isGlobalView) {
       navigate('/networks/management', {
-        state: {
-          from: location.pathname,
-          divisionId: targetDivisionId
-        }
+        state: { from: location.pathname, divisionId: undefined }
       });
     } else if (isExploitationUser && userDivisionId) {
       navigate(`/divisions/${userDivisionId}/networks/management`, {
-        state: {
-          from: location.pathname,
-          divisionId: userDivisionId
-        }
+        state: { from: location.pathname, divisionId: userDivisionId }
       });
     } else if (id) {
       navigate(`/divisions/${id}/networks/management`, {
-        state: {
-          from: location.pathname,
-          divisionId: id
-        }
+        state: { from: location.pathname, divisionId: id }
       });
     }
   };
 
   const handleNavigateToCreate = () => {
     if (isGlobalView) {
-      navigate('/networks/create', { state: { from: location.pathname, divisionId: targetDivisionId } });
+      navigate('/networks/create', { state: { from: location.pathname, divisionId: undefined } });
     } else if (isExploitationUser && userDivisionId) {
       navigate(`/divisions/${userDivisionId}/networks/create`, { state: { from: location.pathname, divisionId: userDivisionId } });
     } else if (id) {
@@ -189,29 +163,15 @@ const CommunicationNetworks: React.FC = () => {
     setSelectedNode(null);
   };
 
-  // Определяем divisionName для заголовка
   const divisionName = useMemo(() => {
-    if (isGlobalView) {
-      return null;
-    }
-
-    if (isExploitationUser) {
-      return currentUser?.division_info?.name || 'Ваше подразделение';
-    }
-
+    if (isGlobalView) return null;
+    if (isExploitationUser) return user?.division_info?.name || 'Ваше подразделение';
     return division?.name || '';
-  }, [isGlobalView, isExploitationUser, currentUser, division]);
+  }, [isGlobalView, isExploitationUser, user, division]);
 
-  // Определяем ID подразделения для передачи в дочерние компоненты
   const targetDivisionId = useMemo(() => {
-    if (isGlobalView) {
-      return undefined;
-    }
-
-    if (isExploitationUser) {
-      return userDivisionId;
-    }
-
+    if (isGlobalView) return undefined;
+    if (isExploitationUser) return userDivisionId;
     return id;
   }, [isGlobalView, isExploitationUser, userDivisionId, id]);
 

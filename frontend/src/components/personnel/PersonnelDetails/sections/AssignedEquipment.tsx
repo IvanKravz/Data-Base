@@ -11,9 +11,10 @@ import { useSearchParams } from 'react-router-dom';
 interface AssignedEquipmentProps {
   person: Employee;
   id: string;
+  hasAccess?: boolean;
 }
 
-export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
+export function AssignedEquipment({ person, id, hasAccess = true }: AssignedEquipmentProps) {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
   const [assignedEquipment, setAssignedEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
   const subdivisionId = searchParams.get('subdivision');
 
   useEffect(() => {
+    if (!hasAccess) return; // не делаем запрос, если нет доступа
     const fetchAssignedEquipment = async () => {
       try {
         if (token && id) {
@@ -38,7 +40,11 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
     };
 
     fetchAssignedEquipment();
-  }, [token, id]);
+  }, [token, id, hasAccess]);
+
+  if (!hasAccess) {
+    return null; // или сообщение "Нет прав"
+  }
 
   const handleUpdateEquipment = (updatedEquipment: Equipment) => {
     setAssignedEquipment(prev =>
@@ -60,23 +66,23 @@ export function AssignedEquipment({ person, id }: AssignedEquipmentProps) {
   }
 
   const filteredEquipment = subdivisionId
-  ? assignedEquipment.filter(item => item.subdivision?.id == subdivisionId)
-  : assignedEquipment;
+    ? assignedEquipment.filter(item => item.subdivision?.id == subdivisionId)
+    : assignedEquipment;
 
   return (
     <div className="equipment-container">
       <div className="equipment-header-assigned">
         <h2 className="equipment-title-assigned">Закрепленная техника</h2>
-        
+
         <div className="equipment-summary">
           <HardDrive className="equipment-summary-icon" />
           <span className="equipment-summary-text">Всего: {assignedEquipment.length}</span>
           <ExportButton
-          onClick={() => exportEquipmentToExcel(filteredEquipment)}
-          label="Экспорт техники"
-        />
+            onClick={() => exportEquipmentToExcel(filteredEquipment)}
+            label="Экспорт техники"
+          />
         </div>
-       
+
       </div>
       <EquipmentList
         equipment={assignedEquipment}

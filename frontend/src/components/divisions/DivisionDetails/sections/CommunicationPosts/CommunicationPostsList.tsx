@@ -1,6 +1,8 @@
 // CommunicationPostsList.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Trash2, Building, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../store/store';
 import { CommunicationPost } from '../../../../../types';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import { EditCommunicationPostForm } from './EditCommunicationPostForm';
@@ -14,11 +16,6 @@ interface CommunicationPostsListProps {
   onPostUpdated?: () => void;
   isGlobalView?: boolean;
   searchTerm?: string;
-  canDeletePosts?: boolean;
-}
-
-interface GroupedPosts {
-  [divisionName: string]: CommunicationPost[];
 }
 
 export function CommunicationPostsList({
@@ -27,7 +24,6 @@ export function CommunicationPostsList({
   onPostUpdated,
   isGlobalView = false,
   searchTerm = '',
-  canDeletePosts
 }: CommunicationPostsListProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -36,16 +32,17 @@ export function CommunicationPostsList({
   const [expandedDivisions, setExpandedDivisions] = useState<Set<string>>(new Set());
   const descriptionRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
 
-  // Фильтрация постов по поисковому запросу
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+  const canDeletePosts = useMemo(() => permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
+  const canEditPosts = useMemo(() => permissions?.models?.CommunicationPost?.includes('change') ?? false, [permissions]);
+
   const filteredPosts = useMemo(() => {
     if (!searchTerm.trim()) return posts;
     const normalizedSearch = normalizeSearchString(searchTerm);
-    return posts.filter(post =>
-      normalizeSearchString(post.name).includes(normalizedSearch)
-    );
+    return posts.filter(post => normalizeSearchString(post.name).includes(normalizedSearch));
   }, [posts, searchTerm]);
 
-  // Группировка отфильтрованных постов по подразделениям (только в глобальном режиме)
   const groupedPosts = useMemo(() => {
     if (isGlobalView) {
       return filteredPosts.reduce((acc, post) => {
@@ -53,14 +50,13 @@ export function CommunicationPostsList({
         if (!acc[divisionName]) acc[divisionName] = [];
         acc[divisionName].push(post);
         return acc;
-      }, {} as GroupedPosts);
+      }, {} as Record<string, CommunicationPost[]>);
     }
     return { 'Все посты': filteredPosts };
   }, [isGlobalView, filteredPosts]);
 
   const divisionNames = useMemo(() => Object.keys(groupedPosts).sort(), [groupedPosts]);
 
-  // Обработчики удаления
   const handleDelete = (id: string) => {
     setPostToDelete(id);
     setShowDeleteModal(true);
@@ -86,7 +82,6 @@ export function CommunicationPostsList({
     setPostToDelete(null);
   };
 
-  // Обработчики редактирования
   const handleEdit = (id: string) => {
     setEditingPostId(id);
   };
@@ -99,7 +94,6 @@ export function CommunicationPostsList({
     if (onPostUpdated) onPostUpdated();
   };
 
-  // Раскрытие групп
   const toggleDivision = (divisionName: string) => {
     setExpandedDivisions(prev => {
       const newSet = new Set(prev);
@@ -109,13 +103,8 @@ export function CommunicationPostsList({
     });
   };
 
-  // Tooltip для длинных описаний
   const checkTextOverflow = (element: HTMLParagraphElement) => {
-    if (element) {
-      const isOverflowing = element.scrollHeight > element.clientHeight;
-      const hasEllipsis = element.offsetWidth < element.scrollWidth;
-      return isOverflowing || hasEllipsis;
-    }
+    if (element) return element.scrollHeight > element.clientHeight || element.offsetWidth < element.scrollWidth;
     return false;
   };
 
@@ -138,22 +127,13 @@ export function CommunicationPostsList({
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (tooltip.show) {
-        setTooltip(prev => ({
-          ...prev,
-          x: e.clientX + 15,
-          y: e.clientY - 15
-        }));
+        setTooltip(prev => ({ ...prev, x: e.clientX + 15, y: e.clientY - 15 }));
       }
     };
-    if (tooltip.show) {
-      document.addEventListener('mousemove', handleMouseMove);
-    }
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
+    if (tooltip.show) document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [tooltip.show]);
 
-  // Автоматически раскрываем все группы в глобальном режиме
   useEffect(() => {
     if (isGlobalView && divisionNames.length > 0) {
       setExpandedDivisions(new Set(divisionNames));
@@ -191,15 +171,10 @@ export function CommunicationPostsList({
           return (
             <div key={divisionName} className="division-group">
               {isGlobalView && (
-                <button
-                  className="division-post-header"
-                  onClick={() => toggleDivision(divisionName)}
-                >
+                <button className="division-post-header" onClick={() => toggleDivision(divisionName)}>
                   <div className="division-toggle">
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    <span className="division-title">
-                      {divisionName} ({postsInDivision.length})
-                    </span>
+                    <span className="division-title">{divisionName} ({postsInDivision.length})</span>
                   </div>
                 </button>
               )}
@@ -211,22 +186,18 @@ export function CommunicationPostsList({
                       <div className="communication-post-header">
                         <h3 className="communication-post-title">{post.name}</h3>
                         <div className="communication-post-actions">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(post.id);
-                            }}
-                            className="communication-post-edit-btn"
-                            aria-label="Редактировать пост связи"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
+                          {canEditPosts && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEdit(post.id); }}
+                              className="communication-post-edit-btn"
+                              aria-label="Редактировать пост связи"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
                           {canDeletePosts && (
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(post.id);
-                              }}
+                              onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
                               className="communication-post-delete-btn"
                               aria-label="Удалить пост связи"
                             >
@@ -240,13 +211,7 @@ export function CommunicationPostsList({
                         <p
                           ref={el => (descriptionRefs.current[post.id] = el)}
                           className="communication-post-description"
-                          onMouseEnter={(e) =>
-                            handleDescriptionMouseEnter(
-                              post.id,
-                              post.description || 'Описание отсутствует',
-                              e
-                            )
-                          }
+                          onMouseEnter={(e) => handleDescriptionMouseEnter(post.id, post.description || 'Описание отсутствует', e)}
                           onMouseLeave={handleDescriptionMouseLeave}
                         >
                           {post.description || 'Описание отсутствует'}
@@ -256,16 +221,12 @@ export function CommunicationPostsList({
                           {post.division_name && (
                             <div className="communication-post-meta-item">
                               <Building className="communication-post-meta-icon" />
-                              <span className="communication-post-division">
-                                {post.division_name}
-                              </span>
+                              <span className="communication-post-division">{post.division_name}</span>
                             </div>
                           )}
                           {post.subdivision_name && (
                             <div className="communication-post-meta-item">
-                              <span className="communication-post-subdivision">
-                                {post.subdivision_name}
-                              </span>
+                              <span className="communication-post-subdivision">{post.subdivision_name}</span>
                             </div>
                           )}
                         </div>
@@ -282,10 +243,7 @@ export function CommunicationPostsList({
       {tooltip.show && (
         <div
           className="communication-post-tooltip"
-          style={{
-            left: `${tooltip.x}px`,
-            top: `${tooltip.y}px`
-          }}
+          style={{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }}
         >
           {tooltip.content}
         </div>

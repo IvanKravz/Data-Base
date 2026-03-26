@@ -1,6 +1,8 @@
 // FacilitiesSection.tsx
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../../store/store';
 import {
   ArrowLeft,
   Plus,
@@ -20,7 +22,7 @@ import './FacilitiesSection.css';
 import { normalizeSearchString } from '../../../../../utils/normalizeSearchString';
 import { useDebounce } from '../../../../../utils/useDebounce';
 import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationModal';
-import { isExploitationChief, isExploitationEmployee, getCurrentUser, getPermissions, canCreate, canDelete } from '../../../../../api/utils/permissions';
+import { isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
 // Ленивая загрузка карты
 const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
@@ -40,32 +42,24 @@ export function FacilitiesSection() {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Получаем пользователя из Redux
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+
   const [filterType, setFilterType] = useState<'all' | number>(() => {
-    // Сначала проверяем state из location
-    if (location.state?.filterType) {
-      return location.state.filterType;
-    }
-    // Затем проверяем URL параметры
+    if (location.state?.filterType) return location.state.filterType;
     const typeFromUrl = searchParams.get('type');
     return typeFromUrl && typeFromUrl !== 'all' ? parseInt(typeFromUrl) : 'all';
   });
 
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>(() => {
-    // Сначала проверяем state из location
-    if (location.state?.facilityClassFilter) {
-      return location.state.facilityClassFilter;
-    }
-    // Затем проверяем URL параметры
+    if (location.state?.facilityClassFilter) return location.state.facilityClassFilter;
     const classFromUrl = searchParams.get('class');
     return (classFromUrl === '1' || classFromUrl === '2') ? classFromUrl : 'all';
   });
 
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>(() => {
-    // Сначала проверяем state из location
-    if (location.state?.activeTab) {
-      return location.state.activeTab;
-    }
-    // Затем проверяем URL параметры
+    if (location.state?.activeTab) return location.state.activeTab;
     const tabFromUrl = searchParams.get('tab');
     return (tabFromUrl === 'all' || tabFromUrl === 'open' || tabFromUrl === 'closed' || tabFromUrl === 'posts')
       ? tabFromUrl
@@ -73,11 +67,7 @@ export function FacilitiesSection() {
   });
 
   const [viewType, setViewType] = useState<'table' | 'grid'>(() => {
-    // Сначала проверяем state из location
-    if (location.state?.viewType) {
-      return location.state.viewType;
-    }
-    // Затем проверяем URL параметры
+    if (location.state?.viewType) return location.state.viewType;
     const viewFromUrl = searchParams.get('view');
     return viewFromUrl === 'grid' ? 'grid' : 'table';
   });
@@ -94,13 +84,9 @@ export function FacilitiesSection() {
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
 
-  // Получаем данные текущего пользователя
-  const currentUser = getCurrentUser();
-
   // Стабилизированные значения
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
-  const stableCurrentUser = useMemo(() => currentUser, [JSON.stringify(currentUser)]);
 
   // Определяем тип пользователя
   const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
@@ -110,22 +96,34 @@ export function FacilitiesSection() {
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
 
   // Получаем ID подразделения пользователя
-  const userDivisionId = useMemo(() => {
-    if (!stableCurrentUser?.division_info) return null;
-    return stableCurrentUser.division_info.id;
-  }, [stableCurrentUser]);
+  const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
 
   // Получаем ID отделения пользователя
   const userSubdivisionId = useMemo(() => {
-    if (!stableCurrentUser?.division_info || isChief) return null;
-    return stableCurrentUser.division_info.subdivision?.id || null;
-  }, [stableCurrentUser, isChief]);
+    if (!user?.division_info || isChief) return null;
+    return user.division_info.subdivision?.id ?? null;
+  }, [user, isChief]);
+
+  // Проверка прав через Redux
+  const canViewCommunicationPosts = useMemo(() => {
+    return permissions?.models?.CommunicationPost?.includes('view') ?? false;
+  }, [permissions]);
+
+  const canCreateFacilities = useMemo(() => {
+    return permissions?.models?.Facility?.includes('add') ?? false;
+  }, [permissions]);
+
+  const canCreateCommunicationPosts = useMemo(() => {
+    return permissions?.models?.CommunicationPost?.includes('add') ?? false;
+  }, [permissions]);
+
+  const canDeleteCommunicationPosts = useMemo(() => {
+    return permissions?.models?.CommunicationPost?.includes('delete') ?? false;
+  }, [permissions]);
 
   // Отложенная загрузка карты
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowMap(true);
-    }, 500);
+    const timer = setTimeout(() => setShowMap(true), 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -133,11 +131,9 @@ export function FacilitiesSection() {
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     const viewFromUrl = searchParams.get('view');
-
     if (tabFromUrl === 'all' || tabFromUrl === 'open' || tabFromUrl === 'closed' || tabFromUrl === 'posts') {
       setActiveTab(tabFromUrl);
     }
-
     if (viewFromUrl === 'table' || viewFromUrl === 'grid') {
       setViewType(viewFromUrl);
     }
@@ -152,13 +148,15 @@ export function FacilitiesSection() {
       setError(null);
 
       if (isGlobalView) {
-        // Глобальный режим - загружаем все объекты и посты связи
-        const [allFacilities, posts] = await Promise.all([
-          facilitiesApi.getFacilities({ token: stableToken }),
-          communicationPostsApi.getCommunicationPosts({ token: stableToken })
-        ]);
+        // Глобальный режим – объекты всегда, посты только если есть права
+        const allFacilities = await facilitiesApi.getFacilities({ token: stableToken });
         setFacilities(allFacilities);
-        setCommunicationPosts(posts);
+        if (canViewCommunicationPosts) {
+          const posts = await communicationPostsApi.getCommunicationPosts({ token: stableToken });
+          setCommunicationPosts(posts);
+        } else {
+          setCommunicationPosts([]);
+        }
         authApi.updateGlobalView(true);
       } else if (isExploitationUser) {
         // Режим для эксплуатационных пользователей
@@ -171,17 +169,20 @@ export function FacilitiesSection() {
 
         const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
 
-        const [allFacilities, posts, div] = await Promise.all([
+        const [allFacilities, div] = await Promise.all([
           facilitiesApi.getFacilities({ token: stableToken, division: userDivisionId }),
-          communicationPostsApi.getCommunicationPosts({
-            token: stableToken,
-            division: userDivisionId,
-            subdivision: targetSubdivisionId || undefined
-          }),
           divisionsApi.getDivisionById(userDivisionId, stableToken)
         ]);
 
-        // Устанавливаем название отделения если есть
+        let posts: CommunicationPost[] = [];
+        if (canViewCommunicationPosts) {
+          posts = await communicationPostsApi.getCommunicationPosts({
+            token: stableToken,
+            division: userDivisionId,
+            subdivision: targetSubdivisionId || undefined
+          });
+        }
+
         if (targetSubdivisionId) {
           const subdivision = div.subdivisions?.find(s => s.id.toString() === targetSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
@@ -195,15 +196,19 @@ export function FacilitiesSection() {
       } else {
         // Стандартный режим подразделения
         authApi.updateGlobalView(false);
-        const [allFacilities, posts, div] = await Promise.all([
+        const [allFacilities, div] = await Promise.all([
           facilitiesApi.getFacilities({ token: stableToken, division: id }),
-          communicationPostsApi.getCommunicationPosts({
+          divisionsApi.getDivisionById(id, stableToken)
+        ]);
+
+        let posts: CommunicationPost[] = [];
+        if (canViewCommunicationPosts) {
+          posts = await communicationPostsApi.getCommunicationPosts({
             token: stableToken,
             division: id,
             subdivision: stableSubdivisionId || undefined
-          }),
-          divisionsApi.getDivisionById(id, stableToken)
-        ]);
+          });
+        }
 
         if (stableSubdivisionId) {
           const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
@@ -222,7 +227,7 @@ export function FacilitiesSection() {
     } finally {
       setLoading(false);
     }
-  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
+  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId, canViewCommunicationPosts]);
 
   // Основной эффект загрузки данных
   useEffect(() => {
@@ -231,119 +236,67 @@ export function FacilitiesSection() {
 
   // Логика фильтрации для отделения
   const filterBySubdivision = useCallback((items: any[]) => {
-    // Для сотрудника эксплуатации не фильтруем по отделению - показываем все объекты подразделения
-    if (isExploitationUser && !id) {
-      return items;
-    }
-
-    // Для обычных случаев
+    if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-
     return items.filter(item =>
       item.subdivision?.id?.toString() === stableSubdivisionId.toString()
     );
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  // Фильтрация объектов по отделению
-  const filteredBySubdivisionFacilities = useMemo(() => {
-    return filterBySubdivision(facilities);
-  }, [facilities, filterBySubdivision]);
-
-  // Фильтрация постов связи по отделению
-  const filteredBySubdivisionPosts = useMemo(() => {
-    return filterBySubdivision(communicationPosts);
-  }, [communicationPosts, filterBySubdivision]);
+  // Фильтрация объектов и постов по отделению
+  const filteredBySubdivisionFacilities = useMemo(() => filterBySubdivision(facilities), [facilities, filterBySubdivision]);
+  const filteredBySubdivisionPosts = useMemo(() => filterBySubdivision(communicationPosts), [communicationPosts, filterBySubdivision]);
 
   const matchesSearchTerm = useCallback((facility: Facility, part: string) => {
     const normalizedAddress = normalizeSearchString(facility.address);
     const normalizedName = normalizeSearchString(facility.name);
     const facilityType = facility.type.name.toLowerCase().includes('станция') ? 'станция' : 'шд';
-
     return (
       normalizedAddress.includes(part) ||
       normalizedName.includes(part) ||
       facilityType.includes(part) ||
       (facility.facility_class && `${facility.facility_class} класс`.includes(part)) ||
-      (facility.communication_posts?.some(post =>
-        normalizeSearchString(post.name).includes(part)
-      ))
+      (facility.communication_posts?.some(post => normalizeSearchString(post.name).includes(part)))
     );
   }, []);
 
-  // Мемоизированные данные для отображения
-  const hasAllFacilities = useMemo(() =>
-    filteredBySubdivisionFacilities.length > 0,
-    [filteredBySubdivisionFacilities]
-  );
-
-  const hasOpenFacilities = useMemo(() =>
-    filteredBySubdivisionFacilities.some(f => !f.is_closed),
-    [filteredBySubdivisionFacilities]
-  );
-
-  const hasClosedFacilities = useMemo(() =>
-    filteredBySubdivisionFacilities.some(f => f.is_closed),
-    [filteredBySubdivisionFacilities]
-  );
-
+  const hasAllFacilities = useMemo(() => filteredBySubdivisionFacilities.length > 0, [filteredBySubdivisionFacilities]);
+  const hasOpenFacilities = useMemo(() => filteredBySubdivisionFacilities.some(f => !f.is_closed), [filteredBySubdivisionFacilities]);
+  const hasClosedFacilities = useMemo(() => filteredBySubdivisionFacilities.some(f => f.is_closed), [filteredBySubdivisionFacilities]);
   const hasCommunicationPosts = filteredBySubdivisionPosts.length > 0;
 
   const filteredFacilities = useMemo(() => {
     let result = filteredBySubdivisionFacilities;
-
-    // Фильтрация по активной вкладке
-    if (activeTab === 'open') {
-      result = result.filter(f => !f.is_closed);
-    } else if (activeTab === 'closed') {
-      result = result.filter(f => f.is_closed);
-    }
-
-    // Фильтрация по типу и классу
-    if (filterType !== 'all') {
-      result = result.filter(f => f.type.id === filterType);
-    }
-
-    if (facilityClassFilter !== 'all') {
-      result = result.filter(f => f.facility_class === facilityClassFilter);
-    }
-
+    if (activeTab === 'open') result = result.filter(f => !f.is_closed);
+    else if (activeTab === 'closed') result = result.filter(f => f.is_closed);
+    if (filterType !== 'all') result = result.filter(f => f.type.id === filterType);
+    if (facilityClassFilter !== 'all') result = result.filter(f => f.facility_class === facilityClassFilter);
     return result;
   }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
 
-  // Facilities для отображения с поиском
   const displayFacilities = useMemo(() => {
     if (!debouncedSearchTerm) return filteredFacilities;
-
     const normalizedSearchTerm = normalizeSearchString(debouncedSearchTerm);
     const searchParts = normalizedSearchTerm.split(' ').filter(part => part.length > 0);
-
-    if (searchParts.length === 0) return filteredFacilities;
-
+    if (!searchParts.length) return filteredFacilities;
     return filteredFacilities.filter(facility =>
       searchParts.some(part => matchesSearchTerm(facility, part))
     );
   }, [debouncedSearchTerm, filteredFacilities, matchesSearchTerm]);
 
-  // Facilities для карты
   const mapFacilities = useMemo(() =>
     filteredBySubdivisionFacilities.filter(facility => {
       const matchesType = filterType === 'all' || facility.type.id === filterType;
       const matchesClass = facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
-
       let matchesStatus = true;
-      if (activeTab === 'open') {
-        matchesStatus = !facility.is_closed;
-      } else if (activeTab === 'closed') {
-        matchesStatus = facility.is_closed;
-      }
-
+      if (activeTab === 'open') matchesStatus = !facility.is_closed;
+      else if (activeTab === 'closed') matchesStatus = facility.is_closed;
       return matchesType && matchesClass && matchesStatus;
     }),
     [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
   );
 
-  // Обработчики с useCallback
   const handleViewChange = useCallback((type: 'table' | 'grid') => {
     setViewType(type);
     const newSearchParams = new URLSearchParams(searchParams);
@@ -359,89 +312,46 @@ export function FacilitiesSection() {
     setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
   }, []);
 
-  // Обработчик смены вкладки - сбрасываем фильтры
   const handleTabChange = useCallback((tab: 'all' | 'open' | 'closed' | 'posts') => {
     setActiveTab(tab);
     setMapSearchTerm('');
-
-    // Сбрасываем фильтры только при переключении между вкладками объектов
     if (tab !== 'posts' && activeTab !== 'posts') {
-      // Если переключаемся между вкладками объектов (all, open, closed), сбрасываем фильтры
       setFilterType('all');
       setFacilityClassFilter('all');
     }
-    // Если переключаемся на posts или с posts - фильтры сохраняются
-
     const newSearchParams = new URLSearchParams();
-
-    // Сохраняем subdivision если есть
-    if (stableSubdivisionId) {
-      newSearchParams.set('subdivision', stableSubdivisionId);
-    }
-
-    // Устанавливаем новую вкладку
+    if (stableSubdivisionId) newSearchParams.set('subdivision', stableSubdivisionId);
     newSearchParams.set('tab', tab);
-
-    // Сохраняем фильтры в URL только для вкладок объектов
     if (tab !== 'posts') {
-      if (filterType !== 'all') {
-        newSearchParams.set('type', filterType.toString());
-      }
-      if (facilityClassFilter !== 'all') {
-        newSearchParams.set('class', facilityClassFilter);
-      }
+      if (filterType !== 'all') newSearchParams.set('type', filterType.toString());
+      if (facilityClassFilter !== 'all') newSearchParams.set('class', facilityClassFilter);
     }
-
-    // Сохраняем viewType если есть
-    if (viewType !== 'table') {
-      newSearchParams.set('view', viewType);
-    }
-
+    if (viewType !== 'table') newSearchParams.set('view', viewType);
     navigate({ search: newSearchParams.toString() }, { replace: true });
   }, [searchParams, navigate, stableSubdivisionId, viewType, filterType, facilityClassFilter, activeTab]);
 
   const handleTypeChange = useCallback((type: 'all' | number) => {
     setFilterType(type);
     setMapSearchTerm('');
-
     const newSearchParams = new URLSearchParams(searchParams);
-
-    if (type === 'all') {
-      newSearchParams.delete('type');
-    } else {
-      newSearchParams.set('type', type.toString());
-    }
-
+    if (type === 'all') newSearchParams.delete('type');
+    else newSearchParams.set('type', type.toString());
     navigate({ search: newSearchParams.toString() }, { replace: true });
   }, [searchParams, navigate]);
 
   const handleClassChange = useCallback((classValue: 'all' | '1' | '2') => {
     setFacilityClassFilter(classValue);
     setMapSearchTerm('');
-
     const newSearchParams = new URLSearchParams(searchParams);
-
-    if (classValue === 'all') {
-      newSearchParams.delete('class');
-    } else {
-      newSearchParams.set('class', classValue);
-    }
-
+    if (classValue === 'all') newSearchParams.delete('class');
+    else newSearchParams.set('class', classValue);
     navigate({ search: newSearchParams.toString() }, { replace: true });
   }, [searchParams, navigate]);
 
   const handleBack = useCallback(() => {
-    if (isGlobalView) {
-      navigate('/');
-    } else {
-      if (stableSubdivisionId) {
-        // Возвращаемся на страницу отделения (не объектов)
-        navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
-      } else {
-        // Возвращаемся на страницу подразделения
-        navigate(`/divisions/${id}`);
-      }
-    }
+    if (isGlobalView) navigate('/');
+    else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
+    else navigate(`/divisions/${id}`);
   }, [isGlobalView, navigate, id, stableSubdivisionId]);
 
   const handleAddFacility = useCallback(() => {
@@ -452,12 +362,8 @@ export function FacilitiesSection() {
       activeTab: activeTab,
       fromSubdivision: !!stableSubdivisionId
     };
-
-    if (isGlobalView || isExploitationUser) {
-      navigate(`/facilities/create`, { state });
-    } else {
-      navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
-    }
+    if (isGlobalView || isExploitationUser) navigate(`/facilities/create`, { state });
+    else navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
   }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
   const handleAddPost = useCallback(() => {
@@ -466,28 +372,18 @@ export function FacilitiesSection() {
       divisionId: id,
       subdivisionId: stableSubdivisionId,
       activeTab: activeTab,
-      // Передаем флаг, что переходим из контекста отделения
       fromSubdivision: !!stableSubdivisionId
     };
-
-    if (isGlobalView || isExploitationUser) {
-      navigate(`/communication-posts/new`, { state });
-    } else {
-      navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
-    }
+    if (isGlobalView || isExploitationUser) navigate(`/communication-posts/new`, { state });
+    else navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
   }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
   const handleLocateFacility = useCallback((facility: Facility) => {
     setMapSearchTerm('');
-    setTimeout(() => {
-      setMapSearchTerm(facility.name);
-    }, 10);
-
+    setTimeout(() => setMapSearchTerm(facility.name), 10);
     setTimeout(() => {
       const mapElement = document.querySelector('.facilities-map-overlay');
-      if (mapElement) {
-        mapElement.scrollIntoView({ behavior: 'smooth' });
-      }
+      if (mapElement) mapElement.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   }, []);
 
@@ -515,31 +411,23 @@ export function FacilitiesSection() {
     setFacilityToDelete(null);
   }, []);
 
-  // Автоматическое переключение вкладок при отсутствии данных
+  // Автоматическое переключение вкладок
   useEffect(() => {
     if (!loading) {
       const hasAnyData = hasAllFacilities || hasOpenFacilities || hasClosedFacilities || hasCommunicationPosts;
       if (!hasAnyData) return;
-
-      // Если активная вкладка - "posts" и на ней нет данных,
-      // не переключаем (пользователь хочет создать первый пост)
-      if (activeTab === 'posts' && !hasCommunicationPosts) {
-        return;
-      }
-
+      if (activeTab === 'posts' && !hasCommunicationPosts) return;
       const currentTabHasData =
         (activeTab === 'all' && hasAllFacilities) ||
         (activeTab === 'open' && hasOpenFacilities) ||
         (activeTab === 'closed' && hasClosedFacilities) ||
         (activeTab === 'posts' && hasCommunicationPosts);
-
       if (!currentTabHasData) {
         let newTab = 'all';
         if (hasAllFacilities) newTab = 'all';
         else if (hasOpenFacilities) newTab = 'open';
         else if (hasClosedFacilities) newTab = 'closed';
         else if (hasCommunicationPosts) newTab = 'posts';
-
         setActiveTab(newTab);
         const newSearchParams = new URLSearchParams(searchParams);
         newSearchParams.set('tab', newTab);
@@ -550,52 +438,19 @@ export function FacilitiesSection() {
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
-      const divisionName = stableCurrentUser?.division_info?.name || 'Ваше подразделение';
+      const divisionName = user?.division_info?.name || 'Ваше подразделение';
       return `Объекты: ${divisionName}`;
     }
-
-    if (isGlobalView) {
-      return 'Объекты: Все подразделения';
-    }
-
-    // Для начальника эксплуатации показываем и подразделение, и отделение (если есть)
-    if (isChief && subdivisionName) {
-      return `Объекты: ${division?.name || ''} / ${subdivisionName}`;
-    }
-
-    // Для сотрудника эксплуатации или начальника без отделения показываем только подразделение
-    if (isExploitationUser) {
-      return `Объекты: ${division?.name || ''}`;
-    }
-
-    // Для обычных пользователей
+    if (isGlobalView) return 'Объекты: Все подразделения';
+    if (isChief && subdivisionName) return `Объекты: ${division?.name || ''} / ${subdivisionName}`;
+    if (isExploitationUser) return `Объекты: ${division?.name || ''}`;
     return `Объекты: ${division?.name || ''}${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
 
-  const handleSearchTermChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
+  const handleSearchTermChange = useCallback((term: string) => setSearchTerm(term), []);
 
-  // Проверка прав доступа для кнопки "Добавить объект"
-  const canCreateFacilities = canCreate('facilities');
-
-  // Проверка прав доступа для кнопки "Добавить пост связи" - ИСПОЛЬЗУЕМ КОНКРЕТНО ДЛЯ COMMUNICATION POSTS
-  const canCreateCommunicationPosts = canCreate('communicationPosts');
-
-  const canViewCommunicationPosts = useMemo(() => {
-    return currentUser?.permissions?.models?.CommunicationPost?.includes('view') ?? false;
-  }, [currentUser]);
-
-  // Проверка прав доступа для удаления постов связи
-  const canDeleteCommunicationPosts = canDelete('communicationPosts');
-
-  if (loading) {
-    return <div className="flex justify-center py-12">Загрузка данных...</div>;
-  }
-
-  if (error) {
-    return <div className="facilities-error-message">{error}</div>;
-  }
+  if (loading) return <div className="flex justify-center py-12">Загрузка данных...</div>;
+  if (error) return <div className="facilities-error-message">{error}</div>;
 
   return (
     <>
@@ -607,35 +462,26 @@ export function FacilitiesSection() {
                 <ArrowLeft className="back-button-icon" />
               </button>
             )}
-            <h2 className="facilities-title">
-              {getHeaderTitle()}
-            </h2>
+            <h2 className="facilities-title">{getHeaderTitle()}</h2>
           </div>
 
-          {canCreateCommunicationPosts && (<div className="facilities-add-buttons">
+          <div className="facilities-add-buttons">
             {activeTab === 'posts' ? (
               canCreateCommunicationPosts && (
-                <button
-                  onClick={handleAddPost}
-                  className="facilities-add-button"
-                >
+                <button onClick={handleAddPost} className="facilities-add-button">
                   <Plus size={18} />
                   <span>Добавить пост связи</span>
                 </button>
               )
             ) : (
               canCreateFacilities && (
-                <button
-                  onClick={handleAddFacility}
-                  className="facilities-add-button"
-                >
+                <button onClick={handleAddFacility} className="facilities-add-button">
                   <Plus size={18} />
                   <span>Добавить объект</span>
                 </button>
               )
             )}
           </div>
-          )}
         </div>
 
         <div className="facilities-content-wrapper">
@@ -718,12 +564,12 @@ export function FacilitiesSection() {
                 viewType={viewType}
                 onViewChange={handleViewChange}
                 facilities={displayFacilities}
-                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)} // Эта функция теперь не используется напрямую, но оставляем для обратной совместимости
+                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
                 onLocateFacility={handleLocateFacility}
                 showDifferentFields={true}
                 onFacilityDeleted={handleFacilityDeleted}
                 onDeleteInitiated={handleDeleteInitiated}
-                divisionId={id} // Добавляем пропсы для навигации
+                divisionId={id}
                 subdivisionId={stableSubdivisionId}
                 activeTab={activeTab}
                 filterType={filterType}
@@ -737,10 +583,7 @@ export function FacilitiesSection() {
       {showMap && displayFacilities.length > 0 && activeTab !== 'posts' && (
         <div className="facilities-map-overlay">
           <Suspense fallback={<div className="loading-spinner"></div>}>
-            <LazyMapView
-              facilities={mapFacilities}
-              searchTerm={mapSearchTerm}
-            />
+            <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
           </Suspense>
         </div>
       )}
