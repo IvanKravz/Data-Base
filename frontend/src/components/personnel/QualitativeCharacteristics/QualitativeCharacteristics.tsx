@@ -1,3 +1,4 @@
+// components/personnel/QualitativeCharacteristics/QualitativeCharacteristics.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,6 +14,7 @@ import {
   EducationCard
 } from './sections';
 import { FormActions } from './sections/FormActions';
+import { useAppPermissions } from '../../../api/utils/AppPermissionsContext';
 import './style.css';
 
 export function QualitativeCharacteristics() {
@@ -31,10 +33,18 @@ export function QualitativeCharacteristics() {
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
+  const { personnelFilters } = useAppPermissions();
+
   const canViewEmployee = useMemo(() => 
     permissions?.models?.Employee?.includes('view') ?? false, [permissions]);
   const canEditEmployee = useMemo(() => 
     permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
+
+  // Проверка на полный доступ (нет фильтров)
+  const canEditQualitative = useMemo(() => {
+    const hasFilters = personnelFilters && Object.keys(personnelFilters).length > 0;
+    return canEditEmployee && !hasFilters;
+  }, [canEditEmployee, personnelFilters]);
 
   const navigationState = location.state;
 
@@ -69,7 +79,7 @@ export function QualitativeCharacteristics() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!canEditEmployee) {
+    if (!canEditQualitative) {
       setError('У вас нет прав для редактирования данных сотрудника');
       return;
     }
@@ -142,7 +152,7 @@ export function QualitativeCharacteristics() {
           <p className="qc-subtitle">{employee.full_name}</p>
         </div>
 
-        {!isEditing && canEditEmployee && (
+        {!isEditing && canEditQualitative && (
           <button
             onClick={() => setIsEditing(true)}
             className="qc-edit-btn"
@@ -165,29 +175,29 @@ export function QualitativeCharacteristics() {
             <BasicInfoCard
               formData={formData}
               onChange={handleFieldChange}
-              canEdit={canEditEmployee}
+              canEdit={canEditQualitative}
             />
             <WorkExperienceCard
               formData={formData}
               onChange={handleFieldChange}
-              canEdit={canEditEmployee}
+              canEdit={canEditQualitative}
             />
             <SecurityClearanceCard
               formData={formData}
               onChange={handleFieldChange}
-              canEdit={canEditEmployee}
+              canEdit={canEditQualitative}
             />
             <EducationCard
               formData={formData}
               onChange={handleFieldChange}
-              canEdit={canEditEmployee}
+              canEdit={canEditQualitative}
             />
           </div>
 
           <FormActions
             onCancel={() => setIsEditing(false)}
             loading={loading}
-            canEdit={canEditEmployee}
+            canEdit={canEditQualitative}
           />
         </form>
       ) : (
@@ -195,7 +205,7 @@ export function QualitativeCharacteristics() {
           <BasicInfoCard
             employee={employee}
             viewMode
-            canEdit={canEditEmployee}
+            canEdit={canEditQualitative}
           />
           <WorkExperienceCard
             employee={{
@@ -205,7 +215,7 @@ export function QualitativeCharacteristics() {
               date_end_work: employee.date_end_work
             }}
             viewMode
-            canEdit={canEditEmployee}
+            canEdit={canEditQualitative}
           />
           <SecurityClearanceCard
             employee={{
@@ -213,7 +223,7 @@ export function QualitativeCharacteristics() {
               data_state_secrets: employee.data_state_secrets
             }}
             viewMode
-            canEdit={canEditEmployee}
+            canEdit={canEditQualitative}
           />
           <EducationCard
             employee={{
@@ -221,7 +231,7 @@ export function QualitativeCharacteristics() {
               year_graduation: employee.year_graduation
             }}
             viewMode
-            canEdit={canEditEmployee}
+            canEdit={canEditQualitative}
           />
         </div>
       )}

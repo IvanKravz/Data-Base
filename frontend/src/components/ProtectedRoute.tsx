@@ -8,17 +8,21 @@ interface ProtectedRouteProps {
     model: string;
     action?: PermissionType;
     fallback?: string;
+    extraCheck?: () => boolean; // optional additional check
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     children,
     model,
     action = 'view',
-    fallback = '/access-denied'
+    fallback = '/access-denied',
+    extraCheck
 }) => {
     const location = useLocation();
 
-    const hasAccess = canAccessPage(model, action);
+    const hasModelAccess = canAccessPage(model, action);
+    const hasExtraAccess = extraCheck ? extraCheck() : true;
+    const hasAccess = hasModelAccess && hasExtraAccess;
 
     if (!hasAccess) {
         return <Navigate to={fallback} state={{ from: location }} replace />;
@@ -91,7 +95,6 @@ export const MapRoute: React.FC<{ children: React.ReactNode; action?: Permission
         </ProtectedRoute>
     );
 
-// Маршрут для управления пользователями (модель User)
 export const UsersRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
     ({ children, action = 'view' }) => (
         <ProtectedRoute model="User" action={action}>

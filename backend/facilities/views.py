@@ -145,11 +145,17 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
         queryset = super().get_queryset()
 
         # Фильтры по параметрам запроса
+        division = self.request.query_params.get('division')
         subdivision = self.request.query_params.get('subdivision')
         facility_type = self.request.query_params.get('type')
         facility_class = self.request.query_params.get('class')
         search = self.request.query_params.get('search')
         is_closed = self.request.query_params.get('is_closed')
+
+        if division:
+            # Разделяем строку по запятой, если есть несколько ID
+            division_ids = division.split(',')
+            queryset = queryset.filter(division__id__in=division_ids)
 
         if subdivision:
             queryset = queryset.filter(subdivision=subdivision)

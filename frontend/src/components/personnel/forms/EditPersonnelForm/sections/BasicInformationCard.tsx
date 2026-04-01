@@ -1,5 +1,6 @@
+// BasicInformationCard.tsx
 import React, { useEffect, useState } from 'react';
-import { Employee, Division } from '../../../../../types';
+import { Employee } from '../../../../../types';
 import '.././style.css';
 import { employeesApi } from '../../../../../api';
 import { User } from 'lucide-react';
@@ -8,6 +9,7 @@ interface BasicInformationCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
   token: string;
+  readOnly?: boolean;
 }
 
 interface EmployeeDictionaries {
@@ -20,7 +22,7 @@ interface EmployeeDictionaries {
   warrant_officer_ranks: { value: string; label: string }[];
 }
 
-export function BasicInformationCard({ formData, onChange, token }: BasicInformationCardProps) {
+export function BasicInformationCard({ formData, onChange, token, readOnly = false }: BasicInformationCardProps) {
   const [dictionaries, setDictionaries] = useState<EmployeeDictionaries>({
     categories: [],
     officer_positions: [],
@@ -44,7 +46,6 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
         setLoading(false);
       }
     };
-
     loadDictionaries();
   }, [token]);
 
@@ -89,36 +90,25 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (readOnly) return;
     const category = e.target.value;
-    let updateData: Partial<Employee> = {
-      category,
-      position: '',
-      rank: ''
-    };
-
-    onChange(updateData);
+    onChange({ category, position: '', rank: '' });
   };
 
   const handlePositionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (readOnly) return;
     const position = e.target.value;
-    let updateData: Partial<Employee> = {
-      position,
-      ...(position === 'Главный руководитель' || position === 'Заместитель главного руководителя') && {
-        division: null,
-        subdivision: null
-      }
-    };
-
+    let updateData: Partial<Employee> = { position };
+    if (position === 'Главный руководитель' || position === 'Заместитель главного руководителя') {
+      updateData = { ...updateData, division: null, subdivision: null };
+    }
     onChange(updateData);
   };
 
   const handleRankChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange({
-      rank: e.target.value,
-      order_rank: ''
-    });
+    if (readOnly) return;
+    onChange({ rank: e.target.value, order_rank: '' });
   };
-
 
   return (
     <div className="personnel-card">
@@ -133,8 +123,9 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
             type="text"
             required
             value={formData.full_name}
-            onChange={(e) => onChange({ full_name: e.target.value })}
+            onChange={(e) => !readOnly && onChange({ full_name: e.target.value })}
             className="personnel-form-input"
+            disabled={readOnly}
           />
         </div>
 
@@ -144,6 +135,7 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
             value={formData.category || ''}
             onChange={handleCategoryChange}
             className="personnel-form-input"
+            disabled={readOnly}
           >
             <option value="">Выберите категорию</option>
             {dictionaries.categories.map((category) => (
@@ -162,6 +154,7 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
               onChange={handlePositionChange}
               className="personnel-form-input"
               required
+              disabled={readOnly}
             >
               <option value="">Выберите должность</option>
               {getPositionsForCategory().map((position) => (
@@ -180,6 +173,7 @@ export function BasicInformationCard({ formData, onChange, token }: BasicInforma
               value={formData.rank || ''}
               onChange={handleRankChange}
               className="personnel-form-input"
+              disabled={readOnly}
             >
               <option value="">Выберите звание</option>
               {getRanksForCategory().map((rank) => (

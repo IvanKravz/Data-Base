@@ -1,5 +1,7 @@
+// Header.tsx
 import React, { useMemo } from 'react';
 import { ArrowLeft, Pencil, Trash2, FileText } from 'lucide-react';
+import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 import '.././style.css'
 import { isExploitationEmployee } from '../../../../api/utils/permissions';
 
@@ -11,66 +13,66 @@ interface HeaderProps {
   onDelete?: () => void;
   onQualitative?: () => void;
   canEditEmployee: boolean;
+  canDeleteEmployee: boolean;
   isEditing: boolean;
 }
 
-export function Header({ 
-  title, 
-  personId, 
-  onBack, 
-  onEdit, 
-  onDelete, 
+export function Header({
+  title,
+  personId,
+  onBack,
+  onEdit,
+  onDelete,
   onQualitative,
   canEditEmployee,
+  canDeleteEmployee,
   isEditing
 }: HeaderProps) {
-  // Проверяем, является ли пользователь сотрудником эксплуатации
+  const { personnelFilters, isEditorShaWorker } = useAppPermissions();
   const isExploitationUser = useMemo(() => isExploitationEmployee(), []);
+
+  const hasEmployeeFilters = useMemo(() => {
+    return personnelFilters && Object.keys(personnelFilters).length > 0;
+  }, [personnelFilters]);
+
+  // Качественная характеристика – только для полного доступа
+  const canAccessQualitative = useMemo(() => {
+    return canEditEmployee && !hasEmployeeFilters && !isExploitationUser && !isEditorShaWorker;
+  }, [canEditEmployee, hasEmployeeFilters, isExploitationUser, isEditorShaWorker]);
+
+  // Удаление – только для полного доступа
+  const canDelete = useMemo(() => {
+    return canDeleteEmployee && !hasEmployeeFilters && !isEditorShaWorker;
+  }, [canDeleteEmployee, hasEmployeeFilters, isEditorShaWorker]);
+
+  // Редактирование – доступно всем, у кого есть право change (даже для редактора ШаРаботников)
+  const canEdit = canEditEmployee;
 
   return (
     <div className="personnel-header">
       <div className="personnel-header-left">
-        <button
-          onClick={onBack}
-          className="icon-button"
-        >
+        <button onClick={onBack} className="icon-button">
           <ArrowLeft className="button-back" />
         </button>
-        <h1 className="personnel-header-title">
-          {title}
-        </h1>
+        <h1 className="personnel-header-title">{title}</h1>
       </div>
-      
+
       {!isEditing && (
         <div className="personnel-header-right">
-          {/* Кнопка "Качественная характеристика" */}
-          {personId && !isExploitationUser && onQualitative && (
-            <button
-              onClick={onQualitative}
-              className="action-button action-button-green"
-            >
+          {personId && canAccessQualitative && onQualitative && (
+            <button onClick={onQualitative} className="action-button action-button-green">
               <FileText className="action-button-icon" />
               <span>Качественная характеристика</span>
             </button>
           )}
-          
-          {/* Кнопка "Редактировать" */}
-          {onEdit && canEditEmployee && (
-            <button
-              onClick={onEdit}
-              className="action-button action-button-blue"
-            >
+          {onEdit && canEdit && (
+            <button onClick={onEdit} className="action-button action-button-blue">
               <Pencil className="action-button-icon" />
               <span>Редактировать</span>
             </button>
           )}
-          
-          {/* Кнопка "Удалить" */}
-          {onDelete && canEditEmployee && (
-            <button
-              onClick={onDelete}
-              className="action-button action-button-red"
-            >
+          {onDelete && canDelete && (
+            <button onClick={onDelete} className="action-button action-button-red">
               <Trash2 className="action-button-icon" />
               <span>Удалить</span>
             </button>

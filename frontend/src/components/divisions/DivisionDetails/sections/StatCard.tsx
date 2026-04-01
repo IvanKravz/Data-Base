@@ -1,4 +1,3 @@
-// StatCard.tsx
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
 import './style.css';
@@ -9,12 +8,10 @@ interface StatCardProps {
   count: number | null;
   icon: typeof LucideIcon;
   iconColor: string;
-  details: Array<{
-    label: string;
-    value: number;
-  }>;
+  details: Array<{ label: string; value: number }>;
   onClick: () => void;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export function StatCard({
@@ -23,12 +20,17 @@ export function StatCard({
   icon: Icon,
   iconColor,
   onClick,
-  loading = false
+  loading = false,
+  disabled = false
 }: StatCardProps) {
+  const handleClick = () => {
+    if (!disabled) onClick();
+  };
+
   return (
-    <div 
-      onClick={onClick}
-      className={`division-stat-card`}
+    <div
+      onClick={handleClick}
+      className={`division-stat-card ${disabled ? 'disabled' : ''}`}
     >
       <div className="division-stat-card-content">
         <div className="division-stat-card-header">

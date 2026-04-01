@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { RootState, AppDispatch } from '../../../store/store';
 import { Header } from './sections/Header';
 import { BasicInfo } from './sections/BasicInfo';
 import { ContactInfo } from './sections/ContactInfo';
@@ -20,7 +20,7 @@ import { EditPersonnelForm } from '../forms/EditPersonnelForm';
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -33,12 +33,13 @@ export function PersonnelDetails() {
 
   const isGlobalView = authApi.getGlobalView();
 
-  const canEditEmployee = useMemo(() => 
+  const canEditEmployee = useMemo(() =>
     permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
-  const canViewEquipment = useMemo(() => 
+  const canDeleteEmployee = useMemo(() =>
+    permissions?.models?.Employee?.includes('delete') ?? false, [permissions]);
+  const canViewEquipment = useMemo(() =>
     permissions?.models?.Equipment?.includes('view') ?? false, [permissions]);
 
-  // Получаем состояние навигации
   const navigationState = location.state;
 
   useEffect(() => {
@@ -56,14 +57,14 @@ export function PersonnelDetails() {
       previewUrl = URL.createObjectURL(file);
       const updatedPerson = { ...person, photo_url: previewUrl };
 
-      dispatch(updatePersonAsync({
+      await dispatch(updatePersonAsync({
         token,
         id,
         personData: updatedPerson
-      }));
+      })).unwrap();
 
       await employeesApi.uploadPhoto(token, id, file);
-      await dispatch(fetchPersonById({ token, id }));
+      await dispatch(fetchPersonById({ token, id })).unwrap();
 
     } catch (error) {
       console.error('Photo upload error:', error);
@@ -71,7 +72,7 @@ export function PersonnelDetails() {
         token,
         id,
         personData: person
-      }));
+      })).unwrap();
     } finally {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     }
@@ -79,7 +80,7 @@ export function PersonnelDetails() {
 
   const handlePhotoRemove = async () => {
     await employeesApi.deletePhoto(token, id);
-    await dispatch(fetchPersonById({ token, id }));
+    await dispatch(fetchPersonById({ token, id })).unwrap();
   };
 
   if (loading) {
@@ -133,7 +134,7 @@ export function PersonnelDetails() {
 
   const handleUpdate = async (updatedPerson: Employee) => {
     if (token && id) {
-      await dispatch(updatePersonAsync({ token, id, personData: updatedPerson }));
+      await dispatch(updatePersonAsync({ token, id, personData: updatedPerson })).unwrap();
       setIsEditing(false);
     }
   };
@@ -162,10 +163,8 @@ export function PersonnelDetails() {
           title={person?.full_name || ''}
           personId={person?.id || ''}
           onBack={() => setIsEditing(false)}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onQualitative={handleGoToQualitative}
           canEditEmployee={canEditEmployee}
+          canDeleteEmployee={canDeleteEmployee}
           isEditing={true}
         />
         <div className="bg-white rounded-lg shadow p-6">
@@ -189,6 +188,7 @@ export function PersonnelDetails() {
         onDelete={handleDelete}
         onQualitative={handleGoToQualitative}
         canEditEmployee={canEditEmployee}
+        canDeleteEmployee={canDeleteEmployee}
         isEditing={false}
       />
 

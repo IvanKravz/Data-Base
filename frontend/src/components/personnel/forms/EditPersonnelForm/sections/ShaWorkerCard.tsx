@@ -8,6 +8,7 @@ interface ShaWorkerCardProps {
   onAddEquipment: () => void;
   onRemoveEquipment: (index: number) => void;
   onEquipmentChange: (index: number, field: 'equipment_type' | 'conclusion_number', value: string) => void;
+  readOnly?: boolean;
 }
 
 export function ShaWorkerCard({
@@ -15,7 +16,8 @@ export function ShaWorkerCard({
   onChange,
   onAddEquipment,
   onRemoveEquipment,
-  onEquipmentChange
+  onEquipmentChange,
+  readOnly = false
 }: ShaWorkerCardProps) {
   if (!shaWorker) return null;
 
@@ -45,11 +47,12 @@ export function ShaWorkerCard({
               type="date"
               required
               value={formatDateForInput(shaWorker.start_date)}
-              onChange={(e) => onChange({
+              onChange={(e) => !readOnly && onChange({
                 ...shaWorker,
                 start_date: formatDateForServer(e.target.value)
               })}
               className="personnel-form-input"
+              disabled={readOnly}
             />
           </div>
 
@@ -58,11 +61,12 @@ export function ShaWorkerCard({
             <select
               required
               value={shaWorker.access_level}
-              onChange={(e) => onChange({
+              onChange={(e) => !readOnly && onChange({
                 ...shaWorker,
                 access_level: e.target.value as '1' | '2'
               })}
               className="personnel-form-input"
+              disabled={readOnly}
             >
               <option value="1">1 класс</option>
               <option value="2">2 класс</option>
@@ -73,14 +77,16 @@ export function ShaWorkerCard({
         <div className="sha-equipment-section">
           <div className="sha-equipment-header">
             <h4 className="personnel-form-label">Техника и заключения</h4>
-            <button
-              type="button"
-              onClick={onAddEquipment}
-              className="personnel-btn personnel-btn-primary personnel-btn-sm"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Добавить технику</span>
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onAddEquipment}
+                className="personnel-btn personnel-btn-primary personnel-btn-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Добавить технику</span>
+              </button>
+            )}
           </div>
 
           <div className="sha-equipment-list">
@@ -91,26 +97,30 @@ export function ShaWorkerCard({
                     type="text"
                     required
                     value={item.equipment_type}
-                    onChange={(e) => onEquipmentChange(index, 'equipment_type', e.target.value)}
+                    onChange={(e) => !readOnly && onEquipmentChange(index, 'equipment_type', e.target.value)}
                     placeholder="Тип техники"
                     className="personnel-form-input"
+                    disabled={readOnly}
                   />
                   <input
                     type="text"
                     required
                     value={item.conclusion_number}
-                    onChange={(e) => onEquipmentChange(index, 'conclusion_number', e.target.value)}
+                    onChange={(e) => !readOnly && onEquipmentChange(index, 'conclusion_number', e.target.value)}
                     placeholder="Номер заключения"
                     className="personnel-form-input"
+                    disabled={readOnly}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onRemoveEquipment(index)}
-                  className="personnel-btn personnel-btn-danger personnel-btn-icon"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveEquipment(index)}
+                    className="personnel-btn personnel-btn-danger personnel-btn-icon"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             ))}
 

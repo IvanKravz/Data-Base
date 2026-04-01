@@ -100,6 +100,12 @@ export const canAccessPersonnel = (action: PermissionType = 'view'): boolean => 
   return canAccessPage('Employee', action);
 };
 
+export const isEditorShaWorker = (): boolean => {
+  const permissions = getPermissions();
+  if (!permissions) return false;
+  return permissions.is_editor_sha_worker === true;
+};
+
 export const canAccessEquipment = (action: PermissionType = 'view'): boolean => {
   return canAccessPage('Equipment', action);
 };

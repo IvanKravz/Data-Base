@@ -1,4 +1,3 @@
-// Overview.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -16,17 +15,14 @@ interface OverviewProps {
     division: Division;
 }
 
-// Вспомогательная функция: доступен ли раздел на уровне отдела
 const isVisibleForDivision = (
     canAccess: boolean,
-    filters: { division_id?: number } | null,
+    filters: { division_id?: number; subdivision_id?: number } | null,
     divisionId: number
 ): boolean => {
     if (!canAccess) return false;
-    if (!filters) return true;                     // нет фильтров – доступен
+    if (!filters) return true;
     if (filters.division_id && filters.division_id !== divisionId) return false;
-    // Если есть subdivision_id, значит доступ ограничен конкретным подразделением,
-    // карточку на уровне отдела показывать не нужно, т.к. она будет отображаться только на уровне подразделения.
     if (filters.subdivision_id) return false;
     return true;
 };
@@ -67,7 +63,6 @@ export function Overview({ division }: OverviewProps) {
             setLoading(false);
             return;
         }
-
         const fetchEmployees = async () => {
             try {
                 const data = await employeesApi.getPersonnel(token, { division: division.id });
@@ -79,93 +74,93 @@ export function Overview({ division }: OverviewProps) {
                 setLoading(false);
             }
         };
-
         fetchEmployees();
     }, [token, dispatch, division.id, isPersonnelVisible]);
 
     useEffect(() => {
         if (!isTasksVisible) {
             setTasksLoading(false);
+            setIncompleteTasksCount(null);
             return;
         }
-
         const fetchTasksCount = async () => {
             try {
                 const count = await tasksApi.getIncompleteTasksCount({ divisionId: division.id });
                 setIncompleteTasksCount(count);
             } catch (err: any) {
                 console.error('Failed to fetch incomplete tasks count', err);
-                setIncompleteTasksCount(0);
+                setIncompleteTasksCount(null);
             } finally {
                 setTasksLoading(false);
             }
         };
-
         fetchTasksCount();
     }, [division.id, isTasksVisible]);
+
+    // Определяем, какое число показывать в каждой карточке
+    const getCount = (visible: boolean, value: number | null | undefined, isLoading: boolean): number | null => {
+        if (!visible) return null;          // нет прав → прочерк
+        if (isLoading) return null;         // идёт загрузка → спиннер
+        return value !== undefined ? value : null;
+    };
 
     return (
         <div className="division-overview-container">
             <div className="division-stats-grid">
-                {isPersonnelVisible && (
-                    <StatCard
-                        title="Сотрудники"
-                        count={loading ? null : division.employees_count}
-                        icon={Users}
-                        iconColor="#4d5edb"
-                        details={[]}
-                        onClick={() => handleSectionClick('personnel')}
-                        loading={loading}
-                    />
-                )}
+                <StatCard
+                    title="Сотрудники"
+                    count={getCount(isPersonnelVisible, division.employees_count, loading)}
+                    icon={Users}
+                    iconColor="#4d5edb"
+                    details={[]}
+                    onClick={() => handleSectionClick('personnel')}
+                    loading={loading && isPersonnelVisible}
+                    disabled={!isPersonnelVisible}
+                />
 
-                {isEquipmentVisible && (
-                    <StatCard
-                        title="Техника"
-                        count={division.equipment_count}
-                        icon={Plug}
-                        iconColor="#10b981"
-                        details={[]}
-                        onClick={() => handleSectionClick('equipment')}
-                        loading={false}
-                    />
-                )}
+                <StatCard
+                    title="Техника"
+                    count={getCount(isEquipmentVisible, division.equipment_count, false)}
+                    icon={Plug}
+                    iconColor="#10b981"
+                    details={[]}
+                    onClick={() => handleSectionClick('equipment')}
+                    loading={false}
+                    disabled={!isEquipmentVisible}
+                />
 
-                {isFacilitiesVisible && (
-                    <StatCard
-                        title="Объекты"
-                        count={division.facilities_count}
-                        icon={Building2}
-                        iconColor="#888676"
-                        details={[]}
-                        onClick={() => handleSectionClick('facilities')}
-                        loading={false}
-                    />
-                )}
+                <StatCard
+                    title="Объекты"
+                    count={getCount(isFacilitiesVisible, division.facilities_count, false)}
+                    icon={Building2}
+                    iconColor="#888676"
+                    details={[]}
+                    onClick={() => handleSectionClick('facilities')}
+                    loading={false}
+                    disabled={!isFacilitiesVisible}
+                />
 
-                {isNetworksVisible && (
-                    <StatCard
-                        title="Сети связи"
-                        count={division.networks_count}
-                        icon={RadioTower}
-                        iconColor="#70b3d0"
-                        details={[]}
-                        onClick={() => handleSectionClick('networks')}
-                        loading={false}
-                    />
-                )}
+                <StatCard
+                    title="Сети связи"
+                    count={getCount(isNetworksVisible, division.networks_count, false)}
+                    icon={RadioTower}
+                    iconColor="#70b3d0"
+                    details={[]}
+                    onClick={() => handleSectionClick('networks')}
+                    loading={false}
+                    disabled={!isNetworksVisible}
+                />
 
-                {isTasksVisible && (
-                    <StatCard
-                        title="Задачи"
-                        count={tasksLoading ? null : incompleteTasksCount}
-                        icon={ListTodo}
-                        iconColor="#f97316"
-                        details={[]}
-                        onClick={() => handleSectionClick('tasks')}
-                        loading={tasksLoading}
-                    />
-                )}
+                <StatCard
+                    title="Задачи"
+                    count={getCount(isTasksVisible, incompleteTasksCount, tasksLoading)}
+                    icon={ListTodo}
+                    iconColor="#f97316"
+                    details={[]}
+                    onClick={() => handleSectionClick('tasks')}
+                    loading={tasksLoading && isTasksVisible}
+                    disabled={!isTasksVisible}
+                />
             </div>
 
             {!isExploitationEmp && <SubdivisionsList division={division} />}

@@ -5,22 +5,26 @@ import '.././style.css';
 interface CommentsCardProps {
   description: string;
   onChange: (description: string) => void;
+  readOnly?: boolean;
 }
 
-export function CommentsCard({ description, onChange }: CommentsCardProps) {
+export function CommentsCard({ description, onChange, readOnly = false }: CommentsCardProps) {
   const comments = description ? description.split('\n') : [''];
 
   const handleCommentChange = (index: number, value: string) => {
+    if (readOnly) return;
     const newComments = [...comments];
     newComments[index] = value;
     onChange(newComments.filter(c => c.trim() !== '').join('\n'));
   };
 
   const handleAddComment = () => {
+    if (readOnly) return;
     onChange([...comments, ''].join('\n'));
   };
 
   const handleRemoveComment = (index: number) => {
+    if (readOnly) return;
     const newComments = comments.filter((_, i) => i !== index);
     onChange(newComments.join('\n'));
   };
@@ -39,8 +43,9 @@ export function CommentsCard({ description, onChange }: CommentsCardProps) {
               onChange={(e) => handleCommentChange(index, e.target.value)}
               className="personnel-form-input personnel-form-textarea"
               placeholder="Введите комментарий..."
+              disabled={readOnly}
             />
-            {comments.length > 1 && (
+            {comments.length > 1 && !readOnly && (
               <button
                 type="button"
                 onClick={() => handleRemoveComment(index)}
@@ -51,15 +56,17 @@ export function CommentsCard({ description, onChange }: CommentsCardProps) {
             )}
           </div>
         ))}
-        <div>
-          <button
-            type="button"
-            onClick={handleAddComment}
-            className="personnel-btn personnel-btn-primary personnel-btn-sm"
-          >
-            + Добавить комментарий
-          </button>
-        </div>
+        {!readOnly && (
+          <div>
+            <button
+              type="button"
+              onClick={handleAddComment}
+              className="personnel-btn personnel-btn-primary personnel-btn-sm"
+            >
+              + Добавить комментарий
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

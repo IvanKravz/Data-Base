@@ -1,5 +1,5 @@
-// MainLayout.tsx
-import React, { useState, useEffect } from 'react';
+// components/MainLayout.tsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Layout } from './Layout';
 import { MainContent } from './MainContent';
@@ -35,7 +35,8 @@ import {
   DivisionsRoute,
   StorageRoute,
   MapRoute,
-  UsersRoute
+  UsersRoute,
+  ProtectedRoute
 } from './ProtectedRoute';
 import { UserManagementPage } from './UserMenu/UserManagementPage/UserManagementPage';
 import { useAppPermissions } from '../api/utils/AppPermissionsContext';
@@ -59,7 +60,8 @@ export function MainLayout() {
     canAccessTasks,
     canAccessNetworks,
     canAccessMap,
-    canAccessStorage
+    canAccessStorage,
+    personnelFilters
   } = useAppPermissions();
 
   // Автоматический редирект для эксплуатационников на их подразделение
@@ -72,6 +74,12 @@ export function MainLayout() {
       setActiveTab('divisions');
     }
   }, [navigate]);
+
+  // Функция проверки доступа к качественной характеристике (нет фильтров на Employee)
+  const checkQualitativeAccess = useMemo(() => {
+    const hasFilters = personnelFilters && Object.keys(personnelFilters).length > 0;
+    return () => !hasFilters;
+  }, [personnelFilters]);
 
   // Компонент для корневого маршрута: если есть доступ к подразделениям — показываем список, иначе редирект на первый доступный модуль
   const RootRedirect = () => {
@@ -269,10 +277,11 @@ export function MainLayout() {
           </PersonnelRoute>
         } />
 
+        {/* Качественная характеристика – только при отсутствии фильтров на Employee */}
         <Route path="/personnel/:id/qualitative" element={
-          <PersonnelRoute>
+          <ProtectedRoute model="Employee" action="view" extraCheck={checkQualitativeAccess}>
             <QualitativeCharacteristics />
-          </PersonnelRoute>
+          </ProtectedRoute>
         } />
 
         {/* Facility Routes */}

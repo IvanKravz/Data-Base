@@ -1,4 +1,3 @@
-// components/divisions/DivisionDetails/sections/SubdivisionsList.tsx
 import React, { useEffect, useState } from 'react';
 import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { Division } from '../../../../types';
@@ -11,7 +10,6 @@ interface SubdivisionsListProps {
     division: Division;
 }
 
-// Вспомогательная функция: доступен ли раздел для конкретного подразделения
 const isVisibleForSubdivision = (
     canAccess: boolean,
     filters: { division_id?: number; subdivision_id?: number } | null,
@@ -65,7 +63,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
         }
     }, [subdivisions, division.id, canAccessTasks, taskFilters]);
 
-    const handleSectionClick = (section: string, subdivisionId?: string) => {
+    const handleSectionClick = (section: string, subdivisionId?: string, disabled?: boolean) => {
+        if (disabled) return;
         const path = subdivisionId
             ? `/divisions/${division.id}/${section}?subdivision=${subdivisionId}`
             : `/divisions/${division.id}/${section}`;
@@ -84,15 +83,13 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
         });
     };
 
-    if (subdivisions.length === 0) {
-        return null;
-    }
+    if (subdivisions.length === 0) return null;
 
     return (
         <div className="division-subdivisions-section">
             <h2 className="division-section-title">Отделения</h2>
             <div className="division-subdivisions-grid">
-                {subdivisions.map(subdivision => {
+                {subdivisions.map((subdivision, index) => {
                     const showPersonnel = isVisibleForSubdivision(
                         canAccessPersonnel(),
                         personnelFilters,
@@ -119,73 +116,69 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                     );
 
                     return (
-                        <div key={subdivision.id} className="division-subdivision-card">
+                        <div
+                            key={subdivision.id}
+                            className="division-subdivision-card"
+                            style={{ animationDelay: `${index * 0.05}s` }}
+                        >
                             <div className="division-subdivision-header">
                                 <h3 className="division-subdivision-name">{subdivision.name}</h3>
                             </div>
 
                             <div className="division-subdivision-metrics">
-                                {showPersonnel && (
-                                    <div
-                                        className="division-metric-item"
-                                        onClick={() => handleSectionClick('personnel', subdivision.id)}
-                                    >
-                                        <div className="division-metric-icon-container">
-                                            <Users className="division-metric-icon" />
-                                        </div>
-                                        <div className="division-metric-info">
-                                            <span className="division-metric-label">Сотрудники</span>
-                                            <span className="division-metric-value">{subdivision.employees_count}</span>
-                                        </div>
+                                <div
+                                    className={`division-metric-item ${!showPersonnel ? 'disabled' : ''}`}
+                                    onClick={() => handleSectionClick('personnel', subdivision.id, !showPersonnel)}
+                                >
+                                    <div className="division-metric-icon-container">
+                                        <Users className="division-metric-icon" />
                                     </div>
-                                )}
+                                    <div className="division-metric-info">
+                                        <span className="division-metric-label">Сотрудники</span>
+                                        <span className="division-metric-value">{subdivision.employees_count}</span>
+                                    </div>
+                                </div>
 
-                                {showEquipment && (
-                                    <div
-                                        className="division-metric-item"
-                                        onClick={() => handleSectionClick('equipment', subdivision.id)}
-                                    >
-                                        <div className="division-metric-icon-container">
-                                            <Plug className="division-metric-icon" />
-                                        </div>
-                                        <div className="division-metric-info">
-                                            <span className="division-metric-label">Техника</span>
-                                            <span className="division-metric-value">{subdivision.equipment_count}</span>
-                                        </div>
+                                <div
+                                    className={`division-metric-item ${!showEquipment ? 'disabled' : ''}`}
+                                    onClick={() => handleSectionClick('equipment', subdivision.id, !showEquipment)}
+                                >
+                                    <div className="division-metric-icon-container">
+                                        <Plug className="division-metric-icon" />
                                     </div>
-                                )}
+                                    <div className="division-metric-info">
+                                        <span className="division-metric-label">Техника</span>
+                                        <span className="division-metric-value">{subdivision.equipment_count}</span>
+                                    </div>
+                                </div>
 
-                                {showFacilities && (
-                                    <div
-                                        className="division-metric-item"
-                                        onClick={() => handleSectionClick('facilities', subdivision.id)}
-                                    >
-                                        <div className="division-metric-icon-container">
-                                            <Building2 className="division-metric-icon" />
-                                        </div>
-                                        <div className="division-metric-info">
-                                            <span className="division-metric-label">Объекты</span>
-                                            <span className="division-metric-value">{subdivision.facilities_count}</span>
-                                        </div>
+                                <div
+                                    className={`division-metric-item ${!showFacilities ? 'disabled' : ''}`}
+                                    onClick={() => handleSectionClick('facilities', subdivision.id, !showFacilities)}
+                                >
+                                    <div className="division-metric-icon-container">
+                                        <Building2 className="division-metric-icon" />
                                     </div>
-                                )}
+                                    <div className="division-metric-info">
+                                        <span className="division-metric-label">Объекты</span>
+                                        <span className="division-metric-value">{subdivision.facilities_count}</span>
+                                    </div>
+                                </div>
 
-                                {showTasks && (
-                                    <div
-                                        className="division-metric-item"
-                                        onClick={() => handleSectionClick('tasks', subdivision.id)}
-                                    >
-                                        <div className="division-metric-icon-container">
-                                            <ListTodo className="division-metric-icon" />
-                                        </div>
-                                        <div className="division-metric-info">
-                                            <span className="division-metric-label">Задачи</span>
-                                            <span className="division-metric-value">
-                                                {loading ? '...' : tasksCounts[subdivision.id] ?? 0}
-                                            </span>
-                                        </div>
+                                <div
+                                    className={`division-metric-item ${!showTasks ? 'disabled' : ''}`}
+                                    onClick={() => handleSectionClick('tasks', subdivision.id, !showTasks)}
+                                >
+                                    <div className="division-metric-icon-container">
+                                        <ListTodo className="division-metric-icon" />
                                     </div>
-                                )}
+                                    <div className="division-metric-info">
+                                        <span className="division-metric-label">Задачи</span>
+                                        <span className="division-metric-value">
+                                            {loading ? '...' : tasksCounts[subdivision.id] ?? 0}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );

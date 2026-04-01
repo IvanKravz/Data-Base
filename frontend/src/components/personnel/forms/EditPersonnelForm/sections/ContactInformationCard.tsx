@@ -1,15 +1,15 @@
 import React from 'react';
 import { Employee } from '../../../../../types';
-import { divisions } from '../../../../../data/divisionsData';
 import '.././style.css';
 import { Phone } from 'lucide-react';
 
 interface ContactInformationCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
+  readOnly?: boolean;
 }
 
-export function ContactInformationCard({ formData, onChange }: ContactInformationCardProps) {
+export function ContactInformationCard({ formData, onChange, readOnly = false }: ContactInformationCardProps) {
   return (
     <div className="personnel-card">
       <div className="personnel-card-header-edit">
@@ -22,8 +22,9 @@ export function ContactInformationCard({ formData, onChange }: ContactInformatio
           <input
             type="tel"
             value={formData.personal_phone}
-            onChange={(e) => onChange({ personal_phone: e.target.value })}
+            onChange={(e) => !readOnly && onChange({ personal_phone: e.target.value })}
             className="personnel-form-input"
+            disabled={readOnly}
           />
         </div>
 
@@ -32,8 +33,9 @@ export function ContactInformationCard({ formData, onChange }: ContactInformatio
           <input
             type="tel"
             value={formData.work_phone}
-            onChange={(e) => onChange({ work_phone: e.target.value })}
+            onChange={(e) => !readOnly && onChange({ work_phone: e.target.value })}
             className="personnel-form-input"
+            disabled={readOnly}
           />
         </div>
       </div>

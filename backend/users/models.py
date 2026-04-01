@@ -42,7 +42,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     employee = models.OneToOneField(
-        'employees.Employee',  # Изменено на 'employees.Employee'
+        'employees.Employee',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -233,23 +233,27 @@ class User(AbstractUser):
         
         permissions['modules'] = self._get_available_modules(permissions['models'])
         
+        # Добавляем флаг is_editor_sha_worker
+        permissions['is_editor_sha_worker'] = any(
+            ROLE_PERMISSIONS.get(role, {}).get('is_editor_sha_worker', False)
+            for role in self.get_roles()
+        )
+        
         return permissions
     
     def _get_available_modules(self, models_permissions):
         module_mapping = {
-            # Существующие
             'Employee': 'employees',
             'ShaWorkerDetails': 'employees',
-            'ShaEquipmentConclusion': 'employees',  # перенесено из sha_equipment
+            'ShaEquipmentConclusion': 'employees',
             'Equipment': 'equipment',
             'EquipmentCategory': 'equipment',
-            # 'ProductStructure' исключаем
             'InterestOrgan': 'organs',
             'Division': 'divisions',
             'Subdivision': 'divisions',
             'Facility': 'divisions',
             'FacilityType': 'divisions',
-            'CommunicationPost': 'divisions',  # остаётся здесь
+            'CommunicationPost': 'divisions',
             'CommunicationNetwork': 'networks',
             'NetworkMembership': 'networks',
             'NetworkDirection': 'networks',
@@ -265,9 +269,8 @@ class User(AbstractUser):
             'User': 'users',
             'StorageFolder': 'storage',
             'StorageFile': 'storage',
-            'FSBOffice': 'maps',  # добавлено
-            # 'Object' – вероятно, имеется в виду Facility, но для безопасности оставим
-            'Object': 'objects',  # если используется
+            'FSBOffice': 'maps',
+            'Object': 'objects',
         }
         modules = set()
         for model in models_permissions.keys():

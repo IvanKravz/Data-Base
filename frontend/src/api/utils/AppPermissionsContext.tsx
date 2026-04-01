@@ -26,9 +26,9 @@ import {
     PermissionType,
 } from '../utils/permissions';
 
+// Расширяем интерфейс для любых фильтров
 interface ModelFilters {
-    division_id?: number;
-    subdivision_id?: number;
+    [key: string]: any;
 }
 
 interface AppPermissionsContextType {
@@ -59,20 +59,18 @@ interface AppPermissionsContextType {
     facilitiesFilters: ModelFilters | null;
     networksFilters: ModelFilters | null;
     taskFilters: ModelFilters | null;
+    isEditorShaWorker: boolean;   // новый флаг
 }
 
 const AppPermissionsContext = createContext<AppPermissionsContextType | null>(null);
 
+// Возвращаем любые фильтры, а не только division/subdivision
 const extractFilters = (modelFilters: any): ModelFilters | null => {
     if (!modelFilters) return null;
-    const filters: ModelFilters = {};
-    if (modelFilters.division_id) filters.division_id = modelFilters.division_id;
-    if (modelFilters.subdivision_id) filters.subdivision_id = modelFilters.subdivision_id;
-    return Object.keys(filters).length > 0 ? filters : null;
+    return Object.keys(modelFilters).length > 0 ? modelFilters : null;
 };
 
 export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Все хуки должны быть до условного return
     const user = useSelector((state: RootState) => state.auth.user);
     const loading = useSelector((state: RootState) => state.auth.loading);
     const permissions = user?.permissions;
@@ -98,6 +96,7 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
     const facilitiesFilters = useMemo(() => extractFilters(permissions?.filters?.Facility), [permissions]);
     const networksFilters = useMemo(() => extractFilters(permissions?.filters?.CommunicationNetwork), [permissions]);
     const taskFilters = useMemo(() => extractFilters(permissions?.filters?.Task), [permissions]);
+    const isEditorShaWorker = permissions?.is_editor_sha_worker ?? false;
 
     const value = useMemo(() => ({
         canAccessPersonnel,
@@ -127,9 +126,18 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         facilitiesFilters,
         networksFilters,
         taskFilters,
-    }), [canAccessMap, canAccessStorage, personnelFilters, equipmentFilters, facilitiesFilters, networksFilters, taskFilters]);
+        isEditorShaWorker,
+    }), [
+        canAccessMap,
+        canAccessStorage,
+        personnelFilters,
+        equipmentFilters,
+        facilitiesFilters,
+        networksFilters,
+        taskFilters,
+        isEditorShaWorker,
+    ]);
 
-    // Условный return после всех хуков
     if (loading && !user) {
         return <div className="loading-skeleton">Загрузка...</div>;
     }

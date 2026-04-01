@@ -53,13 +53,14 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
 
   return (
     <>
-    <div className="division-list-header-text">Отделы и отделения</div>
+      <div className="division-list-header-text">Отделы и отделения</div>
       <div className="grid-container">
-        {divisions.map((division) => (
+        {divisions.map((division, index) => (
           <div
             key={division.id}
             onClick={() => handleDivisionClick(division)}
             className="division-card"
+            style={{ animationDelay: `${index * 0.05}s` }}
           >
             <div className="division-card-title">
               <h3>{division.name}</h3>
@@ -86,7 +87,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         ))}
 
       </div>
-      <div className='map-country'>
+      <div className='map-country animate-fadeInUp'>
         <MapCountry />
       </div>
     </>

@@ -6,9 +6,11 @@ import { ShieldAlert } from 'lucide-react';
 interface ResponsibilityCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
+  readOnlyBasic?: boolean; // для чекбокса МОЛ
+  readOnlySha?: boolean;   // для чекбокса ШаРаботник
 }
 
-export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardProps) {
+export function ResponsibilityCard({ formData, onChange, readOnlyBasic = false, readOnlySha = false }: ResponsibilityCardProps) {
   return (
     <div className="personnel-card">
       <div className="personnel-card-header-edit">
@@ -21,8 +23,9 @@ export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardPro
             type="checkbox"
             id="isMaterialResponsible"
             checked={formData.is_material_responsible || false}
-            onChange={(e) => onChange({ is_material_responsible: e.target.checked })}
+            onChange={(e) => !readOnlyBasic && onChange({ is_material_responsible: e.target.checked })}
             className="personnel-checkbox"
+            disabled={readOnlyBasic}
           />
           <label htmlFor="isMaterialResponsible" className="personnel-checkbox-label">
             Материально ответственное лицо
@@ -35,10 +38,10 @@ export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardPro
             id="isShaWorker"
             checked={formData.is_sha_worker || false}
             onChange={(e) => {
+              if (readOnlySha) return;
               const isShaWorker = e.target.checked;
               onChange({
                 is_sha_worker: isShaWorker,
-                // Если снимаем галочку, явно устанавливаем sha_details в null
                 sha_details: isShaWorker ? formData.sha_details || {
                   start_date: '',
                   access_level: '1',
@@ -47,6 +50,7 @@ export function ResponsibilityCard({ formData, onChange }: ResponsibilityCardPro
               });
             }}
             className="personnel-checkbox"
+            disabled={readOnlySha}
           />
           <label htmlFor="isShaWorker" className="personnel-checkbox-label">
             ШаРаботник

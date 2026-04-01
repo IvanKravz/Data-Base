@@ -59,7 +59,7 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
 
       {/* Основной контент */}
       <div className="main-content">
-        <div className="content-container">
+        <div className="content-container" >
           {children}
         </div>
       </div>

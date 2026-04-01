@@ -5,9 +5,10 @@ import '.././style.css';
 interface DatesCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
+  readOnly?: boolean;
 }
 
-export function DatesCard({ formData, onChange }: DatesCardProps) {
+export function DatesCard({ formData, onChange, readOnly = false }: DatesCardProps) {
   const formatDateForInput = (dateString: string): string => {
     if (!dateString) return '';
     const [day, month, year] = dateString.split('-');
@@ -33,8 +34,9 @@ export function DatesCard({ formData, onChange }: DatesCardProps) {
             type="date"
             required
             value={formatDateForInput(formData.birth_date)}
-            onChange={(e) => onChange({ birth_date: formatDateForServer(e.target.value) })}
+            onChange={(e) => !readOnly && onChange({ birth_date: formatDateForServer(e.target.value) })}
             className="personnel-form-input"
+            disabled={readOnly}
           />
         </div>
 
@@ -43,8 +45,9 @@ export function DatesCard({ formData, onChange }: DatesCardProps) {
           <input
             type="date"
             value={formatDateForInput(formData.contract_date)}
-            onChange={(e) => onChange({ contract_date: formatDateForServer(e.target.value) })}
+            onChange={(e) => !readOnly && onChange({ contract_date: formatDateForServer(e.target.value) })}
             className="personnel-form-input"
+            disabled={readOnly}
           />
         </div>
       </div>

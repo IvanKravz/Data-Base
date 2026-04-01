@@ -205,7 +205,7 @@ ROLE_PERMISSIONS = {
         'models': {
             'Division': ['view'],
             'Subdivision': ['view'],
-            'Employee': ['view', 'change'],
+            'Employee': ['view', 'change'],         
             'Equipment': ['view', 'change'],
             'CommunicationPost': ['view'],
             'Facility': ['view', 'add', 'change'],
@@ -217,17 +217,17 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Employee': {'is_sha_worker': True},
             'Equipment': {'is_closed': True},
             'Facility': {'is_closed': True},
             'Task': {'division_id': 16, 'subdivision_id': 12}
         },
-        'can_see_all_divisions': True,      # Только свое подразделение
+        'can_see_all_divisions': True,
+        'is_editor_sha_worker': True,              
         'can_access_storage': True,
         'can_see_all_storage': False,
         'storage_quota': 5 * 1024 * 1024 * 1024,
         'max_file_size': 50 * 1024 * 1024,
-        'description': 'Специализированный доступ для 2 отделения'
+        'description': 'Специализированный доступ для 2 отделения (только ШаРаботники)'
     },
 
     'tech_section_1_3': {
