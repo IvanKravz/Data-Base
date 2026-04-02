@@ -217,7 +217,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                 const res = await usersApi.getUser(userId);
                 setUserData(res.data);
             } else if (userData) {
-                // Для текущего пользователя сохраняем только email в localStorage
                 const updatedUser = { ...userData, email: editForm.email };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
                 setUserData(updatedUser);
@@ -423,25 +422,23 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                 onPasswordChange={() => setIsPasswordModalOpen(true)}
                 showEditButton={!!onEdit && !isEditing}
                 showDeleteButton={!!onDelete && !isEditing}
-                showPasswordButton={!!userId}  
+                showPasswordButton={!!userId}
             />
 
             {isPasswordModalOpen && (
                 <ChangePasswordModal
-                    userId={userId}  // если userId есть, то это администратор смотрит другого
+                    userId={userId}
                     username={userData.username}
                     onClose={() => setIsPasswordModalOpen(false)}
-                    onSuccess={() => {
-                        // Можно показать уведомление (например, toast)
-                        console.log('Пароль успешно изменён');
-                    }}
+                    onSuccess={() => console.log('Пароль успешно изменён')}
                 />
             )}
 
             <div className="profile-grid-container">
                 <div className="profile-grid">
-                    {/* Левая колонка: основная информация + редактор ролей */}
-                    <div className="profile-left-column">
+                    {/* Левая колонка – вертикальный стек */}
+                    <div className="profile-left">
+                        {/* Блок основной информации */}
                         <div className="cabinet-form-section">
                             <div className="form-section-header">
                                 <h4 className="form-section-title">Основная информация</h4>
@@ -560,7 +557,16 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                             </table>
                         </div>
 
-                        {/* Редактор ролей под основной информацией */}
+                        {/* Блок доступных модулей */}
+                        <PermissionsModules
+                            modules={filteredModules}
+                            selectedModule={selectedModule}
+                            onModuleClick={handleModuleClick}
+                            getModuleDisplayName={getModuleDisplayName}
+                            getModuleIcon={getModuleIcon}
+                        />
+
+                        {/* Блок редактирования ролей – только в режиме редактирования */}
                         {isEditing && userId && (
                             <RoleEditor
                                 availableRoles={availableRoles}
@@ -571,28 +577,19 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                         )}
                     </div>
 
-                    {/* Средняя колонка: модули */}
-                    <div className="profile-middle-column">
-                        <PermissionsModules
-                            modules={filteredModules}
+                    {/* Правая колонка – детальные разрешения */}
+                    <div className="profile-permissions">
+                        <PermissionsDetails
+                            groupedModels={groupedByModule}
                             selectedModule={selectedModule}
-                            onModuleClick={handleModuleClick}
+                            filteredModels={getFilteredModels()}
+                            moduleSections={MODULE_SECTIONS}
                             getModuleDisplayName={getModuleDisplayName}
-                            getModuleIcon={getModuleIcon}
+                            getModelDisplayName={getModelDisplayName}
+                            getActionDisplayName={getActionDisplayName}
+                            getActionIcon={getActionIcon}
                         />
                     </div>
-
-                    {/* Правая колонка: детальные разрешения */}
-                    <PermissionsDetails
-                        groupedModels={groupedByModule}
-                        selectedModule={selectedModule}
-                        filteredModels={getFilteredModels()}
-                        moduleSections={MODULE_SECTIONS}
-                        getModuleDisplayName={getModuleDisplayName}
-                        getModelDisplayName={getModelDisplayName}
-                        getActionDisplayName={getActionDisplayName}
-                        getActionIcon={getActionIcon}
-                    />
                 </div>
             </div>
         </>

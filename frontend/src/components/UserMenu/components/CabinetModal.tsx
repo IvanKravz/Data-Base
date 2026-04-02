@@ -1,5 +1,6 @@
 // components/CabinetModal.tsx
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { User, X, Clock, Database } from 'lucide-react';
 import { ProfileTab } from './ProfileTab/ProfileTab';
 import { ActivityTab } from './ActivityTab';
@@ -19,7 +20,7 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
 
     const isAdmin = userData?.is_staff || userData?.roles?.includes('admin');
 
-    return (
+    const modalContent = (
         <div className="cabinet-modal-overlay" onClick={onClose}>
             <div className="cabinet-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="cabinet-header">
@@ -77,4 +78,8 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
             </div>
         </div>
     );
+
+    // Получаем контейнер для портала, если он есть, иначе body
+    const modalRoot = document.getElementById('modal-root') || document.body;
+    return createPortal(modalContent, modalRoot);
 }

@@ -18,7 +18,8 @@ class Command(BaseCommand):
             {'value': 'cabel', 'name': 'Кабель, провода', 'is_closed': False},
             {'value': 'material', 'name': 'Материалы', 'is_closed': False},
             {'value': 'furniture', 'name': 'Мебель и оборудование', 'is_closed': False},
-            {'value': 'stationTelephone', 'name': 'Телефонные аппараты, факс', 'is_closed': False},
+            {'value': 'telephone', 'name': 'Телефонные аппараты, факсы', 'is_closed': False},
+            {'value': 'shdTelephone', 'name': 'Специальные телефонные аппараты, факсы', 'is_closed': True},
             {'value': 'mobileTelephone', 'name': 'Сотовые телефоны', 'is_closed': False},
             {'value': 'car', 'name': 'Автомобильная техника', 'is_closed': False},
         ]

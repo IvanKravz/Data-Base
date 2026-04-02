@@ -64,6 +64,31 @@ export function MainLayout() {
     personnelFilters
   } = useAppPermissions();
 
+  // Функция определения активной вкладки по текущему пути
+  const getActiveTabFromPath = (pathname: string): string => {
+    // Для путей, начинающихся с /divisions (включая вложенные)
+    if (pathname.startsWith('/divisions')) {
+      return 'divisions';
+    }
+    // Для других модулей
+    if (pathname.startsWith('/personnel')) return 'personnel';
+    if (pathname.startsWith('/equipment')) return 'equipment';
+    if (pathname.startsWith('/facilities')) return 'facilities';
+    if (pathname.startsWith('/tasks')) return 'tasks';
+    if (pathname.startsWith('/networks')) return 'networks';
+    if (pathname.startsWith('/storage')) return 'storage';
+    if (pathname.startsWith('/map')) return 'map';
+    // Корневой путь
+    if (pathname === '/') return 'divisions';
+    // По умолчанию
+    return 'divisions';
+  };
+
+  useEffect(() => {
+    const newActiveTab = getActiveTabFromPath(location.pathname);
+    setActiveTab(newActiveTab);
+  }, [location.pathname]);
+
   // Автоматический редирект для эксплуатационников на их подразделение
   useEffect(() => {
     const user = getCurrentUser();
@@ -92,7 +117,7 @@ export function MainLayout() {
           viewTypes={viewTypes}
           onSetActiveTab={setActiveTab}
           onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
-          onSelectDivision={() => {}}
+          onSelectDivision={() => { }}
         />
       );
     }

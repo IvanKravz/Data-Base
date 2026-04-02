@@ -252,3 +252,17 @@
 .user-menu-button:hover .chevron-icon:not(.rotated) {
     animation: iconBounce 1.5s ease-in-out infinite;
 }
+
+@keyframes iconBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(2px);
+    }
+}
+
+.user-menu-button.active {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}

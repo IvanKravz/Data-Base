@@ -217,7 +217,7 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Equipment': {'is_closed': True},
+            'Equipment': {'category__value__in': ['tko', 'shd', 'shdTelephone']},
             'Facility': {'is_closed': True},
             'Task': {'division_id': 16, 'subdivision_id': 12}
         },
