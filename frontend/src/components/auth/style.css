@@ -1,171 +1,227 @@
 /* Auth Layout */
 .auth-layout {
-    min-height: 100vh;
-    background: linear-gradient(to bottom, #eff6ff 0%, #fff 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  
-  .auth-content {
-    width: 100%;
-    max-width: 28rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  .auth-header {
-    text-align: center;
-  }
-  
-  .auth-logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .menu_image {
-    margin-bottom: 1rem;
-    width: 6.2rem; 
-    height: 10rem;
-  }
-  
-  .auth-title {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 0.5rem;
-  }
-  
-  .auth-subtitle {
-    font-size: 1.5rem;
-    line-height: 1.75rem;
-    color: #4b5563;
-  }
-
-  /* Основной контейнер формы */
-.form-container {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-
-  }
-  
-  /* Сообщение об ошибке */
-  .error-message {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-  }
-  
-  /* Форма */
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  /* Группа полей формы */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Лейбл для полей ввода */
-  .form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 0.25rem;
-  }
-  
-  /* Поле ввода */
-  .form-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    transition: box-shadow 0.2s;
-  }
-  
-  .form-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px #3b82f6;
-  }
-  
-  /* Контейнер для поля пароля */
-  .password-input-container {
-    position: relative;
-  }
-  
-  /* Кнопка показа/скрытия пароля */
-  .toggle-password-button {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-  
-  .toggle-password-button:hover {
-    color: #374151;
-  }
-  
-  /* Основная кнопка отправки формы */
-.submit {
-    width: 30%;
-    margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #eff6ff 0%, #fff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-  .submit-button {
-    width: 100%;
-    text-align: center;
-    background-color: #2563eb;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: background-color 0.2s;
+.auth-content {
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.auth-header {
+  text-align: center;
+}
+
+.auth-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu_image {
+  margin-bottom: 1rem;
+  width: 6.2rem;
+  height: 10rem;
+}
+
+.auth-title {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  font-size: 1.5rem;
+  line-height: 1.75rem;
+  color: #4b5563;
+}
+
+/* Основной контейнер формы */
+.form-container {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+}
+
+/* Сообщение об ошибке */
+.error-message {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Форма */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Группа полей формы */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Лейбл для полей ввода */
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+/* Поле ввода */
+.form-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+/* Контейнер для поля пароля */
+.password-input-container {
+  position: relative;
+}
+
+/* Кнопка показа/скрытия пароля */
+.toggle-password-button {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.toggle-password-button:hover {
+  color: #374151;
+}
+
+/* Основная кнопка отправки формы */
+.submit {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.submit-fa {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.submit-button {
+  width: 50%;
+  text-align: center;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #1d4ed8;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Вторичная кнопка (например, для регистрации) */
+.secondary-button {
+  font-size: 0.875rem;
+  color: #2563eb;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  color: #1d4ed8;
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.twofa-form {
+  transition: all 0.3s ease-in-out;
+  animation: fadeInUp 0.4s ease;
+}
+
+.twofa-instruction {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #4b5563;
+  font-size: 1rem;
+}
+
+.twofa-inputs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.twofa-digit {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.twofa-digit:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .submit-button:hover {
-    background-color: #1d4ed8;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .submit-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  /* Вторичная кнопка (например, для регистрации) */
-  .secondary-button {
-    font-size: 0.875rem;
-    color: #2563eb;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-  
-  .secondary-button:hover {
-    color: #1d4ed8;
-  }
-  
-  .secondary-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+}

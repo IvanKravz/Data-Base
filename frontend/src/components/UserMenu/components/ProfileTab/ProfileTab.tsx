@@ -4,7 +4,7 @@ import {
     User, Mail, Globe, Calendar, Edit, Check, Shield,
     Eye, PlusCircle, Edit2, Trash2, Users, Building,
     Network, Server, Briefcase, Target, Wrench, Cpu,
-    MapPin, Layers, Folder, Settings, Database
+    MapPin, Layers, Folder, Settings, Database, Key, Lock
 } from 'lucide-react';
 import { usersApi, AvailableRole } from '../../../../api/users';
 import { divisionsApi } from '../../../../api/divisions';
@@ -39,7 +39,7 @@ interface ModuleSubsection {
     models: string[];
 }
 
-// Конфигурация модулей и подразделов
+// ... (конфигурация MODULE_SECTIONS, MAIN_MODULES, buildModelToModuleMap, ROLE_ORDER без изменений) ...
 const MODULE_SECTIONS: Record<string, ModuleSubsection[]> = {
     employees: [
         { id: 'common', name: 'Обычные сотрудники', models: ['Employee'] },
@@ -116,6 +116,11 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         user_division_id: null as number | null,
         user_subdivision_id: null as number | null,
     });
+    // 2FA состояние
+    const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+    const [twoFACode, setTwoFACode] = useState('');
+    const [originalTwoFAEnabled, setOriginalTwoFAEnabled] = useState(false);
+    const [originalTwoFACode, setOriginalTwoFACode] = useState('');
 
     const [availableRoles, setAvailableRoles] = useState<AvailableRole[]>([]);
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
@@ -133,6 +138,13 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                         user_division_id: res.data.division_info?.id ? Number(res.data.division_info.id) : null,
                         user_subdivision_id: res.data.division_info?.subdivision?.id ? Number(res.data.division_info.subdivision.id) : null,
                     });
+                    // Загружаем текущее состояние 2FA (если бэкенд возвращает)
+                    const enabled = res.data.two_factor_enabled || false;
+                    setTwoFAEnabled(enabled);
+                    setOriginalTwoFAEnabled(enabled);
+                    // Код не возвращается по соображениям безопасности, оставляем пустым
+                    setTwoFACode('');
+                    setOriginalTwoFACode('');
                 })
                 .catch(err => console.error('Error loading user:', err))
                 .finally(() => setLoading(false));
@@ -143,6 +155,10 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                 user_division_id: propUserData.division_info?.id ? Number(propUserData.division_info.id) : null,
                 user_subdivision_id: propUserData.division_info?.subdivision?.id ? Number(propUserData.division_info.subdivision.id) : null,
             });
+            setTwoFAEnabled(propUserData.two_factor_enabled || false);
+            setOriginalTwoFAEnabled(propUserData.two_factor_enabled || false);
+            setTwoFACode('');
+            setOriginalTwoFACode('');
             setLoading(false);
         }
     }, [userId, propUserData]);
@@ -214,8 +230,22 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
             }
             if (userId) {
                 await usersApi.updateUser(userId, updateData);
+                // Сохраняем 2FA настройки
+                if (twoFAEnabled && twoFACode && twoFACode.length === 4 && /^\d+$/.test(twoFACode)) {
+                    await usersApi.set2FA(userId, twoFACode);
+                } else if (!twoFAEnabled && originalTwoFAEnabled) {
+                    await usersApi.disable2FA(userId);
+                } else if (twoFAEnabled && twoFACode !== originalTwoFACode && twoFACode.length === 4) {
+                    // Если код изменился, сначала отключаем, потом включаем с новым кодом
+                    await usersApi.disable2FA(userId);
+                    await usersApi.set2FA(userId, twoFACode);
+                }
                 const res = await usersApi.getUser(userId);
                 setUserData(res.data);
+                setOriginalTwoFAEnabled(res.data.two_factor_enabled || false);
+                setTwoFAEnabled(res.data.two_factor_enabled || false);
+                setTwoFACode('');
+                setOriginalTwoFACode('');
             } else if (userData) {
                 const updatedUser = { ...userData, email: editForm.email };
                 localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -405,6 +435,19 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         setEditForm(prev => ({ ...prev, user_subdivision_id: value }));
     };
 
+    const handleTwoFAEnabledChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const enabled = e.target.checked;
+        setTwoFAEnabled(enabled);
+        if (!enabled) {
+            setTwoFACode('');
+        }
+    };
+
+    const handleTwoFACodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        setTwoFACode(value);
+    };
+
     if (loading) return <div className="loading">Загрузка профиля...</div>;
     if (!userData) return <div className="error">Нет данных</div>;
 
@@ -423,6 +466,7 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                 showEditButton={!!onEdit && !isEditing}
                 showDeleteButton={!!onDelete && !isEditing}
                 showPasswordButton={!!userId}
+                twoFAEnabled={twoFAEnabled}
             />
 
             {isPasswordModalOpen && (
@@ -452,6 +496,8 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                                                     user_division_id: userData?.division_info?.id ? Number(userData.division_info.id) : null,
                                                     user_subdivision_id: userData?.division_info?.subdivision?.id ? Number(userData.division_info.subdivision.id) : null,
                                                 });
+                                                setTwoFAEnabled(originalTwoFAEnabled);
+                                                setTwoFACode('');
                                             }}
                                             className="form-cancel-btn"
                                         >
@@ -553,6 +599,43 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                                             )}
                                         </td>
                                     </tr>
+                                    {isEditing && userId && (
+                                        <tr className="info-table-row">
+                                            <td className="info-table-label">
+                                                <label className="form-label-user">
+                                                    <Lock className="form-label-icon" />
+                                                    <span>Двухфакторная аутентификация</span>
+                                                </label>
+                                            </td>
+                                            <td className="info-table-value">
+                                                <div className="twofa-edit-container">
+                                                    <label className="twofa-checkbox-label">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={twoFAEnabled}
+                                                            onChange={handleTwoFAEnabledChange}
+                                                        />
+                                                        <span>Включить 2FA</span>
+                                                    </label>
+                                                    {twoFAEnabled && (
+                                                        <div className="twofa-code-input">
+                                                            <input
+                                                                type="text"
+                                                                value={twoFACode}
+                                                                onChange={handleTwoFACodeChange}
+                                                                placeholder="4 цифры"
+                                                                maxLength={4}
+                                                                pattern="\d*"
+                                                                className="form-input"
+                                                                style={{ width: '100px', textAlign: 'center' }}
+                                                            />
+                                                            <small className="twofa-hint">Установите 4-значный код (только цифры)</small>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

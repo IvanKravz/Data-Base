@@ -4,7 +4,7 @@ import logging
 from django.utils import timezone as django_timezone
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from rest_framework.views import APIView
@@ -30,6 +30,10 @@ from .serializers import (
 )
 from .permissions import RoleBasedPermission, IsAdmin
 from .mixins import UserAccessMixin
+
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from .serializers import TwoFactorVerifySerializer
+from .utils import generate_temp_2fa_token
 
 logger = logging.getLogger(__name__)
 
@@ -230,6 +234,27 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
         )
 
         return Response({'status': 'ok'})
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])  
+    def set_2fa(self, request, pk=None):
+        """Установить 2FA код для пользователя (только админ)"""
+        user = self.get_object()
+        code = request.data.get('code')
+        if not code or not code.isdigit() or len(code) != 4:
+            return Response({'error': 'Код должен быть 4 цифры'}, status=400)
+        user.two_factor_code = code
+        user.two_factor_enabled = True
+        user.save(update_fields=['two_factor_code', 'two_factor_enabled'])
+        return Response({'status': '2FA enabled'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin]) 
+    def disable_2fa(self, request, pk=None):
+        """Отключить 2FA для пользователя"""
+        user = self.get_object()
+        user.two_factor_code = ''
+        user.two_factor_enabled = False
+        user.save(update_fields=['two_factor_code', 'two_factor_enabled'])
+        return Response({'status': '2FA disabled'})
 
 
 class TokenObtainPairView(BaseTokenObtainPairView):
@@ -358,6 +383,42 @@ class SystemInfoView(APIView):
                 'total_users': User.objects.count(),
             }
         })
+    
+class TwoFactorVerifyView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = TwoFactorVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        temp_token = serializer.validated_data['temp_token']
+        code = serializer.validated_data['code']
+
+        try:
+            access_token = AccessToken(temp_token)
+            if not access_token.payload.get('temp_2fa'):
+                return Response({'error': 'Invalid token type'}, status=status.HTTP_400_BAD_REQUEST)
+            user_id = access_token.payload.get('user_id')
+            user = User.objects.get(id=user_id)
+        except Exception:
+            return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверка статического кода
+        if user.two_factor_enabled and user.two_factor_code == code:
+            refresh = RefreshToken.for_user(user)
+            log_user_action(
+                user=user,
+                action='login',
+                module='auth',
+                request=request,
+                details={'login_type': '2fa'}
+            )
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': UserSerializer(user).data
+            })
+        else:
+            return Response({'error': 'Неверный код двухфакторной аутентификации'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def error_400(request, exception=None):

@@ -38,6 +38,10 @@ class RoleBasedPermission(permissions.BasePermission):
         # Суперпользователи и администраторы имеют все права
         if request.user.is_superuser or self._user_has_role(request.user, 'admin'):
             return True
+        
+        # Кастомные административные действия – разрешаем только админам
+        if hasattr(view, 'action') and view.action in ['set_2fa', 'disable_2fa']:
+            return request.user.is_superuser or self._user_has_role(request.user, 'admin')
             
         # Получаем модель и действие
         model_name = self._get_model_name(view)

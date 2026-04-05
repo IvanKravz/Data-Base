@@ -1,6 +1,6 @@
 // UserInfoCard.tsx
 import React from 'react';
-import { User, Edit, Trash2, Key } from 'lucide-react';
+import { User, Edit, Trash2, Key, Shield } from 'lucide-react';
 
 interface UserInfoCardProps {
     username: string;
@@ -12,6 +12,7 @@ interface UserInfoCardProps {
     showEditButton?: boolean;
     showDeleteButton?: boolean;
     showPasswordButton?: boolean;
+    twoFAEnabled?: boolean;
 }
 
 export const UserInfoCard: React.FC<UserInfoCardProps> = ({
@@ -24,6 +25,7 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
     showEditButton = false,
     showDeleteButton = false,
     showPasswordButton = false,
+    twoFAEnabled = false,
 }) => {
     return (
         <div className="cabinet-info-card">
@@ -35,7 +37,14 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
                 )}
             </div>
             <div className="cabinet-user-info">
-                <h3 className="cabinet-user-name">{username}</h3>
+                <h3 className="cabinet-user-name">
+                    {username}
+                    {twoFAEnabled && (
+                        <span className="twofa-badge" title="2FA включена">
+                            <Shield size={14} />
+                        </span>
+                    )}
+                </h3>
                 <p className="cabinet-user-role">{rolesDisplay}</p>
             </div>
             <div className="user-info-actions">

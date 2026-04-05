@@ -14,14 +14,24 @@ interface UserPermissions {
 }
 
 export const authApi = {
-  login: async (username: string, password: string): Promise<LoginResponse> => {
+  login: async (username: string, password: string): Promise<LoginResponse | { requires_2fa: boolean; temp_token: string }> => {
     const { data } = await api.post('/users/auth/login/', { username, password });
-
-    // Сохраняем токены и данные пользователя
+    if (data.requires_2fa) {
+      // Не сохраняем токены, возвращаем признак
+      return { requires_2fa: true, temp_token: data.temp_token };
+    }
+    // Стандартный вход
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
 
+  verify2fa: async (tempToken: string, code: string): Promise<LoginResponse> => {
+    const { data } = await api.post('/users/auth/verify-2fa/', { temp_token: tempToken, code });
+    localStorage.setItem('accessToken', data.access);
+    localStorage.setItem('refreshToken', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   },
 
@@ -46,31 +56,31 @@ export const authApi = {
   },
 
   logout: async () => {
-    
+
     try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        
-        // Используем правильный путь
-        if (refreshToken) {
-            await api.post('/users/auth/logout/', { refresh: refreshToken }); 
-        }
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      // Используем правильный путь
+      if (refreshToken) {
+        await api.post('/users/auth/logout/', { refresh: refreshToken });
+      }
     } catch (error) {
-        console.error('FRONTEND: Logout error:', error);
-        // Даже если запрос на сервер не удался, очищаем локальное хранилище
+      console.error('FRONTEND: Logout error:', error);
+      // Даже если запрос на сервер не удался, очищаем локальное хранилище
     } finally {
-        // Полная очистка данных аутентификации
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        localStorage.removeItem('module_permissions');
-        
-        // Также очищаем sessionStorage если используется
-        sessionStorage.removeItem('appLoaded');
-        
-        // Перенаправляем на страницу входа
-        window.location.href = '/auth';
+      // Полная очистка данных аутентификации
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('module_permissions');
+
+      // Также очищаем sessionStorage если используется
+      sessionStorage.removeItem('appLoaded');
+
+      // Перенаправляем на страницу входа
+      window.location.href = '/auth';
     }
-},
+  },
 
   // Метод для получения прав доступа из новой структуры
   getModulePermissions: (): UserPermissions | null => {

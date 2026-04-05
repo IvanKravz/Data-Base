@@ -1,7 +1,16 @@
 // store/thunks/authThunks.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/auth';
-import { setUser, setLoading, setError, clearAuthState } from '../slices/authSlice';
+import {
+  setUser,
+  setLoading,
+  setError,
+  clearAuthState,
+  setTwoFactorRequired,
+  setTwoFactorVerifyStart,
+  setTwoFactorVerifySuccess,
+  setTwoFactorVerifyFailure,
+} from '../slices/authSlice';
 
 export const loginUser = createAsyncThunk(
   'auth/login',
@@ -9,8 +18,16 @@ export const loginUser = createAsyncThunk(
     dispatch(setLoading(true));
     try {
       const data = await authApi.login(username, password);
+      
+      // Проверяем, требуется ли 2FA
+      if ('requires_2fa' in data && data.requires_2fa) {
+        dispatch(setTwoFactorRequired(data.temp_token));
+        return { requires2FA: true };
+      }
+      
+      // Обычный успешный вход
       dispatch(setUser(data.user));
-      return data;
+      return { requires2FA: false };
     } catch (error: any) {
       let errorMessage = 'Ошибка входа';
       if (error.response) {
@@ -24,6 +41,26 @@ export const loginUser = createAsyncThunk(
       throw error;
     } finally {
       dispatch(setLoading(false));
+    }
+  }
+);
+
+export const verify2FA = createAsyncThunk(
+  'auth/verify2FA',
+  async ({ tempToken, code }: { tempToken: string; code: string }, { dispatch }) => {
+    dispatch(setTwoFactorVerifyStart());
+    try {
+      const data = await authApi.verify2fa(tempToken, code);
+      // data содержит access, refresh, user
+      dispatch(setTwoFactorVerifySuccess(data.user));
+      return data;
+    } catch (error: any) {
+      let errorMessage = 'Неверный код двухфакторной аутентификации';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      dispatch(setTwoFactorVerifyFailure(errorMessage));
+      throw error;
     }
   }
 );

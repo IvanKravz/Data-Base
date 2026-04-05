@@ -5,6 +5,7 @@ from .views import (
     UserViewSet, TokenObtainPairView, TokenRefreshView, RegisterView, UserProfileView,
     AvailableModulesView, SystemInfoView, UserActionLogViewSet, logout_view
 )
+from .views import TwoFactorVerifyView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -14,6 +15,7 @@ urlpatterns = [
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/register/', RegisterView.as_view(), name='auth_register'),
+    path('auth/verify-2fa/', TwoFactorVerifyView.as_view(), name='verify-2fa'),
     
     # User profile and permissions
     path('auth/profile/', UserProfileView.as_view(), name='user-profile'),

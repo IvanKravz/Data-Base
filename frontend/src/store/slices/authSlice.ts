@@ -32,6 +32,11 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  // 2FA поля
+  twoFactorRequired: boolean;
+  tempToken: string | null;
+  twoFactorLoading: boolean;
+  twoFactorError: string | null;
 }
 
 const initialState: AuthState = {
@@ -39,6 +44,10 @@ const initialState: AuthState = {
   isAuthenticated: false,
   loading: false,
   error: null,
+  twoFactorRequired: false,
+  tempToken: null,
+  twoFactorLoading: false,
+  twoFactorError: null,
 };
 
 const authSlice = createSlice({
@@ -60,26 +69,68 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.twoFactorRequired = false;
+      state.tempToken = null;
+      state.twoFactorLoading = false;
+      state.twoFactorError = null;
     },
     clearAuthState: (state) => {
       state.user = null;
       state.error = null;
       state.loading = false;
+      state.twoFactorRequired = false;
+      state.tempToken = null;
+      state.twoFactorLoading = false;
+      state.twoFactorError = null;
     },
     updateGlobalView: (state, action: PayloadAction<boolean>) => {
       if (state.user) {
         state.user.is_global_view = action.payload;
       }
     },
+    // 2FA reducers
+    setTwoFactorRequired: (state, action: PayloadAction<string>) => {
+      state.loading = false;
+      state.twoFactorRequired = true;
+      state.tempToken = action.payload;
+      state.twoFactorError = null;
+    },
+    setTwoFactorVerifyStart: (state) => {
+      state.twoFactorLoading = true;
+      state.twoFactorError = null;
+    },
+    setTwoFactorVerifySuccess: (state, action: PayloadAction<User>) => {
+      state.twoFactorLoading = false;
+      state.twoFactorRequired = false;
+      state.tempToken = null;
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      state.twoFactorError = null;
+    },
+    setTwoFactorVerifyFailure: (state, action: PayloadAction<string>) => {
+      state.twoFactorLoading = false;
+      state.twoFactorError = action.payload;
+    },
+    clearTwoFactorState: (state) => {
+      state.twoFactorRequired = false;
+      state.tempToken = null;
+      state.twoFactorLoading = false;
+      state.twoFactorError = null;
+    },
   },
 });
 
-export const { 
-  setUser, 
-  setLoading, 
-  setError, 
-  logout, 
-  clearAuthState, 
-  updateGlobalView 
+export const {
+  setUser,
+  setLoading,
+  setError,
+  logout,
+  clearAuthState,
+  updateGlobalView,
+  setTwoFactorRequired,
+  setTwoFactorVerifyStart,
+  setTwoFactorVerifySuccess,
+  setTwoFactorVerifyFailure,
+  clearTwoFactorState,
 } = authSlice.actions;
 export default authSlice.reducer;

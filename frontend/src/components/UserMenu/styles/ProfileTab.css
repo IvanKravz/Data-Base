@@ -678,3 +678,62 @@
         min-width: 100px;
     }
 }
+
+/* Дополнительные стили для 2FA в ProfileTab */
+.twofa-edit-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.twofa-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.twofa-checkbox-label input {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.twofa-code-input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.twofa-code-input input {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+}
+
+.twofa-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.twofa-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    background: #10b981;
+    color: white;
+    border-radius: 9999px;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+    vertical-align: middle;
+}
+
+.cabinet-user-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}

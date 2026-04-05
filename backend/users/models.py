@@ -87,6 +87,16 @@ class User(AbstractUser):
         related_name='custom_user_set',
         related_query_name='custom_user'
     )
+    two_factor_code = models.CharField(
+        max_length=4,
+        blank=True,
+        null=True,
+        verbose_name='2FA код (4 цифры)'
+    )
+    two_factor_enabled = models.BooleanField(
+        default=False,
+        verbose_name='2FA включена'
+    )
 
     objects = UserManager()
 

@@ -12,6 +12,8 @@ from django.utils import timezone
 from datetime import timedelta
 from users.logging import log_user_action
 from django.contrib.auth.models import Group
+from rest_framework_simplejwt.tokens import RefreshToken
+from .utils import generate_temp_2fa_token
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +23,36 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         data = super().validate(attrs)
         user = self.user
 
-        # Обновляем last_login
-        user.last_login = timezone.now()
-        user.save(update_fields=['last_login'])
+        # Если 2FA включена и есть код
+        if user.two_factor_enabled and user.two_factor_code:
+            temp_token = generate_temp_2fa_token(user.id)
+            return {
+                'requires_2fa': True,
+                'temp_token': temp_token
+            }
 
-        # Логируем успешный вход
+        # Обычный вход – выдаём токены и данные пользователя
+        refresh = RefreshToken.for_user(user)
+        data['access'] = str(refresh.access_token)
+        data['refresh'] = str(refresh)
+        data['user'] = UserSerializer(user).data
+
+        # Логируем вход
         request = self.context.get('request')
+        from users.logging import log_user_action
         log_user_action(
             user=user,
             action='login',
             module='auth',
             request=request,
-            details={'login_type': 'jwt_token'}
+            details={'login_type': 'password'}
         )
-
-        # Добавляем данные пользователя в ответ (как и было)
-        from .serializers import UserSerializer
-        serializer = UserSerializer(user)
-        data['user'] = serializer.data
         return data
+
+
+class TwoFactorVerifySerializer(serializers.Serializer):
+    temp_token = serializers.CharField()
+    code = serializers.CharField(min_length=4, max_length=4)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,6 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
     division_info = serializers.SerializerMethodField()
     is_online = serializers.SerializerMethodField()
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    two_factor_enabled = serializers.BooleanField(read_only=True)
 
     user_division_id = serializers.PrimaryKeyRelatedField(
         queryset=Division.objects.all(),
@@ -78,9 +92,9 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'password', 'is_staff', 'is_active',
             'date_joined', 'last_login', 'roles', 'permissions', 'division_info',
             'user_division_id', 'user_subdivision_id', 'is_global_view', 'is_online',
-            'groups',
+            'groups', 'two_factor_enabled', 
         ]
-        read_only_fields = ['is_staff', 'is_active', 'date_joined', 'last_login', 'is_online']
+        read_only_fields = ['is_staff', 'is_active', 'date_joined', 'last_login', 'is_online', 'two_factor_enabled']
         extra_kwargs = {
             'password': {'write_only': True}
         }
