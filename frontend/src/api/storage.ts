@@ -76,7 +76,7 @@ export interface UploadProgress {
 export const storageApi = {
   // === Папки ===
   getFolders: async (params?: {
-    parent_id?: string | null;
+    parent_id?: number | string | null;  
     type?: 'personal' | 'work';
     division_id?: number;
     subdivision_id?: number;
@@ -144,7 +144,7 @@ export const storageApi = {
 
   // === Файлы ===
   getFiles: async (params?: {
-    folder_id?: number | null;
+    folder_id?: number | string | null;  // разрешаем строку 'root'
     type?: 'personal' | 'work';
     division_id?: number;
     subdivision_id?: number;

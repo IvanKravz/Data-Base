@@ -206,7 +206,7 @@ ROLE_PERMISSIONS = {
             'Division': ['view'],
             'Subdivision': ['view'],
             'Employee': ['view', 'change'],         
-            'Equipment': ['view', 'change'],
+            'Equipment': ['view'],
             'CommunicationPost': ['view'],
             'Facility': ['view', 'add', 'change'],
             'FacilityType': ['view', 'change'],

@@ -7,6 +7,8 @@ import { storageInfoApi } from './storageInfo';
 export interface StoragePermissions {
     // Основные права
     canViewStorage: boolean;
+    canViewPersonal: boolean;
+    canViewWork: boolean;
     canCreateFolders: boolean;
     canUploadFiles: boolean;
     canEditFiles: boolean;
@@ -45,12 +47,10 @@ export const useStoragePermissions = (): StoragePermissions => {
     const user = getCurrentUser();
     const permissions = authApi.getModulePermissions();
 
-    // Используем useRef для хранения состояния монтажа и таймера
     const isMountedRef = useRef(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const lastFetchRef = useRef<number>(0);
 
-    // Состояние для информации о хранилище
     const [storageInfo, setStorageInfo] = useState({
         usedStorage: 0,
         filesCount: 0,
@@ -59,56 +59,37 @@ export const useStoragePermissions = (): StoragePermissions => {
         remainingStorage: null as number | null,
         isNearQuota: false,
         isQuotaExceeded: false,
-        storageQuota: 0, // Добавлено: храним квоту
+        storageQuota: 0,
     });
 
-    // Загружаем информацию о хранилище
     useEffect(() => {
         isMountedRef.current = true;
 
         const loadStorageInfo = async () => {
             if (!user || !isMountedRef.current) return;
 
-            // Защита от слишком частых запросов (не чаще чем раз в 5 секунд)
             const now = Date.now();
-            if (now - lastFetchRef.current < 5000) {
-                return;
-            }
-
+            if (now - lastFetchRef.current < 5000) return;
             lastFetchRef.current = now;
 
             try {
-                // Получаем информацию о хранилище с сервера
                 const info = await storageInfoApi.getStorageInfo();
 
-                // Получаем квоту из API или ролей
                 let storageQuota = info.storage_quota ?? info.quota ?? 0;
-
-                // Если квота из API равна 0 или не задана, используем роли
                 if (storageQuota <= 0) {
                     const userRoles = user.roles || [];
-                    if (userRoles.includes('admin')) {
-                        storageQuota = 0; // Без лимита
-                    } else if (userRoles.includes('leader') || userRoles.includes('deputy_director')) {
-                        storageQuota = 10 * 1024 * 1024 * 1024; // 10GB
-                    } else if (userRoles.includes('exploitation_employee')) {
-                        storageQuota = 5 * 1024 * 1024 * 1024; // 5GB
-                    } else {
-                        storageQuota = 2 * 1024 * 1024 * 1024; // 2GB
-                    }
+                    if (userRoles.includes('admin')) storageQuota = 0;
+                    else if (userRoles.includes('leader') || userRoles.includes('deputy_director')) storageQuota = 10 * 1024 * 1024 * 1024;
+                    else if (userRoles.includes('exploitation_employee')) storageQuota = 5 * 1024 * 1024 * 1024;
+                    else storageQuota = 2 * 1024 * 1024 * 1024;
                 }
 
                 const usedStorage = info.total_used || info.used || 0;
                 const filesCount = info.files_count || 0;
                 const foldersCount = info.folders_count || 0;
-                
-                // Рассчитываем проценты и оставшееся место
-                const usagePercentage = storageQuota > 0
-                    ? Math.min((usedStorage / storageQuota) * 100, 100)
-                    : 0;
-                const remainingStorage = storageQuota > 0
-                    ? Math.max(storageQuota - usedStorage, 0)
-                    : null;
+
+                const usagePercentage = storageQuota > 0 ? Math.min((usedStorage / storageQuota) * 100, 100) : 0;
+                const remainingStorage = storageQuota > 0 ? Math.max(storageQuota - usedStorage, 0) : null;
 
                 if (isMountedRef.current) {
                     setStorageInfo({
@@ -119,13 +100,11 @@ export const useStoragePermissions = (): StoragePermissions => {
                         remainingStorage,
                         isNearQuota: usagePercentage > 90 && usagePercentage <= 100,
                         isQuotaExceeded: usagePercentage > 100,
-                        storageQuota, // Сохраняем квоту
+                        storageQuota,
                     });
                 }
-
             } catch (error) {
                 console.error('Ошибка при загрузке информации о хранилище:', error);
-                // Используем значения по умолчанию при ошибке
                 if (isMountedRef.current) {
                     setStorageInfo({
                         usedStorage: 0,
@@ -141,32 +120,23 @@ export const useStoragePermissions = (): StoragePermissions => {
             }
         };
 
-        // Загружаем сразу
         loadStorageInfo();
-
-        // Устанавливаем интервал для обновления каждые 5 минут
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
-        
+        if (intervalRef.current) clearInterval(intervalRef.current);
         intervalRef.current = setInterval(() => {
-            if (isMountedRef.current) {
-                loadStorageInfo();
-            }
-        }, 5 * 60 * 1000); // 5 минут
+            if (isMountedRef.current) loadStorageInfo();
+        }, 5 * 60 * 1000);
 
         return () => {
             isMountedRef.current = false;
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [user?.id]);
 
     return useMemo(() => {
         const basePermissions: StoragePermissions = {
             canViewStorage: false,
+            canViewPersonal: false,
+            canViewWork: false,
             canCreateFolders: false,
             canUploadFiles: false,
             canEditFiles: false,
@@ -178,7 +148,7 @@ export const useStoragePermissions = (): StoragePermissions => {
             canEmptyTrash: false,
             canViewAllStorage: false,
             storageQuota: null,
-            maxFileSize: 50 * 1024 * 1024, // 50MB по умолчанию
+            maxFileSize: 50 * 1024 * 1024,
             usedStorage: storageInfo.usedStorage,
             usagePercentage: storageInfo.usagePercentage,
             remainingStorage: storageInfo.remainingStorage,
@@ -194,17 +164,43 @@ export const useStoragePermissions = (): StoragePermissions => {
 
         if (!user || !permissions) return basePermissions;
 
-        // Проверяем права через модель
         const hasModelPermission = (model: string, action: string): boolean => {
             const modelPerms = permissions.models?.[model];
             return modelPerms?.includes(action) || false;
         };
 
-        // Базовые права
         basePermissions.canViewStorage =
             hasModelPermission('StorageFolder', 'view') ||
             hasModelPermission('StorageFile', 'view');
 
+        // Определяем, какие типы доступны пользователю
+        const userRoles = user.roles || [];
+        const isAdmin = userRoles.includes('admin');
+        const isLeaderOrDeputy = userRoles.includes('leader') || userRoles.includes('deputy_director');
+        const isHeadOfDepartment = userRoles.includes('head_of_department_1');
+        const isHeadOfSection = userRoles.includes('head_of_section_1_1');
+        const isEmployee = userRoles.some(r => ['hr_section_1_1', 'tech_section_1_1', 'employee_section_1_2', 'tech_section_1_3'].includes(r));
+
+        if (isAdmin) {
+            basePermissions.canViewPersonal = true;
+            basePermissions.canViewWork = true;
+        } else if (isLeaderOrDeputy) {
+            basePermissions.canViewPersonal = true;
+            basePermissions.canViewWork = false;
+        } else if (isHeadOfDepartment || isHeadOfSection || isEmployee) {
+            basePermissions.canViewPersonal = false;
+            basePermissions.canViewWork = true;
+        } else {
+            basePermissions.canViewPersonal = false;
+            basePermissions.canViewWork = false;
+        }
+
+        // Если пользователь не может просматривать хранилище вообще, отключаем всё
+        if (!basePermissions.canViewStorage) {
+            return { ...basePermissions, canViewPersonal: false, canViewWork: false };
+        }
+
+        // Права на действия (создание, редактирование, удаление) – через модели
         basePermissions.canCreateFolders = hasModelPermission('StorageFolder', 'add');
         basePermissions.canUploadFiles = hasModelPermission('StorageFile', 'add');
         basePermissions.canEditFiles = hasModelPermission('StorageFile', 'change');
@@ -212,133 +208,86 @@ export const useStoragePermissions = (): StoragePermissions => {
         basePermissions.canEditFolders = hasModelPermission('StorageFolder', 'change');
         basePermissions.canDeleteFolders = hasModelPermission('StorageFolder', 'delete');
 
-        // Дополнительные права
         basePermissions.canShareFiles = hasRole('admin') || hasRole('leader');
         basePermissions.canViewTrash = basePermissions.canViewStorage;
         basePermissions.canEmptyTrash = hasRole('admin') || hasRole('leader');
+        basePermissions.canViewAllStorage = hasRole('admin') || hasRole('leader') || hasRole('deputy_director');
 
-        // Права на просмотр всего хранилища
-        basePermissions.canViewAllStorage =
-            hasRole('admin') ||
-            hasRole('leader') ||
-            hasRole('deputy_director');
-
-        // Используем квоту из storageInfo (из API или ролей)
         const storageQuota = storageInfo.storageQuota;
         basePermissions.storageQuota = storageQuota > 0 ? storageQuota : null;
         basePermissions.hasQuota = storageQuota > 0;
 
-        // Получаем maxFileSize из ролей пользователя
-        const userRoles = user.roles || [];
-        let maxFileSize = 50 * 1024 * 1024; // 50MB по умолчанию
-
-        if (userRoles.includes('admin')) {
-            maxFileSize = 1024 * 1024 * 1024; // 1GB
-        } else if (userRoles.includes('leader') || userRoles.includes('deputy_director')) {
-            maxFileSize = 100 * 1024 * 1024; // 100MB
-        } else if (userRoles.includes('exploitation_employee')) {
-            maxFileSize = 50 * 1024 * 1024; // 50MB
-        } else {
-            maxFileSize = 20 * 1024 * 1024; // 20MB
-        }
-
+        let maxFileSize = 50 * 1024 * 1024;
+        if (userRoles.includes('admin')) maxFileSize = 1024 * 1024 * 1024;
+        else if (userRoles.includes('leader') || userRoles.includes('deputy_director')) maxFileSize = 100 * 1024 * 1024;
+        else if (userRoles.includes('exploitation_employee')) maxFileSize = 50 * 1024 * 1024;
+        else maxFileSize = 20 * 1024 * 1024;
         basePermissions.maxFileSize = maxFileSize;
 
-        // Проверяем, превышена ли квота
         if (storageQuota > 0 && storageInfo.usedStorage > storageQuota) {
             basePermissions.isQuotaExceeded = true;
-            // Если превышена квота, запрещаем загрузку файлов
             basePermissions.canUploadFiles = false;
             basePermissions.canCreateFolders = false;
         }
 
-        // Функции проверки доступа к элементам
+        // canEditItem / canDeleteItem с учётом прав и принадлежности
         basePermissions.canEditItem = (item: any) => {
-            if (!basePermissions.canEditFiles && !basePermissions.canEditFolders) return false;
+            const isFolder = item && 'folder_type' in item;
+            const isFile = item && 'file_type' in item;
 
-            if (item && item.file !== undefined) {
-                // Это файл
-                if (!basePermissions.canEditFiles) return false;
-
-                // Для личных файлов - только владелец
-                if (item.file_type === 'personal') {
-                    return item.uploaded_by?.id === user.id;
-                }
-
-                // Для рабочих файлов - проверка подразделения
-                if (!basePermissions.canViewAllStorage && item.division?.id !== user.division_info?.id) {
-                    return false;
-                }
-
-                return basePermissions.canEditFiles;
-            } else {
-                // Это папка
+            if (isFolder) {
                 if (!basePermissions.canEditFolders) return false;
-
-                // Для личных папок - только владелец
-                if (item.folder_type === 'personal') {
-                    return item.created_by?.id === user.id;
+                if (item.folder_type === 'personal') return item.created_by?.id === user.id;
+                if (item.folder_type === 'work') {
+                    if (basePermissions.canViewAllStorage) return true;
+                    return item.division?.id === user.division_info?.id || item.subdivision?.id === user.division_info?.subdivision?.id;
                 }
-
-                // Для рабочих папок - проверка подразделения
-                if (!basePermissions.canViewAllStorage && item.division?.id !== user.division_info?.id) {
-                    return false;
-                }
-
-                return basePermissions.canEditFolders;
+                return false;
             }
+            if (isFile) {
+                if (!basePermissions.canEditFiles) return false;
+                if (item.file_type === 'personal') return item.uploaded_by?.id === user.id;
+                if (item.file_type === 'work') {
+                    if (basePermissions.canViewAllStorage) return true;
+                    return item.division?.id === user.division_info?.id || item.subdivision?.id === user.division_info?.subdivision?.id;
+                }
+                return false;
+            }
+            return false;
         };
 
         basePermissions.canDeleteItem = (item: any) => {
-            if (!basePermissions.canDeleteFiles && !basePermissions.canDeleteFolders) return false;
+            const isFolder = item && 'folder_type' in item;
+            const isFile = item && 'file_type' in item;
 
-            if (item && item.file !== undefined) {
-                // Это файл
-                if (!basePermissions.canDeleteFiles) return false;
-
-                // Для личных файлов - только владелец
-                if (item.file_type === 'personal') {
-                    return item.uploaded_by?.id === user.id;
-                }
-
-                // Для рабочих файлов - проверка подразделения
-                if (!basePermissions.canViewAllStorage && item.division?.id !== user.division_info?.id) {
-                    return false;
-                }
-
-                return basePermissions.canDeleteFiles;
-            } else {
-                // Это папка
+            if (isFolder) {
                 if (!basePermissions.canDeleteFolders) return false;
-
-                // Для личных папок - только владелец
-                if (item.folder_type === 'personal') {
-                    return item.created_by?.id === user.id;
+                if (item.folder_type === 'personal') return item.created_by?.id === user.id;
+                if (item.folder_type === 'work') {
+                    if (basePermissions.canViewAllStorage) return true;
+                    return item.division?.id === user.division_info?.id || item.subdivision?.id === user.division_info?.subdivision?.id;
                 }
-
-                // Для рабочих папок - проверка подразделения
-                if (!basePermissions.canViewAllStorage && item.division?.id !== user.division_info?.id) {
-                    return false;
-                }
-
-                return basePermissions.canDeleteFolders;
+                return false;
             }
+            if (isFile) {
+                if (!basePermissions.canDeleteFiles) return false;
+                if (item.file_type === 'personal') return item.uploaded_by?.id === user.id;
+                if (item.file_type === 'work') {
+                    if (basePermissions.canViewAllStorage) return true;
+                    return item.division?.id === user.division_info?.id || item.subdivision?.id === user.division_info?.subdivision?.id;
+                }
+                return false;
+            }
+            return false;
         };
 
         basePermissions.canShareItem = (item: any) => {
             if (!basePermissions.canShareFiles) return false;
-
-            // Только для файлов
             if (!item || item.file === undefined) return false;
-
-            // Только рабочие файлы можно делиться
             if (item.file_type !== 'work') return false;
-
-            // Только если пользователь может редактировать файл
             return basePermissions.canEditItem(item);
         };
 
         return basePermissions;
-
     }, [user, permissions, canEdit, hasRole, getCurrentUser, storageInfo]);
 };

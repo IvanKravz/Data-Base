@@ -169,13 +169,12 @@ class FileUploadSerializer(serializers.Serializer):  # Изменено с Model
         folder_id = validated_data.get('folder_id')
         files = validated_data.get('files', [])
         file_type = validated_data.get('file_type', 'work')
-        
+
         created_files = []
         for file in files:
-            # Извлекаем расширение файла
             file_name_parts = file.name.split('.')
             extension = file_name_parts[-1].lower() if len(file_name_parts) > 1 else ''
-            
+
             storage_file = StorageFile(
                 name=file.name,
                 original_name=file.name,
@@ -187,8 +186,8 @@ class FileUploadSerializer(serializers.Serializer):  # Изменено с Model
                 uploaded_by=request.user,
                 folder_id=folder_id if folder_id else None
             )
-            
-            # Наследование division и subdivision от папки
+
+            # Наследование division и subdivision от папки (если есть)
             if folder_id:
                 try:
                     folder = StorageFolder.objects.get(id=folder_id)
@@ -196,11 +195,25 @@ class FileUploadSerializer(serializers.Serializer):  # Изменено с Model
                     storage_file.subdivision = folder.subdivision
                 except StorageFolder.DoesNotExist:
                     pass
-            
+            else:
+                # Для файлов в корне рабочего типа – проставляем из пользователя
+                if file_type == 'work':
+                    user = request.user
+                    # Используем employee, если есть
+                    if user.employee and user.employee.division:
+                        storage_file.division = user.employee.division
+                    elif user.user_division:
+                        storage_file.division = user.user_division
+
+                    if user.employee and user.employee.subdivision:
+                        storage_file.subdivision = user.employee.subdivision
+                    elif user.user_subdivision:
+                        storage_file.subdivision = user.user_subdivision
+
             storage_file.save()
             created_files.append(storage_file)
-        
-        return created_files  # Возвращаем список
+
+        return created_files
     
     def to_representation(self, instance):
         """Добавляем дополнительную информацию для диагностики"""

@@ -33,20 +33,16 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!folderName.trim()) {
             setError('Введите название папки');
             return;
         }
-
         if (folderName.length > 100) {
             setError('Название папки не должно превышать 100 символов');
             return;
         }
-
         setIsSubmitting(true);
         setError('');
-
         try {
             await onCreate(folderName, selectedColor);
             onClose();
@@ -58,9 +54,7 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
     };
 
     const handleOverlayClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
+        if (e.target === e.currentTarget) onClose();
     };
 
     return (
@@ -68,20 +62,14 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
             <div className="storage-create-folder-modal">
                 <div className="storage-modal-header">
                     <h2 className="storage-modal-title">Создать новую папку</h2>
-                    <button className="storage-modal-close" onClick={onClose}>
-                        <i className="fas fa-times"></i>
-                    </button>
+                    <button className="storage-modal-close" onClick={onClose}><i className="fas fa-times"></i></button>
                 </div>
-
                 <div className="storage-modal-body">
                     <div className="storage-create-folder-info">
                         <div className="storage-folder-location">
                             <i className="fas fa-folder"></i>
                             <span className="storage-folder-location-text">
-                                {currentFolder
-                                    ? `В папке "${currentFolder.name}"`
-                                    : 'В корне хранилища'
-                                }
+                                {currentFolder ? `В папке "${currentFolder.name}"` : 'В корне хранилища'}
                             </span>
                         </div>
                         <div className="storage-folder-type-badge">
@@ -89,82 +77,29 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
                             {viewType === 'personal' ? 'Личная папка' : 'Рабочая папка'}
                         </div>
                     </div>
-
                     <form onSubmit={handleSubmit} className="storage-create-folder-form">
                         <div className="storage-form-group">
-                            <label htmlFor="folderName" className="storage-form-label">
-                                Название папки *
-                            </label>
-                            <input
-                                type="text"
-                                id="folderName"
-                                value={folderName}
-                                onChange={(e) => setFolderName(e.target.value)}
-                                className="storage-form-input"
-                                placeholder="Введите название папки"
-                                autoFocus
-                                maxLength={100}
-                            />
-                            <div className="storage-form-helper">
-                                Максимум 100 символов
-                            </div>
+                            <label htmlFor="folderName" className="storage-form-label">Название папки *</label>
+                            <input type="text" id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} className="storage-form-input" placeholder="Введите название папки" autoFocus maxLength={100} />
+                            <div className="storage-form-helper">Максимум 100 символов</div>
                         </div>
-
                         <div className="storage-form-group">
-                            <label className="storage-form-label">
-                                Цвет папки
-                            </label>
+                            <label className="storage-form-label">Цвет папки</label>
                             <div className="storage-color-picker">
                                 {colorOptions.map(color => (
                                     <label key={color.value} className="storage-color-option">
-                                        <input
-                                            type="radio"
-                                            name="folderColor"
-                                            value={color.value}
-                                            checked={selectedColor === color.value}
-                                            onChange={(e) => setSelectedColor(e.target.value)}
-                                            className="storage-color-radio"
-                                        />
-                                        <span
-                                            className="storage-color-preview"
-                                            style={{ backgroundColor: color.value }}
-                                            title={color.label}
-                                        ></span>
+                                        <input type="radio" name="folderColor" value={color.value} checked={selectedColor === color.value} onChange={(e) => setSelectedColor(e.target.value)} className="storage-color-radio" />
+                                        <span className="storage-color-preview" style={{ backgroundColor: color.value }} title={color.label}></span>
                                         <span className="storage-color-label">{color.label}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
-
-                        {error && (
-                            <div className="storage-form-error">
-                                <i className="fas fa-exclamation-circle"></i>
-                                {error}
-                            </div>
-                        )}
-
+                        {error && <div className="storage-form-error"><i className="fas fa-exclamation-circle"></i>{error}</div>}
                         <div className="storage-modal-actions">
-                            <button
-                                type="button"
-                                className="storage-modal-cancel"
-                                onClick={onClose}
-                                disabled={isSubmitting}
-                            >
-                                Отмена
-                            </button>
-                            <button
-                                type="submit"
-                                className="storage-modal-submit"
-                                disabled={isSubmitting || !folderName.trim()}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <i className="fas fa-spinner fa-spin"></i>
-                                        Создание...
-                                    </>
-                                ) : (
-                                    'Создать папку'
-                                )}
+                            <button type="button" className="storage-modal-cancel" onClick={onClose} disabled={isSubmitting}>Отмена</button>
+                            <button type="submit" className="storage-modal-submit" disabled={isSubmitting || !folderName.trim()}>
+                                {isSubmitting ? <><i className="fas fa-spinner fa-spin"></i> Создание...</> : 'Создать папку'}
                             </button>
                         </div>
                     </form>

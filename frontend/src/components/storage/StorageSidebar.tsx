@@ -61,9 +61,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         if (storageStats.storageQuota && storageStats.remainingStorage !== null) {
             return (
                 <div className="storage-info-item">
-                    <span className="storage-info-label">
-                        <i className="fas fa-space-shuttle"></i> Осталось:
-                    </span>
+                    <span className="storage-info-label"><i className="fas fa-space-shuttle"></i> Осталось:</span>
                     <span className={`storage-info-value ${storageStats.isNearQuota || storageStats.isQuotaExceeded ? 'storage-warning' : ''}`}>
                         {formatBytes(storageStats.remainingStorage)}
                     </span>
@@ -72,7 +70,7 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
         }
         return null;
     };
-    
+
     const renderStorageAlerts = () => {
         if (storageStats.isQuotaExceeded) {
             return (
@@ -82,7 +80,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                 </div>
             );
         }
-
         if (storageStats.isNearQuota) {
             return (
                 <div className="storage-alert storage-alert-warning">
@@ -91,147 +88,81 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                 </div>
             );
         }
-
         return null;
     };
+
+    const canSwitchTypes = permissions.canViewPersonal && permissions.canViewWork;
 
     return (
         <div className="storage-sidebar">
             <div className="storage-sidebar-header">
                 <h2 className="storage-sidebar-title">Хранилище</h2>
-                <div className="storage-view-toggle">
-                    <button
-                        className={`storage-view-toggle-btn ${viewType === 'work' ? 'active' : ''}`}
-                        onClick={() => onViewTypeChange('work')}
-                        disabled={!permissions.canViewStorage}
-                    >
-                        Рабочее
-                    </button>
-                    <button
-                        className={`storage-view-toggle-btn ${viewType === 'personal' ? 'active' : ''}`}
-                        onClick={() => onViewTypeChange('personal')}
-                        disabled={!permissions.canViewStorage}
-                    >
-                        Личное
-                    </button>
-                </div>
+                {canSwitchTypes && (
+                    <div className="storage-view-toggle">
+                        <button className={`storage-view-toggle-btn ${viewType === 'work' ? 'active' : ''}`} onClick={() => onViewTypeChange('work')}>Рабочее</button>
+                        <button className={`storage-view-toggle-btn ${viewType === 'personal' ? 'active' : ''}`} onClick={() => onViewTypeChange('personal')}>Личное</button>
+                    </div>
+                )}
             </div>
-
             <div className="storage-sidebar-menu">
                 <div className="storage-menu-section">
                     <h3 className="storage-menu-section-title">Навигация</h3>
                     <ul className="storage-menu-list">
                         {menuItems.map(item => {
                             if (item.id === 'trash' && !permissions.canViewTrash) return null;
-
                             return (
                                 <li key={item.id}>
-                                    <button
-                                        className={`storage-menu-item ${currentView === item.id ? 'active' : ''}`}
-                                        onClick={() => onViewChange(item.id as any)}
-                                        disabled={!permissions.canViewStorage}
-                                    >
-                                        <i className={`fas fa-${item.icon}`}></i>
-                                        <span>{item.label}</span>
-                                        {item.id === 'trash' && (
-                                            <span className="storage-menu-badge">3</span>
-                                        )}
+                                    <button className={`storage-menu-item ${currentView === item.id ? 'active' : ''}`} onClick={() => onViewChange(item.id as any)} disabled={!permissions.canViewStorage}>
+                                        <i className={`fas fa-${item.icon}`}></i><span>{item.label}</span>
                                     </button>
                                 </li>
                             );
                         })}
                     </ul>
                 </div>
-
                 {currentView === 'trash' && permissions.canEmptyTrash && (
                     <div className="storage-trash-actions">
-                        <button
-                            className="storage-empty-trash-btn"
-                            onClick={onEmptyTrash}
-                            disabled={!permissions.canViewTrash}
-                        >
-                            <i className="fas fa-broom"></i>
-                            Очистить корзину
+                        <button className="storage-empty-trash-btn" onClick={onEmptyTrash} disabled={!permissions.canViewTrash}>
+                            <i className="fas fa-broom"></i> Очистить корзину
                         </button>
                     </div>
                 )}
-
-                {/* Блок информации о хранилище */}
                 <div className="storage-info-section">
                     <h3 className="storage-info-section-title">Хранилище</h3>
                     <div className="storage-storage-info">
                         <div className="storage-info-grid">
                             <div className="storage-info-item">
-                                <span className="storage-info-label">
-                                    <i className="fas fa-hdd"></i> Использовано:
-                                </span>
-                                <span className="storage-info-value">
-                                    {formatBytes(storageStats.usedStorage)}
-                                </span>
+                                <span className="storage-info-label"><i className="fas fa-hdd"></i> Использовано:</span>
+                                <span className="storage-info-value">{formatBytes(storageStats.usedStorage)}</span>
                             </div>
-
                             {storageStats.storageQuota && (
                                 <div className="storage-info-item">
-                                    <span className="storage-info-label">
-                                        <i className="fas fa-database"></i> Всего:
-                                    </span>
-                                    <span className="storage-info-value">
-                                        {formatBytes(storageStats.storageQuota)}
-                                    </span>
+                                    <span className="storage-info-label"><i className="fas fa-database"></i> Всего:</span>
+                                    <span className="storage-info-value">{formatBytes(storageStats.storageQuota)}</span>
                                 </div>
                             )}
-
                             {renderRemainingStorage()}
-
                             <div className="storage-info-item">
-                                <span className="storage-info-label">
-                                    <i className="fas fa-folder"></i> Папок:
-                                </span>
-                                <span className="storage-info-value">
-                                    {storageStats.foldersCount}
-                                </span>
+                                <span className="storage-info-label"><i className="fas fa-folder"></i> Папок:</span>
+                                <span className="storage-info-value">{storageStats.foldersCount}</span>
                             </div>
-
                             <div className="storage-info-item">
-                                <span className="storage-info-label">
-                                    <i className="fas fa-file"></i> Файлов:
-                                </span>
-                                <span className="storage-info-value">
-                                    {storageStats.filesCount}
-                                </span>
+                                <span className="storage-info-label"><i className="fas fa-file"></i> Файлов:</span>
+                                <span className="storage-info-value">{storageStats.filesCount}</span>
                             </div>
                         </div>
-
-                        {/* Прогресс-бар показываем только если есть квота */}
                         {storageStats.storageQuota && (
                             <div className="storage-progress-container">
                                 <div className="storage-progress-labels">
-                                    <span className="storage-progress-label">
-                                        {storageStats.usagePercentage < 0.1 && storageStats.usagePercentage > 0
-                                            ? '<0.1%'
-                                            : storageStats.usagePercentage.toFixed(1)}% использовано
-                                    </span>
-                                    {storageStats.remainingStorage !== null && (
-                                        <span className="storage-progress-label">
-                                            {formatBytes(storageStats.remainingStorage)} свободно
-                                        </span>
-                                    )}
+                                    <span className="storage-progress-label">{storageStats.usagePercentage < 0.1 && storageStats.usagePercentage > 0 ? '<0.1%' : storageStats.usagePercentage.toFixed(1)}% использовано</span>
+                                    {storageStats.remainingStorage !== null && <span className="storage-progress-label">{formatBytes(storageStats.remainingStorage)} свободно</span>}
                                 </div>
                                 <div className={`storage-progress-bar ${getProgressBarClass()}`}>
-                                    <div
-                                        className="storage-progress-fill"
-                                        style={{
-                                            width: `${Math.min(storageStats.usagePercentage, 100)}%`
-                                        }}
-                                    ></div>
+                                    <div className="storage-progress-fill" style={{ width: `${Math.min(storageStats.usagePercentage, 100)}%` }}></div>
                                 </div>
                             </div>
                         )}
-
-                        {/* Предупреждения */}
                         {renderStorageAlerts()}
-
-                        {/* Информация о максимальном размере файла */}
                         <div className="storage-max-size-info">
                             <i className="fas fa-info-circle"></i>
                             <span>Макс. размер файла: {formatBytes(permissions.maxFileSize)}</span>
@@ -246,11 +177,9 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
 const formatBytes = (bytes: number): string => {
     if (bytes === 0 || bytes === null || bytes === undefined) return '0 B';
     if (bytes < 0) return '-';
-
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
