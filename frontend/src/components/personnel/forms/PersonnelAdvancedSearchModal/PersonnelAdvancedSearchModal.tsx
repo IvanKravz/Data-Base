@@ -7,7 +7,7 @@ interface PersonnelAdvancedSearchFilters {
   ranks: string[];
   positions: string[];
   divisions: string[];
-  subdivisions: string[]; // ДОБАВЛЕНО: поле для отделений
+  subdivisions: string[];
   networkClasses: string[];
   gtForms: string[];
 }
@@ -33,7 +33,7 @@ export function PersonnelAdvancedSearchModal({
     ranks: '',
     positions: '',
     divisions: '',
-    subdivisions: '', // ДОБАВЛЕНО: поле для отделений
+    subdivisions: '', 
     networkClasses: '',
     gtForms: ''
   });
@@ -42,7 +42,7 @@ export function PersonnelAdvancedSearchModal({
     ranks: useRef<HTMLInputElement>(null),
     positions: useRef<HTMLInputElement>(null),
     divisions: useRef<HTMLInputElement>(null),
-    subdivisions: useRef<HTMLInputElement>(null), // ДОБАВЛЕНО: ref для отделений
+    subdivisions: useRef<HTMLInputElement>(null), 
     networkClasses: useRef<HTMLInputElement>(null),
     gtForms: useRef<HTMLInputElement>(null)
   };
@@ -51,7 +51,7 @@ export function PersonnelAdvancedSearchModal({
     const ranks = new Set<string>();
     const positions = new Set<string>();
     const divisions = new Set<string>();
-    const subdivisions = new Set<string>(); // ДОБАВЛЕНО: Set для отделений
+    const subdivisions = new Set<string>(); 
     const networkClasses = new Set<string>();
     const gtForms = new Set<string>();
 
@@ -138,7 +138,7 @@ export function PersonnelAdvancedSearchModal({
       ranks: '',
       positions: '',
       divisions: '',
-      subdivisions: '', // ДОБАВЛЕНО: сброс поля отделений
+      subdivisions: '', 
       networkClasses: '',
       gtForms: ''
     });
@@ -150,7 +150,7 @@ export function PersonnelAdvancedSearchModal({
       ranks: '',
       positions: '',
       divisions: '',
-      subdivisions: '', // ДОБАВЛЕНО: сброс поля отделений
+      subdivisions: '',
       networkClasses: '',
       gtForms: ''
     });

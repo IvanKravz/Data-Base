@@ -55,7 +55,7 @@ export const verify2FA = createAsyncThunk(
       dispatch(setTwoFactorVerifySuccess(data.user));
       return data;
     } catch (error: any) {
-      let errorMessage = 'Неверный код двухфакторной аутентификации';
+      let errorMessage = 'Неверный код аутентификации';
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       }

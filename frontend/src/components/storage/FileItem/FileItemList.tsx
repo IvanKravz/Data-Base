@@ -104,10 +104,6 @@ const FileItemList: React.FC<FileItemListProps> = ({
             </div>
 
             <div className="storage-file-list-stats">
-                <div className="storage-file-list-downloads" title="Количество скачиваний">
-                    <i className="fas fa-download"></i>
-                    <span>{file.download_count || 0}</span>
-                </div>
                 <div className="storage-file-list-modified">
                     <i className="fas fa-clock"></i>
                     <span>{formatDate(file.updated_at, 'time')}</span>

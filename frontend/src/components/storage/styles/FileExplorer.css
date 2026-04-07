@@ -22,7 +22,7 @@
     border: 1px solid var(--file-explorer-border);
     border-radius: var(--file-explorer-radius);
     background-color: var(--file-explorer-bg);
-    padding: 16px;
+    padding: 12px;
     overflow: hidden;
 }
 
@@ -58,7 +58,6 @@
     transition: var(--file-explorer-transition);
     display: flex;
     align-items: center;
-    gap: 6px;
 }
 
 .control-button:hover:not(:disabled) {
@@ -145,8 +144,8 @@
     display: flex;
     flex-direction: column;
     gap: 1px;
-    background: var(--file-explorer-surface);
-    border-radius: 6px;
+    /* background: var(--file-explorer-surface); */
+    /* border-radius: 6px; */
     overflow: hidden;
     border: 1px solid var(--file-explorer-border);
 }
@@ -192,7 +191,6 @@
 .create-folder-button {
     display: flex;
     align-items: center;
-    gap: 8px;
     padding: 10px 20px;
     border-radius: 6px;
     font-size: 14px;

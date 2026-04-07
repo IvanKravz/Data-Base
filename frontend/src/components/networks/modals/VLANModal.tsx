@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { VLAN } from '../../types';
+import { createPortal } from 'react-dom';
+import { VLAN } from '../../../types';
 import './Modal.css';
 
 interface VLANModalProps {
@@ -27,12 +28,10 @@ const VLANModal: React.FC<VLANModalProps> = ({ vlan, onSave, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!vlanId || !name) {
       alert('Пожалуйста, заполните обязательные поля');
       return;
     }
-
     onSave({
       vlan_id: parseInt(vlanId),
       name,
@@ -40,14 +39,13 @@ const VLANModal: React.FC<VLANModalProps> = ({ vlan, onSave, onClose }) => {
     });
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
           <h2>{vlan ? 'Редактировать VLAN' : 'Добавить VLAN'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="vlanId">VLAN ID *</label>
@@ -61,7 +59,7 @@ const VLANModal: React.FC<VLANModalProps> = ({ vlan, onSave, onClose }) => {
               required
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="name">Название *</label>
             <input
@@ -72,7 +70,7 @@ const VLANModal: React.FC<VLANModalProps> = ({ vlan, onSave, onClose }) => {
               required
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="description">Описание</label>
             <textarea
@@ -82,14 +80,15 @@ const VLANModal: React.FC<VLANModalProps> = ({ vlan, onSave, onClose }) => {
               rows={3}
             />
           </div>
-          
+
           <div className="modal-actions">
             <button type="button" onClick={onClose}>Отмена</button>
             <button type="submit">Сохранить</button>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

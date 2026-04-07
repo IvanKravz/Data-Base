@@ -12,7 +12,7 @@ import TrashView from './TrashView';
 import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
-import { ChevronLeft, ChevronRight, Grid, List, Clock, Star, Trash2, FolderOpen } from 'lucide-react';
+import { Grid, List, Clock, Star, Trash2, FolderOpen } from 'lucide-react';
 
 const Storage: React.FC = () => {
     const { folderId, subfolderId } = useParams<{ folderId?: string; subfolderId?: string }>();
@@ -33,7 +33,6 @@ const Storage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [sidebarVisible, setSidebarVisible] = useState(true);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [viewModeRecent, setViewModeRecent] = useState<'grid' | 'list'>('list');
 
@@ -82,6 +81,25 @@ const Storage: React.FC = () => {
                 setError('Ошибка при загрузке папки');
             }
             setCurrentFolder(null);
+        }
+    };
+
+    const handleDeleteSelected = () => {
+        handleDeleteItems(selectedItems);
+    };
+
+    const handleDownloadSelected = async () => {
+        if (selectedItems.length === 0) return;
+        // Базовая реализация: скачиваем первый файл (если есть)
+        const file = selectedItems.find(item => 'file_type' in item) as StorageFile;
+        if (file) {
+            try {
+                await storageApi.downloadFile(file.id);
+            } catch (err: any) {
+                setError(err.message || 'Ошибка при скачивании');
+            }
+        } else {
+            console.log('Скачивание папок пока не реализовано');
         }
     };
 
@@ -269,31 +287,12 @@ const Storage: React.FC = () => {
         }
     };
 
-    const toggleSidebar = () => setSidebarVisible(!sidebarVisible);
     const toggleViewMode = () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
     const toggleViewModeRecent = () => setViewModeRecent(prev => prev === 'grid' ? 'list' : 'grid');
     const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'trash') => {
         setActiveView(view);
         setSelectedItems([]);
         if (searchQuery) setSearchQuery('');
-    };
-
-    const getViewTitle = () => {
-        switch (activeView) {
-            case 'recent': return 'Недавние файлы';
-            case 'favorites': return 'Избранное';
-            case 'trash': return 'Корзина';
-            default: return null;
-        }
-    };
-
-    const getViewIcon = () => {
-        switch (activeView) {
-            case 'recent': return <Clock size={20} />;
-            case 'favorites': return <Star size={20} />;
-            case 'trash': return <Trash2 size={20} />;
-            default: return <FolderOpen size={20} />;
-        }
     };
 
     if (!permissions.canViewStorage) {
@@ -308,25 +307,10 @@ const Storage: React.FC = () => {
     }
 
     return (
-        <div className={`storage-container ${sidebarVisible ? 'storage-with-sidebar' : 'storage-sidebar-hidden'}`}>
+        <div className="storage-container">
             <div className="storage-main-content">
                 <div className="storage-header">
                     <div className="storage-header-left">
-                        {activeView === 'explorer' ? (
-                            <Breadcrumbs currentFolder={currentFolder} onNavigateUp={handleNavigateUp} onFolderClick={handleBreadcrumbClick} />
-                        ) : (
-                            <div className="storage-view-header">
-                                <div className="storage-view-icon">{getViewIcon()}</div>
-                                <h2 className="storage-view-title">{getViewTitle()}</h2>
-                                {activeView === 'recent' && files.length > 0 && (
-                                    <span className="storage-view-count">
-                                        {files.length} {files.length === 1 ? 'файл' : files.length < 5 ? 'файла' : 'файлов'}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    <div className="storage-header-right">
                         <div className="storage-search-box">
                             <input type="text" placeholder="Поиск файлов и папок..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="storage-search-input" />
                             <button className="storage-search-button"><i className="fas fa-search"></i></button>
@@ -351,6 +335,8 @@ const Storage: React.FC = () => {
                                 {viewModeRecent === 'grid' ? <List size={20} /> : <Grid size={20} />}
                             </button>
                         )}
+                    </div>
+                    <div className="storage-header-right">
                         {permissions.canUploadFiles && activeView === 'explorer' && (
                             <button className="storage-upload-button-inline" onClick={() => setIsUploadModalOpen(true)}><i className="fas fa-cloud-upload-alt"></i> Загрузить файлы</button>
                         )}
@@ -358,20 +344,17 @@ const Storage: React.FC = () => {
                             <button onClick={() => setIsCreateFolderModalOpen(true)} className="storage-create-folder-button"><i className="fas fa-folder-plus"></i> Новая папка</button>
                         )}
                         <button onClick={loadData} disabled={loading} className="storage-refresh-button" title="Обновить данные"><i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`}></i></button>
-                        <button onClick={toggleSidebar} className="storage-toggle-sidebar-button" title={sidebarVisible ? 'Скрыть панель' : 'Показать панель'}>
-                            {sidebarVisible ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-                        </button>
-                        {selectedItems.length > 0 && (
-                            <div className="storage-selection-actions">
-                                <span className="storage-selection-count">Выбрано: {selectedItems.length}</span>
-                                <button onClick={() => handleDeleteItems(selectedItems)} className="storage-delete-selected-button" disabled={!selectedItems.every(item => permissions.canDeleteItem(item))}>Удалить</button>
-                                {activeView === 'trash' && (
-                                    <button onClick={() => handleRestoreItems(selectedItems)} className="storage-restore-selected-button">Восстановить</button>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
+                {activeView === 'explorer' && (
+                    <div className="storage-breadcrumbs-row">
+                        <Breadcrumbs
+                            currentFolder={currentFolder}
+                            onNavigateUp={handleNavigateUp}
+                            onFolderClick={handleBreadcrumbClick}
+                        />
+                    </div>
+                )}
                 <div className="storage-content-area">
                     {loading ? (
                         <div className="storage-loading"><div className="storage-spinner"></div><p>Загрузка...</p></div>
@@ -381,10 +364,19 @@ const Storage: React.FC = () => {
                         <>
                             {activeView === 'explorer' && (
                                 <FileExplorer
-                                    folders={folders} files={files} currentFolder={currentFolder}
-                                    onFolderClick={handleFolderClick} onFileClick={(file) => console.log('File clicked:', file)}
-                                    viewMode={viewMode} selectedItems={selectedItems} onSelectItems={setSelectedItems}
-                                    permissions={permissions} onUploadClick={() => setIsUploadModalOpen(true)} onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
+                                    folders={folders}
+                                    files={files}
+                                    currentFolder={currentFolder}
+                                    onFolderClick={handleFolderClick}
+                                    onFileClick={(file) => console.log('File clicked:', file)}
+                                    viewMode={viewMode}
+                                    selectedItems={selectedItems}
+                                    onSelectItems={setSelectedItems}
+                                    permissions={permissions}
+                                    onUploadClick={() => setIsUploadModalOpen(true)}
+                                    onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
+                                    onDeleteSelected={handleDeleteSelected}
+                                    onDownloadSelected={handleDownloadSelected}
                                 />
                             )}
                             {activeView === 'recent' && <RecentFilesView files={files} viewMode={viewModeRecent} sortBy={sortBy} sortOrder={sortOrder} onFileClick={(file) => console.log('File clicked:', file)} permissions={permissions} />}
@@ -400,13 +392,11 @@ const Storage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            {sidebarVisible && (
-                <StorageSidebar
-                    currentView={activeView} onViewChange={handleViewChange}
-                    viewType={viewType} onViewTypeChange={setViewType}
-                    permissions={permissions} onEmptyTrash={handleEmptyTrash}
-                />
-            )}
+            <StorageSidebar
+                currentView={activeView} onViewChange={handleViewChange}
+                viewType={viewType} onViewTypeChange={setViewType}
+                permissions={permissions} onEmptyTrash={handleEmptyTrash}
+            />
             {isCreateFolderModalOpen && <CreateFolderModal currentFolder={currentFolder} viewType={viewType} onCreate={handleCreateFolder} onClose={() => setIsCreateFolderModalOpen(false)} />}
             {isUploadModalOpen && <UploadModal currentFolder={currentFolder} viewType={viewType} maxFileSize={permissions.maxFileSize} onUpload={handleUploadFiles} onClose={() => setIsUploadModalOpen(false)} />}
         </div>

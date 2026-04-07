@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { NetworkInterface, Equipment, VLAN } from '../../types';
+import { createPortal } from 'react-dom';
+import { NetworkInterface, Equipment, VLAN } from '../../../types';
 import './Modal.css';
 
 interface InterfaceModalProps {
@@ -10,12 +11,12 @@ interface InterfaceModalProps {
   onClose: () => void;
 }
 
-const InterfaceModal: React.FC<InterfaceModalProps> = ({ 
-  interface: intf, 
-  equipmentList, 
-  vlanList, 
-  onSave, 
-  onClose 
+const InterfaceModal: React.FC<InterfaceModalProps> = ({
+  interface: intf,
+  equipmentList,
+  vlanList,
+  onSave,
+  onClose
 }) => {
   const [name, setName] = useState('');
   const [interfaceType, setInterfaceType] = useState('physical');
@@ -49,7 +50,6 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
       setNativeVlanId(intf.native_vlan?.id || '');
       setEquipmentId(intf.equipment?.id || '');
     } else {
-      // Сброс значений для нового интерфейса
       setName('');
       setInterfaceType('physical');
       setPhysicalType('');
@@ -69,12 +69,10 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!name || !equipmentId) {
       alert('Пожалуйста, заполните обязательные поля');
       return;
     }
-
     onSave({
       name,
       interface_type: interfaceType,
@@ -93,14 +91,13 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
     });
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
           <h2>{intf ? 'Редактировать интерфейс' : 'Добавить интерфейс'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="equipment">Оборудование *</label>
@@ -174,7 +171,6 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
                     min="0"
                   />
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="module">Модуль</label>
                   <input
@@ -185,7 +181,6 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
                     min="0"
                   />
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="portNumber">Номер порта</label>
                   <input
@@ -292,7 +287,8 @@ const InterfaceModal: React.FC<InterfaceModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

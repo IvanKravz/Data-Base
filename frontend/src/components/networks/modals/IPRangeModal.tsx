@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IPRange, VLAN, Equipment } from '../../types';
+import { createPortal } from 'react-dom';
+import { IPRange, VLAN, Equipment } from '../../../types';
 import './Modal.css';
 
 interface IPRangeModalProps {
@@ -10,12 +11,12 @@ interface IPRangeModalProps {
   onClose: () => void;
 }
 
-const IPRangeModal: React.FC<IPRangeModalProps> = ({ 
-  ipRange, 
-  vlans, 
-  equipmentList, 
-  onSave, 
-  onClose 
+const IPRangeModal: React.FC<IPRangeModalProps> = ({
+  ipRange,
+  vlans,
+  equipmentList,
+  onSave,
+  onClose
 }) => {
   const [network, setNetwork] = useState('');
   const [description, setDescription] = useState('');
@@ -29,7 +30,6 @@ const IPRangeModal: React.FC<IPRangeModalProps> = ({
       setVlanId(ipRange.vlan?.id || '');
       setSelectedDevices(ipRange.devices?.map(d => d.id) || []);
     } else {
-      // Сброс значений для нового диапазона
       setNetwork('');
       setDescription('');
       setVlanId('');
@@ -38,7 +38,7 @@ const IPRangeModal: React.FC<IPRangeModalProps> = ({
   }, [ipRange]);
 
   const handleDeviceToggle = (deviceId: string) => {
-    setSelectedDevices(prev => 
+    setSelectedDevices(prev =>
       prev.includes(deviceId)
         ? prev.filter(id => id !== deviceId)
         : [...prev, deviceId]
@@ -47,12 +47,10 @@ const IPRangeModal: React.FC<IPRangeModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!network) {
       alert('Пожалуйста, заполните обязательные поля');
       return;
     }
-
     onSave({
       network,
       description,
@@ -61,14 +59,13 @@ const IPRangeModal: React.FC<IPRangeModalProps> = ({
     });
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
           <h2>{ipRange ? 'Редактировать диапазон IP' : 'Добавить диапазон IP'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="network">Сеть *</label>
@@ -128,7 +125,8 @@ const IPRangeModal: React.FC<IPRangeModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

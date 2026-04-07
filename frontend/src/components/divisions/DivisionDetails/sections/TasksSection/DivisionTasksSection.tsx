@@ -318,7 +318,7 @@ export function DivisionTasksSection() {
           subdivisionName={subdivisionName}
           divisionName={division?.name}
           onBack={handleBack}
-          onCreateTask={() => canCreateTask && setShowCreateModal(true)}
+          onCreateTask={() => setShowCreateModal(true)}
           showBackButton={!!id}
           headerTitle={getHeaderTitle()}
         />

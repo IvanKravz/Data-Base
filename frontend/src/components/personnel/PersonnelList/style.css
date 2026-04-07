@@ -27,7 +27,6 @@
 .filters-content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .main-filters {
@@ -96,10 +95,10 @@
 
 .additional-filters {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  padding-top: 1rem;
-  margin-top: 1rem;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
   border-top: 1px solid #f1f3f4;
 }
 

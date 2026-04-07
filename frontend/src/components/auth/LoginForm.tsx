@@ -98,7 +98,7 @@ export function LoginForm({
             {twoFACode.map((digit, idx) => (
               <input
                 key={idx}
-                type="text"
+                type="password"
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}

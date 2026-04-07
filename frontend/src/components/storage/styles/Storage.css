@@ -14,15 +14,15 @@
 
 .storage-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    /* justify-content: space-between; */
+    /* align-items: center; */
     padding: 16px 14px;
     background-color: white;
     border: 1px solid var(--file-explorer-border);
     border-radius: var(--file-explorer-radius);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     flex-shrink: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
 }
 
 .storage-header-left {
@@ -42,6 +42,19 @@
     position: relative;
     display: flex;
     align-items: center;
+}
+
+.storage-breadcrumbs-row {
+    margin-bottom: 0.4rem;
+    flex-shrink: 0;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .storage-breadcrumbs-row {
+        margin-bottom: 12px;
+        padding: 0 12px;
+    }
 }
 
 .storage-search-input {
@@ -344,28 +357,6 @@
     white-space: nowrap;
 }
 
-.storage-toggle-sidebar-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #666;
-    margin-left: 8px;
-}
-
-.storage-toggle-sidebar-button:hover {
-    background-color: #f5f5f5;
-    border-color: #1976d2;
-    color: #1976d2;
-    transform: scale(1.05);
-}
-
 /* Стили для контейнера с sidebar */
 .storage-sidebar {
     flex-shrink: 0;
@@ -465,11 +456,6 @@
         order: 2;
         width: 36px;
         height: 36px;
-    }
-
-    .storage-toggle-sidebar-button {
-        order: 3;
-        margin-left: auto;
     }
 
     .storage-create-folder-button,

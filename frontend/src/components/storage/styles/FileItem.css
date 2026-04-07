@@ -104,13 +104,13 @@
     grid-template-columns: 15px 56px 1fr auto auto;
     align-items: center;
     gap: 16px;
-    padding: 12px 16px;
+    padding: 8px 16px;
     background: var(--file-item-bg);
-    border-radius: var(--file-item-radius);
     border: 1px solid transparent;
+    border-color: #e2e8f0;
     transition: var(--file-item-transition);
     cursor: pointer;
-    margin: 2px 0;
+    margin-bottom: 2px;
     position: relative;
 }
 

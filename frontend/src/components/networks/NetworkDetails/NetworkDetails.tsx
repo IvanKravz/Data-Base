@@ -97,7 +97,6 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
   }
 
   // Извлекаем данные из сети в соответствии с актуальной моделью
-  // Предполагаем, что сеть содержит информацию о членствах (memberships)
   const memberships = network.memberships || [];
 
   // Собираем уникальные подразделения, объекты и оборудование
@@ -262,6 +261,7 @@ const NetworkDetails: React.FC<NetworkDetailsProps> = ({
                                   {facilityEquipment.length > 0 ? (
                                     facilityEquipment.map(eq => (
                                       <div
+                                        key={`equipment-${eq.id}`}
                                         className={`hierarchy-item hierarchy-equipment ${highlightedItem === `equipment-${eq.id}` ? 'highlighted' : ''}`}
                                         onMouseEnter={() => handleNodeHover(`equipment-${eq.id}`, 'equipment')}
                                         onMouseLeave={handleNodeLeave}

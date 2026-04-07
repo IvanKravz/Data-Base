@@ -106,7 +106,7 @@ ROLE_PERMISSIONS = {
         'filters': {
             'Task': {'division_id': 16},
         },
-        'can_see_all_divisions': False,      # Только свое подразделение
+        'can_see_all_divisions': True,
         'can_access_storage': True,
         'can_see_all_storage': False,
         'storage_quota': 5 * 1024 * 1024 * 1024,

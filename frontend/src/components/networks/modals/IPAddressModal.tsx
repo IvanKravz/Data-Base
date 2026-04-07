@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IPAddress, NetworkInterface } from '../../types';
+import { createPortal } from 'react-dom';
+import { IPAddress, NetworkInterface } from '../../../types';
 import './Modal.css';
 
 interface IPAddressModalProps {
@@ -9,11 +10,11 @@ interface IPAddressModalProps {
   onClose: () => void;
 }
 
-const IPAddressModal: React.FC<IPAddressModalProps> = ({ 
-  ipAddress, 
-  interfaces, 
-  onSave, 
-  onClose 
+const IPAddressModal: React.FC<IPAddressModalProps> = ({
+  ipAddress,
+  interfaces,
+  onSave,
+  onClose
 }) => {
   const [address, setAddress] = useState('');
   const [netmask, setNetmask] = useState('');
@@ -35,7 +36,6 @@ const IPAddressModal: React.FC<IPAddressModalProps> = ({
       setDescription(ipAddress.description || '');
       setInterfaceId(ipAddress.interface?.id || '');
     } else {
-      // Сброс значений для нового IP-адреса
       setAddress('');
       setNetmask('');
       setVersion('IPv4');
@@ -49,12 +49,10 @@ const IPAddressModal: React.FC<IPAddressModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!address || !netmask || !interfaceId) {
       alert('Пожалуйста, заполните обязательные поля');
       return;
     }
-
     onSave({
       address,
       netmask,
@@ -67,14 +65,13 @@ const IPAddressModal: React.FC<IPAddressModalProps> = ({
     });
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
           <h2>{ipAddress ? 'Редактировать IP-адрес' : 'Добавить IP-адрес'}</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label htmlFor="interface">Интерфейс *</label>
@@ -178,7 +175,8 @@ const IPAddressModal: React.FC<IPAddressModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
