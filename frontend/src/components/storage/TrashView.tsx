@@ -1,8 +1,8 @@
 // components/storage/TrashView.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Square, CheckSquare, Trash2, RotateCcw, Folder, File } from 'lucide-react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import './styles/TrashView.css';
-
 
 interface TrashViewProps {
     folders: any[];
@@ -26,8 +26,24 @@ const TrashView: React.FC<TrashViewProps> = ({
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+    // Получаем текущего пользователя из permissions или из глобального состояния
+    const currentUser = (permissions as any).user;
+
+    // Фильтруем элементы, удалённые текущим пользователем
+    const userFolders = useMemo(() => {
+        return folders.filter(folder => folder.deleted_by?.id === currentUser?.id);
+    }, [folders, currentUser]);
+    const userFiles = useMemo(() => {
+        return files.filter(file => file.deleted_by?.id === currentUser?.id);
+    }, [files, currentUser]);
+
+    const totalItems = userFolders.length + userFiles.length;
+    const totalSize = [...userFolders, ...userFiles].reduce((sum, item) =>
+        sum + ('size' in item ? item.size : 0), 0
+    );
+
     const handleSelectAll = () => {
-        const allItems = [...folders, ...files];
+        const allItems = [...userFolders, ...userFiles];
         setSelectedItems(allItems);
     };
 
@@ -52,35 +68,22 @@ const TrashView: React.FC<TrashViewProps> = ({
 
     const handleDeleteSelected = () => {
         if (selectedItems.length === 0) return;
-
         if (window.confirm(`Удалить выбранные элементы (${selectedItems.length}) навсегда?`)) {
             onDelete(selectedItems);
             setSelectedItems([]);
         }
     };
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
     const formatBytes = (bytes: number): string => {
         if (bytes === 0) return '0 B';
-
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     const getTimeSinceDeleted = (deletedAt: string) => {
+        if (!deletedAt) return 'неизвестно';
         const deleted = new Date(deletedAt);
         const now = new Date();
         const diffMs = now.getTime() - deleted.getTime();
@@ -90,25 +93,24 @@ const TrashView: React.FC<TrashViewProps> = ({
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
             if (diffHours === 0) {
                 const diffMinutes = Math.floor(diffMs / (1000 * 60));
-                return `${diffMinutes} минут назад`;
+                return `${diffMinutes} мин. назад`;
             }
-            return `${diffHours} часов назад`;
+            return `${diffHours} ч. назад`;
         } else if (diffDays === 1) {
             return 'Вчера';
         } else if (diffDays < 7) {
-            return `${diffDays} дней назад`;
+            return `${diffDays} дн. назад`;
         } else if (diffDays < 30) {
             const weeks = Math.floor(diffDays / 7);
-            return `${weeks} недель назад`;
+            return `${weeks} нед. назад`;
         } else {
             const months = Math.floor(diffDays / 30);
-            return `${months} месяцев назад`;
+            return `${months} мес. назад`;
         }
     };
 
-    const sortedItems = [...folders, ...files].sort((a, b) => {
+    const sortedItems = [...userFolders, ...userFiles].sort((a, b) => {
         let aValue: any, bValue: any;
-
         switch (sortBy) {
             case 'name':
                 aValue = a.name.toLowerCase();
@@ -125,32 +127,22 @@ const TrashView: React.FC<TrashViewProps> = ({
             default:
                 return 0;
         }
-
-        if (sortOrder === 'asc') {
-            return aValue > bValue ? 1 : -1;
-        } else {
-            return aValue < bValue ? 1 : -1;
-        }
+        return sortOrder === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
     });
-
-    const totalItems = folders.length + files.length;
-    const totalSize = [...folders, ...files].reduce((sum, item) =>
-        sum + ('size' in item ? item.size : 0), 0
-    );
 
     return (
         <div className="storage-trash-view">
             <div className="storage-trash-header">
                 <div className="storage-trash-header-left">
                     <h2 className="storage-trash-title">
-                        <i className="fas fa-trash"></i> Корзина
+                        <Trash2 size={24} /> Корзина
                     </h2>
                     <div className="storage-trash-stats">
                         <span className="storage-trash-stat">
-                            <i className="fas fa-folder"></i> {folders.length} папок
+                            <Folder size={14} /> {userFolders.length} папок
                         </span>
                         <span className="storage-trash-stat">
-                            <i className="fas fa-file"></i> {files.length} файлов
+                            <File size={14} /> {userFiles.length} файлов
                         </span>
                         <span className="storage-trash-stat">
                             <i className="fas fa-database"></i> {formatBytes(totalSize)}
@@ -192,7 +184,7 @@ const TrashView: React.FC<TrashViewProps> = ({
             {totalItems === 0 ? (
                 <div className="storage-trash-empty">
                     <div className="storage-trash-empty-icon">
-                        <i className="fas fa-trash-alt"></i>
+                        <Trash2 size={64} />
                     </div>
                     <h3 className="storage-trash-empty-title">Корзина пуста</h3>
                     <p className="storage-trash-empty-text">
@@ -203,12 +195,16 @@ const TrashView: React.FC<TrashViewProps> = ({
                 <>
                     <div className="storage-trash-selection-bar">
                         <div className="storage-trash-selection-info">
-                            <input
-                                type="checkbox"
-                                checked={selectedItems.length === totalItems && totalItems > 0}
-                                onChange={selectedItems.length === totalItems ? handleClearSelection : handleSelectAll}
-                                className="storage-trash-select-all"
-                            />
+                            <button
+                                className="storage-trash-checkbox-button"
+                                onClick={selectedItems.length === totalItems ? handleClearSelection : handleSelectAll}
+                            >
+                                {selectedItems.length === totalItems && totalItems > 0 ? (
+                                    <CheckSquare size={20} className="checked" />
+                                ) : (
+                                    <Square size={20} />
+                                )}
+                            </button>
                             <span className="storage-trash-selected-count">
                                 Выбрано: {selectedItems.length} из {totalItems}
                             </span>
@@ -221,23 +217,22 @@ const TrashView: React.FC<TrashViewProps> = ({
                                         className="storage-trash-action-btn storage-trash-restore-btn"
                                         onClick={handleRestoreSelected}
                                     >
-                                        <i className="fas fa-redo"></i> Восстановить
+                                        <RotateCcw size={16} /> Восстановить
                                     </button>
                                     <button
                                         className="storage-trash-action-btn storage-trash-delete-btn"
                                         onClick={handleDeleteSelected}
                                     >
-                                        <i className="fas fa-trash"></i> Удалить навсегда
+                                        <Trash2 size={16} /> Удалить навсегда
                                     </button>
                                 </>
                             )}
-
                             {permissions.canEmptyTrash && (
                                 <button
                                     className="storage-trash-action-btn storage-trash-empty-btn"
                                     onClick={onEmptyTrash}
                                 >
-                                    <i className="fas fa-broom"></i> Очистить корзину
+                                    <Trash2 size={16} /> Очистить корзину
                                 </button>
                             )}
                         </div>
@@ -245,29 +240,32 @@ const TrashView: React.FC<TrashViewProps> = ({
 
                     <div className={`storage-trash-items ${viewMode === 'grid' ? 'grid-view' : 'list-view'}`}>
                         {sortedItems.map((item) => {
-                            const isFile = 'file' in item;
+                            const isFile = 'file_type' in item;
                             const isSelected = selectedItems.some(selected => selected.id === item.id);
 
                             return (
                                 <div
                                     key={item.id}
                                     className={`storage-trash-item ${isSelected ? 'selected' : ''}`}
-                                    onClick={() => handleItemSelect(item)}
                                 >
                                     <div className="storage-trash-item-select">
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => handleItemSelect(item)}
-                                            className="storage-trash-item-checkbox"
-                                        />
+                                        <button
+                                            className="storage-trash-checkbox-button"
+                                            onClick={() => handleItemSelect(item)}
+                                        >
+                                            {isSelected ? (
+                                                <CheckSquare size={20} className="checked" />
+                                            ) : (
+                                                <Square size={20} />
+                                            )}
+                                        </button>
                                     </div>
 
                                     <div className="storage-trash-item-icon">
-                                        <i className={`fas fa-${isFile ? 'file' : 'folder'}`}></i>
+                                        {isFile ? <File size={20} /> : <Folder size={20} />}
                                     </div>
 
-                                    <div className="storage-trash-item-info">
+                                    <div className="storage-trash-item-info" onClick={() => handleItemSelect(item)}>
                                         <h4 className="storage-trash-item-name" title={item.name}>
                                             {item.name}
                                         </h4>
@@ -285,7 +283,7 @@ const TrashView: React.FC<TrashViewProps> = ({
                                                 </>
                                             ) : (
                                                 <span className="storage-trash-item-type">
-                                                    Папка ({item.files_count} файлов)
+                                                    Папка ({item.files_count || 0} файлов)
                                                 </span>
                                             )}
                                         </div>
@@ -310,7 +308,7 @@ const TrashView: React.FC<TrashViewProps> = ({
                                             }}
                                             title="Восстановить"
                                         >
-                                            <i className="fas fa-redo"></i>
+                                            <RotateCcw size={16} />
                                         </button>
                                         <button
                                             className="storage-trash-item-action"
@@ -320,7 +318,7 @@ const TrashView: React.FC<TrashViewProps> = ({
                                             }}
                                             title="Удалить навсегда"
                                         >
-                                            <i className="fas fa-trash-alt"></i>
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>

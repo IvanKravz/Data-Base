@@ -1,0 +1,551 @@
+/* components/storage/styles/MoveModal.css */
+
+.mm-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: mm-fadeIn 0.2s ease-out;
+}
+
+@keyframes mm-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.mm-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.25), 0 8px 16px -6px rgba(0, 0, 0, 0.1);
+    width: 520px;
+    max-width: 90vw;
+    max-height: 70vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: mm-slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mm-slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.mm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.mm-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.mm-close:hover {
+    color: #0f172a;
+    background-color: #f8fafc;
+}
+
+.mm-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.mm-loading,
+.mm-error {
+    padding: 32px 24px;
+    text-align: center;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.mm-loading i {
+    font-size: 32px;
+    color: #3b82f6;
+    animation: mm-spin 1s linear infinite;
+}
+
+@keyframes mm-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.mm-error {
+    color: #ef4444;
+}
+
+.mm-tree {
+    margin-top: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background-color: #f8fafc;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.mm-tree::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mm-tree::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.mm-tree::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.mm-tree-item {
+    margin-bottom: 2px;
+}
+
+.mm-folder-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin: 2px 0;
+}
+
+.mm-folder-row:hover {
+    background-color: #f1f5f9;
+}
+
+.mm-folder-row--selected {
+    background-color: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    padding-left: 9px;
+    /* compensate for border */
+    font-weight: 500;
+}
+
+.mm-folder-row--root {
+    font-weight: 600;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    color: #0f172a;
+}
+
+.mm-expand-icon {
+    width: 24px;
+    display: inline-flex;
+    justify-content: center;
+    margin-right: 4px;
+    color: #64748b;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.mm-folder-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.mm-folder-icon {
+    color: #3b82f6;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.mm-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.mm-button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.mm-button:hover {
+    background-color: #e2e8f0;
+}
+
+.mm-button--primary {
+    background-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.mm-button--primary:hover:not(:disabled) {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+}
+
+.mm-button--secondary {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.mm-button--secondary:hover:not(:disabled) {
+    background-color: #e2e8f0;
+}
+
+.mm-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Адаптивность */
+@media (max-width: 640px) {
+    .mm-container {
+        width: 95vw;
+        max-height: 80vh;
+    }
+
+    .mm-header,
+    .mm-body,
+    .mm-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
+/* components/storage/styles/MoveModal.css */
+
+.mm-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: mm-fadeIn 0.2s ease-out;
+}
+
+@keyframes mm-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.mm-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.25), 0 8px 16px -6px rgba(0, 0, 0, 0.1);
+    width: 520px;
+    max-width: 90vw;
+    max-height: 70vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: mm-slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mm-slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.mm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mm-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.mm-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.mm-close:hover {
+    color: #0f172a;
+    background-color: #f8fafc;
+}
+
+.mm-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.mm-loading,
+.mm-error {
+    padding: 32px 24px;
+    text-align: center;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.mm-loading i {
+    font-size: 32px;
+    color: #3b82f6;
+    animation: mm-spin 1s linear infinite;
+}
+
+@keyframes mm-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.mm-error {
+    color: #ef4444;
+}
+
+.mm-tree {
+    margin-top: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background-color: #f8fafc;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.mm-tree::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mm-tree::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.mm-tree::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.mm-tree-item {
+    margin-bottom: 2px;
+}
+
+.mm-folder-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin: 2px 0;
+}
+
+.mm-folder-row:hover {
+    background-color: #f1f5f9;
+}
+
+.mm-folder-row--selected {
+    background-color: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    padding-left: 9px;
+    /* compensate for border */
+    font-weight: 500;
+}
+
+.mm-folder-row--root {
+    font-weight: 600;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    color: #0f172a;
+}
+
+.mm-expand-icon {
+    width: 24px;
+    display: inline-flex;
+    justify-content: center;
+    margin-right: 4px;
+    color: #64748b;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.mm-folder-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.mm-folder-icon {
+    color: #3b82f6;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.mm-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.mm-button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.mm-button:hover {
+    background-color: #e2e8f0;
+}
+
+.mm-button--primary {
+    background-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.mm-button--primary:hover:not(:disabled) {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+}
+
+.mm-button--secondary {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.mm-button--secondary:hover:not(:disabled) {
+    background-color: #e2e8f0;
+}
+
+.mm-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Адаптивность */
+@media (max-width: 640px) {
+    .mm-container {
+        width: 95vw;
+        max-height: 80vh;
+    }
+
+    .mm-header,
+    .mm-body,
+    .mm-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}

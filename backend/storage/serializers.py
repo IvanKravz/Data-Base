@@ -12,6 +12,8 @@ class StorageFolderSerializer(serializers.ModelSerializer):
     subfolders_count = serializers.SerializerMethodField()
     total_size = serializers.SerializerMethodField()
     full_path = serializers.SerializerMethodField()
+    deleted_at = serializers.DateTimeField(read_only=True)
+    deleted_by = UserSerializer(read_only=True)
     
     class Meta:
         model = StorageFolder
@@ -19,7 +21,7 @@ class StorageFolderSerializer(serializers.ModelSerializer):
             'id', 'name', 'parent', 'parent_name', 'folder_type',
             'division', 'subdivision', 'created_by', 'files_count',
             'subfolders_count', 'total_size', 'full_path', 'is_pinned',
-            'color', 'created_at', 'updated_at', 'is_deleted'
+            'color', 'created_at', 'updated_at', 'is_deleted', 'deleted_at', 'deleted_by'
         ]
         read_only_fields = ['is_deleted', 'deleted_at']
     
@@ -71,6 +73,8 @@ class StorageFileSerializer(serializers.ModelSerializer):
     download_endpoint = serializers.SerializerMethodField()  # НОВОЕ ПОЛЕ
     human_readable_size = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+    deleted_at = serializers.DateTimeField(read_only=True)
+    deleted_by = UserSerializer(read_only=True)
     
     class Meta:
         model = StorageFile
@@ -79,7 +83,7 @@ class StorageFileSerializer(serializers.ModelSerializer):
             'mime_type', 'extension', 'file_type', 'folder', 'folder_name',
             'division', 'subdivision', 'uploaded_by', 'download_url', 'download_endpoint',
             'is_favorited', 'is_pinned', 'download_count', 'last_downloaded', 
-            'created_at', 'updated_at', 'is_deleted'
+            'created_at', 'updated_at', 'is_deleted', 'deleted_at', 'deleted_by'
         ]
         read_only_fields = ['is_deleted', 'deleted_at', 'download_count', 'last_downloaded']
     

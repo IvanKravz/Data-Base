@@ -5,17 +5,21 @@ import FileItemList from './FileItemList';
 import FileActionsMenu from '../FileActionsMenu';
 import { useFileHandlers } from './hooks/useFileHandlers';
 import { StoragePermissions } from '../../../api/utils/useStoragePermissions';
+import { StorageFile } from '../../../api/storage';
 import '../styles/FileItem.css';
 
 interface FileItemProps {
-    file: any;
+    file: StorageFile;
     viewMode: 'list' | 'grid';
     isSelected: boolean;
     onSelect: () => void;
     onClick: () => void;
     onDownload: () => void;
     permissions: StoragePermissions;
-    onDragStart?: (e: React.DragEvent, item: any) => void;
+    viewType: 'personal' | 'work';
+    onMoveItem: (itemId: number, targetFolderId: number | null, isFolder: boolean) => Promise<void>;
+    onDeleteItem?: (fileId: number) => void;
+    onDragStart?: (e: React.DragEvent, item: StorageFile) => void;
     onDragEnd?: (e: React.DragEvent) => void;
 }
 
@@ -27,6 +31,9 @@ const FileItem: React.FC<FileItemProps> = ({
     onClick,
     onDownload,
     permissions,
+    viewType,
+    onMoveItem,
+    onDeleteItem,
     onDragStart,
     onDragEnd
 }) => {
@@ -112,6 +119,12 @@ const FileItem: React.FC<FileItemProps> = ({
                     position={menuPosition}
                     onClose={closeContextMenu}
                     permissions={permissions}
+                    viewType={viewType}
+                    onMove={async (targetId) => {
+                        await onMoveItem(file.id, targetId, false);
+                        closeContextMenu();
+                    }}
+                    onDelete={onDeleteItem}
                 />
             )}
         </>

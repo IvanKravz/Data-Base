@@ -1,31 +1,26 @@
 // components/storage/FolderItem.tsx
 import React, { useState } from 'react';
-import {
-    FaUserCircle,
-    FaThumbtack,
-    FaEllipsisV
-} from 'react-icons/fa';
-import {
-    HiFolder,
-    HiFolderOpen,
-    HiOutlineDatabase
-} from 'react-icons/hi';
-import {
-    MdFolderShared,
-    MdFolderSpecial
-} from 'react-icons/md';
+import { FaThumbtack } from 'react-icons/fa';
+import { HiFolder, HiFolderOpen, HiOutlineDatabase } from 'react-icons/hi';
+import { MdFolderShared, MdFolderSpecial } from 'react-icons/md';
+import { Square, CheckSquare } from 'lucide-react';
 import FolderActionsMenu from './FolderActionsMenu';
 import './styles/FolderItem.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
+import { StorageFolder } from '../../api/storage';
 
 interface FolderItemProps {
-    folder: any;
+    folder: StorageFolder;
     viewMode: 'list' | 'grid';
     isSelected: boolean;
     onSelect: () => void;
     onClick: () => void;
     onDragStart: (e: React.DragEvent) => void;
+    onDragEnd?: (e: React.DragEvent) => void;
     permissions: StoragePermissions;
+    viewType: 'personal' | 'work';
+    onMoveItem: (itemId: number, targetFolderId: number | null, isFolder: boolean) => Promise<void>;
+    onDeleteItem?: (folderId: number) => void;
 }
 
 const FolderItem: React.FC<FolderItemProps> = ({
@@ -35,7 +30,11 @@ const FolderItem: React.FC<FolderItemProps> = ({
     onSelect,
     onClick,
     onDragStart,
-    permissions
+    onDragEnd,
+    permissions,
+    viewType,
+    onMoveItem,
+    onDeleteItem,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -44,9 +43,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (!permissions.canEditItem(folder) && !permissions.canDeleteItem(folder)) return;
-
         const { clientX, clientY } = e;
         setMenuPosition({ x: clientX, y: clientY });
         setShowActionsMenu(true);
@@ -58,26 +55,30 @@ const FolderItem: React.FC<FolderItemProps> = ({
         }
     };
 
+    const handleCheckboxClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onSelect();
+    };
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU', {
             day: '2-digit',
             month: '2-digit',
-            year: 'numeric'
+            year: 'numeric',
         });
     };
 
     const getFolderIcon = () => {
         const iconSize = viewMode === 'grid' ? 64 : 24;
 
-        // Если у папки есть кастомный цвет, используем его
         if (folder.color && folder.color.startsWith('#')) {
             return (
                 <div
                     className="storage-folder-icon-gradient custom-color"
                     style={{
                         background: folder.color,
-                        color: getContrastColor(folder.color)
+                        color: getContrastColor(folder.color),
                     }}
                 >
                     {getFolderIconByType(iconSize)}
@@ -85,7 +86,6 @@ const FolderItem: React.FC<FolderItemProps> = ({
             );
         }
 
-        // Иначе используем градиенты по типам
         if (folder.folder_type === 'personal') {
             return (
                 <div className="storage-folder-icon-gradient personal">
@@ -125,34 +125,19 @@ const FolderItem: React.FC<FolderItemProps> = ({
         );
     };
 
-    // Вспомогательная функция для определения иконки по типу папки
     const getFolderIconByType = (size: number) => {
-        if (folder.folder_type === 'shared') {
-            return <MdFolderShared size={size} />;
-        }
-        if (folder.is_pinned) {
-            return <MdFolderSpecial size={size} />;
-        }
-        if (folder.subfolders_count > 0) {
-            return <HiFolderOpen size={size} />;
-        }
+        if (folder.folder_type === 'shared') return <MdFolderShared size={size} />;
+        if (folder.is_pinned) return <MdFolderSpecial size={size} />;
+        if (folder.subfolders_count > 0) return <HiFolderOpen size={size} />;
         return <HiFolder size={size} />;
     };
 
-    // Функция для определения контрастного цвета текста
     const getContrastColor = (hexColor: string) => {
-        // Удаляем символ # если есть
         const hex = hexColor.replace('#', '');
-
-        // Преобразуем hex в RGB
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-
-        // Рассчитываем яркость (формула для восприятия человеком)
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-        // Если цвет светлый, возвращаем темный цвет для контраста
         return brightness > 128 ? '#1e293b' : '#ffffff';
     };
 
@@ -166,17 +151,21 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     onContextMenu={handleContextMenu}
                     draggable={permissions.canEditItem(folder)}
                     onDragStart={handleDragStart}
+                    onDragEnd={onDragEnd}
                 >
                     <div className="storage-folder-card-header">
-                        <div className="storage-folder-select">
-                            <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={onSelect}
-                                className="storage-folder-checkbox"
-                                title="Выбрать папку"
-                            />
-                        </div>
+                        <button
+                            className="storage-folder-checkbox-button"
+                            onClick={handleCheckboxClick}
+                            title="Выбрать папку"
+                            type="button"
+                        >
+                            {isSelected ? (
+                                <CheckSquare size={16} className="checked" />
+                            ) : (
+                                <Square size={16} />
+                            )}
+                        </button>
 
                         {folder.is_pinned && (
                             <div className="storage-folder-pin-indicator" title="Закреплено">
@@ -190,11 +179,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     </div>
 
                     <div className="storage-folder-card-body">
-                        <h4
-                            className="storage-folder-title"
-                            onClick={onClick}
-                            title={folder.name}
-                        >
+                        <h4 className="storage-folder-title" onClick={onClick} title={folder.name}>
                             {folder.name}
                         </h4>
 
@@ -212,6 +197,12 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         position={menuPosition}
                         onClose={() => setShowActionsMenu(false)}
                         permissions={permissions}
+                        viewType={viewType}
+                        onMove={async (targetId) => {
+                            await onMoveItem(folder.id, targetId, true);
+                            setShowActionsMenu(false);
+                        }}
+                        onDelete={onDeleteItem}
                     />
                 )}
             </>
@@ -228,14 +219,21 @@ const FolderItem: React.FC<FolderItemProps> = ({
                 onContextMenu={handleContextMenu}
                 draggable={permissions.canEditItem(folder)}
                 onDragStart={handleDragStart}
+                onDragEnd={onDragEnd}
             >
                 <div className="storage-folder-select">
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={onSelect}
-                        className="storage-folder-checkbox"
-                    />
+                    <button
+                        className="storage-folder-checkbox-button"
+                        onClick={handleCheckboxClick}
+                        title="Выбрать папку"
+                        type="button"
+                    >
+                        {isSelected ? (
+                            <CheckSquare size={20} className="checked" />
+                        ) : (
+                            <Square size={20} />
+                        )}
+                    </button>
                 </div>
 
                 <div className="storage-folder-row-icon" onClick={onClick}>
@@ -286,6 +284,12 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     position={menuPosition}
                     onClose={() => setShowActionsMenu(false)}
                     permissions={permissions}
+                    viewType={viewType}
+                    onMove={async (targetId) => {
+                        await onMoveItem(folder.id, targetId, true);
+                        setShowActionsMenu(false);
+                    }}
+                    onDelete={onDeleteItem}
                 />
             )}
         </>
@@ -294,11 +298,9 @@ const FolderItem: React.FC<FolderItemProps> = ({
 
 const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
-
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 

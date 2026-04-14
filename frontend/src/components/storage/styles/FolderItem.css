@@ -1,5 +1,4 @@
 /* components/storage/styles/FolderItem.css */
-/* Основные стили */
 .storage-folder-card {
     position: relative;
     background: white;
@@ -14,7 +13,6 @@
     cursor: pointer;
     transition: all 0.2s ease;
     overflow: hidden;
-    position: relative;
     padding: 12px 0;
 }
 
@@ -40,58 +38,61 @@
 }
 
 .storage-folder-select {
-    opacity: 0;
-    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Для режима карточки (grid) показываем чекбокс только при наведении или выборе */
+/* Кнопка чекбокса */
+.storage-folder-checkbox-button {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 4px;
+    padding: 2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.storage-folder-checkbox-button:hover {
+    color: #2c5282;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.storage-folder-checkbox-button .checked {
+    color: #2c5282;
+}
+
+/* В grid-режиме чекбокс всегда видим */
 .storage-folder-card .storage-folder-select {
-    opacity: 0;
-}
-
-.storage-folder-card:hover .storage-folder-select,
-.storage-folder-card.selected .storage-folder-select {
     opacity: 1;
 }
 
-/* Для режима списка (list) чекбокс всегда видим */
+/* Режим списка */
 .storage-folder-row .storage-folder-select {
-    opacity: 1;
     width: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.storage-folder-checkbox {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    border: 2px solid #cbd5e1;
-    background: white;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    appearance: none;
-    position: relative;
+.storage-folder-row .storage-folder-checkbox-button {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
 }
 
-.storage-folder-checkbox:checked {
-    background: #4299e1;
-    border-color: #4299e1;
+.storage-folder-row .storage-folder-checkbox-button:hover {
+    background: transparent;
+    box-shadow: none;
 }
 
-.storage-folder-checkbox:checked::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
+/* Индикатор закрепления */
 .storage-folder-pin-indicator {
     background: #ed8936;
     color: white;
@@ -103,6 +104,7 @@
     justify-content: center;
 }
 
+/* Иконка папки */
 .storage-folder-icon-container {
     flex: 1;
     display: flex;
@@ -117,7 +119,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    padding: 20px;
+    padding: 10px;
     transition: transform 0.2s ease;
 }
 
@@ -185,18 +187,6 @@
     white-space: nowrap;
 }
 
-.storage-folder-card-actions {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.storage-folder-card:hover .storage-folder-card-actions {
-    opacity: 1;
-}
-
 /* Режим списка */
 .storage-folder-row {
     display: grid;
@@ -205,7 +195,6 @@
     gap: 10px;
     padding: 8px 16px;
     background: white;
-    /* border-radius: 8px; */
     border: 1px solid transparent;
     border-color: #e2e8f0;
     transition: all 0.15s ease;
@@ -302,36 +291,6 @@
     min-width: 100px;
 }
 
-.storage-folder-row-actions {
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.storage-folder-row:hover .storage-folder-row-actions {
-    opacity: 1;
-}
-
-/* Кнопки действий */
-.storage-folder-action-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    color: #718096;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.storage-folder-action-btn:hover {
-    background: #4299e1;
-    border-color: #4299e1;
-    color: white;
-}
-
 /* Анимации */
 @keyframes fadeIn {
     from {
@@ -356,7 +315,6 @@
         height: 170px;
         padding: 16px;
     }
-
     .storage-folder-row-info {
         min-width: 160px;
         gap: 16px;
@@ -369,17 +327,14 @@
         height: 160px;
         padding: 12px;
     }
-
     .storage-folder-row {
         grid-template-columns: auto 1fr auto;
         gap: 12px;
         padding: 12px 16px;
     }
-
     .storage-folder-row-info {
         display: none;
     }
-
     .storage-folder-row-meta {
         flex-wrap: wrap;
         gap: 4px;

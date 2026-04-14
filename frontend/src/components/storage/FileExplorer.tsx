@@ -16,10 +16,14 @@ interface FileExplorerProps {
     selectedItems: Array<StorageFolder | StorageFile>;
     onSelectItems: (items: Array<StorageFolder | StorageFile>) => void;
     permissions: StoragePermissions;
+    viewType: 'personal' | 'work';
+    onMoveItem: (itemId: number, targetFolderId: number | null, isFolder: boolean) => Promise<void>;
+    onDeleteItem?: (itemId: number, isFolder: boolean) => void;
     onUploadClick?: () => void;
     onCreateFolderClick?: () => void;
     onDeleteSelected?: () => void;
     onDownloadSelected?: () => void;
+    onFilesDrop?: (files: File[]) => Promise<void>;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -32,23 +36,24 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     selectedItems,
     onSelectItems,
     permissions,
+    viewType,
+    onMoveItem,
+    onDeleteItem,
     onUploadClick,
     onCreateFolderClick,
     onDeleteSelected,
-    onDownloadSelected
+    onDownloadSelected,
+    onFilesDrop
 }) => {
     const [dragOver, setDragOver] = useState(false);
     const [draggedItem, setDraggedItem] = useState<any>(null);
 
-    // Мемоизация вычислений
     const { pinnedFolders, regularFolders, pinnedFiles, regularFiles, totalSize } = useMemo(() => {
         const pinnedFolders = folders.filter(f => f.is_pinned);
         const regularFolders = folders.filter(f => !f.is_pinned);
         const pinnedFiles = files.filter(f => f.is_pinned);
         const regularFiles = files.filter(f => !f.is_pinned);
-        
         const totalSize = selectedItems.reduce((sum, item) => sum + (item.size || 0), 0);
-        
         return { pinnedFolders, regularFolders, pinnedFiles, regularFiles, totalSize };
     }, [folders, files, selectedItems]);
 
@@ -74,7 +79,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         setDraggedItem(item);
         e.dataTransfer.setData('text/plain', JSON.stringify(item));
         e.dataTransfer.effectAllowed = 'move';
-        
         const target = e.target as HTMLElement;
         target.style.opacity = '0.6';
     };
@@ -93,28 +97,29 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        
         const relatedTarget = e.relatedTarget as Node;
         const currentTarget = e.currentTarget as Node;
-        
         if (!currentTarget.contains(relatedTarget)) {
             setDragOver(false);
         }
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setDragOver(false);
+
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length > 0 && onFilesDrop) {
+            await onFilesDrop(files);
+        }
     };
 
     const formatTotalSize = (bytes: number): string => {
         if (bytes === 0) return '0 B';
-
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
@@ -146,7 +151,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         <i className="fas fa-times-circle"></i>
                         Снять выделение
                     </button>
-                    
+
                     {selectedItems.length > 0 && onDownloadSelected && (
                         <button
                             onClick={onDownloadSelected}
@@ -157,7 +162,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                             Скачать
                         </button>
                     )}
-                    
+
                     {selectedItems.length > 0 && onDeleteSelected && (
                         <button
                             onClick={onDeleteSelected}
@@ -202,6 +207,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onDragStart={(e) => handleDragStart(e, folder)}
                                 onDragEnd={handleDragEnd}
                                 permissions={permissions}
+                                viewType={viewType}
+                                onMoveItem={onMoveItem}
+                                onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
                             />
                         ))}
                     </div>
@@ -227,6 +235,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onDragStart={(e) => handleDragStart(e, folder)}
                                 onDragEnd={handleDragEnd}
                                 permissions={permissions}
+                                viewType={viewType}
+                                onMoveItem={onMoveItem}
+                                onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
                             />
                         ))}
                     </div>
@@ -252,6 +263,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onDragStart={(e) => handleDragStart(e, file)}
                                 onDragEnd={handleDragEnd}
                                 permissions={permissions}
+                                viewType={viewType}
+                                onMoveItem={onMoveItem}
+                                onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
                             />
                         ))}
                     </div>
@@ -277,6 +291,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onDragStart={(e) => handleDragStart(e, file)}
                                 onDragEnd={handleDragEnd}
                                 permissions={permissions}
+                                viewType={viewType}
+                                onMoveItem={onMoveItem}
+                                onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
                             />
                         ))}
                     </div>
@@ -291,8 +308,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     </div>
                     <h3>{currentFolder ? 'Папка пуста' : 'Хранилище пусто'}</h3>
                     <p>
-                        {currentFolder 
-                            ? 'Добавьте файлы или создайте новую папку' 
+                        {currentFolder
+                            ? 'Добавьте файлы или создайте новую папку'
                             : 'Начните с загрузки файлов или создания папок'
                         }
                     </p>

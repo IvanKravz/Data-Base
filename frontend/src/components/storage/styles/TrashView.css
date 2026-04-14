@@ -400,6 +400,69 @@
     font-size: 16px;
 }
 
+/* Стили для кнопок чекбоксов */
+.storage-trash-checkbox-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    transition: color 0.2s ease;
+}
+
+.storage-trash-checkbox-button:hover {
+    color: #2c5282;
+}
+
+.storage-trash-checkbox-button .checked {
+    color: #2c5282;
+}
+
+/* Кнопки действий */
+.storage-trash-item-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.storage-trash-item:hover .storage-trash-item-actions {
+    opacity: 1;
+}
+
+.storage-trash-item-action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.storage-trash-item-action:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.storage-trash-item-action:first-child:hover {
+    color: #10b981;
+    border-color: #10b981;
+}
+
+.storage-trash-item-action:last-child:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
 @media (max-width: 768px) {
     .storage-trash-header {
         flex-direction: column;

@@ -12,7 +12,9 @@ import TrashView from './TrashView';
 import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
-import { Grid, List, Clock, Star, Trash2, FolderOpen } from 'lucide-react';
+import { Grid, List } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 const Storage: React.FC = () => {
     const { folderId, subfolderId } = useParams<{ folderId?: string; subfolderId?: string }>();
@@ -35,13 +37,12 @@ const Storage: React.FC = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [viewModeRecent, setViewModeRecent] = useState<'grid' | 'list'>('list');
+    const currentUser = useSelector((state: RootState) => state.auth.user);
 
     const permissions = useStoragePermissions();
 
-    // Определяем начальный тип хранилища на основе доступных типов
     useEffect(() => {
         if (permissions.canViewWork && permissions.canViewPersonal) {
-            // Если доступны оба, оставляем текущий (или work по умолчанию)
             setViewType(prev => prev);
         } else if (permissions.canViewWork) {
             setViewType('work');
@@ -90,7 +91,6 @@ const Storage: React.FC = () => {
 
     const handleDownloadSelected = async () => {
         if (selectedItems.length === 0) return;
-        // Базовая реализация: скачиваем первый файл (если есть)
         const file = selectedItems.find(item => 'file_type' in item) as StorageFile;
         if (file) {
             try {
@@ -108,10 +108,20 @@ const Storage: React.FC = () => {
         return [...items].sort((a, b) => {
             let aVal: any, bVal: any;
             switch (sortBy) {
-                case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
-                case 'date': aVal = new Date(a.created_at).getTime(); bVal = new Date(b.created_at).getTime(); break;
-                case 'size': aVal = 'size' in a ? a.size : 0; bVal = 'size' in b ? b.size : 0; break;
-                default: return 0;
+                case 'name':
+                    aVal = a.name.toLowerCase();
+                    bVal = b.name.toLowerCase();
+                    break;
+                case 'date':
+                    aVal = new Date(a.created_at).getTime();
+                    bVal = new Date(b.created_at).getTime();
+                    break;
+                case 'size':
+                    aVal = 'size' in a ? a.size : 0;
+                    bVal = 'size' in b ? b.size : 0;
+                    break;
+                default:
+                    return 0;
             }
             return sortOrder === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
         });
@@ -130,19 +140,22 @@ const Storage: React.FC = () => {
                         storageApi.getFolders({
                             parent_id: currentFolderId ? parseInt(currentFolderId) : 'root',
                             type: viewType,
-                            ordering: sortBy === 'name' ? 'name' : '-created_at'
+                            ordering: sortBy === 'name' ? 'name' : '-created_at',
                         }),
                         storageApi.getFiles({
                             folder_id: currentFolderId ? parseInt(currentFolderId) : 'root',
                             type: viewType,
-                            ordering: sortBy === 'name' ? 'name' : '-created_at'
-                        })
+                            ordering: sortBy === 'name' ? 'name' : '-created_at',
+                        }),
                     ]);
                     break;
                 case 'recent':
                     const recentResponse = await storageApi.getRecentFiles({ page: 1, page_size: 50 });
                     fetchedFiles = recentResponse?.files || (Array.isArray(recentResponse) ? recentResponse : []);
-                    if (searchQuery.trim()) fetchedFiles = fetchedFiles.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                    if (searchQuery.trim())
+                        fetchedFiles = fetchedFiles.filter(f =>
+                            f.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
                     fetchedFiles = sortItems(fetchedFiles) as StorageFile[];
                     break;
                 case 'favorites':
@@ -150,20 +163,28 @@ const Storage: React.FC = () => {
                     fetchedFolders = favoritesResponse?.folders || [];
                     fetchedFiles = favoritesResponse?.files || [];
                     if (searchQuery.trim()) {
-                        fetchedFolders = fetchedFolders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-                        fetchedFiles = fetchedFiles.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                        fetchedFolders = fetchedFolders.filter(f =>
+                            f.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        fetchedFiles = fetchedFiles.filter(f =>
+                            f.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
                     }
                     break;
                 case 'trash':
                     const [trashFolders, trashFiles] = await Promise.all([
                         storageApi.getTrashFolders(),
-                        storageApi.getTrashFiles()
+                        storageApi.getTrashFiles(),
                     ]);
                     fetchedFolders = trashFolders?.folders || (Array.isArray(trashFolders) ? trashFolders : []);
                     fetchedFiles = trashFiles?.files || (Array.isArray(trashFiles) ? trashFiles : []);
                     if (searchQuery.trim()) {
-                        fetchedFolders = fetchedFolders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-                        fetchedFiles = fetchedFiles.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                        fetchedFolders = fetchedFolders.filter(f =>
+                            f.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        fetchedFiles = fetchedFiles.filter(f =>
+                            f.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
                     }
                     break;
             }
@@ -190,8 +211,10 @@ const Storage: React.FC = () => {
             else navigate(`/storage/${folder.id}`);
         } catch (err: any) {
             console.error('Cannot access folder:', err);
-            if (err.response?.status === 404) setError(`Папка "${folder.name}" не найдена или была удалена.`);
-            else if (err.response?.status === 403) setError(`У вас нет прав доступа к папке "${folder.name}".`);
+            if (err.response?.status === 404)
+                setError(`Папка "${folder.name}" не найдена или была удалена.`);
+            else if (err.response?.status === 403)
+                setError(`У вас нет прав доступа к папке "${folder.name}".`);
             else setError(`Ошибка при доступе к папке "${folder.name}": ${err.message}`);
             loadData();
         }
@@ -242,6 +265,35 @@ const Storage: React.FC = () => {
         }
     };
 
+    // НОВЫЙ ОБРАБОТЧИК ДЛЯ УДАЛЕНИЯ ОДНОГО ЭЛЕМЕНТА (ИЗ МЕНЮ)
+    const handleDeleteSingleItem = async (itemId: number, isFolder: boolean) => {
+        try {
+            if (isFolder) {
+                await storageApi.softDeleteFolder(itemId);
+                setFolders(prev => prev.filter(f => f.id !== itemId));
+            } else {
+                await storageApi.softDeleteFile(itemId);
+                setFiles(prev => prev.filter(f => f.id !== itemId));
+            }
+            setSelectedItems(prev => prev.filter(item => item.id !== itemId));
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при удалении');
+        }
+    };
+
+    const handleFilesDrop = async (files: File[]) => {
+        try {
+            const uploadedFiles = await storageApi.uploadMultipleFiles(
+                files,
+                currentFolderId ? parseInt(currentFolderId) : null,
+                viewType
+            );
+            setFiles(prev => [...prev, ...uploadedFiles]);
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при загрузке файлов');
+        }
+    };
+
     const handleRestoreItems = async (items: Array<StorageFolder | StorageFile>) => {
         try {
             const folderIds = items.filter(i => 'folder_type' in i).map(i => i.id);
@@ -268,14 +320,31 @@ const Storage: React.FC = () => {
         }
     };
 
+    const handleMoveItem = async (itemId: number, targetFolderId: number | null, isFolder: boolean) => {
+        try {
+            if (isFolder) {
+                await storageApi.moveMultipleFolders([itemId], targetFolderId);
+            } else {
+                await storageApi.moveMultipleFiles([itemId], targetFolderId);
+            }
+            await loadData();
+            setSelectedItems([]);
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при перемещении');
+        }
+    };
+
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
-        if (!query.trim()) { loadData(); return; }
+        if (!query.trim()) {
+            loadData();
+            return;
+        }
         if (activeView === 'explorer') {
             try {
                 const [searchFolders, searchFiles] = await Promise.all([
                     storageApi.searchFolders(query, { type: viewType }),
-                    storageApi.searchFiles(query, { type: viewType })
+                    storageApi.searchFiles(query, { type: viewType }),
                 ]);
                 setFolders(searchFolders);
                 setFiles(searchFiles);
@@ -287,8 +356,9 @@ const Storage: React.FC = () => {
         }
     };
 
-    const toggleViewMode = () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
-    const toggleViewModeRecent = () => setViewModeRecent(prev => prev === 'grid' ? 'list' : 'grid');
+    const toggleViewMode = () => setViewMode(prev => (prev === 'grid' ? 'list' : 'grid'));
+    const toggleViewModeRecent = () => setViewModeRecent(prev => (prev === 'grid' ? 'list' : 'grid'));
+
     const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'trash') => {
         setActiveView(view);
         setSelectedItems([]);
@@ -312,38 +382,80 @@ const Storage: React.FC = () => {
                 <div className="storage-header">
                     <div className="storage-header-left">
                         <div className="storage-search-box">
-                            <input type="text" placeholder="Поиск файлов и папок..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)} className="storage-search-input" />
-                            <button className="storage-search-button"><i className="fas fa-search"></i></button>
+                            <input
+                                type="text"
+                                placeholder="Поиск файлов и папок..."
+                                value={searchQuery}
+                                onChange={e => handleSearch(e.target.value)}
+                                className="storage-search-input"
+                            />
+                            <button className="storage-search-button">
+                                <i className="fas fa-search"></i>
+                            </button>
                         </div>
                         {files.length > 0 && (
                             <div className="storage-sort-controls">
-                                <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="storage-sort-select">
+                                <select
+                                    value={sortBy}
+                                    onChange={e => setSortBy(e.target.value as any)}
+                                    className="storage-sort-select"
+                                >
                                     <option value="date">По дате</option>
                                     <option value="name">По имени</option>
                                     <option value="size">По размеру</option>
                                 </select>
-                                <button onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')} className="storage-sort-order-button">{sortOrder === 'asc' ? '↑' : '↓'}</button>
+                                <button
+                                    onClick={() => setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))}
+                                    className="storage-sort-order-button"
+                                >
+                                    {sortOrder === 'asc' ? '↑' : '↓'}
+                                </button>
                             </div>
                         )}
                         {activeView === 'explorer' && files.length > 0 && (
-                            <button className="storage-view-toggle-button" onClick={toggleViewMode} title={viewMode === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}>
+                            <button
+                                className="storage-view-toggle-button"
+                                onClick={toggleViewMode}
+                                title={viewMode === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
+                            >
                                 {viewMode === 'grid' ? <List size={20} /> : <Grid size={20} />}
                             </button>
                         )}
                         {activeView === 'recent' && files.length > 0 && (
-                            <button className="storage-view-toggle-button" onClick={toggleViewModeRecent} title={viewModeRecent === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}>
+                            <button
+                                className="storage-view-toggle-button"
+                                onClick={toggleViewModeRecent}
+                                title={viewModeRecent === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
+                            >
                                 {viewModeRecent === 'grid' ? <List size={20} /> : <Grid size={20} />}
                             </button>
                         )}
                     </div>
                     <div className="storage-header-right">
                         {permissions.canUploadFiles && activeView === 'explorer' && (
-                            <button className="storage-upload-button-inline" onClick={() => setIsUploadModalOpen(true)}><i className="fas fa-cloud-upload-alt"></i> Загрузить файлы</button>
+                            <button
+                                className="storage-upload-button-inline"
+                                onClick={() => setIsUploadModalOpen(true)}
+                            >
+                                <i className="fas fa-cloud-upload-alt"></i> Загрузить файлы
+                            </button>
                         )}
                         {permissions.canCreateFolders && activeView === 'explorer' && (
-                            <button onClick={() => setIsCreateFolderModalOpen(true)} className="storage-create-folder-button"><i className="fas fa-folder-plus"></i> Новая папка</button>
+                            <button
+                                onClick={() => setIsCreateFolderModalOpen(true)}
+                                className="storage-create-folder-button"
+                            >
+                                <i className="fas fa-folder-plus"></i> Новая папка
+                            </button>
                         )}
-                        <button onClick={loadData} disabled={loading} className="storage-refresh-button" title="Обновить данные"><i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`}></i></button>
+                        <button
+                            onClick={loadData}
+                            disabled={loading}
+                            className="storage-refresh-button"
+                            title="Обновить данные"
+                        >
+                            <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`}></i>
+                        </button>
                     </div>
                 </div>
                 {activeView === 'explorer' && (
@@ -357,9 +469,18 @@ const Storage: React.FC = () => {
                 )}
                 <div className="storage-content-area">
                     {loading ? (
-                        <div className="storage-loading"><div className="storage-spinner"></div><p>Загрузка...</p></div>
+                        <div className="storage-loading">
+                            <div className="storage-spinner"></div>
+                            <p>Загрузка...</p>
+                        </div>
                     ) : error ? (
-                        <div className="storage-error"><i className="fas fa-exclamation-triangle"></i><p>{error}</p><button onClick={loadData} className="storage-retry-button">Повторить попытку</button></div>
+                        <div className="storage-error">
+                            <i className="fas fa-exclamation-triangle"></i>
+                            <p>{error}</p>
+                            <button onClick={loadData} className="storage-retry-button">
+                                Повторить попытку
+                            </button>
+                        </div>
                     ) : (
                         <>
                             {activeView === 'explorer' && (
@@ -368,37 +489,95 @@ const Storage: React.FC = () => {
                                     files={files}
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
-                                    onFileClick={(file) => console.log('File clicked:', file)}
+                                    onFileClick={file => console.log('File clicked:', file)}
                                     viewMode={viewMode}
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}
+                                    viewType={viewType}
                                     onUploadClick={() => setIsUploadModalOpen(true)}
                                     onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
                                     onDeleteSelected={handleDeleteSelected}
                                     onDownloadSelected={handleDownloadSelected}
+                                    onMoveItem={(itemId, targetId, isFolder) =>
+                                        handleMoveItem(itemId, targetId, isFolder)
+                                    }
+                                    onDeleteItem={handleDeleteSingleItem}
+                                    onFilesDrop={handleFilesDrop}
                                 />
                             )}
-                            {activeView === 'recent' && <RecentFilesView files={files} viewMode={viewModeRecent} sortBy={sortBy} sortOrder={sortOrder} onFileClick={(file) => console.log('File clicked:', file)} permissions={permissions} />}
-                            {activeView === 'favorites' && <FavoritesView folders={folders} files={files} onFolderClick={handleFolderClick} onFileClick={(file) => console.log('File clicked:', file)} permissions={permissions} />}
-                            {activeView === 'trash' && <TrashView folders={folders} files={files} onRestore={handleRestoreItems} onDelete={handleDeleteItems} onEmptyTrash={handleEmptyTrash} permissions={permissions} />}
+                            {activeView === 'recent' && (
+                                <RecentFilesView
+                                    files={files}
+                                    viewMode={viewModeRecent}
+                                    sortBy={sortBy}
+                                    sortOrder={sortOrder}
+                                    onFileClick={file => console.log('File clicked:', file)}
+                                    permissions={permissions}
+                                />
+                            )}
+                            {activeView === 'favorites' && (
+                                <FavoritesView
+                                    folders={folders}
+                                    files={files}
+                                    onFolderClick={handleFolderClick}
+                                    onFileClick={file => console.log('File clicked:', file)}
+                                    permissions={permissions}
+                                />
+                            )}
+                            {activeView === 'trash' && (
+                                <TrashView
+                                    folders={folders}
+                                    files={files}
+                                    onRestore={handleRestoreItems}
+                                    onDelete={handleDeleteItems}
+                                    onEmptyTrash={handleEmptyTrash}
+                                    permissions={{ ...permissions, user: currentUser }}
+                                />
+                            )}
                         </>
                     )}
                 </div>
                 <div className="storage-info">
                     <div className="storage-usage">
-                        <div className="storage-usage-bar"><div className="storage-usage-fill" style={{ width: `${permissions.usagePercentage}%` }}></div></div>
-                        <span className="storage-usage-text">Использовано: {formatBytes(permissions.usedStorage)} / {permissions.storageQuota ? formatBytes(permissions.storageQuota) : '∞'}</span>
+                        <div className="storage-usage-bar">
+                            <div
+                                className="storage-usage-fill"
+                                style={{ width: `${permissions.usagePercentage}%` }}
+                            ></div>
+                        </div>
+                        <span className="storage-usage-text">
+                            Использовано: {formatBytes(permissions.usedStorage)} /{' '}
+                            {permissions.storageQuota ? formatBytes(permissions.storageQuota) : '∞'}
+                        </span>
                     </div>
                 </div>
             </div>
             <StorageSidebar
-                currentView={activeView} onViewChange={handleViewChange}
-                viewType={viewType} onViewTypeChange={setViewType}
-                permissions={permissions} onEmptyTrash={handleEmptyTrash}
+                currentView={activeView}
+                onViewChange={handleViewChange}
+                viewType={viewType}
+                onViewTypeChange={setViewType}
+                permissions={permissions}
+                onEmptyTrash={handleEmptyTrash}
             />
-            {isCreateFolderModalOpen && <CreateFolderModal currentFolder={currentFolder} viewType={viewType} onCreate={handleCreateFolder} onClose={() => setIsCreateFolderModalOpen(false)} />}
-            {isUploadModalOpen && <UploadModal currentFolder={currentFolder} viewType={viewType} maxFileSize={permissions.maxFileSize} onUpload={handleUploadFiles} onClose={() => setIsUploadModalOpen(false)} />}
+            {isCreateFolderModalOpen && (
+                <CreateFolderModal
+                    currentFolder={currentFolder}
+                    viewType={viewType}
+                    onCreate={handleCreateFolder}
+                    onClose={() => setIsCreateFolderModalOpen(false)}
+                />
+            )}
+            {isUploadModalOpen && (
+                <UploadModal
+                    currentFolder={currentFolder}
+                    viewType={viewType}
+                    maxFileSize={permissions.maxFileSize}
+                    onUpload={handleUploadFiles}
+                    onClose={() => setIsUploadModalOpen(false)}
+                />
+            )}
         </div>
     );
 };

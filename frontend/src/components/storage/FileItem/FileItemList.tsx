@@ -1,7 +1,7 @@
 // components/storage/FileItem/FileItemList.tsx
 import React from 'react';
+import { Square, CheckSquare } from 'lucide-react';
 import FileIcon from './FileIcon';
-import FileMetaInfo from './FileMetaInfo';
 import FileActions from './FileActions';
 import { formatBytes } from './utils/fileUtils';
 import { formatDate } from './utils/dateUtils';
@@ -33,8 +33,13 @@ const FileItemList: React.FC<FileItemListProps> = ({
     fileRef,
     permissions,
     onDragStart,
-    onDragEnd
+    onDragEnd,
 }) => {
+    const handleCheckboxClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onSelect();
+    };
+
     return (
         <div
             ref={fileRef}
@@ -47,14 +52,18 @@ const FileItemList: React.FC<FileItemListProps> = ({
             onDragEnd={onDragEnd}
         >
             <div className="storage-file-list-select">
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={onSelect}
-                    className="storage-file-list-checkbox"
-                    onClick={(e) => e.stopPropagation()}
+                <button
+                    className="storage-file-checkbox-button"
+                    onClick={handleCheckboxClick}
                     title="Выбрать файл"
-                />
+                    type="button"
+                >
+                    {isSelected ? (
+                        <CheckSquare size={20} className="checked" />
+                    ) : (
+                        <Square size={20} />
+                    )}
+                </button>
             </div>
 
             <div className="storage-file-list-icon-wrapper" onClick={handleFileClick}>

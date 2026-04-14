@@ -1,14 +1,19 @@
 // components/storage/FileActionsMenu.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
-import { storageApi } from '../../api/storage';
+import { storageApi, StorageFile } from '../../api/storage';
+import ItemPropertiesModal from './ItemPropertiesModal';
+import MoveModal from './MoveModal';
 import './styles/FileActionsMenu.css';
 
 interface FileActionsMenuProps {
-    file: any;
+    file: StorageFile;
     position: { x: number; y: number };
     onClose: () => void;
     permissions: StoragePermissions;
+    viewType: 'personal' | 'work';
+    onMove: (fileId: number, targetFolderId: number | null) => Promise<void>;
+    onDelete?: (fileId: number) => void; // <-- новый проп
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -23,13 +28,18 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     file,
     position,
     onClose,
-    permissions
+    permissions,
+    viewType,
+    onMove,
+    onDelete,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(file.name);
     const [isSharing, setIsSharing] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isFavoriting, setIsFavoriting] = useState(false);
+    const [showProperties, setShowProperties] = useState(false);
+    const [showMoveModal, setShowMoveModal] = useState(false);
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>(INITIAL_MENU_STYLE);
     const [isPositioned, setIsPositioned] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -40,7 +50,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
                 onClose();
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
@@ -51,59 +60,36 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
                 onClose();
             }
         };
-
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
-    // Эффект для корректировки позиции меню
     useEffect(() => {
         if (!menuRef.current) return;
-
         const calculatePosition = () => {
             const rect = menuRef.current!.getBoundingClientRect();
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-
-            // Начальная позиция
             let adjustedX = position.x;
             let adjustedY = position.y;
-
-            // Проверка выхода за правую границу
-            if (adjustedX + rect.width > windowWidth) {
-                adjustedX = position.x - rect.width;
-            }
-
-            // Проверка выхода за нижнюю границу
-            if (adjustedY + rect.height > windowHeight) {
-                adjustedY = position.y - rect.height;
-            }
-
-            // Убедимся, что меню не выходит за левую и верхнюю границы
+            if (adjustedX + rect.width > windowWidth) adjustedX = position.x - rect.width;
+            if (adjustedY + rect.height > windowHeight) adjustedY = position.y - rect.height;
             adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
             adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
-
-            // Применяем позицию сразу без промежуточных состояний
             setMenuStyle({
                 position: 'fixed',
                 left: `${adjustedX}px`,
                 top: `${adjustedY}px`,
                 zIndex: 1001,
-                opacity: 1, // Сразу показываем
+                opacity: 1,
             });
-
             setIsPositioned(true);
         };
-
-        // Используем requestAnimationFrame для синхронизации с браузером
-        requestAnimationFrame(() => {
-            calculatePosition();
-        });
+        requestAnimationFrame(calculatePosition);
     }, [position]);
 
     const handleDownload = async () => {
         if (isDownloading) return;
-
         try {
             setIsDownloading(true);
             await storageApi.downloadFile(file.id);
@@ -137,7 +123,6 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
 
     const handleToggleFavorite = async () => {
         if (isFavoriting) return;
-
         try {
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ file_id: file.id });
@@ -160,18 +145,14 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
         }
     };
 
-    const handleMove = async () => {
-        onClose();
+    const handleMove = () => {
+        setShowMoveModal(true);
     };
 
     const handleDelete = async () => {
         if (window.confirm(`Удалить файл "${file.name}"?`)) {
-            try {
-                await storageApi.softDeleteFile(file.id);
-                onClose();
-            } catch (error) {
-                console.error('Error deleting file:', error);
-            }
+            onDelete?.(file.id);
+            onClose();
         }
     };
 
@@ -190,7 +171,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     };
 
     const handleGetInfo = () => {
-        onClose();
+        setShowProperties(true);
     };
 
     const renderMenuItem = (icon: string, text: string, onClick: () => void, disabled = false, danger = false) => (
@@ -205,136 +186,130 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     );
 
     return (
-        <div
-            ref={menuRef}
-            style={menuStyle}
-            className={`storage-file-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
-        >
-            <div className="storage-file-menu-header">
-                <div className="storage-file-menu-preview">
-                    <i className="fas fa-file"></i>
-                </div>
-                <div className="storage-file-menu-info">
-                    <h4 className="storage-file-menu-title" title={file.name}>
-                        {file.name}
-                    </h4>
-                    <div className="storage-file-menu-meta">
-                        <span className="storage-file-menu-size">
-                            {file.human_readable_size || formatBytes(file.size)}
-                        </span>
-                        <span className="storage-file-menu-date">
-                            {formatDate(file.created_at)}
-                        </span>
+        <>
+            <div
+                ref={menuRef}
+                style={menuStyle}
+                className={`storage-file-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
+            >
+                <div className="storage-file-menu-header">
+                    <div className="storage-file-menu-preview">
+                        <i className="fas fa-file"></i>
                     </div>
-                </div>
-            </div>
-
-            <div className="storage-file-menu-content">
-                {isRenaming ? (
-                    <div className="storage-file-rename-form">
-                        <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className="storage-file-rename-input"
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleRename();
-                                if (e.key === 'Escape') handleRenameCancel();
-                            }}
-                        />
-                        <div className="storage-file-rename-actions">
-                            <button
-                                className="storage-file-rename-cancel"
-                                onClick={handleRenameCancel}
-                            >
-                                Отмена
-                            </button>
-                            <button
-                                className="storage-file-rename-save"
-                                onClick={handleRename}
-                                disabled={!newName.trim() || newName === file.name}
-                            >
-                                Сохранить
-                            </button>
+                    <div className="storage-file-menu-info">
+                        <h4 className="storage-file-menu-title" title={file.name}>
+                            {file.name}
+                        </h4>
+                        <div className="storage-file-menu-meta">
+                            <span className="storage-file-menu-size">
+                                {file.human_readable_size || formatBytes(file.size)}
+                            </span>
+                            <span className="storage-file-menu-date">
+                                {formatDate(file.created_at)}
+                            </span>
                         </div>
                     </div>
-                ) : (
-                    <>
-                        {renderMenuItem(
-                            isDownloading ? 'fa-spinner fa-spin' : 'fa-download',
-                            isDownloading ? 'Скачивание...' : 'Скачать',
-                            handleDownload,
-                            isDownloading
-                        )}
+                </div>
 
-                        {permissions.canEditItem(file) && renderMenuItem(
-                            'fa-edit',
-                            'Переименовать',
-                            handleRename
-                        )}
+                <div className="storage-file-menu-content">
+                    {isRenaming ? (
+                        <div className="storage-file-rename-form">
+                            <input
+                                type="text"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                className="storage-file-rename-input"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleRename();
+                                    if (e.key === 'Escape') handleRenameCancel();
+                                }}
+                            />
+                            <div className="storage-file-rename-actions">
+                                <button className="storage-file-rename-cancel" onClick={handleRenameCancel}>
+                                    Отмена
+                                </button>
+                                <button
+                                    className="storage-file-rename-save"
+                                    onClick={handleRename}
+                                    disabled={!newName.trim() || newName === file.name}
+                                >
+                                    Сохранить
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {renderMenuItem(
+                                isDownloading ? 'fa-spinner fa-spin' : 'fa-download',
+                                isDownloading ? 'Скачивание...' : 'Скачать',
+                                handleDownload,
+                                isDownloading
+                            )}
 
-                        {renderMenuItem(
-                            isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
-                            isFavoriting ? 'Обработка...' :
-                                file.is_favorited ? 'Удалить из избранного' : 'Добавить в избранное',
-                            handleToggleFavorite,
-                            isFavoriting
-                        )}
+                            {permissions.canEditItem(file) &&
+                                renderMenuItem('fa-edit', 'Переименовать', handleRename)}
 
-                        {renderMenuItem(
-                            'fa-thumbtack',
-                            file.is_pinned ? 'Открепить' : 'Закрепить',
-                            handleTogglePin
-                        )}
+                            {renderMenuItem(
+                                isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
+                                isFavoriting
+                                    ? 'Обработка...'
+                                    : file.is_favorited
+                                        ? 'Удалить из избранного'
+                                        : 'Добавить в избранное',
+                                handleToggleFavorite,
+                                isFavoriting
+                            )}
 
-                        {permissions.canEditItem(file) && renderMenuItem(
-                            'fa-folder-open',
-                            'Переместить',
-                            handleMove
-                        )}
+                            {renderMenuItem(
+                                'fa-thumbtack',
+                                file.is_pinned ? 'Открепить' : 'Закрепить',
+                                handleTogglePin
+                            )}
 
-                        {permissions.canShareItem(file) && renderMenuItem(
-                            'fa-share-alt',
-                            'Поделиться',
-                            handleShare
-                        )}
+                            {permissions.canEditItem(file) &&
+                                renderMenuItem('fa-folder-open', 'Переместить', handleMove)}
 
-                        {renderMenuItem(
-                            'fa-link',
-                            'Копировать ссылку',
-                            handleCopyLink
-                        )}
+                            {permissions.canShareItem(file) &&
+                                renderMenuItem('fa-share-alt', 'Поделиться', handleShare)}
 
-                        <div className="storage-file-menu-divider"></div>
+                            {renderMenuItem('fa-link', 'Копировать ссылку', handleCopyLink)}
 
-                        {renderMenuItem(
-                            'fa-info-circle',
-                            'Свойства',
-                            handleGetInfo
-                        )}
+                            <div className="storage-file-menu-divider"></div>
 
-                        {permissions.canDeleteItem(file) && renderMenuItem(
-                            'fa-trash',
-                            'Удалить',
-                            handleDelete,
-                            false,
-                            true
-                        )}
-                    </>
-                )}
+                            {renderMenuItem('fa-info-circle', 'Свойства', handleGetInfo)}
+
+                            {permissions.canDeleteItem(file) &&
+                                renderMenuItem('fa-trash', 'Удалить', handleDelete, false, true)}
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
+
+            {showProperties && (
+                <ItemPropertiesModal item={file} onClose={() => setShowProperties(false)} />
+            )}
+
+            {showMoveModal && (
+                <MoveModal
+                    itemId={file.id}
+                    itemType="file"
+                    currentParentId={file.folder || null}
+                    viewType={viewType}
+                    permissions={permissions}
+                    onMove={(targetId) => onMove(file.id, targetId)}
+                    onClose={() => setShowMoveModal(false)}
+                />
+            )}
+        </>
     );
 };
 
 const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
-
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
@@ -343,7 +318,7 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('ru-RU', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
     });
 };
 

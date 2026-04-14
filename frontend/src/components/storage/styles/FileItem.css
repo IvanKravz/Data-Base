@@ -1,5 +1,4 @@
-/* components/storage/styles/FileItem.css - Professional Minimalist Design */
-
+/* components/storage/styles/FileItem.css */
 :root {
     --file-item-primary: #2c5282;
     --file-item-primary-light: #4299e1;
@@ -18,7 +17,6 @@
     --file-item-transition: all 0.15s ease;
 }
 
-/* Основной контейнер */
 .storage-file-item {
     position: relative;
     border-radius: var(--file-item-radius);
@@ -53,49 +51,36 @@
     position: relative;
 }
 
-/* Чекбокс выбора в grid режиме */
 .storage-file-select {
     position: absolute;
     top: 8px;
     left: 8px;
     z-index: 10;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.storage-file-item:hover .storage-file-select,
-.storage-file-item.selected .storage-file-select {
     opacity: 1;
 }
 
-.storage-file-checkbox {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--file-item-border);
+.storage-file-checkbox-button {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
     border-radius: 4px;
-    background: var(--file-item-bg);
+    padding: 2px;
     cursor: pointer;
-    transition: var(--file-item-transition);
-    position: relative;
-    appearance: none;
-    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.storage-file-checkbox:checked {
-    background: var(--file-item-primary);
-    border-color: var(--file-item-primary);
+.storage-file-checkbox-button:hover {
+    color: #2c5282;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.storage-file-checkbox:checked::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 5px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+.storage-file-checkbox-button .checked {
+    color: #2c5282;
 }
 
 /* ========== LIST MODE ========== */
@@ -125,49 +110,26 @@
     box-shadow: 0 0 0 1px rgba(66, 153, 225, 0.2);
 }
 
-/* Чекбокс выбора в режиме списка */
 .storage-file-list-select {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    opacity: 1;
-    visibility: visible;
 }
 
-.storage-file-list-checkbox {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #cbd5e1;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    position: relative;
-    appearance: none;
-    -webkit-appearance: none;
-    flex-shrink: 0;
+.storage-file-list-select .storage-file-checkbox-button {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
 }
 
-.storage-file-list-checkbox:checked {
-    background: var(--file-item-primary);
-    border-color: var(--file-item-primary);
+.storage-file-list-select .storage-file-checkbox-button:hover {
+    background: transparent;
+    box-shadow: none;
 }
 
-.storage-file-list-checkbox:checked::after {
-    content: '';
-    position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 6px;
-    height: 12px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-}
-
-/* Иконка в режиме списка */
+/* Иконка в списке */
 .storage-file-list-icon-wrapper {
     width: 44px;
     height: 44px;
@@ -179,7 +141,6 @@
     border: 1px solid var(--file-item-border);
 }
 
-/* Контент в режиме списка */
 .storage-file-list-content {
     min-width: 0;
     padding-right: 16px;
@@ -233,7 +194,6 @@
     background: #ecc94b;
 }
 
-/* Мета-информация в режиме списка */
 .storage-file-list-meta {
     display: flex;
     align-items: center;
@@ -268,7 +228,6 @@
     color: var(--file-item-text-light);
 }
 
-/* Статистика в режиме списка */
 .storage-file-list-stats {
     display: flex;
     flex-direction: column;
@@ -278,7 +237,6 @@
     padding-right: 16px;
 }
 
-.storage-file-list-downloads,
 .storage-file-list-modified {
     display: flex;
     align-items: center;
@@ -288,13 +246,6 @@
     white-space: nowrap;
 }
 
-.storage-file-list-downloads i,
-.storage-file-list-modified i {
-    font-size: 11px;
-    opacity: 0.7;
-}
-
-/* Кнопки действий в режиме списка */
 .storage-file-list-actions {
     opacity: 0;
     transition: var(--file-item-transition);
@@ -317,7 +268,6 @@
     position: relative;
 }
 
-/* Стили для изображений */
 .storage-file-image-preview {
     width: 100%;
     height: 100%;
@@ -326,7 +276,6 @@
     background: var(--file-item-surface);
 }
 
-/* Стили для иконок файлов */
 .storage-file-icon-default {
     display: flex;
     align-items: center;
@@ -355,7 +304,6 @@
     object-fit: cover;
 }
 
-/* Информация о файле в grid */
 .storage-file-info {
     width: 100%;
     text-align: center;
@@ -390,7 +338,7 @@
     margin-top: 2px;
 }
 
-/* Бейджи для закрепленных/избранных */
+/* Бейджи */
 .storage-file-pin-badge,
 .storage-file-favorite-badge {
     position: absolute;
@@ -416,7 +364,6 @@
     color: white;
 }
 
-/* Кнопка загрузки в grid */
 .storage-file-actions {
     position: absolute;
     top: 5px;
@@ -451,45 +398,17 @@
     color: white;
 }
 
-/* Индикаторы загрузки */
-.storage-file-icon-loading {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 6px;
-    z-index: 2;
-}
-
-.storage-file-icon-spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(66, 153, 225, 0.1);
-    border-top: 2px solid var(--file-item-primary);
-    border-radius: 50%;
-    animation: file-item-spin 0.8s linear infinite;
-}
-
 /* Анимации */
 @keyframes file-item-appear {
     from {
         opacity: 0;
         transform: translateY(5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-@keyframes file-item-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 
 /* Адаптивность */
@@ -498,7 +417,7 @@
         width: 130px;
         height: 150px;
     }
-    
+
     .storage-file-list-stats {
         min-width: 120px;
     }
@@ -509,7 +428,7 @@
         grid-template-columns: 48px 56px 1fr auto;
         gap: 12px;
     }
-    
+
     .storage-file-list-stats {
         display: none;
     }
@@ -521,37 +440,37 @@
         height: 140px;
         padding: 12px 6px;
     }
-    
+
     .storage-file-icon {
         width: 56px;
         height: 56px;
     }
-    
+
     .storage-file-icon-default,
     .storage-file-icon-fallback {
         width: 56px;
         height: 56px;
     }
-    
+
     .storage-file-name {
         font-size: 12px;
     }
-    
+
     .storage-file-list-item {
         grid-template-columns: 40px 48px 1fr auto;
         gap: 10px;
         padding: 10px 12px;
     }
-    
+
     .storage-file-list-icon-wrapper {
         width: 34px;
         height: 34px;
     }
-    
+
     .storage-file-list-name {
         font-size: 13px;
     }
-    
+
     .storage-file-list-meta {
         font-size: 12px;
     }
@@ -562,39 +481,39 @@
         width: 100px;
         height: 130px;
     }
-    
+
     .storage-file-icon {
         width: 48px;
         height: 48px;
         margin-bottom: 8px;
     }
-    
+
     .storage-file-icon-default,
     .storage-file-icon-fallback {
         width: 48px;
         height: 48px;
     }
-    
+
     .storage-file-name {
         font-size: 11px;
         -webkit-line-clamp: 2;
     }
-    
+
     .storage-file-list-item {
         grid-template-columns: 36px 40px 1fr auto;
         gap: 8px;
         padding: 8px 10px;
     }
-    
+
     .storage-file-list-icon-wrapper {
         width: 40px;
         height: 40px;
     }
-    
+
     .storage-file-list-name {
         font-size: 13px;
     }
-    
+
     .storage-file-list-meta {
         font-size: 11px;
         gap: 4px;

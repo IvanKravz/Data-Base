@@ -1,14 +1,19 @@
 // components/storage/FolderActionsMenu.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
-import { storageApi } from '../../api/storage';
+import { storageApi, StorageFolder } from '../../api/storage';
+import ItemPropertiesModal from './ItemPropertiesModal';
+import MoveModal from './MoveModal';
 import './styles/FolderActionsMenu.css';
 
 interface FolderActionsMenuProps {
-    folder: any;
+    folder: StorageFolder;
     position: { x: number; y: number };
     onClose: () => void;
     permissions: StoragePermissions;
+    viewType: 'personal' | 'work';
+    onMove: (folderId: number, targetParentId: number | null) => Promise<void>;
+    onDelete?: (folderId: number) => void; // <-- новый проп
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -23,12 +28,17 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     folder,
     position,
     onClose,
-    permissions
+    permissions,
+    viewType,
+    onMove,
+    onDelete,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(folder.name);
     const [isFavoriting, setIsFavoriting] = useState(false);
     const [colorPickerOpen, setColorPickerOpen] = useState(false);
+    const [showProperties, setShowProperties] = useState(false);
+    const [showMoveModal, setShowMoveModal] = useState(false);
     const [menuStyle, setMenuStyle] = useState<React.CSSProperties>(INITIAL_MENU_STYLE);
     const [isPositioned, setIsPositioned] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -44,7 +54,7 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         { value: '#795548', label: 'Коричневый' },
         { value: '#607D8B', label: 'Серый' },
         { value: '#E91E63', label: 'Розовый' },
-        { value: null, label: 'Сбросить цвет' }, // Опция для сброса цвета
+        { value: null, label: 'Сбросить цвет' },
     ];
 
     useEffect(() => {
@@ -53,7 +63,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                 onClose();
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
@@ -64,34 +73,22 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                 onClose();
             }
         };
-
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
-    // Эффект для корректировки позиции меню
     useEffect(() => {
         if (!menuRef.current) return;
-
         const calculatePosition = () => {
             const rect = menuRef.current!.getBoundingClientRect();
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
-
             let adjustedX = position.x;
             let adjustedY = position.y;
-
-            if (adjustedX + rect.width > windowWidth) {
-                adjustedX = position.x - rect.width;
-            }
-
-            if (adjustedY + rect.height > windowHeight) {
-                adjustedY = position.y - rect.height;
-            }
-
+            if (adjustedX + rect.width > windowWidth) adjustedX = position.x - rect.width;
+            if (adjustedY + rect.height > windowHeight) adjustedY = position.y - rect.height;
             adjustedX = Math.max(10, Math.min(adjustedX, windowWidth - rect.width - 10));
             adjustedY = Math.max(10, Math.min(adjustedY, windowHeight - rect.height - 10));
-
             setMenuStyle({
                 position: 'fixed',
                 left: `${adjustedX}px`,
@@ -99,13 +96,9 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                 zIndex: 1001,
                 opacity: 1,
             });
-
             setIsPositioned(true);
         };
-
-        requestAnimationFrame(() => {
-            calculatePosition();
-        });
+        requestAnimationFrame(calculatePosition);
     }, [position]);
 
     const handleRename = async () => {
@@ -130,7 +123,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
 
     const handleToggleFavorite = async () => {
         if (isFavoriting) return;
-
         try {
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ folder_id: folder.id });
@@ -154,7 +146,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
 
     const handleChangeColor = async (color: string | null) => {
         try {
-            // Если color === null, сбрасываем цвет
             await storageApi.updateFolder(folder.id, { color });
             folder.color = color;
             setColorPickerOpen(false);
@@ -164,18 +155,14 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         }
     };
 
-    const handleMove = async () => {
-        onClose();
+    const handleMove = () => {
+        setShowMoveModal(true);
     };
 
     const handleDelete = async () => {
         if (window.confirm(`Удалить папку "${folder.name}" и все её содержимое?`)) {
-            try {
-                await storageApi.softDeleteFolder(folder.id);
-                onClose();
-            } catch (error) {
-                console.error('Error deleting folder:', error);
-            }
+            onDelete?.(folder.id);
+            onClose();
         }
     };
 
@@ -184,17 +171,13 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleGetInfo = () => {
-        onClose();
+        setShowProperties(true);
     };
 
     const getFolderIcon = () => {
-        if (folder.folder_type === 'personal') {
-            return 'fas fa-user-circle';
-        }
-        return 'fas fa-folder';
+        return folder.folder_type === 'personal' ? 'fas fa-user-circle' : 'fas fa-folder';
     };
 
-    // Функция для определения контрастного цвета текста
     const getContrastColor = (hexColor: string) => {
         if (!hexColor) return '#ffffff';
         const hex = hexColor.replace('#', '');
@@ -219,158 +202,152 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     );
 
     return (
-        <div
-            ref={menuRef}
-            style={menuStyle}
-            className={`storage-folder-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
-        >
-            <div className="storage-folder-menu-header">
-                <div
-                    className="storage-folder-menu-preview"
-                    style={{
-                        background: folder.color || '#1976D2',
-                        color: folder.color ? getContrastColor(folder.color) : '#ffffff'
-                    }}
-                >
-                    <i className={getFolderIcon()}></i>
-                </div>
-                <div className="storage-folder-menu-info">
-                    <h4 className="storage-folder-menu-title" title={folder.name}>
-                        {folder.name}
-                    </h4>
-                    <div className="storage-folder-menu-meta">
-                        <span className="storage-folder-menu-files">
-                            {folder.files_count} файлов
-                        </span>
-                        <span className="storage-folder-menu-folders">
-                            {folder.subfolders_count} папок
-                        </span>
+        <>
+            <div
+                ref={menuRef}
+                style={menuStyle}
+                className={`storage-folder-actions-menu ${isPositioned ? 'storage-menu-visible' : ''}`}
+            >
+                <div className="storage-folder-menu-header">
+                    <div
+                        className="storage-folder-menu-preview"
+                        style={{
+                            background: folder.color || '#1976D2',
+                            color: folder.color ? getContrastColor(folder.color) : '#ffffff',
+                        }}
+                    >
+                        <i className={getFolderIcon()}></i>
                     </div>
-                </div>
-            </div>
-
-            <div className="storage-folder-menu-content">
-                {isRenaming ? (
-                    <div className="storage-folder-rename-form">
-                        <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className="storage-folder-rename-input"
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleRename();
-                                if (e.key === 'Escape') handleRenameCancel();
-                            }}
-                        />
-                        <div className="storage-folder-rename-actions">
-                            <button
-                                className="storage-folder-rename-cancel"
-                                onClick={handleRenameCancel}
-                            >
-                                Отмена
-                            </button>
-                            <button
-                                className="storage-folder-rename-save"
-                                onClick={handleRename}
-                                disabled={!newName.trim() || newName === folder.name}
-                            >
-                                Сохранить
-                            </button>
+                    <div className="storage-folder-menu-info">
+                        <h4 className="storage-folder-menu-title" title={folder.name}>
+                            {folder.name}
+                        </h4>
+                        <div className="storage-folder-menu-meta">
+                            <span className="storage-folder-menu-files">{folder.files_count} файлов</span>
+                            <span className="storage-folder-menu-folders">{folder.subfolders_count} папок</span>
                         </div>
                     </div>
-                ) : (
-                    <>
-                        {permissions.canEditItem(folder) && renderMenuItem(
-                            'fa-edit',
-                            'Переименовать',
-                            handleRename
-                        )}
+                </div>
 
-                        {renderMenuItem(
-                            isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
-                            isFavoriting ? 'Обработка...' : 'Добавить в избранное',
-                            handleToggleFavorite,
-                            isFavoriting
-                        )}
-
-                        {renderMenuItem(
-                            'fa-thumbtack',
-                            folder.is_pinned ? 'Открепить' : 'Закрепить',
-                            handleTogglePin
-                        )}
-
-                        {permissions.canEditItem(folder) && (
-                            <div className="storage-folder-color-picker-container">
-                                <button
-                                    className="storage-folder-menu-item"
-                                    onClick={() => setColorPickerOpen(!colorPickerOpen)}
-                                >
-                                    <div className="storage-folder-menu-item-content">
-                                        <i className="fas fa-palette"></i>
-                                        <span>Изменить цвет</span>
-                                        <i className={`fas fa-chevron-${colorPickerOpen ? 'up' : 'down'}`}></i>
-                                    </div>
+                <div className="storage-folder-menu-content">
+                    {isRenaming ? (
+                        <div className="storage-folder-rename-form">
+                            <input
+                                type="text"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                className="storage-folder-rename-input"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleRename();
+                                    if (e.key === 'Escape') handleRenameCancel();
+                                }}
+                            />
+                            <div className="storage-folder-rename-actions">
+                                <button className="storage-folder-rename-cancel" onClick={handleRenameCancel}>
+                                    Отмена
                                 </button>
-
-                                {colorPickerOpen && (
-                                    <div className="storage-folder-color-picker">
-                                        {colorOptions.map(color => (
-                                            <button
-                                                key={color.value || 'reset'}
-                                                className="storage-folder-color-option"
-                                                onClick={() => handleChangeColor(color.value)}
-                                                title={color.label}
-                                            >
-                                                <div
-                                                    className="storage-folder-color-preview"
-                                                    style={{
-                                                        backgroundColor: color.value || 'transparent',
-                                                        border: !color.value ? '2px dashed #ccc' : 'none'
-                                                    }}
-                                                >
-                                                    {!color.value && (
-                                                        <i className="fas fa-times" style={{ color: '#666', fontSize: '12px' }}></i>
-                                                    )}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                                <button
+                                    className="storage-folder-rename-save"
+                                    onClick={handleRename}
+                                    disabled={!newName.trim() || newName === folder.name}
+                                >
+                                    Сохранить
+                                </button>
                             </div>
-                        )}
+                        </div>
+                    ) : (
+                        <>
+                            {permissions.canEditItem(folder) &&
+                                renderMenuItem('fa-edit', 'Переименовать', handleRename)}
 
-                        {permissions.canEditItem(folder) && renderMenuItem(
-                            'fa-folder-open',
-                            'Переместить',
-                            handleMove
-                        )}
+                            {renderMenuItem(
+                                isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
+                                isFavoriting ? 'Обработка...' : 'Добавить в избранное',
+                                handleToggleFavorite,
+                                isFavoriting
+                            )}
 
-                        {renderMenuItem(
-                            'fa-download',
-                            'Скачать папку',
-                            handleDownload
-                        )}
+                            {renderMenuItem(
+                                'fa-thumbtack',
+                                folder.is_pinned ? 'Открепить' : 'Закрепить',
+                                handleTogglePin
+                            )}
 
-                        <div className="storage-folder-menu-divider"></div>
+                            {permissions.canEditItem(folder) && (
+                                <div className="storage-folder-color-picker-container">
+                                    <button
+                                        className="storage-folder-menu-item"
+                                        onClick={() => setColorPickerOpen(!colorPickerOpen)}
+                                    >
+                                        <div className="storage-folder-menu-item-content">
+                                            <i className="fas fa-palette"></i>
+                                            <span>Изменить цвет</span>
+                                            <i className={`fas fa-chevron-${colorPickerOpen ? 'up' : 'down'}`}></i>
+                                        </div>
+                                    </button>
+                                    {colorPickerOpen && (
+                                        <div className="storage-folder-color-picker">
+                                            {colorOptions.map((color) => (
+                                                <button
+                                                    key={color.value || 'reset'}
+                                                    className="storage-folder-color-option"
+                                                    onClick={() => handleChangeColor(color.value)}
+                                                    title={color.label}
+                                                >
+                                                    <div
+                                                        className="storage-folder-color-preview"
+                                                        style={{
+                                                            backgroundColor: color.value || 'transparent',
+                                                            border: !color.value ? '2px dashed #ccc' : 'none',
+                                                        }}
+                                                    >
+                                                        {!color.value && (
+                                                            <i
+                                                                className="fas fa-times"
+                                                                style={{ color: '#666', fontSize: '12px' }}
+                                                            ></i>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
-                        {renderMenuItem(
-                            'fa-info-circle',
-                            'Свойства',
-                            handleGetInfo
-                        )}
+                            {permissions.canEditItem(folder) &&
+                                renderMenuItem('fa-folder-open', 'Переместить', handleMove)}
 
-                        {permissions.canDeleteItem(folder) && renderMenuItem(
-                            'fa-trash',
-                            'Удалить',
-                            handleDelete,
-                            false,
-                            true
-                        )}
-                    </>
-                )}
+                            {renderMenuItem('fa-download', 'Скачать папку', handleDownload)}
+
+                            <div className="storage-folder-menu-divider"></div>
+
+                            {renderMenuItem('fa-info-circle', 'Свойства', handleGetInfo)}
+
+                            {permissions.canDeleteItem(folder) &&
+                                renderMenuItem('fa-trash', 'Удалить', handleDelete, false, true)}
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
+
+            {showProperties && (
+                <ItemPropertiesModal item={folder} onClose={() => setShowProperties(false)} />
+            )}
+
+            {showMoveModal && (
+                <MoveModal
+                    itemId={folder.id}
+                    itemType="folder"
+                    currentParentId={folder.parent}
+                    viewType={viewType}
+                    permissions={permissions}
+                    onMove={(targetId) => onMove(folder.id, targetId)}
+                    onClose={() => setShowMoveModal(false)}
+                />
+            )}
+        </>
     );
 };
 
