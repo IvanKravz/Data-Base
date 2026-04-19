@@ -221,8 +221,9 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         if self.action in ['retrieve', 'path', 'contents', 'check_access', 'pin', 'move',
-                        'rename', 'soft_delete', 'restore', 'update', 'partial_update']:
-            queryset = StorageFolder.objects.all()
+                        'rename', 'soft_delete', 'restore', 'update', 'partial_update',
+                        'hard_delete']:
+            queryset = StorageFolder.objects.all_objects() 
         else:
             queryset = self.filter_queryset(self.get_queryset())
 
@@ -235,6 +236,14 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
         obj = get_object_or_404(queryset, **filter_kwargs)
         self.check_object_permissions(self.request, obj)
         return obj
+    
+    @action(detail=True, methods=['delete'], url_path='hard-delete')
+    def hard_delete(self, request, pk=None):
+        folder = self.get_object()
+        folder_id = folder.id
+        folder_name = folder.name
+        folder.hard_delete()
+        return Response({'status': 'permanently_deleted', 'id': folder_id, 'name': folder_name})
 
     @action(detail=True, methods=['get'])
     def check_access(self, request, pk=None):
@@ -602,7 +611,7 @@ class StorageFileViewSet(viewsets.ModelViewSet):
     def get_object(self):
         if self.action in ['retrieve', 'download', 'pin', 'move', 'rename', 'soft_delete',
                         'restore', 'hard_delete', 'update', 'partial_update']:
-            queryset = StorageFile.objects.all()
+            queryset = StorageFile.objects.all_objects()   # ИСПРАВЛЕНО
         else:
             queryset = self.filter_queryset(self.get_queryset())
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -711,19 +720,12 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         )
         return Response({'id': file.id, 'status': 'restored'})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['delete'], url_path='hard-delete')
     def hard_delete(self, request, pk=None):
         file = self.get_object()
         file_id = file.id
         file_name = file.name
-        file_data = self.get_serializer(file).data
         file.hard_delete()
-        log_storage_delete(
-            user=request.user,
-            instance=file,
-            request=request,
-            details={'deleted_data': file_data}
-        )
         return Response({'status': 'permanently_deleted', 'id': file_id, 'name': file_name})
 
     @action(detail=False, methods=['post'])

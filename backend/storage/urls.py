@@ -14,10 +14,6 @@ router.register(r'favorites', FavoriteViewSet, basename='favorite')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('share/download/<str:token>/', 
-         FileShareLinkViewSet.as_view({'get': 'download_shared'}), 
-         name='download-shared'),
-    
-    # Добавляем endpoint для информации о хранилище
+    path('share/download/<str:token>/', FileShareLinkViewSet.as_view({'get': 'download_shared'}), name='download-shared'),
     path('user-storage-info/', get_user_storage_info, name='user-storage-info'),
 ]

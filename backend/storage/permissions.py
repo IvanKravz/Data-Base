@@ -28,39 +28,50 @@ class StoragePermission(RoleBasedPermission):
     
     def has_object_permission(self, request, view, obj):
         user = request.user
-        
-        # Суперпользователи и администраторы имеют все права к объектам
+
+        # Суперпользователи и администраторы имеют полный доступ
         if user.is_superuser or self._user_has_role(user, 'admin'):
             return True
-            
-        # Получаем модель и действие
+
+        # ---- ДОБАВЛЕНА ПРОВЕРКА ДЛЯ УДАЛЁННЫХ ОБЪЕКТОВ ----
+        if hasattr(obj, 'is_deleted') and obj.is_deleted:
+            # Разрешаем доступ только тем, кто может управлять корзиной:
+            #   - создатель объекта
+            #   - пользователь, который удалил объект
+            #   - пользователь с правом CanEmptyTrash (например, руководитель)
+            if hasattr(obj, 'created_by') and obj.created_by == user:
+                return True
+            if hasattr(obj, 'deleted_by') and obj.deleted_by == user:
+                return True
+            if hasattr(obj, 'uploaded_by') and obj.uploaded_by == user:
+                return True
+            # Дополнительно можно разрешить тем, кто имеет право очищать корзину
+            from storage.permissions import CanEmptyTrash
+            if CanEmptyTrash().has_permission(request, view):
+                return True
+            return False
+        # ---- КОНЕЦ ДОБАВЛЕННОЙ ПРОВЕРКИ ----
+
+        # Далее стандартная логика для активных объектов
         model_name = obj.__class__.__name__
         action = self._get_action(view)
-        
-        # Проверяем базовые права
+
         has_perm = self._check_permission(user, model_name, action)
         if not has_perm:
             return False
-        
-        # Проверяем доступ на основе типа (личное/рабочее)
+
         if hasattr(obj, 'folder_type'):
-            # Папка
             if obj.folder_type == 'personal':
-                # Личные папки - только владелец
                 return obj.created_by == user
             elif obj.folder_type == 'work':
-                # Рабочие папки - упрощенная проверка
                 return self._check_work_object_access(user, obj)
-                
+
         elif hasattr(obj, 'file_type'):
-            # Файл
             if obj.file_type == 'personal':
-                # Личные файлы - только владелец
                 return obj.uploaded_by == user
             elif obj.file_type == 'work':
-                # Рабочие файлы - упрощенная проверка
                 return self._check_work_object_access(user, obj)
-        
+
         return False
     
     def _check_work_object_access(self, user, obj):

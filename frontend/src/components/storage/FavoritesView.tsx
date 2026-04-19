@@ -12,6 +12,7 @@ interface FavoritesViewProps {
     onFolderClick: (folder: any) => void;
     onFileClick: (file: any) => void;
     permissions: StoragePermissions;
+    onRefreshFavorites?: () => void;
 }
 
 const FavoritesView: React.FC<FavoritesViewProps> = ({
@@ -19,14 +20,18 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
     files,
     onFolderClick,
     onFileClick,
-    permissions
+    permissions,
+    onRefreshFavorites,
 }) => {
     const [selectedItems, setSelectedItems] = useState<any[]>([]);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [groupBy, setGroupBy] = useState<'type' | 'date'>('type');
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    console.log('folders', folders)
+    console.log('files', files)
 
     useEffect(() => {
         setSelectedItems([]);
@@ -290,6 +295,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
                                                     onClick={() => onFolderClick(item)}
                                                     onDragStart={() => { }}
                                                     permissions={permissions}
+                                                    onRefreshFavorites={onRefreshFavorites}
                                                 />
                                             );
                                         } else {
@@ -303,6 +309,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
                                                     onClick={() => onFileClick(item)}
                                                     onDragStart={() => { }}
                                                     permissions={permissions}
+                                                    onRefreshFavorites={onRefreshFavorites}
                                                 />
                                             );
                                         }
@@ -322,6 +329,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
                                                     onClick={() => onFolderClick(item)}
                                                     onDragStart={() => { }}
                                                     permissions={permissions}
+                                                    onRefreshFavorites={onRefreshFavorites}  
                                                 />
                                             );
                                         } else {
@@ -335,6 +343,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
                                                     onClick={() => onFileClick(item)}
                                                     onDragStart={() => { }}
                                                     permissions={permissions}
+                                                    onRefreshFavorites={onRefreshFavorites}
                                                 />
                                             );
                                         }

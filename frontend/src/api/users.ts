@@ -76,3 +76,18 @@ export const usersApi = {
     disable2FA: (userId: number) =>
         api.post(`/users/users/${userId}/disable_2fa/`),
 };
+
+export const backupApi = {
+    downloadBackup: () =>
+        api.get('/backup/download/', {
+            responseType: 'blob',
+        }),
+    restoreBackup: (file: File, flushFirst: boolean = false) => {
+        const formData = new FormData();
+        formData.append('backup_file', file);
+        formData.append('flush_first', String(flushFirst));
+        return api.post('/backup/restore/', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+};

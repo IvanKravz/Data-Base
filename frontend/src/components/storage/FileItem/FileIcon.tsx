@@ -22,23 +22,21 @@ const FileIcon: React.FC<FileIconProps> = ({
     const { imageUrl, imageLoading, imageError } = useFileImage(file);
     const isImage = isImageFile(file);
 
-
     const renderIconContent = () => {
-        // Если это изображение и есть URL для превью без ошибок
         if (isImage && imageUrl && !imageError) {
             return (
                 <>
                     <img
                         src={imageUrl}
                         alt={file.name}
-                        className={`${viewMode === 'grid' ? 'storage-file-image-preview' : 'storage-file-thumbnail'}`}
+                        className={viewMode === 'grid' ? 'storage-file-image-preview' : 'storage-file-thumbnail'}
                         style={{
                             opacity: imageLoading ? 0 : 1,
                             transition: 'opacity 0.3s ease'
                         }}
                         loading="lazy"
                         onError={(e) => {
-                        console.error('Image failed to load in img tag:', e);
+                            console.error('Image failed to load in img tag:', e);
                         }}
                     />
                     {imageLoading && (
@@ -50,7 +48,6 @@ const FileIcon: React.FC<FileIconProps> = ({
             );
         }
 
-        // Fallback для изображений (когда нет URL или есть ошибка)
         if (isImage) {
             return (
                 <div className="storage-file-icon-fallback">
@@ -64,7 +61,6 @@ const FileIcon: React.FC<FileIconProps> = ({
             );
         }
 
-        // Для обычных файлов
         return (
             <div 
                 className="storage-file-icon-default"
@@ -81,15 +77,19 @@ const FileIcon: React.FC<FileIconProps> = ({
         <div className={iconClassName} onClick={onClick}>
             {renderIconContent()}
 
-            {showBadges && file.is_pinned && (
-                <span className="storage-file-pin-badge">
-                    <FaThumbtack size={10} />
-                </span>
-            )}
-            {showBadges && file.is_favorite && (
-                <span className="storage-file-favorite-badge">
-                    <FaStar size={10} />
-                </span>
+            {showBadges && (
+                <div className="storage-file-badges-container">
+                    {file.is_pinned && (
+                        <span className="storage-file-pin-badge" title="Закреплено">
+                            <FaThumbtack size={10} />
+                        </span>
+                    )}
+                    {file.is_favorited && (
+                        <span className="storage-file-favorite-badge" title="В избранном">
+                            <FaStar size={10} />
+                        </span>
+                    )}
+                </div>
             )}
         </div>
     );

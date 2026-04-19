@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { User, X, Clock, Database } from 'lucide-react';
 import { ProfileTab } from './ProfileTab/ProfileTab';
 import { ActivityTab } from './ActivityTab';
-import { AdminLogsCleanup } from './AdminLogsCleanup';
+import { AdminPanel } from '../UserManagementPage/components/AdminPanel';
 import '../styles/CabinetModal.css';
 
 interface CabinetModalProps {
@@ -61,25 +61,20 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
                             onClick={() => setActiveTab('admin')}
                         >
                             <Database className="w-4 h-4" />
-                            <span>Очистка логов</span>
+                            <span>Администрирование</span>
                         </button>
                     )}
                 </div>
 
                 <div className="cabinet-content">
-                    {activeTab === 'profile' ? (
-                        <ProfileTab userData={userData} />
-                    ) : activeTab === 'activity' ? (
-                        <ActivityTab />
-                    ) : (
-                        <AdminLogsCleanup />
-                    )}
+                    {activeTab === 'profile' && <ProfileTab userData={userData} />}
+                    {activeTab === 'activity' && <ActivityTab />}
+                    {activeTab === 'admin' && <AdminPanel />}
                 </div>
             </div>
         </div>
     );
 
-    // Получаем контейнер для портала, если он есть, иначе body
     const modalRoot = document.getElementById('modal-root') || document.body;
     return createPortal(modalContent, modalRoot);
 }

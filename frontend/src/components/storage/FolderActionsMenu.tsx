@@ -13,7 +13,8 @@ interface FolderActionsMenuProps {
     permissions: StoragePermissions;
     viewType: 'personal' | 'work';
     onMove: (folderId: number, targetParentId: number | null) => Promise<void>;
-    onDelete?: (folderId: number) => void; // <-- новый проп
+    onDelete?: (folderId: number) => void;
+    onRefreshFavorites?: () => void;
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -32,6 +33,7 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     viewType,
     onMove,
     onDelete,
+    onRefreshFavorites,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(folder.name);
@@ -126,6 +128,9 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         try {
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ folder_id: folder.id });
+            // Обновляем локальное состояние (если нужно)
+            folder.is_favorited = !folder.is_favorited; // если добавить поле в модель, но пока просто обновим список
+            onRefreshFavorites?.();
             onClose();
         } catch (error) {
             console.error('Error toggling favorite:', error);
@@ -262,8 +267,10 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                                 renderMenuItem('fa-edit', 'Переименовать', handleRename)}
 
                             {renderMenuItem(
-                                isFavoriting ? 'fa-spinner fa-spin' : 'fa-star',
-                                isFavoriting ? 'Обработка...' : 'Добавить в избранное',
+                                isFavoriting ? 'fa-spinner fa-spin' : (folder.is_favorited ? 'fa-star' : 'fa-star'),
+                                isFavoriting
+                                    ? 'Обработка...'
+                                    : (folder.is_favorited ? 'Удалить из избранного' : 'Добавить в избранное'),
                                 handleToggleFavorite,
                                 isFavoriting
                             )}

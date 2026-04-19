@@ -1,5 +1,5 @@
 // components/storage/Storage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FileExplorer from './FileExplorer';
 import StorageSidebar from './StorageSidebar';
@@ -15,6 +15,7 @@ import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
 import { Grid, List } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
+import { authApi } from '../../api/auth'; // <-- добавить импорт
 
 const Storage: React.FC = () => {
     const { folderId, subfolderId } = useParams<{ folderId?: string; subfolderId?: string }>();
@@ -38,6 +39,19 @@ const Storage: React.FC = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [viewModeRecent, setViewModeRecent] = useState<'grid' | 'list'>('list');
     const currentUser = useSelector((state: RootState) => state.auth.user);
+
+    // Получаем userId из localStorage синхронно (для корзины)
+    const [localUserId, setLocalUserId] = useState<number | null>(() => {
+        const user = authApi.getCurrentUser();
+        return user?.id ? Number(user.id) : null;
+    });
+
+    // Обновляем localUserId, когда Redux загрузит пользователя
+    useEffect(() => {
+        if (currentUser?.id && currentUser.id !== localUserId) {
+            setLocalUserId(currentUser.id);
+        }
+    }, [currentUser, localUserId]);
 
     const permissions = useStoragePermissions();
 
@@ -64,6 +78,12 @@ const Storage: React.FC = () => {
         if (currentFolderId) loadCurrentFolder();
         else setCurrentFolder(null);
     }, [currentFolderId]);
+
+    useEffect(() => {
+        if (activeView === 'trash' && currentUser) {
+            loadData();
+        }
+    }, [currentUser, activeView]);
 
     const loadCurrentFolder = async () => {
         if (!currentFolderId) {
@@ -281,6 +301,26 @@ const Storage: React.FC = () => {
         }
     };
 
+    const handleHardDeleteItems = async (items: Array<StorageFolder | StorageFile>) => {
+        // Убираем confirm, так как он уже есть в TrashView
+        try {
+            const folderIds = items.filter(i => 'folder_type' in i).map(i => i.id);
+            const fileIds = items.filter(i => 'file_type' in i).map(i => i.id);
+            if (folderIds.length) await Promise.all(folderIds.map(id => storageApi.hardDeleteFolder(id)));
+            if (fileIds.length) await Promise.all(fileIds.map(id => storageApi.hardDeleteFile(id)));
+            await loadData();
+            setSelectedItems([]);
+        } catch (err: any) {
+            if (err.response?.status === 404) {
+                console.warn('Некоторые элементы уже отсутствуют в БД, обновляем список');
+                await loadData();
+                setSelectedItems([]);
+            } else {
+                setError(err.message || 'Ошибка при удалении элементов');
+            }
+        }
+    };
+
     const handleFilesDrop = async (files: File[]) => {
         try {
             const uploadedFiles = await storageApi.uploadMultipleFiles(
@@ -360,9 +400,26 @@ const Storage: React.FC = () => {
     const toggleViewModeRecent = () => setViewModeRecent(prev => (prev === 'grid' ? 'list' : 'grid'));
 
     const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'trash') => {
+        // Если кликнули на уже активную вкладку — просто обновляем содержимое
+        if (view === activeView) {
+            loadData();  // перезагрузить текущий вид
+            return;
+        }
+
+        // Иначе переключаем вкладку
         setActiveView(view);
         setSelectedItems([]);
         if (searchQuery) setSearchQuery('');
+        // Сбрасываем данные предыдущей вкладки и показываем загрузку
+        setFolders([]);
+        setFiles([]);
+        setLoading(true);
+    };
+
+    const refreshFavorites = () => {
+        if (activeView === 'favorites') {
+            loadData();
+        }
     };
 
     if (!permissions.canViewStorage) {
@@ -504,6 +561,7 @@ const Storage: React.FC = () => {
                                     }
                                     onDeleteItem={handleDeleteSingleItem}
                                     onFilesDrop={handleFilesDrop}
+                                    onRefreshFavorites={refreshFavorites}
                                 />
                             )}
                             {activeView === 'recent' && (
@@ -523,6 +581,7 @@ const Storage: React.FC = () => {
                                     onFolderClick={handleFolderClick}
                                     onFileClick={file => console.log('File clicked:', file)}
                                     permissions={permissions}
+                                    onRefreshFavorites={refreshFavorites}
                                 />
                             )}
                             {activeView === 'trash' && (
@@ -530,9 +589,11 @@ const Storage: React.FC = () => {
                                     folders={folders}
                                     files={files}
                                     onRestore={handleRestoreItems}
-                                    onDelete={handleDeleteItems}
+                                    onDelete={handleHardDeleteItems}
                                     onEmptyTrash={handleEmptyTrash}
-                                    permissions={{ ...permissions, user: currentUser }}
+                                    permissions={permissions}
+                                    isLoading={loading}
+                                    userId={localUserId ?? currentUser?.id}
                                 />
                             )}
                         </>

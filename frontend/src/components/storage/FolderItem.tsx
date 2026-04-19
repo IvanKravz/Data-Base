@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { FaThumbtack } from 'react-icons/fa';
 import { HiFolder, HiFolderOpen, HiOutlineDatabase } from 'react-icons/hi';
 import { MdFolderShared, MdFolderSpecial } from 'react-icons/md';
-import { Square, CheckSquare } from 'lucide-react';
+import { Square, CheckSquare, Star } from 'lucide-react';
 import FolderActionsMenu from './FolderActionsMenu';
 import './styles/FolderItem.css';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
@@ -21,6 +21,7 @@ interface FolderItemProps {
     viewType: 'personal' | 'work';
     onMoveItem: (itemId: number, targetFolderId: number | null, isFolder: boolean) => Promise<void>;
     onDeleteItem?: (folderId: number) => void;
+    onRefreshFavorites?: () => void;
 }
 
 const FolderItem: React.FC<FolderItemProps> = ({
@@ -35,6 +36,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
     viewType,
     onMoveItem,
     onDeleteItem,
+    onRefreshFavorites,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -172,6 +174,11 @@ const FolderItem: React.FC<FolderItemProps> = ({
                                 <FaThumbtack size={12} />
                             </div>
                         )}
+                        {folder.is_favorited && (
+                            <div className="storage-folder-favorite-indicator" title="В избранном">
+                                <Star size={12} />
+                            </div>
+                        )}
                     </div>
 
                     <div className="storage-folder-icon-container" onClick={onClick}>
@@ -203,6 +210,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                             setShowActionsMenu(false);
                         }}
                         onDelete={onDeleteItem}
+                        onRefreshFavorites={onRefreshFavorites}
                     />
                 )}
             </>
@@ -247,7 +255,12 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         </h4>
                         {folder.is_pinned && (
                             <span className="storage-folder-row-pin">
-                                <FaThumbtack size={12} />
+                                <FaThumbtack size={14} />
+                            </span>
+                        )}
+                        {folder.is_favorited && (
+                            <span className="storage-folder-row-favorite" title="В избранном">
+                                <Star size={16} />
                             </span>
                         )}
                     </div>
@@ -290,6 +303,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         setShowActionsMenu(false);
                     }}
                     onDelete={onDeleteItem}
+                    onRefreshFavorites={onRefreshFavorites}
                 />
             )}
         </>

@@ -182,16 +182,18 @@
     width: 20px;
     height: 20px;
     border-radius: 4px;
-    font-size: 10px;
-    color: white;
+    /* background: #ed8936; */
+    
 }
 
 .storage-file-list-pin-badge {
-    background: #ed8936;
+    color: #ed8936;
+    /* background: #ed8936; */
 }
 
 .storage-file-list-favorite-badge {
-    background: #ecc94b;
+    /* background: #ecc94b; */
+    color: #ecc94b;
 }
 
 .storage-file-list-meta {
@@ -258,14 +260,21 @@
 
 /* Иконка файла в grid */
 .storage-file-icon {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    margin-bottom: 12px;
-    position: relative;
+    width: 100%;
+}
+
+.storage-file-badges-container {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
 }
 
 .storage-file-image-preview {
@@ -341,27 +350,23 @@
 /* Бейджи */
 .storage-file-pin-badge,
 .storage-file-favorite-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    color: white;
 }
 
 .storage-file-pin-badge {
     background: #ed8936;
-    color: white;
 }
 
 .storage-file-favorite-badge {
     background: #ecc94b;
-    color: white;
 }
 
 .storage-file-actions {

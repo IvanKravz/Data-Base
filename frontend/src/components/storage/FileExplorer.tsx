@@ -24,6 +24,7 @@ interface FileExplorerProps {
     onDeleteSelected?: () => void;
     onDownloadSelected?: () => void;
     onFilesDrop?: (files: File[]) => Promise<void>;
+    onRefreshFavorites?: () => void;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -43,7 +44,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     onCreateFolderClick,
     onDeleteSelected,
     onDownloadSelected,
-    onFilesDrop
+    onFilesDrop,
+    onRefreshFavorites,
 }) => {
     const [dragOver, setDragOver] = useState(false);
     const [draggedItem, setDraggedItem] = useState<any>(null);
@@ -210,6 +212,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 viewType={viewType}
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
+                                onRefreshFavorites={onRefreshFavorites}
                             />
                         ))}
                     </div>
@@ -238,6 +241,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 viewType={viewType}
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
+                                onRefreshFavorites={onRefreshFavorites}
                             />
                         ))}
                     </div>
@@ -266,6 +270,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 viewType={viewType}
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
+                                onRefreshFavorites={onRefreshFavorites}
                             />
                         ))}
                     </div>
@@ -294,6 +299,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 viewType={viewType}
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
+                                onRefreshFavorites={onRefreshFavorites}
                             />
                         ))}
                     </div>

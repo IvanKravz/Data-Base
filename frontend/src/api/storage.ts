@@ -76,7 +76,7 @@ export interface UploadProgress {
 export const storageApi = {
   // === Папки ===
   getFolders: async (params?: {
-    parent_id?: number | string | null;  
+    parent_id?: number | string | null;
     type?: 'personal' | 'work';
     division_id?: number;
     subdivision_id?: number;
@@ -124,7 +124,7 @@ export const storageApi = {
   },
 
   hardDeleteFolder: async (folderId: number) => {
-    await api.delete(`/storage/folders/${folderId}/hard_delete/`);
+    await api.delete(`/storage/folders/${folderId}/hard-delete/`);
   },
 
   getFolderContents: async (folderId: number) => {
@@ -206,7 +206,7 @@ export const storageApi = {
   },
 
   hardDeleteFile: async (fileId: number) => {
-    await api.post(`/storage/files/${fileId}/hard_delete/`);
+    await api.delete(`/storage/files/${fileId}/hard-delete/`);
   },
 
   downloadFile: async (fileId: number) => {
@@ -259,7 +259,8 @@ export const storageApi = {
 
   // === Избранное ===
   getFavorites: async () => {
-    const { data } = await api.get('/storage/favorites/');
+    // Вместо стандартного списка избранного используем специальный эндпоинт 'all'
+    const { data } = await api.get('/storage/favorites/all/');
     return data;
   },
 

@@ -13,7 +13,8 @@ interface FileActionsMenuProps {
     permissions: StoragePermissions;
     viewType: 'personal' | 'work';
     onMove: (fileId: number, targetFolderId: number | null) => Promise<void>;
-    onDelete?: (fileId: number) => void; // <-- новый проп
+    onDelete?: (fileId: number) => void;
+    onRefreshFavorites?: () => void;
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -32,6 +33,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     viewType,
     onMove,
     onDelete,
+    onRefreshFavorites,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(file.name);
@@ -127,6 +129,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ file_id: file.id });
             file.is_favorited = !file.is_favorited;
+            onRefreshFavorites?.(); // 👈 обновляем избранное
             onClose();
         } catch (error) {
             console.error('Error toggling favorite:', error);

@@ -21,6 +21,7 @@ interface FileItemProps {
     onDeleteItem?: (fileId: number) => void;
     onDragStart?: (e: React.DragEvent, item: StorageFile) => void;
     onDragEnd?: (e: React.DragEvent) => void;
+    onRefreshFavorites?: () => void;
 }
 
 const FileItem: React.FC<FileItemProps> = ({
@@ -35,7 +36,8 @@ const FileItem: React.FC<FileItemProps> = ({
     onMoveItem,
     onDeleteItem,
     onDragStart,
-    onDragEnd
+    onDragEnd,
+    onRefreshFavorites,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -125,6 +127,7 @@ const FileItem: React.FC<FileItemProps> = ({
                         closeContextMenu();
                     }}
                     onDelete={onDeleteItem}
+                    onRefreshFavorites={onRefreshFavorites}
                 />
             )}
         </>

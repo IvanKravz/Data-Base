@@ -5,7 +5,6 @@ from django.conf import settings
 from users.models import User, Division, Subdivision
 
 class SoftDeleteManager(models.Manager):
-    """Менеджер для работы с мягким удалением"""
     def get_queryset(self):
         return super().get_queryset().filter(is_deleted=False)
     
@@ -13,7 +12,9 @@ class SoftDeleteManager(models.Manager):
         return super().get_queryset().filter(is_deleted=True)
     
     def all_objects(self):
+        """Возвращает все объекты без фильтрации по is_deleted"""
         return super().get_queryset()
+
 
 class SoftDeleteMixin(models.Model):
     """Миксин для мягкого удаления"""

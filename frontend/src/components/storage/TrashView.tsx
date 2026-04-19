@@ -1,5 +1,7 @@
 // components/storage/TrashView.tsx
 import React, { useState, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import { Square, CheckSquare, Trash2, RotateCcw, Folder, File } from 'lucide-react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import './styles/TrashView.css';
@@ -11,6 +13,8 @@ interface TrashViewProps {
     onDelete: (items: any[]) => void;
     onEmptyTrash: () => void;
     permissions: StoragePermissions;
+    isLoading?: boolean;
+    userId?: number; 
 }
 
 const TrashView: React.FC<TrashViewProps> = ({
@@ -19,23 +23,32 @@ const TrashView: React.FC<TrashViewProps> = ({
     onRestore,
     onDelete,
     onEmptyTrash,
-    permissions
+    permissions,
+    isLoading = false,
+    userId,
 }) => {
     const [selectedItems, setSelectedItems] = useState<any[]>([]);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-    // Получаем текущего пользователя из permissions или из глобального состояния
-    const currentUser = (permissions as any).user;
-
-    // Фильтруем элементы, удалённые текущим пользователем
     const userFolders = useMemo(() => {
-        return folders.filter(folder => folder.deleted_by?.id === currentUser?.id);
-    }, [folders, currentUser]);
+        if (!userId) return [];
+        return folders.filter(folder => folder.deleted_by?.id === userId);
+    }, [folders, userId]);
+
     const userFiles = useMemo(() => {
-        return files.filter(file => file.deleted_by?.id === currentUser?.id);
-    }, [files, currentUser]);
+        if (!userId) return [];
+        return files.filter(file => file.deleted_by?.id === userId);
+    }, [files, userId]);
+
+    if (isLoading || !userId) {
+        return (
+            <div className="storage-trash-loading">
+                <div className="storage-spinner"></div>
+                <p>{!userId ? 'Загрузка пользователя...' : 'Загрузка корзины...'}</p>
+            </div>
+        );
+    }
 
     const totalItems = userFolders.length + userFiles.length;
     const totalSize = [...userFolders, ...userFiles].reduce((sum, item) =>
@@ -152,14 +165,6 @@ const TrashView: React.FC<TrashViewProps> = ({
 
                 <div className="storage-trash-header-right">
                     <div className="storage-trash-controls">
-                        <button
-                            className="storage-trash-control"
-                            onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                            title={viewMode === 'list' ? 'Плитка' : 'Список'}
-                        >
-                            <i className={`fas fa-${viewMode === 'list' ? 'th-large' : 'list'}`}></i>
-                        </button>
-
                         <div className="storage-trash-sort">
                             <select
                                 value={sortBy}
@@ -238,7 +243,7 @@ const TrashView: React.FC<TrashViewProps> = ({
                         </div>
                     </div>
 
-                    <div className={`storage-trash-items ${viewMode === 'grid' ? 'grid-view' : 'list-view'}`}>
+                    <div className="storage-trash-items list-view">
                         {sortedItems.map((item) => {
                             const isFile = 'file_type' in item;
                             const isSelected = selectedItems.some(selected => selected.id === item.id);

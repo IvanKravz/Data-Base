@@ -4,19 +4,18 @@ import logging
 from django.utils import timezone as django_timezone
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView as BaseTokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView as BaseTokenRefreshView
 from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from django.db import models
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import logout
 from django.http import JsonResponse, HttpResponse
 from .logging_utils import get_storage_statistics
 import csv
 from rest_framework import filters
-from django.utils import timezone
 from .models import RoleGroup
 from .permissions_config import ROLE_PERMISSIONS, get_role_from_group
 
@@ -33,7 +32,11 @@ from .mixins import UserAccessMixin
 
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from .serializers import TwoFactorVerifySerializer
-from .utils import generate_temp_2fa_token
+
+from django.core.management import call_command
+import tempfile
+import os
+from rest_framework.parsers import MultiPartParser
 
 logger = logging.getLogger(__name__)
 
@@ -696,3 +699,120 @@ class UserActionLogViewSet(viewsets.ReadOnlyModelViewSet):
             'message': f'Удалено {deleted_count} записей логов.',
             'deleted_count': deleted_count
         }, status=status.HTTP_200_OK)
+    
+
+class DatabaseBackupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not (user.is_superuser or user.has_role('admin') or user.is_staff):
+            return Response({'error': 'Доступ запрещён'}, status=403)
+
+        # Список ваших приложений, которые нужно включить в бэкап
+        APPS_TO_BACKUP = [
+            'employees',
+            'equipment',
+            'facilities',
+            'tasks',
+            'networks',
+            'users',          
+            'storage',
+            'map',
+        ]
+
+        # Исключаем ненужные модели внутри приложений
+        EXCLUDE_MODELS = [
+            'users.UserActionLog',   # логи не нужны в бэкапе
+            'sessions.Session',
+            'admin.LogEntry',
+            'contenttypes.ContentType',  # может восстановиться автоматически
+            'auth.Permission',
+        ]
+
+        args = ['--natural-foreign', '--natural-primary', '--indent', '2']
+        args.extend(APPS_TO_BACKUP)
+        for model in EXCLUDE_MODELS:
+            args.extend(['--exclude', model])
+
+        # Используем StringIO, так как dumpdata выводит текст
+        from io import StringIO
+        out = StringIO()
+        try:
+            call_command('dumpdata', stdout=out, *args)
+        except Exception as e:
+            logger.error(f"Backup failed: {e}")
+            return Response({'error': f'Ошибка создания бэкапа: {str(e)}'}, status=500)
+
+        response = HttpResponse(out.getvalue(), content_type='application/json')
+        from django.utils import timezone
+        filename = f"backup_{timezone.now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        # Добавляем CORS заголовок, если он нужен (хотя обычно его добавляет middleware)
+        response['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        return response
+    
+class DatabaseRestoreView(APIView):
+    """
+    Восстановление базы данных из загруженного JSON-файла (только для администраторов)
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser]
+
+    def post(self, request):
+        user = request.user
+        if not (user.is_superuser or user.has_role('admin') or user.is_staff):
+            return Response({'error': 'Доступ запрещён'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Получаем загруженный файл
+        file_obj = request.FILES.get('backup_file')
+        if not file_obj:
+            return Response({'error': 'Файл не предоставлен'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверяем расширение и размер (например, не более 100 МБ)
+        if not file_obj.name.endswith('.json'):
+            return Response({'error': 'Неверный формат файла. Ожидается JSON.'}, status=status.HTTP_400_BAD_REQUEST)
+        if file_obj.size > 100 * 1024 * 1024:  # 100 MB
+            return Response({'error': 'Файл слишком большой (максимум 100 МБ)'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Опционально: сбросить существующие данные?
+        flush_first = request.data.get('flush_first') == 'true'
+
+        # Сохраняем временный файл
+        with tempfile.NamedTemporaryFile(mode='wb+', suffix='.json', delete=False) as tmp_file:
+            for chunk in file_obj.chunks():
+                tmp_file.write(chunk)
+            tmp_file_path = tmp_file.name
+
+        try:
+            if flush_first:
+                # Сброс данных (только для указанных приложений, чтобы не трогать админов и сессии)
+                # Внимание: эта операция опасна! Лучше предупредить пользователя.
+                # Для простоты выполним flush всех данных (это удалит всех пользователей, включая текущего!)
+                # Поэтому лучше не использовать flush, а загружать поверх.
+                # Вместо этого оставим только загрузку данных (без очистки).
+                pass
+
+            # Загружаем фикстуру
+            call_command('loaddata', tmp_file_path, verbosity=0)
+
+            # Логируем действие
+            log_user_action(
+                user=user,
+                action='restore',
+                module='system',
+                request=request,
+                model_name='Database',
+                details={
+                    'filename': file_obj.name,
+                    'size': file_obj.size,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Restore failed: {e}")
+            return Response({'error': f'Ошибка восстановления: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        finally:
+            # Удаляем временный файл
+            os.unlink(tmp_file_path)
+
+        return Response({'message': 'База данных успешно восстановлена из резервной копии.'}, status=status.HTTP_200_OK)

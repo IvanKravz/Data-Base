@@ -1,7 +1,8 @@
 // components/storage/FileItem/FileItemList.tsx
 import React from 'react';
-import { Square, CheckSquare } from 'lucide-react';
+import { Square, CheckSquare, Star } from 'lucide-react';
 import FileIcon from './FileIcon';
+import { FaThumbtack } from 'react-icons/fa';
 import FileActions from './FileActions';
 import { formatBytes } from './utils/fileUtils';
 import { formatDate } from './utils/dateUtils';
@@ -80,16 +81,16 @@ const FileItemList: React.FC<FileItemListProps> = ({
                     <h4 className="storage-file-list-name" title={file.name}>
                         {file.name}
                     </h4>
-                    {(file.is_pinned || file.is_favorite) && (
+                    {(file.is_pinned || file.is_favorited) && (
                         <div className="storage-file-list-badges">
                             {file.is_pinned && (
                                 <span className="storage-file-list-pin-badge" title="Закреплен">
-                                    <i className="fas fa-thumbtack"></i>
+                                    <FaThumbtack size={16} />
                                 </span>
                             )}
-                            {file.is_favorite && (
+                            {file.is_favorited && (
                                 <span className="storage-file-list-favorite-badge" title="В избранном">
-                                    <i className="fas fa-star"></i>
+                                    <Star size={16} />
                                 </span>
                             )}
                         </div>

@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 # Импортируем обработчики ошибок из существующего приложения
-from users.views import error_400, error_403, error_404, error_500
+from users.views import DatabaseBackupView, DatabaseRestoreView, error_400, error_403, error_404, error_500
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,7 +16,10 @@ urlpatterns = [
     path('api/tasks/', include('tasks.urls')),
     path('api/networks/', include('networks.urls')),
     path('api/map/', include('map.urls')),
-    path('api/storage/', include('storage.urls'))
+    path('api/storage/', include('storage.urls')),
+
+    path('api/backup/download/', DatabaseBackupView.as_view(), name='database-backup'),
+    path('api/backup/restore/', DatabaseRestoreView.as_view(), name='database-restore'),
 ]
 
 if settings.DEBUG:

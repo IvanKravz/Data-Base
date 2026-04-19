@@ -1,0 +1,51 @@
+.database-backup {
+    /* убираем padding, оставляем только если нужно внутреннее пространство */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.database-backup__hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eef2ff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #1e40af;
+    font-size: 0.8125rem;
+}
+
+.database-backup__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.database-backup__button:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.database-backup__button:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.database-backup__error {
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+}

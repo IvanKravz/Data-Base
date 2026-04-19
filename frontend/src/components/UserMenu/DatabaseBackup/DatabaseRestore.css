@@ -1,0 +1,101 @@
+.database-restore {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.database-restore__hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eef2ff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #1e40af;
+    font-size: 0.8125rem;
+}
+
+.database-restore__form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.database-restore__file-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.database-restore__file-input {
+    display: none;
+}
+
+.database-restore__file-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #3b82f6;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.database-restore__file-button:hover {
+    background: #2563eb;
+}
+
+.database-restore__file-name {
+    color: #374151;
+    font-size: 0.8125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.database-restore__restore-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.database-restore__restore-btn:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.database-restore__restore-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.database-restore__error {
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+}
+
+.database-restore__success {
+    color: #10b981;
+    background: #d1fae5;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+}

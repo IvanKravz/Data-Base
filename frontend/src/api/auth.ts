@@ -81,6 +81,7 @@ export const authApi = {
       window.location.href = '/auth';
     }
   },
+  
 
   // Метод для получения прав доступа из новой структуры
   getModulePermissions: (): UserPermissions | null => {

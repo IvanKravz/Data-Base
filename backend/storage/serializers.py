@@ -14,6 +14,7 @@ class StorageFolderSerializer(serializers.ModelSerializer):
     full_path = serializers.SerializerMethodField()
     deleted_at = serializers.DateTimeField(read_only=True)
     deleted_by = UserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
     
     class Meta:
         model = StorageFolder
@@ -21,9 +22,16 @@ class StorageFolderSerializer(serializers.ModelSerializer):
             'id', 'name', 'parent', 'parent_name', 'folder_type',
             'division', 'subdivision', 'created_by', 'files_count',
             'subfolders_count', 'total_size', 'full_path', 'is_pinned',
-            'color', 'created_at', 'updated_at', 'is_deleted', 'deleted_at', 'deleted_by'
+            'color', 'created_at', 'updated_at', 'is_deleted', 'deleted_at', 'deleted_by',
+            'is_favorited'  # добавить сюда
         ]
         read_only_fields = ['is_deleted', 'deleted_at']
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Favorite.objects.filter(user=request.user, folder=obj).exists()
+        return False
     
     def get_files_count(self, obj):
         return obj.files.filter(is_deleted=False).count()

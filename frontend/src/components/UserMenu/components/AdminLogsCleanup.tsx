@@ -20,7 +20,7 @@ const PERIODS = [
 ] as const;
 
 interface AdminLogsCleanupProps {
-    userId?: number; // если передан – удаляем логи этого пользователя
+    userId?: number;
 }
 
 export const AdminLogsCleanup: React.FC<AdminLogsCleanupProps> = ({ userId }) => {
@@ -32,11 +32,10 @@ export const AdminLogsCleanup: React.FC<AdminLogsCleanupProps> = ({ userId }) =>
 
     useEffect(() => {
         logsApi.getChoices().then(data => {
-            // Добавляем опцию "Все модули" в начало списка
             const allModulesOption = { value: 'all', label: 'Все модули' };
             const modulesWithAll = [allModulesOption, ...data.modules];
             setModules(modulesWithAll);
-            setSelectedModule(modulesWithAll[0].value); // по умолчанию "Все модули"
+            setSelectedModule(modulesWithAll[0].value);
         });
     }, []);
 
@@ -61,7 +60,7 @@ export const AdminLogsCleanup: React.FC<AdminLogsCleanupProps> = ({ userId }) =>
             const response = await logsApi.bulkDeleteLogs({
                 module: selectedModule,
                 period: selectedPeriod,
-                user_id: userId, // передаём userId
+                user_id: userId,
             });
             setResult({ message: response.message, type: 'success' });
         } catch (error: any) {
@@ -74,64 +73,59 @@ export const AdminLogsCleanup: React.FC<AdminLogsCleanupProps> = ({ userId }) =>
 
     return (
         <div className="admin-logs-cleanup">
-            <p className="admin-logs-cleanup__hint">
+            <div className="admin-logs-cleanup__hint">
                 <AlertCircle size={16} />
-                {userId 
-                    ? 'Удаление записей этого пользователя необратимо.' 
-                    : 'Удаление записей необратимо. Доступно только администраторам.'}
-            </p>
-
-            <div className="admin-logs-cleanup__form">
-                <div className="admin-logs-cleanup__form-group">
-                    <label>Модуль</label>
-                    <select
-                        className="admin-logs-cleanup__select"
-                        value={selectedModule}
-                        onChange={(e) => setSelectedModule(e.target.value)}
-                        disabled={isDeleting}
-                    >
-                        {modules.map((m) => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="admin-logs-cleanup__form-group">
-                    <label>Период</label>
-                    <div className="admin-logs-cleanup__period-group">
-                        {PERIODS.map((p) => (
-                            <label key={p.value} className="admin-logs-cleanup__period-radio">
-                                <input
-                                    type="radio"
-                                    name="period"
-                                    value={p.value}
-                                    checked={selectedPeriod === p.value}
-                                    onChange={() => setSelectedPeriod(p.value)}
-                                    disabled={isDeleting}
-                                />
-                                {p.label}
-                            </label>
-                        ))}
-                    </div>
-                </div>
-
-                <button
-                    className="admin-logs-cleanup__delete-btn"
-                    onClick={handleDelete}
-                    disabled={isDeleting || !selectedModule}
-                >
-                    <Trash2 size={18} />
-                    {isDeleting ? 'Удаление...' : 'Удалить логи'}
-                </button>
-
-                {result && (
-                    <div className={`admin-logs-cleanup__result admin-logs-cleanup__result--${result.type}`}>
-                        {result.message}
-                    </div>
-                )}
+                <span>
+                    {userId 
+                        ? 'Удаление записей этого пользователя необратимо.' 
+                        : 'Удаление записей необратимо. Доступно только администраторам.'}
+                </span>
             </div>
+
+            <div className="admin-logs-cleanup__field">
+                <label>Модуль</label>
+                <select
+                    value={selectedModule}
+                    onChange={(e) => setSelectedModule(e.target.value)}
+                    disabled={isDeleting}
+                >
+                    {modules.map((m) => (
+                        <option key={m.value} value={m.value}>
+                            {m.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div className="admin-logs-cleanup__field">
+                <label>Период</label>
+                <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value as typeof PERIODS[number]['value'])}
+                    disabled={isDeleting}
+                >
+                    {PERIODS.map((p) => (
+                        <option key={p.value} value={p.value}>
+                            {p.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <button
+                className="admin-logs-cleanup__button"
+                onClick={handleDelete}
+                disabled={isDeleting || !selectedModule}
+            >
+                <Trash2 size={18} />
+                {isDeleting ? 'Удаление...' : 'Удалить логи'}
+            </button>
+
+            {result && (
+                <div className={`admin-logs-cleanup__result admin-logs-cleanup__result--${result.type}`}>
+                    {result.message}
+                </div>
+            )}
         </div>
     );
 };
