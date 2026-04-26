@@ -32,7 +32,7 @@ services:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
-      - INITIAL_DATA=${INITIAL_DATA:-false}   # по умолчанию false
+      - INITIAL_DATA=${INITIAL_DATA:-false}
     volumes:
       - media_volume:/app/media
       - static_volume:/app/static
