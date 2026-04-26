@@ -185,7 +185,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
             <div className="um-container">
                 <div className="um-header">
                     <h2 className="um-title">
-                        <i className="fas fa-cloud-upload-alt"></i>
+                        <FaCloudUploadAlt />
                         Загрузка файлов
                     </h2>
                     <button className="um-close" onClick={onClose} aria-label="Закрыть">
@@ -207,6 +207,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         </div>
                     </div>
 
+                    {/* Обновлённая зона перетаскивания — горизонтальная карточка */}
                     <div
                         className={`um-dropzone ${isDragging ? 'um-dropzone--dragging' : ''}`}
                         onDragOver={handleDragOver}
@@ -215,13 +216,15 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <div className="um-dropzone-icon">
-                            <FaCloudUploadAlt size={48} />
+                            <FaCloudUploadAlt />
                         </div>
-                        <h3 className="um-dropzone-title">Перетащите файлы сюда</h3>
-                        <p className="um-dropzone-subtitle">или нажмите для выбора файлов</p>
-                        <p className="um-dropzone-info">
-                            Максимальный размер файла: {formatBytes(maxFileSize)}
-                        </p>
+                        <div className="um-dropzone-content">
+                            <h3 className="um-dropzone-title">Перетащите файлы сюда</h3>
+                            <p className="um-dropzone-subtitle">или нажмите для выбора файлов</p>
+                            <p className="um-dropzone-info">
+                                Максимальный размер файла: {formatBytes(maxFileSize)}
+                            </p>
+                        </div>
                         <input
                             ref={fileInputRef}
                             type="file"

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { RootState, AppDispatch } from '../../../store/store';
 import { ArrowLeft } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { updateEquipment, deleteEquipment } from '../../../store/slices/equipmentSlice';
+import { updateEquipment, deleteEquipmentThunk } from '../../../store/slices/equipmentSlice';
 import { equipmentApi, authApi } from '../../../api';
 import './style.css';
 import {
@@ -28,21 +28,19 @@ export function EquipmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken') || '';
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Получаем пользователя из Redux
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // Проверка прав через Redux
-  const canEditEquipment = useMemo(() => 
+  const canEditEquipment = useMemo(() =>
     permissions?.models?.Equipment?.includes('change') ?? false, [permissions]);
-  const canDeleteEquipment = useMemo(() => 
+  const canDeleteEquipment = useMemo(() =>
     permissions?.models?.Equipment?.includes('delete') ?? false, [permissions]);
 
   const isGlobalView = authApi.getGlobalView();
@@ -100,6 +98,18 @@ export function EquipmentDetailsPage() {
       setError('Не удалось обновить данные техники');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await dispatch(deleteEquipmentThunk(equipment!.id)).unwrap();
+      handleBack();
+    } catch (error) {
+      console.error('Ошибка при удалении:', error);
+      setError('Не удалось удалить технику');
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
@@ -172,11 +182,7 @@ export function EquipmentDetailsPage() {
 
       {showDeleteModal && (
         <DeleteConfirmationModal
-          isOpen={showDeleteModal}
-          onConfirm={() => {
-            dispatch(deleteEquipment(equipment.id));
-            handleBack();
-          }}
+          onConfirm={handleDeleteConfirm}
           onCancel={() => setShowDeleteModal(false)}
           title="Удаление техники"
           message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."

@@ -205,10 +205,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         onClose={() => setShowActionsMenu(false)}
                         permissions={permissions}
                         viewType={viewType}
-                        onMove={async (targetId) => {
-                            await onMoveItem(folder.id, targetId, true);
-                            setShowActionsMenu(false);
-                        }}
+                        onMove={(targetId) => onMoveItem(folder.id, targetId, true)}
                         onDelete={onDeleteItem}
                         onRefreshFavorites={onRefreshFavorites}
                     />
@@ -298,10 +295,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     onClose={() => setShowActionsMenu(false)}
                     permissions={permissions}
                     viewType={viewType}
-                    onMove={async (targetId) => {
-                        await onMoveItem(folder.id, targetId, true);
-                        setShowActionsMenu(false);
-                    }}
+                    onMove={(targetId) => onMoveItem(folder.id, targetId, true)}
                     onDelete={onDeleteItem}
                     onRefreshFavorites={onRefreshFavorites}
                 />

@@ -9,7 +9,6 @@ interface StorageSidebarProps {
     viewType: 'work' | 'personal';
     onViewTypeChange: (type: 'work' | 'personal') => void;
     permissions: StoragePermissions;
-    onEmptyTrash?: () => void;
 }
 
 const StorageSidebar: React.FC<StorageSidebarProps> = ({
@@ -18,7 +17,6 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
     viewType,
     onViewTypeChange,
     permissions,
-    onEmptyTrash
 }) => {
     const [storageStats, setStorageStats] = useState({
         usagePercentage: 0,
@@ -120,13 +118,9 @@ const StorageSidebar: React.FC<StorageSidebarProps> = ({
                         })}
                     </ul>
                 </div>
-                {currentView === 'trash' && permissions.canEmptyTrash && (
-                    <div className="storage-trash-actions">
-                        <button className="storage-empty-trash-btn" onClick={onEmptyTrash} disabled={!permissions.canViewTrash}>
-                            <i className="fas fa-broom"></i> Очистить корзину
-                        </button>
-                    </div>
-                )}
+
+                {/* Кнопка очистки корзины УДАЛЕНА */}
+
                 <div className="storage-info-section">
                     <h3 className="storage-info-section-title">Хранилище</h3>
                     <div className="storage-storage-info">

@@ -42,13 +42,11 @@ const FileItem: React.FC<FileItemProps> = ({
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-
     const fileRef = useRef<HTMLDivElement>(null);
 
     const {
         handleFileClick,
         handleDownload,
-        handleContextMenu: originalHandleContextMenu
     } = useFileHandlers({
         file,
         onClick,
@@ -61,9 +59,7 @@ const FileItem: React.FC<FileItemProps> = ({
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (!permissions.canEditItem(file) && !permissions.canDeleteItem(file)) return;
-
         const { clientX, clientY } = e;
         setMenuPosition({ x: clientX, y: clientY });
         setShowActionsMenu(true);
@@ -74,22 +70,15 @@ const FileItem: React.FC<FileItemProps> = ({
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', JSON.stringify(file));
         e.dataTransfer.effectAllowed = 'move';
-
         const target = e.currentTarget as HTMLElement;
         target.style.opacity = '0.4';
-
-        if (onDragStart) {
-            onDragStart(e, file);
-        }
+        if (onDragStart) onDragStart(e, file);
     };
 
     const handleDragEnd = (e: React.DragEvent) => {
         const target = e.currentTarget as HTMLElement;
         target.style.opacity = '1';
-
-        if (onDragEnd) {
-            onDragEnd(e);
-        }
+        if (onDragEnd) onDragEnd(e);
     };
 
     const commonProps = {
@@ -122,10 +111,7 @@ const FileItem: React.FC<FileItemProps> = ({
                     onClose={closeContextMenu}
                     permissions={permissions}
                     viewType={viewType}
-                    onMove={async (targetId) => {
-                        await onMoveItem(file.id, targetId, false);
-                        closeContextMenu();
-                    }}
+                    onMove={(targetId) => onMoveItem(file.id, targetId, false)}
                     onDelete={onDeleteItem}
                     onRefreshFavorites={onRefreshFavorites}
                 />

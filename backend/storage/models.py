@@ -167,6 +167,15 @@ class StorageFolder(SoftDeleteMixin):
         """Полное удаление из БД"""
         super().delete()
 
+    def is_descendant_of(self, other):
+        """Проверяет, является ли текущая папка потомком other"""
+        current = self.parent
+        while current:
+            if current == other:
+                return True
+            current = current.parent
+        return False
+
 class StorageFile(SoftDeleteMixin):
     TYPE_CHOICES = [
         ('personal', 'Личное'),

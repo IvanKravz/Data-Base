@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Equipment } from '../../types';
+import { equipmentApi } from '../../api';
 
 interface EquipmentState {
   equipment: Equipment[];
@@ -12,6 +13,18 @@ const initialState: EquipmentState = {
   loading: false,
   error: null,
 };
+
+export const deleteEquipmentThunk = createAsyncThunk(
+  'equipment/delete',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await equipmentApi.deleteEquipment(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 const equipmentSlice = createSlice({
   name: 'equipment',
@@ -38,6 +51,21 @@ const equipmentSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(deleteEquipmentThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteEquipmentThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.equipment = state.equipment.filter(item => item.id !== action.payload);
+      })
+      .addCase(deleteEquipmentThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Ошибка при удалении';
+      });
   },
 });
 

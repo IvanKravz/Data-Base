@@ -152,6 +152,7 @@ class StoragePermission(RoleBasedPermission):
                 'empty_trash': 'delete',
                 'pinned': 'view',
                 'check_access': 'view',
+                'batch_move': 'change',
                 
                 # Файлы
                 'download': 'view',

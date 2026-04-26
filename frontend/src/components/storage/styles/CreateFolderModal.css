@@ -52,8 +52,9 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px 24px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #ffffff;
+    background: #f8fafc;
+    ;
+    color: #0f172a;
 }
 
 .cfm-title {
@@ -72,31 +73,29 @@
 }
 
 .cfm-close {
-    background: rgba(255, 255, 255, 0.15);
+    background: transparent;
     border: none;
     cursor: pointer;
-    color: #ffffff;
-    transition: all 0.2s ease;
-    width: 32px;
-    height: 32px;
+    color: var(--um-gray-500);
+    transition: var(--um-transition);
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    /* Дополнительно: */
-    font-size: 18px;
-    /* на случай, если иконка не загрузится, будет виден текст */
+    border-radius: 10px;
 }
 
-.cfm-close i {
+/* .cfm-close i {
     font-size: 16px;
     color: inherit;
     line-height: 1;
-}
+} */
 
 .cfm-close:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.05);
+    color: #0f172a;;
+    background-color: #e2e8f0;
+    transform: scale(1.02);
 }
 
 .cfm-body {

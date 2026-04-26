@@ -30,9 +30,6 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
     const [groupBy, setGroupBy] = useState<'type' | 'date'>('type');
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    console.log('folders', folders)
-    console.log('files', files)
-
     useEffect(() => {
         setSelectedItems([]);
     }, [folders, files]);
@@ -63,20 +60,20 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
 
             const promises = items.map(item => {
                 if (item.hasOwnProperty('folder_type')) {
-                    // Это папка
                     return storageApi.toggleFavorite({ folder_id: item.id });
                 } else {
-                    // Это файл
                     return storageApi.toggleFavorite({ file_id: item.id });
                 }
             });
 
             await Promise.all(promises);
 
-            // После успешного удаления из избранного, можно обновить список
-            // или просто очистить выбранные элементы
             setSelectedItems([]);
 
+            // Обновляем список избранного
+            if (onRefreshFavorites) {
+                onRefreshFavorites();
+            }
         } catch (error) {
             console.error('Error removing from favorites:', error);
         } finally {
@@ -85,10 +82,11 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
     };
 
     const handleRefresh = async () => {
-        // Здесь можно добавить логику обновления данных
-        // В реальном приложении это будет перезагрузка данных
         setIsRefreshing(true);
-        setTimeout(() => setIsRefreshing(false), 1000);
+        if (onRefreshFavorites) {
+            onRefreshFavorites();
+        }
+        setIsRefreshing(false);
     };
 
     const sortedFolders = [...folders].sort(sortItems);
@@ -131,7 +129,6 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
         if (diffDays === 1) return 'Вчера';
         if (diffDays < 7) return 'На этой неделе';
         if (diffDays < 30) return 'В этом месяце';
-
         return 'Ранее';
     };
 
@@ -143,15 +140,11 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
             };
         } else {
             const groups: Record<string, any[]> = {};
-
             [...sortedFolders, ...sortedFiles].forEach(item => {
                 const groupKey = formatDateGroup(item.created_at);
-                if (!groups[groupKey]) {
-                    groups[groupKey] = [];
-                }
+                if (!groups[groupKey]) groups[groupKey] = [];
                 groups[groupKey].push(item);
             });
-
             return groups;
         }
     };
@@ -274,7 +267,6 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
             <div className="storage-favorites-content">
                 {Object.entries(groupedItems).map(([groupName, items]) => {
                     if (items.length === 0) return null;
-
                     return (
                         <div key={groupName} className="storage-favorites-group-section">
                             <h3 className="storage-favorites-group-title">
@@ -329,7 +321,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({
                                                     onClick={() => onFolderClick(item)}
                                                     onDragStart={() => { }}
                                                     permissions={permissions}
-                                                    onRefreshFavorites={onRefreshFavorites}  
+                                                    onRefreshFavorites={onRefreshFavorites}
                                                 />
                                             );
                                         } else {

@@ -445,7 +445,41 @@ class StorageFolderViewSet(viewsets.ModelViewSet):
                 {'error': f'Ошибка при получении пути: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, HasFolderAccess])
+    def batch_move(self, request):
+        folder_ids = request.data.get('folder_ids', [])
+        parent_id = request.data.get('parent_id')
+        if not folder_ids:
+            return Response({'error': 'No folder IDs provided'}, status=400)
 
+        target_folder = None
+        if parent_id:
+            try:
+                target_folder = StorageFolder.objects.get(id=parent_id)
+                # Проверяем права на целевую папку (требуется 'change' или хотя бы 'add' на неё)
+                self.check_object_permissions(request, target_folder)
+            except StorageFolder.DoesNotExist:
+                return Response({'error': 'Target folder not found'}, status=404)
+
+        moved = []
+        errors = []
+        for fid in folder_ids:
+            try:
+                folder = StorageFolder.objects.get(id=fid)
+                self.check_object_permissions(request, folder)
+                if target_folder and (folder.id == target_folder.id or folder.is_descendant_of(target_folder)):
+                    errors.append({'id': fid, 'error': 'Cannot move folder into itself or its descendant'})
+                    continue
+                folder.parent = target_folder
+                folder.save()
+                moved.append(fid)
+            except StorageFolder.DoesNotExist:
+                errors.append({'id': fid, 'error': 'Folder not found'})
+            except Exception as e:
+                errors.append({'id': fid, 'error': str(e)})
+
+        return Response({'moved': moved, 'errors': errors, 'count': len(moved)})
 
 class StorageFileViewSet(viewsets.ModelViewSet):
     queryset = StorageFile.objects.all()
@@ -709,6 +743,21 @@ class StorageFileViewSet(viewsets.ModelViewSet):
         )
         return Response({'id': file.id, 'status': 'deleted', 'deleted_at': file.deleted_at})
 
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, CanEmptyTrash])
+    def empty_trash(self, request):
+        """Очистить корзину (удалить все удалённые файлы пользователя)"""
+        deleted_files = StorageFile.objects.deleted().filter(uploaded_by=request.user)
+        count = deleted_files.count()
+        for file in deleted_files:
+            file.hard_delete()
+        log_storage_empty_trash(
+            user=request.user,
+            count=count,
+            request=request,
+            details={'type': 'files'}
+        )
+        return Response({'status': 'trash_emptied', 'deleted_count': count, 'type': 'files'})
+
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
         file = self.get_object()
@@ -882,6 +931,42 @@ class StorageFileViewSet(viewsets.ModelViewSet):
                 'deleted_folders': StorageFolder.objects.filter(created_by=user, is_deleted=True).count(),
             }
         })
+    
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, HasFileAccess])
+    def batch_move(self, request):
+        file_ids = request.data.get('file_ids', [])
+        folder_id = request.data.get('folder_id')
+        if not file_ids:
+            return Response({'error': 'No file IDs provided'}, status=400)
+
+        target_folder = None
+        if folder_id:
+            try:
+                target_folder = StorageFolder.objects.get(id=folder_id)
+                # Проверяем права на целевую папку (через HasFolderAccess)
+                from storage.permissions import HasFolderAccess
+                permission = HasFolderAccess()
+                if not permission.has_object_permission(request, None, target_folder):
+                    return Response({'error': 'Permission denied for target folder'}, status=403)
+            except StorageFolder.DoesNotExist:
+                return Response({'error': 'Target folder not found'}, status=404)
+
+        moved = []
+        errors = []
+        for fid in file_ids:
+            try:
+                file = StorageFile.objects.get(id=fid)
+                self.check_object_permissions(request, file)
+                file.folder = target_folder
+                file.save()
+                moved.append(fid)
+            except StorageFile.DoesNotExist:
+                errors.append({'id': fid, 'error': 'File not found'})
+            except Exception as e:
+                errors.append({'id': fid, 'error': str(e)})
+
+        return Response({'moved': moved, 'errors': errors, 'count': len(moved)})
 
 
 class FileShareLinkViewSet(viewsets.ModelViewSet):

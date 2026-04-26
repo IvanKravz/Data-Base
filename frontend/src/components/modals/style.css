@@ -1,116 +1,146 @@
-/* Общие стили для модального окна */
-.modal-overlay {
+/* DeleteConfirmationModal.css — уникальные имена классов */
+
+.delete-modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   padding: 1rem;
-  animation: fade-in 0.3s ease-in-out;
+  animation: delete-modal-fade-in 0.2s ease-out;
 }
 
-.modal-content-delete {
-  background-color: white;
-  border-radius: 0.5rem;
+.delete-modal-content {
+  background: #ffffff;
+  border-radius: 1.5rem;
   width: 100%;
-  width: 30rem;
-  transform: scale(1);
-  transition: transform 0.2s ease-in-out;
+  max-width: 28rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  transform: scale(0.96);
+  animation: delete-modal-scale-in 0.2s ease-out forwards;
 }
 
-.modal-header-delete {
-  padding: 1rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
+.delete-modal-header {
+  padding: 1rem 1rem 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  border-bottom: none;
 }
 
-.header-content {
+.delete-modal-header-content {
   display: flex;
   align-items: center;
+  margin: 0 auto;
   gap: 0.75rem;
 }
 
-.warning-icon {
-  height: 1.5rem;
-  width: 1.5rem;
-  color: #ef4444;
-  animation: pulse 1.5s infinite;
+.delete-modal-warning-icon {
+  height: 1.75rem;
+  width: 1.75rem;
+  color: #dc2626;
+  stroke-width: 1.75;
 }
 
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #1f2937;
+.delete-modal-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
-.close-button {
+.delete-modal-close-button {
+  background: transparent;
+  border: none;
   padding: 0.5rem;
   border-radius: 9999px;
-  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
 }
 
-.close-button:hover {
+.delete-modal-close-button:hover {
   background-color: #f3f4f6;
+  color: #1f2937;
+  transform: rotate(90deg);
 }
 
-.close-icon {
+.delete-modal-close-icon {
   height: 1.25rem;
   width: 1.25rem;
 }
 
-.modal-body {
-  padding: 1rem;
+.delete-modal-body {
+  padding: 0.5rem 1rem 1rem 1rem;
 }
 
-.modal-message {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+.delete-modal-message {
+  font-size: 1rem;
+  line-height: 1.5;
   color: #4b5563;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
-.modal-actions-delete {
+.delete-modal-actions {
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
-.cancel-button {
-  padding: 0.5rem 1rem;
+.delete-modal-cancel-button {
+  padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
-  background-color: rgb(202, 207, 222);
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease-in-out;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
-.cancel-button:hover {
-  background-color: rgb(228, 231, 240);
+.delete-modal-cancel-button:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
 }
 
-.confirm-button {
-  padding: 0.5rem 1rem;
+.delete-modal-confirm-button {
+  padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: white;
-  background-color: #eb4b4b;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease-in-out;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  letter-spacing: 0.01em;
 }
 
-.confirm-button:hover {
-  background-color: #f03535;
+.delete-modal-confirm-button:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
 }
 
-/* Анимации */
-@keyframes fade-in {
+.delete-modal-confirm-button:active {
+  transform: translateY(1px);
+}
+
+@keyframes delete-modal-fade-in {
   from {
     opacity: 0;
   }
@@ -120,14 +150,38 @@
   }
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
+@keyframes delete-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
   }
 
-  50% {
-    opacity: 0.5;
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .delete-modal-content {
+    max-width: 90%;
+    border-radius: 1.25rem;
+  }
+
+  .delete-modal-header {
+    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+  }
+
+  .delete-modal-title {
+    font-size: 1.2rem;
+  }
+
+  .delete-modal-body {
+    padding: 0.25rem 1.25rem 1.25rem 1.25rem;
+  }
+
+  .delete-modal-cancel-button,
+  .delete-modal-confirm-button {
+    padding: 0.5rem 1.25rem;
   }
 }

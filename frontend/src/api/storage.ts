@@ -281,8 +281,10 @@ export const storageApi = {
   },
 
   emptyTrash: async () => {
-    // Используем endpoint для папок, который очищает корзину
+    // Очищаем папки
     await api.post('/storage/folders/empty_trash/');
+    // Очищаем файлы
+    await api.post('/storage/files/empty_trash/');
   },
 
   // === Статистика ===
@@ -320,17 +322,17 @@ export const storageApi = {
     return data;
   },
 
-  deleteMultipleFiles: async (fileIds: number[]) => {
-    const { data } = await api.post('/storage/files/batch_delete/', {
-      file_ids: fileIds
-    });
-    return data;
-  },
-
   moveMultipleFolders: async (folderIds: number[], parentId: number | null) => {
     const { data } = await api.post('/storage/folders/batch_move/', {
       folder_ids: folderIds,
       parent_id: parentId
+    });
+    return data;
+  },
+
+  deleteMultipleFiles: async (fileIds: number[]) => {
+    const { data } = await api.post('/storage/files/batch_delete/', {
+      file_ids: fileIds
     });
     return data;
   },

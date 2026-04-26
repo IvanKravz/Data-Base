@@ -1,8 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import './style.css'
+import './style.css';
 
 interface DeleteConfirmationModalProps {
   title: string;
@@ -19,38 +17,38 @@ export function DeleteConfirmationModal({
 }: DeleteConfirmationModalProps) {
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content-delete">
-        <div className="modal-header-delete">
-          <div className="header-content">
-            <AlertTriangle className="warning-icon" />
-            <h2 className="modal-title">
+    <div className="delete-modal-overlay">
+      <div className="delete-modal-content">
+        <div className="delete-modal-header">
+          <div className="delete-modal-header-content">
+            <AlertTriangle className="delete-modal-warning-icon" />
+            <h2 className="delete-modal-title">
               {title}
             </h2>
           </div>
           <button
             onClick={onCancel}
-            className="close-button"
+            className="delete-modal-close-button"
           >
-            <X className="close-icon" />
+            <X className="delete-modal-close-icon" />
           </button>
         </div>
 
-        <div className="modal-body">
-          <p className="modal-message">
+        <div className="delete-modal-body">
+          <p className="delete-modal-message">
             {message}
           </p>
 
-          <div className="modal-actions-delete">
+          <div className="delete-modal-actions">
             <button
               onClick={onCancel}
-              className="cancel-button"
+              className="delete-modal-cancel-button"
             >
               Отмена
             </button>
             <button
               onClick={onConfirm}
-              className="confirm-button"
+              className="delete-modal-confirm-button"
             >
               Удалить
             </button>

@@ -112,15 +112,13 @@ const Storage: React.FC = () => {
     const handleDownloadSelected = async () => {
         if (selectedItems.length === 0) return;
         const file = selectedItems.find(item => 'file_type' in item) as StorageFile;
-        if (file) {
-            try {
-                await storageApi.downloadFile(file.id);
-            } catch (err: any) {
-                setError(err.message || 'Ошибка при скачивании');
-            }
-        } else {
-            console.log('Скачивание папок пока не реализовано');
+
+        try {
+            await storageApi.downloadFile(file.id);
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при скачивании');
         }
+
     };
 
     const sortItems = (items: Array<StorageFolder | StorageFile>) => {
@@ -348,18 +346,6 @@ const Storage: React.FC = () => {
         }
     };
 
-    const handleEmptyTrash = async () => {
-        if (!window.confirm('Очистить корзину? Это действие нельзя отменить.')) return;
-        try {
-            await storageApi.emptyTrash();
-            setFolders([]);
-            setFiles([]);
-            setSelectedItems([]);
-        } catch (err: any) {
-            setError(err.message || 'Ошибка при очистке корзины');
-        }
-    };
-
     const handleMoveItem = async (itemId: number, targetFolderId: number | null, isFolder: boolean) => {
         try {
             if (isFolder) {
@@ -367,9 +353,18 @@ const Storage: React.FC = () => {
             } else {
                 await storageApi.moveMultipleFiles([itemId], targetFolderId);
             }
-            await loadData();
+
+            // Если переместили текущую открытую папку – перенаправляем
+            if (isFolder && currentFolder && itemId === currentFolder.id) {
+                const parentId = currentFolder.parent_id;
+                if (parentId) navigate(`/storage/${parentId}`);
+                else navigate('/storage');
+            } else {
+                await loadData();
+            }
             setSelectedItems([]);
         } catch (err: any) {
+            console.error('Move error:', err);
             setError(err.message || 'Ошибка при перемещении');
         }
     };
@@ -546,7 +541,6 @@ const Storage: React.FC = () => {
                                     files={files}
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
-                                    onFileClick={file => console.log('File clicked:', file)}
                                     viewMode={viewMode}
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
@@ -570,7 +564,6 @@ const Storage: React.FC = () => {
                                     viewMode={viewModeRecent}
                                     sortBy={sortBy}
                                     sortOrder={sortOrder}
-                                    onFileClick={file => console.log('File clicked:', file)}
                                     permissions={permissions}
                                 />
                             )}
@@ -579,7 +572,6 @@ const Storage: React.FC = () => {
                                     folders={folders}
                                     files={files}
                                     onFolderClick={handleFolderClick}
-                                    onFileClick={file => console.log('File clicked:', file)}
                                     permissions={permissions}
                                     onRefreshFavorites={refreshFavorites}
                                 />
@@ -590,7 +582,6 @@ const Storage: React.FC = () => {
                                     files={files}
                                     onRestore={handleRestoreItems}
                                     onDelete={handleHardDeleteItems}
-                                    onEmptyTrash={handleEmptyTrash}
                                     permissions={permissions}
                                     isLoading={loading}
                                     userId={localUserId ?? currentUser?.id}
@@ -620,7 +611,6 @@ const Storage: React.FC = () => {
                 viewType={viewType}
                 onViewTypeChange={setViewType}
                 permissions={permissions}
-                onEmptyTrash={handleEmptyTrash}
             />
             {isCreateFolderModalOpen && (
                 <CreateFolderModal

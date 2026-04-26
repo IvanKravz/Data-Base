@@ -1,7 +1,5 @@
 // components/storage/TrashView.tsx
 import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
 import { Square, CheckSquare, Trash2, RotateCcw, Folder, File } from 'lucide-react';
 import { StoragePermissions } from '../../api/utils/useStoragePermissions';
 import './styles/TrashView.css';
@@ -11,10 +9,9 @@ interface TrashViewProps {
     files: any[];
     onRestore: (items: any[]) => void;
     onDelete: (items: any[]) => void;
-    onEmptyTrash: () => void;
     permissions: StoragePermissions;
     isLoading?: boolean;
-    userId?: number; 
+    userId?: number;
 }
 
 const TrashView: React.FC<TrashViewProps> = ({
@@ -22,7 +19,6 @@ const TrashView: React.FC<TrashViewProps> = ({
     files,
     onRestore,
     onDelete,
-    onEmptyTrash,
     permissions,
     isLoading = false,
     userId,
@@ -231,14 +227,6 @@ const TrashView: React.FC<TrashViewProps> = ({
                                         <Trash2 size={16} /> Удалить навсегда
                                     </button>
                                 </>
-                            )}
-                            {permissions.canEmptyTrash && (
-                                <button
-                                    className="storage-trash-action-btn storage-trash-empty-btn"
-                                    onClick={onEmptyTrash}
-                                >
-                                    <Trash2 size={16} /> Очистить корзину
-                                </button>
                             )}
                         </div>
                     </div>

@@ -12,7 +12,8 @@ interface FolderActionsMenuProps {
     onClose: () => void;
     permissions: StoragePermissions;
     viewType: 'personal' | 'work';
-    onMove: (folderId: number, targetParentId: number | null) => Promise<void>;
+    // Изменено: onMove принимает только целевой ID, ID папки уже известен
+    onMove: (targetParentId: number | null) => Promise<void>;
     onDelete?: (folderId: number) => void;
     onRefreshFavorites?: () => void;
 }
@@ -61,13 +62,20 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
+            // Если открыто модальное окно перемещения, игнорируем клики внутри него
+            if (showMoveModal) {
+                const modalElement = document.querySelector('.mm-overlay');
+                if (modalElement && modalElement.contains(event.target as Node)) {
+                    return;
+                }
+            }
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 onClose();
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [onClose]);
+    }, [onClose, showMoveModal]);
 
     useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
@@ -346,11 +354,15 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
             {showMoveModal && (
                 <MoveModal
                     itemId={folder.id}
+                    itemName={folder.name}
                     itemType="folder"
                     currentParentId={folder.parent}
                     viewType={viewType}
                     permissions={permissions}
-                    onMove={(targetId) => onMove(folder.id, targetId)}
+                    onMove={(targetFolderId) => {
+                        // Родительский onMove ожидает только целевую папку
+                        return onMove(targetFolderId);
+                    }}
                     onClose={() => setShowMoveModal(false)}
                 />
             )}
