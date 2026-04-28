@@ -67,6 +67,6 @@ export default defineConfig({
       },
     },
   },
-  base: './',
+  base: '/',
   envPrefix: 'VITE_',
 });
