@@ -115,6 +115,9 @@ MEDIA_ROOT = '/app/media'             # Папка для пользовател
 # ========== DEFAULT PRIMARY KEY ==========
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Доверять заголовку X-Forwarded-Host (передаётся от Nginx)
+USE_X_FORWARDED_HOST = True
+
 # ========== REST FRAMEWORK ==========
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
