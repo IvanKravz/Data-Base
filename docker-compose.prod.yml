@@ -15,6 +15,7 @@ services:
       - app_network
 
   backend:
+    build: ./backend 
     image: myapp_backend:latest
     container_name: backend_prod
     restart: unless-stopped

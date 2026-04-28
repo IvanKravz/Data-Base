@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from facilities.models import Division, Subdivision
 from .models import Employee, ShaWorkerDetails, ShaEquipmentConclusion
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -93,12 +94,10 @@ class EmployeeSerializer(serializers.ModelSerializer):
         }
 
     def get_photo_url(self, obj):
-        if not obj.photo:
-            return None
-        try:
-            return obj.photo.url
-        except Exception:
-            return None
+        if obj.photo and obj.photo.name:
+            # Возвращаем только относительный путь: /media/employee_photos/...
+            return f"{settings.MEDIA_URL}{obj.photo.name}"
+        return None
     
     # def validate(self, data):
     #     request = self.context.get('request')
