@@ -255,8 +255,8 @@ class EmployeePhotoSerializer(serializers.ModelSerializer):
     photo_url = serializers.SerializerMethodField()
 
     def get_photo_url(self, obj):
-        if obj.photo:
-            return obj.photo.url
+        if obj.photo and obj.photo.name:
+            return f"{settings.MEDIA_URL}{obj.photo.name}"
         return None
 
     class Meta:

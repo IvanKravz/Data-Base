@@ -19,6 +19,7 @@ from .serializers import (
     EmployeeSerializer, ShaWorkerDetailsSerializer, 
     ShaEquipmentConclusionSerializer, EmployeeDictionariesSerializer
 )
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -317,7 +318,7 @@ class EmployeePhotoView(APIView):
             
             return Response({
                 'id': employee.id,
-                'photo_url': employee.photo.url if employee.photo else None
+                'photo_url': f"{settings.MEDIA_URL}{employee.photo.name}" if employee.photo else None
             })
             
         except Exception as e:
