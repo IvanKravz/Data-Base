@@ -72,7 +72,7 @@ const extractFilters = (modelFilters: any): ModelFilters | null => {
 
 export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const user = useSelector((state: RootState) => state.auth.user);
-    const loading = useSelector((state: RootState) => state.auth.loading);
+    // const loading = useSelector((state: RootState) => state.auth.loading);
     const permissions = user?.permissions;
 
     const canAccessMap = useCallback((action: PermissionType = 'view') => {
@@ -138,9 +138,9 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         isEditorShaWorker,
     ]);
 
-    if (loading && !user) {
-        return <div className="loading-skeleton">Загрузка...</div>;
-    }
+    // if (loading && !user) {
+    //     return <div className="loading-skeleton">Загрузка...</div>;
+    // }
 
     return (
         <AppPermissionsContext.Provider value={value}>

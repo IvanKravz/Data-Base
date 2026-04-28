@@ -26,7 +26,7 @@ export interface Employee {
   subdivision?: string;
   is_material_responsible: boolean;
   is_sha_worker: boolean;
-  comments?: string; // Added comment field
+  comments?: string;
   sha_details?: {
     conclusion_number: string;
     start_date: string;

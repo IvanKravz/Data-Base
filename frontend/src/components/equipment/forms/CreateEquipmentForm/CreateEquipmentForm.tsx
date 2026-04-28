@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -15,7 +15,6 @@ import { EditCommentsCard } from '../EditEquipmentForm/sections/EditCommentsCard
 import { DocumentsInfo } from '../EditEquipmentForm/sections/DocumentsInfo';
 import { ProductStructureEditor } from '../EditEquipmentForm/sections/ProductStructureEditor';
 import { AdditionalInfo } from '../EditEquipmentForm/sections/AdditionalInfo';
-import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
 
 interface Division {
@@ -37,44 +36,28 @@ interface EquipmentCategory {
     is_closed: boolean;
 }
 
-// Создаем объект прав по умолчанию
-const defaultFieldPermissions = {
-    canEditName: false,
-    canEditCategory: false,
-    canEditModel: false,
-    canEditStatus: false,
-    canEditSoftwareVersion: false,
-    canEditManufacturingDate: false,
-    canEditExploitationDate: false,
-    canEditServiceLife: false,
-    canEditSecretLevel: false,
-    canEditInterestOrgan: false,
-    canEditFreeUse: false,
-    canEditDivision: false,
-    canEditSubdivision: false,
-    canEditAssignedTo: false,
-    canEditFacility: false,
-    canEditComments: false,
-    canEditProductStructure: false,
-    canEditDocuments: false,
-    canEditIdentification: false,
-};
-
 export function CreateEquipmentForm() {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const { id: paramDivisionId } = useParams<{ id: string }>();
     const location = useLocation();
     const token = localStorage.getItem('accessToken');
 
-    // Получаем пользователя из Redux
     const user = useSelector((state: RootState) => state.auth.user);
     const permissions = user?.permissions;
-
-    const hasCreatePermission = useMemo(() => 
-        permissions?.models?.Equipment?.includes('add') ?? false, [permissions]);
+    const hasCreatePermission = useMemo(
+        () => permissions?.models?.Equipment?.includes('add') ?? false,
+        [permissions]
+    );
 
     const fieldPermissions = useEquipmentFieldPermissions();
-    const effectivePermissions = fieldPermissions || defaultFieldPermissions;
+    // Права могут быть ещё не загружены – показываем лоадер, а не подставляем заглушку
+    const [isPermissionsReady, setIsPermissionsReady] = useState(false);
+
+    useEffect(() => {
+        if (fieldPermissions !== null) {
+            setIsPermissionsReady(true);
+        }
+    }, [fieldPermissions]);
 
     const navigationState = location.state as {
         divisionId?: string;
@@ -86,7 +69,7 @@ export function CreateEquipmentForm() {
     } | undefined;
 
     const isClosedEquipment = navigationState?.isClosed || false;
-    const isGlobalMode = !id;
+    const isGlobalMode = !paramDivisionId;
 
     const [formData, setFormData] = useState<Partial<Equipment>>({
         status: 'in-operation',
@@ -96,21 +79,26 @@ export function CreateEquipmentForm() {
     });
     const [divisions, setDivisions] = useState<Division[]>([]);
     const [personnel, setPersonnel] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<EquipmentCategory[]>([]);
     const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
     const fixedDivision = navigationState?.divisionId
         ? { id: navigationState.divisionId, name: navigationState.divisionName || '' }
         : null;
-    const fixedSubdivision = navigationState?.subdivisionId && navigationState.fromSubdivision
-        ? { id: navigationState.subdivisionId, name: navigationState.subdivisionName || '' }
-        : null;
+    const fixedSubdivision =
+        navigationState?.subdivisionId && navigationState.fromSubdivision
+            ? { id: navigationState.subdivisionId, name: navigationState.subdivisionName || '' }
+            : null;
 
+    // Загрузка справочников
     useEffect(() => {
-        const fetchAllData = async () => {
+        const fetchData = async () => {
             if (!token) return;
-            setIsLoading(true);
+            setLoading(true);
+            setError(null);
             try {
                 const [divisionsData, categoriesData, organsData] = await Promise.all([
                     divisionsApi.getDivisions(token),
@@ -121,9 +109,9 @@ export function CreateEquipmentForm() {
                 setCategories(categoriesData);
                 setInterestOrgans(organsData);
 
-                const divisionIdToUse = id || navigationState?.divisionId;
+                const divisionIdToUse = paramDivisionId || navigationState?.divisionId;
                 if (divisionIdToUse) {
-                    const division = divisionsData.find(d => String(d.id) === String(divisionIdToUse));
+                    const division = divisionsData.find((d) => String(d.id) === String(divisionIdToUse));
                     if (division) {
                         const personnelData = await employeesApi.getPersonnel(token, { division: divisionIdToUse });
                         setPersonnel(personnelData);
@@ -131,51 +119,60 @@ export function CreateEquipmentForm() {
                             status: 'in-operation',
                             comments: '',
                             product_structures: [],
-                            division: { id: division.id, name: division.name }
+                            division: { id: division.id, name: division.name },
                         };
-                        if (navigationState?.subdivisionId && navigationState.fromSubdivision && division.subdivisions) {
-                            const subdivision = division.subdivisions.find(s => String(s.id) === String(navigationState.subdivisionId));
+                        if (
+                            navigationState?.subdivisionId &&
+                            navigationState.fromSubdivision &&
+                            division.subdivisions
+                        ) {
+                            const subdivision = division.subdivisions.find(
+                                (s) => String(s.id) === String(navigationState.subdivisionId)
+                            );
                             if (subdivision) updatedFormData.subdivision = { id: subdivision.id, name: subdivision.name };
                         }
                         setFormData(updatedFormData);
                     }
                 }
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
+            } catch (err) {
+                console.error('Ошибка загрузки данных:', err);
+                setError('Не удалось загрузить необходимые данные. Обновите страницу.');
             } finally {
-                setIsLoading(false);
+                setLoading(false);
             }
         };
-        fetchAllData();
-    }, [token, id, navigationState]);
+        fetchData();
+    }, [token, paramDivisionId, navigationState]);
 
-    const handleChange = async (data: Partial<Equipment>) => {
-        const newFormData = { ...formData, ...data };
-        setFormData(newFormData);
-        if (data.division?.id && data.division.id !== formData.division?.id && token && !fixedDivision) {
-            setIsLoading(true);
-            try {
-                const personnelData = await employeesApi.getPersonnel(token, { division: data.division.id });
-                setPersonnel(personnelData);
-            } catch (error) {
-                console.error('Ошибка загрузки персонала:', error);
-            } finally {
-                setIsLoading(false);
+    const handleChange = useCallback(
+        async (data: Partial<Equipment>) => {
+            setFormData((prev) => ({ ...prev, ...data }));
+            // Если изменилось подразделение – перезагружаем персонал
+            if (data.division?.id && data.division.id !== formData.division?.id && token && !fixedDivision) {
+                setLoading(true);
+                try {
+                    const personnelData = await employeesApi.getPersonnel(token, { division: data.division.id });
+                    setPersonnel(personnelData);
+                } catch (err) {
+                    console.error('Ошибка загрузки персонала:', err);
+                } finally {
+                    setLoading(false);
+                }
             }
-        }
-    };
+        },
+        [formData.division?.id, token, fixedDivision]
+    );
 
     const handleStructureChange = (structures: any[]) => {
         handleChange({ product_structures: structures });
     };
 
     const handleCancel = () => {
-        if (id) {
-            if (navigationState?.subdivisionId) {
-                navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
-            } else {
-                navigate(`/divisions/${id}/equipment`);
-            }
+        if (paramDivisionId) {
+            const url = navigationState?.subdivisionId
+                ? `/divisions/${paramDivisionId}/equipment?subdivision=${navigationState.subdivisionId}`
+                : `/divisions/${paramDivisionId}/equipment`;
+            navigate(url);
         } else {
             navigate('/equipment');
         }
@@ -183,22 +180,35 @@ export function CreateEquipmentForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token) return;
-        if (!formData.division) {
-            alert('Пожалуйста, выберите подразделение');
+        setValidationErrors({});
+
+        if (!token) {
+            setError('Отсутствует токен авторизации');
             return;
         }
+        if (!formData.division) {
+            setError('Пожалуйста, выберите подразделение');
+            return;
+        }
+        if (!formData.name?.trim()) {
+            setError('Введите название техники');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
         try {
-            setIsLoading(true);
             const dataToSend = {
                 ...formData,
-                name: formData.name || '',
+                name: formData.name?.trim(),
                 type: formData.type || '',
                 status: formData.status || 'in-operation',
-                category: formData.category ? {
-                    value: formData.category.value || formData.category,
-                    name: formData.category.name || formData.category
-                } : null,
+                category: formData.category
+                    ? {
+                        value: formData.category.value || formData.category,
+                        name: formData.category.name || formData.category,
+                    }
+                    : null,
                 is_closed: isClosedEquipment,
                 division_id: formData.division ? formData.division.id : null,
                 subdivision_id: formData.subdivision ? formData.subdivision.id : null,
@@ -209,33 +219,49 @@ export function CreateEquipmentForm() {
                 secret_level: formData.secret_level === '' ? null : formData.secret_level,
             };
             await equipmentApi.createEquipment(token, dataToSend);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            if (id) {
-                if (navigationState?.subdivisionId) {
-                    navigate(`/divisions/${id}/equipment?subdivision=${navigationState.subdivisionId}`);
-                } else {
-                    navigate(`/divisions/${id}/equipment`);
-                }
+
+            // Успешное создание – переход
+            if (paramDivisionId) {
+                const url = navigationState?.subdivisionId
+                    ? `/divisions/${paramDivisionId}/equipment?subdivision=${navigationState.subdivisionId}`
+                    : `/divisions/${paramDivisionId}/equipment`;
+                navigate(url);
             } else {
                 navigate('/equipment');
             }
-        } catch (error: any) {
-            console.error('Ошибка создания техники:', error);
-            if (error.response?.data) console.error('Детали ошибки:', error.response.data);
+        } catch (err: any) {
+            console.error('Ошибка создания техники:', err);
+            const errorData = err.response?.data;
+            if (errorData && typeof errorData === 'object') {
+                // Если есть валидационные ошибки – показываем их
+                const errors: Record<string, string> = {};
+                Object.entries(errorData).forEach(([field, msgs]) => {
+                    errors[field] = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+                });
+                setValidationErrors(errors);
+                setError('Пожалуйста, исправьте ошибки в форме');
+            } else {
+                setError('Не удалось создать технику. Проверьте соединение или обратитесь к администратору.');
+            }
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     const getCurrentSubdivisions = () => {
         if (!formData.division?.id) return [];
-        const division = divisions.find(d => String(d.id) === String(formData.division?.id));
+        const division = divisions.find((d) => String(d.id) === String(formData.division?.id));
         return division?.subdivisions || [];
     };
 
-    const currentCategories = categories.filter(cat =>
+    const currentCategories = categories.filter((cat) =>
         isClosedEquipment ? cat.is_closed : !cat.is_closed || cat.value === 'shd'
     );
+
+    // Ожидание загрузки прав (если ещё не готовы)
+    if (!isPermissionsReady && fieldPermissions === null) {
+        return <div className="equipment-form-container">Загрузка прав доступа...</div>;
+    }
 
     return (
         <div className="equipment-form-container">
@@ -246,6 +272,12 @@ export function CreateEquipmentForm() {
                 <h2>Добавление новой техники</h2>
             </div>
 
+            {error && (
+                <div className="form-error-message" style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
+                    {error}
+                </div>
+            )}
+
             <form onSubmit={handleSubmit}>
                 <div className="equipment-form">
                     <BasicInformation
@@ -254,7 +286,8 @@ export function CreateEquipmentForm() {
                         isClosedEquipment={isClosedEquipment}
                         isDisposed={false}
                         equipmentCategories={currentCategories}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <AssignmentInfo
                         formData={formData}
@@ -262,40 +295,45 @@ export function CreateEquipmentForm() {
                         availableSubdivisions={getCurrentSubdivisions()}
                         availablePersonnel={personnel}
                         divisions={divisions}
-                        isLoading={isLoading}
+                        isLoading={loading}
                         fixedDivision={!!fixedDivision}
                         fixedSubdivision={!!fixedSubdivision}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <DocumentsInfo
                         formData={formData}
                         onChange={handleChange}
                         isDisposed={false}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <IdentificationInfo
                         formData={formData}
                         onChange={handleChange}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <DatesInfo
                         formData={formData}
                         onChange={handleChange}
                         serviceLife={formData.service_life}
                         onServiceLifeChange={(value) => handleChange({ service_life: value })}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <AdditionalInfo
                         formData={formData}
                         onChange={handleChange}
                         interestOrgans={interestOrgans}
                         isDisposed={false}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
                     />
                     <EditCommentsCard
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
                     />
                 </div>
                 <div className="equipment-form-structure">
@@ -303,14 +341,14 @@ export function CreateEquipmentForm() {
                         productStructures={formData.product_structures || []}
                         onChange={handleStructureChange}
                         isDisposed={false}
-                        permissions={effectivePermissions}
+                        permissions={fieldPermissions ?? {}}
                     />
                 </div>
                 <FormActions
                     onCancel={handleCancel}
                     showDisposeButton={false}
                     onDispose={undefined}
-                    isLoading={isLoading}
+                    isLoading={loading}
                     hasEditPermission={hasCreatePermission}
                     isCreating={true}
                 />

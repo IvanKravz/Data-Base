@@ -139,7 +139,8 @@ export function EditPersonnelForm({
         data_state_secrets: formData.is_sha_worker ? formData.data_state_secrets : null,
         date_end_work: formData.is_sha_worker ? formData.date_end_work : null,
         date_start_work: formData.is_sha_worker ? formData.date_start_work : null,
-        year_graduation: formData.is_sha_worker ? formData.year_graduation : null
+        year_graduation: formData.is_sha_worker ? formData.year_graduation : null,
+        rank: formData.category === 'civilian' ? null : (formData.rank || null),
       };
       onSubmit(dataToSend as Employee);
     } catch (err) {

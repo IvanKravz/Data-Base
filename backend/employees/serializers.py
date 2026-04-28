@@ -44,6 +44,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
     division = DivisionSerializer(read_only=True)
     subdivision = SubdivisionSerializer(read_only=True)
     sha_details = ShaWorkerDetailsSerializer(required=False, allow_null=True)
+    personal_phone = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    work_phone = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    rank = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     
     date_fields = ['birth_date', 'contract_date', 'data_state_secrets', 
                    'year_graduation', 'date_start_work', 'date_end_work']

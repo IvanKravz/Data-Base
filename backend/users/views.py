@@ -347,7 +347,10 @@ class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        serializer = UserSerializer(request.user)
+        # Принудительно обновляем пользователя из БД,
+        # чтобы гарантировать актуальность групп и прав доступа
+        user = User.objects.get(pk=request.user.pk)
+        serializer = UserSerializer(user)
         return Response(serializer.data)
 
 

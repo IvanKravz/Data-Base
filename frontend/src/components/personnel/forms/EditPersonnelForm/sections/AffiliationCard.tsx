@@ -15,22 +15,25 @@ interface AffiliationCardProps {
   readOnly?: boolean;
 }
 
-export function AffiliationCard({ 
-  formData, 
-  divisions, 
-  onChange, 
-  isTopManagement, 
+export function AffiliationCard({
+  formData,
+  divisions,
+  onChange,
+  isTopManagement,
   showDivisionField,
   fixedDivision = false,
   fixedSubdivision = false,
   readOnly = false
 }: AffiliationCardProps) {
+  // Ищем текущее подразделение с приведением id к строке
   const currentDivision = formData.division
-    ? divisions.find(d => d.id === formData.division.id)
+    ? divisions.find(d => String(d.id) === String(formData.division?.id))
     : null;
 
   const currentSubdivisions = currentDivision?.subdivisions || [];
   const hasSubdivisions = currentSubdivisions.length > 0;
+  const isDivisionDisabled = fixedDivision || readOnly || isTopManagement;
+  const isSubdivisionDisabled = fixedSubdivision || readOnly || isTopManagement;
 
   const handleDivisionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (fixedDivision || readOnly) return;
@@ -67,7 +70,7 @@ export function AffiliationCard({
               value={formData.division?.id || ''}
               onChange={handleDivisionChange}
               className="personnel-form-input"
-              disabled={isDisabled}
+              disabled={isDivisionDisabled}
             >
               <option value="">Выберите подразделение</option>
               {divisions.map((division) => (
@@ -79,14 +82,15 @@ export function AffiliationCard({
           </div>
         )}
 
-        {showDivisionField && hasSubdivisions && formData.division && (
+        {/* Отделение отображается, если выбрано подразделение и у него есть отделения */}
+        {showDivisionField && formData.division && hasSubdivisions && (
           <div className="personnel-form-group">
             <label className="personnel-form-label">Отделение</label>
             <select
               value={formData.subdivision?.id || ''}
               onChange={handleSubdivisionChange}
               className="personnel-form-input"
-              disabled={isDisabled}
+              disabled={isSubdivisionDisabled} 
             >
               <option value="">Выберите отделение</option>
               {currentSubdivisions.map((subdivision) => (

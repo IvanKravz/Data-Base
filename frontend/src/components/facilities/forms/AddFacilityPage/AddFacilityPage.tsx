@@ -17,7 +17,7 @@ export function AddFacilityPage() {
     const token = localStorage.getItem('accessToken');
 
     const user = useSelector((state: RootState) => state.auth.user);
-    const isExploitationUser = useMemo(() => 
+    const isExploitationUser = useMemo(() =>
         user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,6 +26,7 @@ export function AddFacilityPage() {
     const [facilityTypes, setFacilityTypes] = useState<any[]>([]);
     const [communicationPosts, setCommunicationPosts] = useState<any[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
     const navigationState = location.state as {
         divisionId?: string;
@@ -61,35 +62,49 @@ export function AddFacilityPage() {
 
     useEffect(() => {
         const fetchAllData = async () => {
-          if (!token) {
-            console.error('Token not available');
-            return;
-          }
-          
-          try {
-            setIsLoadingData(true);
-            setError(null);
-      
-            const [divisionsData, facilityTypesData, communicationPostsData] = await Promise.all([
-              divisionsApi.getDivisions({ token }),
-              facilitiesApi.getFacilityTypes(token),
-              communicationPostsApi.getCommunicationPosts({ token })
-            ]);
-      
-            setDivisions(divisionsData);
-            setFacilityTypes(facilityTypesData);
-            setCommunicationPosts(communicationPostsData);
-            
-          } catch (err: any) {
-            console.error('Ошибка при загрузке данных:', err);
-            setError(`Ошибка загрузки данных: ${err.message}`);
-          } finally {
-            setIsLoadingData(false);
-          }
+            if (!token) {
+                console.error('Token not available');
+                return;
+            }
+
+            try {
+                setIsLoadingData(true);
+                setError(null);
+
+                const [divisionsData, facilityTypesData, communicationPostsData] = await Promise.all([
+                    divisionsApi.getDivisions({ token }),
+                    facilitiesApi.getFacilityTypes(token),
+                    communicationPostsApi.getCommunicationPosts({ token })
+                ]);
+
+                setDivisions(divisionsData);
+                setFacilityTypes(facilityTypesData);
+                setCommunicationPosts(communicationPostsData);
+
+            } catch (err: any) {
+                console.error('Ошибка при создании объекта:', err);
+
+                // Извлекаем детали ошибки от сервера
+                const errorData = err.response?.data;
+                if (errorData && typeof errorData === 'object') {
+                    // Формируем читаемое сообщение
+                    const messages = Object.entries(errorData).map(([field, errors]) => {
+                        if (Array.isArray(errors)) {
+                            return `${field}: ${errors.join(', ')}`;
+                        }
+                        return `${field}: ${errors}`;
+                    });
+                    setError(`Ошибка валидации:\n${messages.join('\n')}`);
+                } else {
+                    setError('Не удалось создать объект. Проверьте соединение или обратитесь к администратору.');
+                }
+            } finally {
+                setIsLoadingData(false);
+            }
         };
-        
+
         fetchAllData();
-      }, [token]);
+    }, [token]);
 
     const initialData = useMemo(() => {
         const divisionObj = effectiveDivisionId && divisions.length > 0
@@ -127,6 +142,7 @@ export function AddFacilityPage() {
         try {
             setIsSubmitting(true);
             setError(null);
+            setValidationErrors({}); // очищаем старые ошибки
 
             const newFacility = await facilitiesApi.createFacility({
                 ...data,
@@ -167,9 +183,20 @@ export function AddFacilityPage() {
             } else {
                 navigate('/facilities');
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Ошибка при создании объекта:', err);
-            setError('Не удалось создать объект');
+            const errorResponse = err.response?.data;
+            if (errorResponse && typeof errorResponse === 'object') {
+                // Преобразуем в плоский объект { поле: "сообщение" }
+                const errors: Record<string, string> = {};
+                Object.entries(errorResponse).forEach(([field, msgs]) => {
+                    errors[field] = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+                });
+                setValidationErrors(errors);
+                setError('Пожалуйста, исправьте ошибки в форме');
+            } else {
+                setError('Не удалось создать объект. Проверьте соединение или обратитесь к администратору.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -222,8 +249,7 @@ export function AddFacilityPage() {
                     onSubmit={handleSubmit}
                     onCancel={handleBack}
                     isEditing={false}
-                    preSelectedDivision={effectiveDivisionId}
-                    preSelectedSubdivision={effectiveSubdivisionId}
+                    validationErrors={validationErrors}
                     divisions={divisions}
                     facilityTypes={facilityTypes}
                     communicationPosts={communicationPosts}
@@ -234,7 +260,7 @@ export function AddFacilityPage() {
             </div>
 
             {error && (
-                <div className="facility-add-error-message">
+                <div className="facility-add-error-message" style={{ whiteSpace: 'pre-line' }}>
                     {error}
                 </div>
             )}

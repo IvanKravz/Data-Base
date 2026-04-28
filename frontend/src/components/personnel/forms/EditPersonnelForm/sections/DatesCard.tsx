@@ -48,6 +48,7 @@ export function DatesCard({ formData, onChange, readOnly = false }: DatesCardPro
             onChange={(e) => !readOnly && onChange({ contract_date: formatDateForServer(e.target.value) })}
             className="personnel-form-input"
             disabled={readOnly}
+            required
           />
         </div>
       </div>

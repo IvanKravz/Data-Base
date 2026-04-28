@@ -177,7 +177,6 @@ export function EditFacilityForm({
             formData={formData}
             onChange={handleChange}
             divisionId={formData.division?.id}
-            subdivisionId={formData.subdivision?.id}
             facilityTypes={facilityTypes}
             communicationPosts={communicationPosts}
             isLoading={isLoadingData}

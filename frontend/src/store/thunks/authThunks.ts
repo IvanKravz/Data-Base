@@ -24,6 +24,7 @@ export const loginUser = createAsyncThunk(
         dispatch(setTwoFactorRequired(data.temp_token));
         return { requires2FA: true };
       }
+      window.location.reload();
       
       // Обычный успешный вход
       dispatch(setUser(data.user));
@@ -51,6 +52,7 @@ export const verify2FA = createAsyncThunk(
     dispatch(setTwoFactorVerifyStart());
     try {
       const data = await authApi.verify2fa(tempToken, code);
+      window.location.reload();
       // data содержит access, refresh, user
       dispatch(setTwoFactorVerifySuccess(data.user));
       return data;

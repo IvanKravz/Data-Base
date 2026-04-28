@@ -194,7 +194,8 @@ export function PersonnelSection() {
       divisionId: id,
       subdivisionId: stableSubdivisionId,
       divisionName: division?.name,
-      subdivisionName: subdivisionName
+      subdivisionName: subdivisionName,
+      fromSubdivision: !!stableSubdivisionId 
     };
     navigate(`/personnel/create`, { state });
   }, [navigate, id, stableSubdivisionId, location.pathname, location.search, division?.name, subdivisionName]);

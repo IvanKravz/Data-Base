@@ -136,6 +136,7 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
             onChange={handleCategoryChange}
             className="personnel-form-input"
             disabled={readOnly}
+            required
           >
             <option value="">Выберите категорию</option>
             {dictionaries.categories.map((category) => (

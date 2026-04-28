@@ -523,7 +523,6 @@ const Storage: React.FC = () => {
                     {loading ? (
                         <div className="storage-loading">
                             <div className="storage-spinner"></div>
-                            <p>Загрузка...</p>
                         </div>
                     ) : error ? (
                         <div className="storage-error">
