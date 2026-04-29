@@ -32,7 +32,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             return person.photo_url;
         }
         const separator = person.photo_url.includes('?') ? '&' : '?';
-        return `${config.backendUrl}${person.photo_url}${separator}t=${Date.now()}`;
+        // Просто возвращаем относительный путь (он уже начинается с /media/)
+        return `${person.photo_url}${separator}t=${Date.now()}`;
     };
 
     const fullPhotoUrl = getPhotoUrl();
