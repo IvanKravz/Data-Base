@@ -1,6 +1,6 @@
 :root {
   --transition-speed: 150ms;
-  --border-radius: 6px;
+  --border-radius: 3px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --primary-color: #3b82f6;
@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.5rem;
+  padding: 0.9rem 0.5rem;
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   background-color: white;
@@ -55,8 +55,8 @@
 }
 
 .facility-filter-icon {
-  height: 1.25rem;
-  width: 1.25rem;
+  height: 1.5rem;
+  width: 1.5rem;
   flex-shrink: 0;
   color: var(--muted-text);
 }

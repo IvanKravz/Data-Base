@@ -11,7 +11,8 @@ import {
   Radio,
   Antenna,
   RadioTower,
-  Home
+  Home,
+  Droplets
 } from 'lucide-react';
 import { Facility } from '../../types';
 import './style.css';
@@ -92,14 +93,15 @@ export function FacilityTypeFilter({
   // Функция для получения иконки по типу объекта
   const getFacilityIcon = (typeName: string) => {
     const lowerName = typeName.toLowerCase();
-    
+    console.log('lowerName', lowerName)
     if (lowerName.includes('лаз')) return Phone;
-    if (lowerName.includes('передающий')) return RadioTower;
-    if (lowerName.includes('приёмный')) return Antenna;
+    if (lowerName.includes('пдрц')) return RadioTower;
+    if (lowerName.includes('прц')) return Antenna;
     if (lowerName.includes('спутниковая')) return Satellite;
     if (lowerName.includes('радиорелейная')) return Radio;
-    if (lowerName.includes('шд')) return KeyRound;
-    if (lowerName.includes('спец.')) return ShieldX;
+    if (lowerName.includes('станция')) return ShieldX;
+    if (lowerName.includes('дизельная')) return Droplets;
+    
     
     return Home; // Станция и другие по умолчанию
   };
