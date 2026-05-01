@@ -37,6 +37,11 @@
   background-color: white;
 }
 
+.person-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 .division-header-row {
   background-color: #f8f9fa;
   /* border-left: 4px solid #3b82f6; */
@@ -121,17 +126,17 @@
 }
 
 .badge--red {
-  background-color: #fee2e2;
+  /* background-color: #fee2e2; */
   color: #dc2626;
 }
 
 .badge--blue {
-  background-color: #dbeafe;
+  /* background-color: #dbeafe; */
   color: #2563eb;
 }
 
 .badge--green {
-  background-color: #dcfce7;
+  /* background-color: #dcfce7; */
   color: #16a34a;
 }
 

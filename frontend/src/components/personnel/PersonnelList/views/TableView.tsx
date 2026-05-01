@@ -29,19 +29,36 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
     setCollapsedSubdivisions(newCollapsed);
   };
 
+  // Маппинг подкатегорий для правильной сортировки
+  const subcategoryOrder: Record<string, number> = {
+    chief: 1,
+    deputy_chief: 2,
+    department_head: 3,
+    deputy_department_head: 4,
+    section_head: 5,
+  };
+
   const sortEmployeesInGroup = (employees: Employee[]): Employee[] => {
     return [...employees].sort((a, b) => {
+      // Сначала сравниваем категории (management всегда выше)
       if (a.category === 'management' && b.category !== 'management') return -1;
       if (a.category !== 'management' && b.category === 'management') return 1;
+
+      // Если оба management, сортируем по подкатегории (если есть)
+      if (a.category === 'management' && b.category === 'management') {
+        const orderA = a.subcategory ? subcategoryOrder[a.subcategory] : 99;
+        const orderB = b.subcategory ? subcategoryOrder[b.subcategory] : 99;
+        if (orderA !== orderB) return orderA - orderB;
+      }
+
+      // Затем по приоритету
       if (a.priority !== b.priority) return a.priority - b.priority;
+      // И по ФИО
       return a.full_name.localeCompare(b.full_name);
     });
   };
 
-  // Группировка:
-  // - globalManagement: руководство без division
-  // - для каждого division: managers (руководство отдела, у которых нет subdivision)
-  //   и subdivisions (отделения с сотрудниками, исключая руководство отдела)
+  // Группировка с разделением глобального руководства (без division) и локального
   const groupedData = personnel.reduce(
     (acc, person) => {
       const isManagement = person.category === 'management';
@@ -54,32 +71,31 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
         return acc;
       }
 
-      // Если нет подразделения, пропускаем (такие уже не должны попадать)
+      // Если нет подразделения, пропускаем
       if (!hasDivision) return acc;
 
       const divisionId = person.division.id;
       const divisionName = person.division.name;
       const divisionOrder = person.division.order || 9999;
 
-      // Инициализируем запись подразделения, если её нет
       if (!acc.divisions[divisionId]) {
         acc.divisions[divisionId] = {
           divisionName,
           divisionOrder,
-          managers: [], // руководство отдела (без отделения)
+          managers: [],
           subdivisions: {},
         };
       }
 
       const divisionEntry = acc.divisions[divisionId];
 
-      // Если это руководство отдела (management) и нет привязки к отделению
+      // Руководство отдела (management без отделения)
       if (isManagement && !person.subdivision) {
         divisionEntry.managers.push(person);
         return acc;
       }
 
-      // Остальные сотрудники (включая руководство отделений, если есть subdivision)
+      // Остальные сотрудники (в т.ч. руководство отделений)
       const subdivisionId = person.subdivision?.id || 'no-subdivision';
       const subdivisionName = person.subdivision?.name || 'Без отделения';
       const subdivisionOrder = person.subdivision?.order || 9999;
@@ -201,7 +217,7 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
 
                 {!isDivisionCollapsed && (
                   <>
-                    {/* Руководство отдела (начальник и замы) */}
+                    {/* Руководство отдела */}
                     {hasManagers && (
                       <>
                         <tr className="subdivision-header-row">
@@ -287,7 +303,7 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
           <span>{person.full_name.charAt(0)}</span>
         </div>
         <div className="ml-3">
-          <div className="text-sm font-medium text-gray-900">{truncate(person.full_name, 30)}</div>
+          <div className="person-name">{truncate(person.full_name, 30)}</div>
           <div className="flex items-center gap-1 mt-0.5">
             {person.category === 'management' && (
               <div className="badge badge--red">

@@ -1,6 +1,6 @@
 // MapView.tsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ObjectMarker from './ObjectMarker';
@@ -35,6 +35,7 @@ interface MapViewProps {
 }
 
 const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '' }) => {
+  const [geoDataLoaded, setGeoDataLoaded] = useState(false);
   const [foundLocation, setFoundLocation] = useState<[number, number] | null>(null);
   const [objects, setObjects] = useState<any[]>([]);
   const [mapReady, setMapReady] = useState(false);
@@ -46,96 +47,29 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
   const mapRef = useRef<L.Map | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
-  const location = useLocation(); 
+  const location = useLocation();
 
   const setPopupRef = useCallback((id: string, popup: L.Popup | null) => {
     popupRefs.current[id] = popup;
   }, []);
 
-  // Оптимизированная обработка поиска
+  // 1. Загружаем GeoJSON один раз при монтировании
   useEffect(() => {
-    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
-      setSelectedObjectId(null);
-      setFoundLocation(null);
-
-      // Закрываем все открытые попапы при сбросе поиска
-      Object.values(popupRefs.current).forEach(popup => {
-        if (popup && mapRef.current) {
-          mapRef.current.closePopup(popup);
-        }
-      });
-      return;
-    }
-
-    const normalizedSearch = debouncedSearchTerm.toLowerCase()
-      .replace(/,/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    const foundObj = objects.find(obj => {
-      const fullAddress = `${obj.address || ''}`.toLowerCase()
-        .replace(/,/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      return fullAddress.includes(normalizedSearch) ||
-        obj.name.toLowerCase().includes(normalizedSearch);
+    let isMounted = true;
+    loadGeoJSONData().then(() => {
+      if (isMounted) setGeoDataLoaded(true);
     });
+    return () => { isMounted = false; };
+  }, []);
 
-    if (foundObj && foundObj.lat && foundObj.lng) {
-      setSelectedObjectId(foundObj.id);
-      setFoundLocation([foundObj.lat, foundObj.lng]);
-
-      setTimeout(() => {
-        if (foundObj.id && popupRefs.current[foundObj.id]) {
-          popupRefs.current[foundObj.id]?.openOn(mapRef.current);
-        }
-      }, 300);
-    } else {
-      setSelectedObjectId(null);
-      setFoundLocation(null);
-    }
-  }, [debouncedSearchTerm, objects]);
-
-  // Обработка закрытия попапов
+  // 2. Обрабатываем facilities только после загрузки геоданных
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!geoDataLoaded || facilities.length === 0) return;
 
-    const handlePopupClose = (e: L.PopupEvent) => {
-      const popupContent = e.popup.getContent();
-      if (popupContent && typeof popupContent === 'string') {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(popupContent, 'text/html');
-        const titleElement = doc.querySelector('h3.font-bold');
-        if (titleElement) {
-          const objectName = titleElement.textContent;
-          const foundObject = objects.find(obj => obj.name === objectName);
-          if (foundObject && foundObject.id === selectedObjectId) {
-            setSelectedObjectId(null);
-          }
-        }
-      }
-    };
-
-    mapRef.current.on('popupclose', handlePopupClose);
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.off('popupclose', handlePopupClose);
-      }
-    };
-  }, [objects, selectedObjectId]);
-
-  // Оптимизированная обработка facilities
-  useEffect(() => {
     let isMounted = true;
 
     const processFacilities = async () => {
       try {
-        await loadGeoJSONData();
-        if (!isMounted) return;
-
-        // Используем Promise.all для параллельной обработки
         const processingPromises = facilities.map(async (facility) => {
           const geocoded = facility.address ? geocodeAddress(facility.address) : null;
           let lat = null;
@@ -146,7 +80,6 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
             lng = Array.isArray(geocoded.lng) ? geocoded.lng[0] : geocoded.lng;
           }
 
-          // Возвращаем только если есть координаты
           if (lat && lng) {
             return {
               id: facility.id,
@@ -170,12 +103,11 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
 
         if (isMounted) {
           setObjects(validObjects);
-          
+
           if (validObjects.length > 0) {
-            const objectWithMinId = validObjects.reduce((prev, current) => 
+            const objectWithMinId = validObjects.reduce((prev, current) =>
               (prev.id < current.id) ? prev : current
             );
-            
             if (objectWithMinId.lat && objectWithMinId.lng) {
               setInitialPosition({
                 center: [objectWithMinId.lat, objectWithMinId.lng],
@@ -187,26 +119,83 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
         }
       } catch (error) {
         console.error('Ошибка обработки объектов:', error);
-        if (isMounted) {
-          setMapReady(true);
-        }
+        if (isMounted) setMapReady(true);
       }
     };
 
-    // Запускаем обработку только если есть facilities
-    if (facilities.length > 0) {
-      processFacilities();
-    } else {
-      setObjects([]);
-      setMapReady(true);
-    }
+    processFacilities();
 
     return () => { isMounted = false; };
-  }, [facilities]);
+  }, [facilities, geoDataLoaded]);
 
-  
+  // Обработка поиска (без изменений)
+  useEffect(() => {
+    if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
+      setSelectedObjectId(null);
+      setFoundLocation(null);
+      Object.values(popupRefs.current).forEach(popup => {
+        if (popup && mapRef.current) {
+          mapRef.current.closePopup(popup);
+        }
+      });
+      return;
+    }
 
-  // Мемоизированные маркеры
+    const normalizedSearch = debouncedSearchTerm.toLowerCase()
+      .replace(/,/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const foundObj = objects.find(obj => {
+      const fullAddress = `${obj.address || ''}`.toLowerCase()
+        .replace(/,/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return fullAddress.includes(normalizedSearch) ||
+        obj.name.toLowerCase().includes(normalizedSearch);
+    });
+
+    if (foundObj && foundObj.lat && foundObj.lng) {
+      setSelectedObjectId(foundObj.id);
+      setFoundLocation([foundObj.lat, foundObj.lng]);
+      setTimeout(() => {
+        if (foundObj.id && popupRefs.current[foundObj.id]) {
+          popupRefs.current[foundObj.id]?.openOn(mapRef.current);
+        }
+      }, 300);
+    } else {
+      setSelectedObjectId(null);
+      setFoundLocation(null);
+    }
+  }, [debouncedSearchTerm, objects]);
+
+  // Обработка закрытия попапов (без изменений)
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const handlePopupClose = (e: L.PopupEvent) => {
+      const popupContent = e.popup.getContent();
+      if (popupContent && typeof popupContent === 'string') {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(popupContent, 'text/html');
+        const titleElement = doc.querySelector('h3.font-bold');
+        if (titleElement) {
+          const objectName = titleElement.textContent;
+          const foundObject = objects.find(obj => obj.name === objectName);
+          if (foundObject && foundObject.id === selectedObjectId) {
+            setSelectedObjectId(null);
+          }
+        }
+      }
+    };
+    mapRef.current.on('popupclose', handlePopupClose);
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('popupclose', handlePopupClose);
+      }
+    };
+  }, [objects, selectedObjectId]);
+
+  // Мемоизированные маркеры (без изменений)
   const renderMarkers = useMemo(() => {
     return objects
       .filter(obj => obj.lat !== null && obj.lng !== null)
