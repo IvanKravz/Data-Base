@@ -140,19 +140,6 @@ export function EditFacilityForm({
     }
   }, [formData, onSubmit]);
 
-  // Пока данные загружаются, показываем индикатор загрузки
-  if (!isInitialized && isLoadingData) {
-    return (
-      <div className="facility-form-edit-container">
-        <div className="facility-form-edit-card">
-          <div className="facility-form-edit-card-content">
-            <p>Загрузка данных...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="facility-form-edit-container">
       <form onSubmit={handleSubmit} className="facility-form-edit-wrapper">

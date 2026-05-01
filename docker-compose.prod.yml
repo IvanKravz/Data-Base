@@ -54,6 +54,8 @@ services:
     volumes:
       - media_volume:/app/media
       - static_volume:/app/static
+      - /data/mapdata/tiles:/usr/share/nginx/html/tiles
+      - /data/mapdata/map:/usr/share/nginx/html/map
     depends_on:
       - backend
     networks:

@@ -13,9 +13,17 @@ RUN npm cache clean --force && npm ci
 COPY . .
 RUN npm run build
 
-# Этап раздачи через nginx (остаётся без изменений)
 FROM nginx:alpine
+
+# Копируем собранное приложение
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Копируем только нужные файлы из public (исключая tiles и map)
+COPY --from=builder /app/public/error-tile.png /usr/share/nginx/html/
+COPY --from=builder /app/public/division-image.png /usr/share/nginx/html/
+
+# Копируем конфиг nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
