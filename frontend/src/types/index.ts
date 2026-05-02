@@ -70,16 +70,16 @@ export interface Equipment {
   type: string;
   is_closed: boolean;
   open_category?: 'tko' | 'radio' | 'computer' | 'battery' | 'antenna' | 'power' | 'materials' | null;
-  closed_category?: number | null; 
+  closed_category?: number | null;
   status: 'in-operation' | 'in-storage' | 'defective' | 'for-disposal' | 'disposed';
   serial_number: string;
   inventory_number: string;
-  manufacturing_date: string; 
-  exploitation_date: string;      
-  division: number;            
-  subdivision?: number | null; 
-  facility?: number | null;    
-  assigned_to?: number | null; 
+  manufacturing_date: string;
+  exploitation_date: string;
+  division: number;
+  subdivision?: number | null;
+  facility?: number | null;
+  assigned_to?: number | null;
   comments?: string | null;
   disposal_act_number?: string | null;
   disposal_act_date?: string | null;
@@ -162,6 +162,8 @@ export interface Facility {
   has_grounding_in_kz?: boolean;
   inn?: string;
   is_closed?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface CommunicationPost {

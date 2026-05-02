@@ -38,7 +38,6 @@ export function FacilitiesSection() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
-  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
 
   const user = useSelector((state: RootState) => state.auth.user);

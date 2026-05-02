@@ -166,7 +166,7 @@ class FacilityAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'name', 'type', 'facility_class', 'division', 
         'subdivision', 'is_closed', 'communication_posts_list', 
-        'inn', 'equipment_count'
+        'inn', 'equipment_count', 'latitude', 'longitude'
     )
     list_filter = (
         'type', 'facility_class', 'division', 
@@ -183,7 +183,8 @@ class FacilityAdmin(admin.ModelAdmin):
             'fields': (
                 'name', 'type', 'facility_class', 
                 ('city', 'street', 'house_number'), 'address',
-                'comments', 'is_closed', 'inn'
+                'comments', 'is_closed', 'inn',  # <-- возможно, здесь
+                'latitude', 'longitude'           # <-- добавить
             )
         }),
         ('Принадлежность', {

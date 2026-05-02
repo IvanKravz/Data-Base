@@ -107,6 +107,7 @@ class FacilityType(models.Model):
     is_closed_type = models.BooleanField(default=False, verbose_name='Закрытый тип')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return f"{self.name}"
@@ -194,6 +195,22 @@ class Facility(models.Model):
     has_transformer_in_kz = models.BooleanField(default=False, verbose_name='ТП в пределах КЗ')
     has_grounding_in_kz = models.BooleanField(default=False, verbose_name='Контур заземления в пределах КЗ')
     
+    latitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        verbose_name='Широта'
+    )
+
+    longitude = models.DecimalField(
+        max_digits=10,
+        decimal_places=7,
+        null=True,
+        blank=True,
+        verbose_name='Долгота'
+    )
+
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -227,7 +244,40 @@ class Facility(models.Model):
         if self.house_number:
             address_parts.append(self.house_number)
         self.address = ', '.join(address_parts) if address_parts else None
+
+        # Определяем, изменились ли поля, влияющие на адрес
+        address_changed = False
+        if self.pk:
+            try:
+                old = Facility.objects.get(pk=self.pk)
+                if (old.city != self.city or old.street != self.street or 
+                    old.house_number != self.house_number):
+                    address_changed = True
+            except Facility.DoesNotExist:
+                address_changed = True
+        else:
+            # Новый объект
+            address_changed = True
+
+        # Сохраняем объект первый раз (без геокодирования)
         super().save(*args, **kwargs)
+
+        # Геокодируем только если адрес изменился, а координаты отсутствуют или устарели
+        need_geocode = address_changed and self.address
+        if not need_geocode and (self.latitude is None or self.longitude is None):
+            need_geocode = True  # координаты отсутствуют, но адрес не менялся — всё равно попробуем
+
+        if need_geocode:
+            from .geocoder import AddressGeocoder
+            geocoder = AddressGeocoder()
+            coords = geocoder.geocode(self.address)
+            if coords:
+                # Обновляем координаты, если они отличаются
+                if self.latitude != coords[0] or self.longitude != coords[1]:
+                    self.latitude = coords[0]
+                    self.longitude = coords[1]
+                    # Второй save только для полей координат
+                    super().save(update_fields=['latitude', 'longitude'])
 
     class Meta:
         verbose_name = 'Объект'

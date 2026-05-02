@@ -149,6 +149,8 @@ class FacilitySerializer(serializers.ModelSerializer):
     equipment_count = serializers.SerializerMethodField()
     division_name = serializers.CharField(source='division.name', read_only=True)
     subdivision_name = serializers.CharField(source='subdivision.name', read_only=True, allow_null=True)
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=7, read_only=True)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=7, read_only=True)
     
     # Добавляем сериализаторы для подразделений с полем order
     division = DivisionForFacilitySerializer(read_only=True)
@@ -202,7 +204,7 @@ class FacilitySerializer(serializers.ModelSerializer):
             'equipment_count', 'comments', 'acceptance_act_number', 'rim_act_number',
             'commissioning_act_number', 'opening_permission_number', 'is_closed', 'communication_posts', 
             'communication_post_ids', 'kz_size', 'has_transformer_in_kz', 'has_grounding_in_kz', 
-            'communication_posts', 'inn', 'created_at', 'updated_at'
+            'communication_posts', 'inn', 'latitude', 'longitude', 'created_at', 'updated_at'
         ]
         extra_kwargs = {
             'address': {'read_only': True}

@@ -4,15 +4,12 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import ObjectMarker from './ObjectMarker';
-import { geocodeAddress, loadGeoJSONData } from '../data/addresses';
 import './style.css';
 
-// Фикс для иконок маркеров
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { useDebounce } from '../../../utils/useDebounce';
-import { useLocation } from 'react-router-dom';
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -20,7 +17,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Компонент для управления положением карты
 const MapController = React.memo(({ center, zoom }: { center: [number, number]; zoom: number }) => {
   const map = useMap();
   useEffect(() => {
@@ -35,10 +31,8 @@ interface MapViewProps {
 }
 
 const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '' }) => {
-  const [geoDataLoaded, setGeoDataLoaded] = useState(false);
   const [foundLocation, setFoundLocation] = useState<[number, number] | null>(null);
   const [objects, setObjects] = useState<any[]>([]);
-  const [mapReady, setMapReady] = useState(false);
   const [initialPosition, setInitialPosition] = useState<{
     center: [number, number];
     zoom: number;
@@ -47,88 +41,43 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
   const mapRef = useRef<L.Map | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
-  const location = useLocation();
 
   const setPopupRef = useCallback((id: string, popup: L.Popup | null) => {
     popupRefs.current[id] = popup;
   }, []);
 
-  // 1. Загружаем GeoJSON один раз при монтировании
+  // Преобразуем facilities в объекты карты, используя готовые координаты из БД
   useEffect(() => {
-    let isMounted = true;
-    loadGeoJSONData().then(() => {
-      if (isMounted) setGeoDataLoaded(true);
-    });
-    return () => { isMounted = false; };
-  }, []);
+    if (!facilities.length) return;
 
-  // 2. Обрабатываем facilities только после загрузки геоданных
-  useEffect(() => {
-    if (!geoDataLoaded || facilities.length === 0) return;
+    const validObjects = facilities
+      .filter(f => f.latitude != null && f.longitude != null)
+      .map(f => ({
+        id: f.id,
+        name: f.name,
+        lat: f.latitude,
+        lng: f.longitude,
+        address: f.address || 'Адрес не указан',
+        description: f.comments,
+        type: f.type,
+        facility_class: f.facility_class,
+        is_closed: f.is_closed,
+        type_display: f.type_display,
+        color: f.is_closed ? 'grey' : 'blue'
+      }));
 
-    let isMounted = true;
+    setObjects(validObjects);
 
-    const processFacilities = async () => {
-      try {
-        const processingPromises = facilities.map(async (facility) => {
-          const geocoded = facility.address ? geocodeAddress(facility.address) : null;
-          let lat = null;
-          let lng = null;
+    if (validObjects.length > 0) {
+      const firstObject = validObjects[0];
+      setInitialPosition({
+        center: [firstObject.lat, firstObject.lng],
+        zoom: 10
+      });
+    }
+  }, [facilities]);
 
-          if (geocoded) {
-            lat = Array.isArray(geocoded.lat) ? geocoded.lat[1] : geocoded.lat;
-            lng = Array.isArray(geocoded.lng) ? geocoded.lng[0] : geocoded.lng;
-          }
-
-          if (lat && lng) {
-            return {
-              id: facility.id,
-              name: facility.name,
-              lat: lat,
-              lng: lng,
-              address: facility.address || 'Адрес не указан',
-              description: facility.comments,
-              type: facility.type,
-              facility_class: facility.facility_class,
-              is_closed: facility.is_closed,
-              type_display: facility.type_display,
-              color: facility.is_closed ? 'grey' : 'blue'
-            };
-          }
-          return null;
-        });
-
-        const results = await Promise.all(processingPromises);
-        const validObjects = results.filter(Boolean);
-
-        if (isMounted) {
-          setObjects(validObjects);
-
-          if (validObjects.length > 0) {
-            const objectWithMinId = validObjects.reduce((prev, current) =>
-              (prev.id < current.id) ? prev : current
-            );
-            if (objectWithMinId.lat && objectWithMinId.lng) {
-              setInitialPosition({
-                center: [objectWithMinId.lat, objectWithMinId.lng],
-                zoom: 10
-              });
-            }
-          }
-          setMapReady(true);
-        }
-      } catch (error) {
-        console.error('Ошибка обработки объектов:', error);
-        if (isMounted) setMapReady(true);
-      }
-    };
-
-    processFacilities();
-
-    return () => { isMounted = false; };
-  }, [facilities, geoDataLoaded]);
-
-  // Обработка поиска (без изменений)
+  // Поиск по объектам
   useEffect(() => {
     if (!debouncedSearchTerm || debouncedSearchTerm.trim() === '') {
       setSelectedObjectId(null);
@@ -169,7 +118,7 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
     }
   }, [debouncedSearchTerm, objects]);
 
-  // Обработка закрытия попапов (без изменений)
+  // Закрытие попапов
   useEffect(() => {
     if (!mapRef.current) return;
     const handlePopupClose = (e: L.PopupEvent) => {
@@ -195,7 +144,6 @@ const MapView: React.FC<MapViewProps> = React.memo(({ facilities, searchTerm = '
     };
   }, [objects, selectedObjectId]);
 
-  // Мемоизированные маркеры (без изменений)
   const renderMarkers = useMemo(() => {
     return objects
       .filter(obj => obj.lat !== null && obj.lng !== null)
