@@ -60,7 +60,6 @@ dist-ssr/
 
 # Ваши специфичные файлы
 frontend/public/tiles/
-coordinate.osm.json
 
 # Редакторы и ОС
 .vscode/
