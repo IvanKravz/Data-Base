@@ -1,10 +1,10 @@
 // FacilityTypeFilter.tsx
 import React, { useState } from 'react';
-import { 
+import {
   Building2,
-  ShieldX, 
-  KeyRound, 
-  ChevronDown, 
+  ShieldX,
+  KeyRound,
+  ChevronDown,
   ChevronUp,
   Satellite,
   Phone,
@@ -20,7 +20,7 @@ import './style.css';
 interface FacilityTypeFilterProps {
   facilities: Facility[];
   selectedType: 'all' | number;
-  onTypeChange: (type: 'all' | number) => void;
+  onTypeChange: (type: 'all' | number, resetClass?: boolean) => void;  
   selectedClass: 'all' | '1' | '2';
   onClassChange: (facilityClass: 'all' | '1' | '2') => void;
   activeTab?: 'all' | 'open' | 'closed';
@@ -36,7 +36,6 @@ export function FacilityTypeFilter({
 }: FacilityTypeFilterProps) {
   const [showClassFilters, setShowClassFilters] = useState(false);
 
-  // Фильтруем facilities по активной вкладке
   const filteredFacilities = facilities.filter(facility => {
     if (activeTab === 'all') return true;
     if (activeTab === 'open') return !facility.is_closed;
@@ -44,17 +43,13 @@ export function FacilityTypeFilter({
     return true;
   });
 
-  // Для вкладки "Открытые объекты" скрываем фильтр по классам
   const showClassFilter = activeTab !== 'open';
 
   const uniqueTypeIds = Array.from(new Set(filteredFacilities.map(f => f.type.id)));
   const facilityTypes = uniqueTypeIds.map(id => {
     const type = filteredFacilities.find(f => f.type.id === id)?.type;
     return type!;
-  }).filter(Boolean) as {id: number, name: string, description: string}[];
-
-  const isShdSelected = selectedType !== 'all' && 
-    filteredFacilities.find(f => f.type.id === selectedType)?.type.name.toLowerCase().includes('шд');
+  }).filter(Boolean) as { id: number, name: string, description: string }[];
 
   const getTypeCount = (typeId: 'all' | number) => {
     if (typeId === 'all') return filteredFacilities.length;
@@ -68,17 +63,11 @@ export function FacilityTypeFilter({
   };
 
   const handleTypeChange = (typeId: 'all' | number) => {
-    if (typeId === selectedType && isShdSelected) {
-      // Убрали переключение showClassFilters здесь
-    } else {
-      onTypeChange(typeId);
-      const newTypeIsShd = typeId !== 'all' && 
-        filteredFacilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
-      if (!newTypeIsShd) {
-        onClassChange('all');
-      }
-      setShowClassFilters(false);
-    }
+    const isShd = typeId !== 'all' &&
+      filteredFacilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
+    // Передаём родителю флаг сброса класса (true для не-ШД)
+    onTypeChange(typeId, !isShd);
+    setShowClassFilters(false);
   };
 
   const handleClassChange = (facilityClass: 'all' | '1' | '2') => {
@@ -90,10 +79,8 @@ export function FacilityTypeFilter({
     setShowClassFilters(!showClassFilters);
   };
 
-  // Функция для получения иконки по типу объекта
   const getFacilityIcon = (typeName: string) => {
     const lowerName = typeName.toLowerCase();
-    console.log('lowerName', lowerName)
     if (lowerName.includes('лаз')) return Phone;
     if (lowerName.includes('пдрц')) return RadioTower;
     if (lowerName.includes('прц')) return Antenna;
@@ -101,9 +88,7 @@ export function FacilityTypeFilter({
     if (lowerName.includes('радиорелейная')) return Radio;
     if (lowerName.includes('станция')) return ShieldX;
     if (lowerName.includes('дизельная')) return Droplets;
-    
-    
-    return Home; // Станция и другие по умолчанию
+    return Home;
   };
 
   const shdType = facilityTypes.find(t => t.name.toLowerCase().includes('шд'));
@@ -126,8 +111,8 @@ export function FacilityTypeFilter({
           </span>
         </button>
 
-        {/* Остальные типы объектов (кроме ШД и спец.) */}
-        {facilityTypes.filter(t => 
+        {/* Обычные типы (не ШД и не спец.) */}
+        {facilityTypes.filter(t =>
           !t.name.toLowerCase().includes('шд') && !t.name.toLowerCase().includes('спец.')
         ).map(type => {
           const IconComponent = getFacilityIcon(type.name);
@@ -148,7 +133,7 @@ export function FacilityTypeFilter({
           );
         })}
 
-        {/* Станция спец. связи */}
+        {/* Спец. связь */}
         {specType && (
           <button
             onClick={() => handleTypeChange(specType.id)}
@@ -164,7 +149,7 @@ export function FacilityTypeFilter({
           </button>
         )}
 
-        {/* ШД с фильтром по классам */}
+        {/* ШД с дропдауном классов */}
         {shdType && showClassFilter && (
           <div className="shd-filter-wrapper">
             <button
@@ -188,7 +173,7 @@ export function FacilityTypeFilter({
                     : getTypeCount(shdType.id)}
                 </span>
                 {selectedType === shdType.id && showClassFilter && (
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleClassFilters();

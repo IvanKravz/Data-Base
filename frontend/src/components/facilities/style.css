@@ -169,8 +169,9 @@
 }
 
 .chevron-icon {
-  height: 1rem;
-  width: 1rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  color: #2563eb;
 }
 
 /* Animation for dropdown */

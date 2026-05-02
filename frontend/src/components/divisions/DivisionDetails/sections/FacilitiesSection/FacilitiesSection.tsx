@@ -24,7 +24,6 @@ import { useDebounce } from '../../../../../utils/useDebounce';
 import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationModal';
 import { isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
-// Ленивая загрузка карты
 const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
 
 const TAB_ICONS = {
@@ -37,40 +36,19 @@ const TAB_ICONS = {
 export function FacilitiesSection() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Получаем пользователя из Redux
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  const [filterType, setFilterType] = useState<'all' | number>(() => {
-    if (location.state?.filterType) return location.state.filterType;
-    const typeFromUrl = searchParams.get('type');
-    return typeFromUrl && typeFromUrl !== 'all' ? parseInt(typeFromUrl) : 'all';
-  });
-
-  const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>(() => {
-    if (location.state?.facilityClassFilter) return location.state.facilityClassFilter;
-    const classFromUrl = searchParams.get('class');
-    return (classFromUrl === '1' || classFromUrl === '2') ? classFromUrl : 'all';
-  });
-
-  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>(() => {
-    if (location.state?.activeTab) return location.state.activeTab;
-    const tabFromUrl = searchParams.get('tab');
-    return (tabFromUrl === 'all' || tabFromUrl === 'open' || tabFromUrl === 'closed' || tabFromUrl === 'posts')
-      ? tabFromUrl
-      : 'all';
-  });
-
-  const [viewType, setViewType] = useState<'table' | 'grid'>(() => {
-    if (location.state?.viewType) return location.state.viewType;
-    const viewFromUrl = searchParams.get('view');
-    return viewFromUrl === 'grid' ? 'grid' : 'table';
-  });
+  // ----- Состояния (синхронизируются с URL) -----
+  const [filterType, setFilterType] = useState<'all' | number>('all');
+  const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>('all');
+  const [viewType, setViewType] = useState<'table' | 'grid'>('table');
 
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [communicationPosts, setCommunicationPosts] = useState<CommunicationPost[]>([]);
@@ -84,71 +62,113 @@ export function FacilitiesSection() {
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
 
-  // Стабилизированные значения
+  // ----- Вспомогательные вычисления -----
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
 
-  // Определяем тип пользователя
   const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
   const isChief = useMemo(() => isExploitationChief(), []);
-
-  // Для эксплуатационных пользователей отключаем глобальный режим
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
-
-  // Получаем ID подразделения пользователя
   const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
-
-  // Получаем ID отделения пользователя
   const userSubdivisionId = useMemo(() => {
     if (!user?.division_info || isChief) return null;
     return user.division_info.subdivision?.id ?? null;
   }, [user, isChief]);
 
-  // Проверка прав через Redux
-  const canViewCommunicationPosts = useMemo(() => {
-    return permissions?.models?.CommunicationPost?.includes('view') ?? false;
-  }, [permissions]);
+  const canViewCommunicationPosts = useMemo(() =>
+    permissions?.models?.CommunicationPost?.includes('view') ?? false, [permissions]);
+  const canCreateFacilities = useMemo(() =>
+    permissions?.models?.Facility?.includes('add') ?? false, [permissions]);
+  const canCreateCommunicationPosts = useMemo(() =>
+    permissions?.models?.CommunicationPost?.includes('add') ?? false, [permissions]);
+  const canDeleteCommunicationPosts = useMemo(() =>
+    permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
 
-  const canCreateFacilities = useMemo(() => {
-    return permissions?.models?.Facility?.includes('add') ?? false;
-  }, [permissions]);
+  // ----- Функция обновления URL с функциональным подходом (избегает гонок) -----
+  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null) newParams.delete(key);
+        else newParams.set(key, value);
+      });
+      return newParams;
+    }, { replace: true });
+  }, [setSearchParams]);
 
-  const canCreateCommunicationPosts = useMemo(() => {
-    return permissions?.models?.CommunicationPost?.includes('add') ?? false;
-  }, [permissions]);
-
-  const canDeleteCommunicationPosts = useMemo(() => {
-    return permissions?.models?.CommunicationPost?.includes('delete') ?? false;
-  }, [permissions]);
-
-  // Отложенная загрузка карты
+  // ----- Синхронизация состояния с URL (один источник правды) -----
   useEffect(() => {
-    const timer = setTimeout(() => setShowMap(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const tabParam = searchParams.get('tab');
+    let newActiveTab: typeof activeTab = 'all';
+    if (tabParam === 'open') newActiveTab = 'open';
+    else if (tabParam === 'closed') newActiveTab = 'closed';
+    else if (tabParam === 'posts') newActiveTab = 'posts';
+    else newActiveTab = 'all';
+    if (newActiveTab !== activeTab) setActiveTab(newActiveTab);
 
-  // Инициализация из URL параметров
-  useEffect(() => {
-    const tabFromUrl = searchParams.get('tab');
-    const viewFromUrl = searchParams.get('view');
-    if (tabFromUrl === 'all' || tabFromUrl === 'open' || tabFromUrl === 'closed' || tabFromUrl === 'posts') {
-      setActiveTab(tabFromUrl);
+    const viewParam = searchParams.get('view');
+    let newViewType: typeof viewType = 'table';
+    if (viewParam === 'grid') newViewType = 'grid';
+    if (newViewType !== viewType) setViewType(newViewType);
+
+    const typeParam = searchParams.get('type');
+    let newFilterType: typeof filterType = 'all';
+    if (typeParam && typeParam !== 'all') {
+      const parsed = parseInt(typeParam, 10);
+      if (!isNaN(parsed)) newFilterType = parsed;
     }
-    if (viewFromUrl === 'table' || viewFromUrl === 'grid') {
-      setViewType(viewFromUrl);
-    }
+    if (newFilterType !== filterType) setFilterType(newFilterType);
+
+    const classParam = searchParams.get('class');
+    let newClass: typeof facilityClassFilter = 'all';
+    if (classParam === '1' || classParam === '2') newClass = classParam;
+    if (newClass !== facilityClassFilter) setFacilityClassFilter(newClass);
   }, [searchParams]);
 
-  // Мемоизированная функция загрузки данных
+  // ----- Обработчики изменений (обновляют только URL, состояние обновится через эффект) -----
+  const handleTabChange = useCallback((tab: typeof activeTab) => {
+    if (tab === 'posts') {
+      updateUrlParams({ tab, type: null, class: null });
+    } else {
+      updateUrlParams({ tab });
+    }
+    setMapSearchTerm('');
+  }, [updateUrlParams]);
+
+  const handleViewChange = useCallback((type: typeof viewType) => {
+    updateUrlParams({ view: type });
+  }, [updateUrlParams]);
+
+  const handleTypeChange = useCallback((type: typeof filterType, resetClass: boolean = false) => {
+    const updates: Record<string, string | null> = {};
+    if (type === 'all') {
+      updates.type = null;
+    } else {
+      updates.type = type.toString();
+    }
+    if (resetClass) {
+      updates.class = null;
+    }
+    updateUrlParams(updates);
+    setMapSearchTerm('');
+  }, [updateUrlParams]);
+
+  const handleClassChange = useCallback((cls: typeof facilityClassFilter) => {
+    if (cls === 'all') {
+      updateUrlParams({ class: null });
+    } else {
+      updateUrlParams({ class: cls });
+    }
+    setMapSearchTerm('');
+  }, [updateUrlParams]);
+
+  // ----- Загрузка данных (без изменений) -----
   const fetchData = useCallback(async () => {
     if (!stableToken) return;
-
     try {
       setLoading(true);
       setError(null);
-
       if (isGlobalView) {
-        // Глобальный режим – объекты всегда, посты только если есть права
         const allFacilities = await facilitiesApi.getFacilities({ token: stableToken });
         setFacilities(allFacilities);
         if (canViewCommunicationPosts) {
@@ -159,21 +179,16 @@ export function FacilitiesSection() {
         }
         authApi.updateGlobalView(true);
       } else if (isExploitationUser) {
-        // Режим для эксплуатационных пользователей
         authApi.updateGlobalView(false);
-
         if (!userDivisionId) {
           setError('У вашей учетной записи не назначено подразделение');
           return;
         }
-
         const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
-
         const [allFacilities, div] = await Promise.all([
           facilitiesApi.getFacilities({ token: stableToken, division: userDivisionId }),
           divisionsApi.getDivisionById(userDivisionId, stableToken)
         ]);
-
         let posts: CommunicationPost[] = [];
         if (canViewCommunicationPosts) {
           posts = await communicationPostsApi.getCommunicationPosts({
@@ -182,25 +197,21 @@ export function FacilitiesSection() {
             subdivision: targetSubdivisionId || undefined
           });
         }
-
         if (targetSubdivisionId) {
           const subdivision = div.subdivisions?.find(s => s.id.toString() === targetSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
-
         setFacilities(allFacilities);
         setCommunicationPosts(posts);
         setDivision(div);
       } else {
-        // Стандартный режим подразделения
         authApi.updateGlobalView(false);
         const [allFacilities, div] = await Promise.all([
           facilitiesApi.getFacilities({ token: stableToken, division: id }),
           divisionsApi.getDivisionById(id, stableToken)
         ]);
-
         let posts: CommunicationPost[] = [];
         if (canViewCommunicationPosts) {
           posts = await communicationPostsApi.getCommunicationPosts({
@@ -209,14 +220,12 @@ export function FacilitiesSection() {
             subdivision: stableSubdivisionId || undefined
           });
         }
-
         if (stableSubdivisionId) {
           const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
-
         setFacilities(allFacilities);
         setCommunicationPosts(posts);
         setDivision(div);
@@ -229,12 +238,11 @@ export function FacilitiesSection() {
     }
   }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId, canViewCommunicationPosts]);
 
-  // Основной эффект загрузки данных
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Логика фильтрации для отделения
+  // ----- Логика фильтрации -----
   const filterBySubdivision = useCallback((items: any[]) => {
     if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
@@ -244,7 +252,6 @@ export function FacilitiesSection() {
     );
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  // Фильтрация объектов и постов по отделению
   const filteredBySubdivisionFacilities = useMemo(() => filterBySubdivision(facilities), [facilities, filterBySubdivision]);
   const filteredBySubdivisionPosts = useMemo(() => filterBySubdivision(communicationPosts), [communicationPosts, filterBySubdivision]);
 
@@ -297,13 +304,7 @@ export function FacilitiesSection() {
     [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
   );
 
-  const handleViewChange = useCallback((type: 'table' | 'grid') => {
-    setViewType(type);
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('view', type);
-    navigate({ search: newSearchParams.toString() }, { replace: true });
-  }, [searchParams, navigate]);
-
+  // ----- Обработчики действий -----
   const handleFacilityDeleted = useCallback((deletedId: string) => {
     setFacilities(prev => prev.filter(f => f.id !== deletedId));
   }, []);
@@ -311,42 +312,6 @@ export function FacilitiesSection() {
   const handlePostDeleted = useCallback((deletedId: string) => {
     setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
   }, []);
-
-  const handleTabChange = useCallback((tab: 'all' | 'open' | 'closed' | 'posts') => {
-    setActiveTab(tab);
-    setMapSearchTerm('');
-    if (tab !== 'posts' && activeTab !== 'posts') {
-      setFilterType('all');
-      setFacilityClassFilter('all');
-    }
-    const newSearchParams = new URLSearchParams();
-    if (stableSubdivisionId) newSearchParams.set('subdivision', stableSubdivisionId);
-    newSearchParams.set('tab', tab);
-    if (tab !== 'posts') {
-      if (filterType !== 'all') newSearchParams.set('type', filterType.toString());
-      if (facilityClassFilter !== 'all') newSearchParams.set('class', facilityClassFilter);
-    }
-    if (viewType !== 'table') newSearchParams.set('view', viewType);
-    navigate({ search: newSearchParams.toString() }, { replace: true });
-  }, [searchParams, navigate, stableSubdivisionId, viewType, filterType, facilityClassFilter, activeTab]);
-
-  const handleTypeChange = useCallback((type: 'all' | number) => {
-    setFilterType(type);
-    setMapSearchTerm('');
-    const newSearchParams = new URLSearchParams(searchParams);
-    if (type === 'all') newSearchParams.delete('type');
-    else newSearchParams.set('type', type.toString());
-    navigate({ search: newSearchParams.toString() }, { replace: true });
-  }, [searchParams, navigate]);
-
-  const handleClassChange = useCallback((classValue: 'all' | '1' | '2') => {
-    setFacilityClassFilter(classValue);
-    setMapSearchTerm('');
-    const newSearchParams = new URLSearchParams(searchParams);
-    if (classValue === 'all') newSearchParams.delete('class');
-    else newSearchParams.set('class', classValue);
-    navigate({ search: newSearchParams.toString() }, { replace: true });
-  }, [searchParams, navigate]);
 
   const handleBack = useCallback(() => {
     if (isGlobalView) navigate('/');
@@ -411,31 +376,6 @@ export function FacilitiesSection() {
     setFacilityToDelete(null);
   }, []);
 
-  // Автоматическое переключение вкладок
-  useEffect(() => {
-    if (!loading) {
-      const hasAnyData = hasAllFacilities || hasOpenFacilities || hasClosedFacilities || hasCommunicationPosts;
-      if (!hasAnyData) return;
-      if (activeTab === 'posts' && !hasCommunicationPosts) return;
-      const currentTabHasData =
-        (activeTab === 'all' && hasAllFacilities) ||
-        (activeTab === 'open' && hasOpenFacilities) ||
-        (activeTab === 'closed' && hasClosedFacilities) ||
-        (activeTab === 'posts' && hasCommunicationPosts);
-      if (!currentTabHasData) {
-        let newTab = 'all';
-        if (hasAllFacilities) newTab = 'all';
-        else if (hasOpenFacilities) newTab = 'open';
-        else if (hasClosedFacilities) newTab = 'closed';
-        else if (hasCommunicationPosts) newTab = 'posts';
-        setActiveTab(newTab);
-        const newSearchParams = new URLSearchParams(searchParams);
-        newSearchParams.set('tab', newTab);
-        navigate({ search: newSearchParams.toString() }, { replace: true });
-      }
-    }
-  }, [loading, hasAllFacilities, hasOpenFacilities, hasClosedFacilities, hasCommunicationPosts, activeTab, searchParams, navigate]);
-
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
       const divisionName = user?.division_info?.name || 'Ваше подразделение';
@@ -447,7 +387,10 @@ export function FacilitiesSection() {
     return `Объекты: ${division?.name || ''}${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
 
-  const handleSearchTermChange = useCallback((term: string) => setSearchTerm(term), []);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowMap(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading) return <div className="flex justify-center py-12">Загрузка данных...</div>;
   if (error) return <div className="facilities-error-message">{error}</div>;
@@ -530,7 +473,7 @@ export function FacilitiesSection() {
             <div className="facilities-search-container">
               <SearchBar
                 searchTerm={searchTerm}
-                setSearchTerm={handleSearchTermChange}
+                setSearchTerm={setSearchTerm}
                 placeholder={
                   activeTab === 'posts'
                     ? "Поиск по названию поста связи..."
