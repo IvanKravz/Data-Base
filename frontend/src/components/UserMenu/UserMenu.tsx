@@ -86,7 +86,7 @@ export function UserMenu() {
                 <span className="user-name">
                     {isLoading ? 'Загрузка...' : userData?.username || 'Гость'}
                 </span>
-                <ChevronDown className={`chevron-icon ${isOpen ? 'rotated' : ''}`} size={18} />
+                <ChevronDown className={`chevron-icon-user ${isOpen ? 'rotated' : ''}`} size={18} />
             </button>
 
             {isOpen && (

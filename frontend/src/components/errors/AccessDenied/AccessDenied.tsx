@@ -1,15 +1,18 @@
 // components/errors/AccessDenied.tsx
 import React from 'react';
 import { Home, ArrowLeft, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './AccessDenied.css';
 
 const AccessDenied: React.FC = () => {
+  const navigate = useNavigate();
+  
   const handleGoHome = () => {
-    window.location.href = '/';
+    navigate('/');         
   };
 
   const handleGoBack = () => {
-    window.history.back();
+    navigate(-1);           
   };
 
   // SVG иконка в минималистичном стиле

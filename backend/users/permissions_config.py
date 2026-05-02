@@ -104,7 +104,7 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 16},
+            'Task': {'division_id': 1},
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,
@@ -134,7 +134,7 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 16, 'subdivision_id': 11},
+            'Task': {'division_id': 1, 'subdivision_id': 1},
             # 'Equipment': {'is_closed': True},
             # 'Facility': {'is_closed': True},
         },
@@ -158,7 +158,7 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 16, 'subdivision_id': 11}
+            'Task': {'division_id': 1, 'subdivision_id': 1}
         },
         'can_see_all_divisions': True,      # Видит все подразделения
         'can_access_storage': True,
@@ -190,7 +190,7 @@ ROLE_PERMISSIONS = {
             'ACL': ['view', 'change'],
         },
         'filters': {
-            'Task': {'division_id': 16, 'subdivision_id': 11},
+            'Task': {'division_id': 1, 'subdivision_id': 1},
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,
@@ -219,7 +219,7 @@ ROLE_PERMISSIONS = {
         'filters': {
             'Equipment': {'category__value__in': ['tko', 'shd', 'shdTelephone']},
             'Facility': {'is_closed': True},
-            'Task': {'division_id': 16, 'subdivision_id': 12}
+            'Task': {'division_id': 1, 'subdivision_id': 2}
         },
         'can_see_all_divisions': True,
         'is_editor_sha_worker': True,              
@@ -242,7 +242,7 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 16, 'subdivision_id': 13}
+            'Task': {'division_id': 1, 'subdivision_id': 3}
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,

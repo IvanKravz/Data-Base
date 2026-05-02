@@ -232,7 +232,7 @@
 }   
 
 /* Иконка шеврона */
-.chevron-icon {
+.chevron-icon-user {
     width: 1rem;
     height: 1rem;
     color: rgba(255, 255, 255, 0.95);
@@ -240,16 +240,16 @@
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.chevron-icon.rotated {
+.chevron-icon-user.rotated {
     transform: rotate(180deg);
 }
 
 /* Анимация иконки при наведении */
-.user-menu-button:hover .chevron-icon {
+.user-menu-button:hover .chevron-icon-user {
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
-.user-menu-button:hover .chevron-icon:not(.rotated) {
+.user-menu-button:hover .chevron-icon-user:not(.rotated) {
     animation: iconBounce 1.5s ease-in-out infinite;
 }
 
