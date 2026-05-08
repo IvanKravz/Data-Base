@@ -1,119 +1,9 @@
-/* Основной контейнер страницы Layout */
-.page-container {
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
-
-/* Хедер с градиентом */
-.header {
-  background: #466cd5;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0 1rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  animation: slideDown 0.4s ease-out forwards;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.header-content {
-  margin: 0 auto;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  z-index: 2;
-}
-
-.header-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.header-logo-icon {
-  display: flex;
-}
-
-.header-logo-icon img {
-  width: 2.3rem;
-  height: 3.5rem;
-}
-
-.header-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: white;
-}
-
-/* Сайдбар */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 4rem;
-  height: calc(100vh - 4rem);
-  width: 14rem;
-  background-color: white;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
-  animation: slideLeft 0.5s ease-out 0.2s forwards;
-  opacity: 0;
-  transform: translateX(-100%);
-}
-
-@keyframes slideLeft {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Основной контент */
-.main-content {
-  padding-left: 14rem;
-  padding-top: 4rem;
-  min-height: 100vh;
-}
-
-.content-container {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-/* Анимация fadeIn */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Основной контейнер страницы Sidebar */
-
-/* Основной контейнер элемента меню */
+/* style.css — исходные стили для Sidebar (меню, подменю) остаются без изменений */
 .menu-item {
   overflow: hidden;
   position: relative;
 }
 
-/* Контейнер для кликабельной области */
 .menu-item-button {
   width: 100%;
   display: flex;
@@ -125,7 +15,6 @@
   position: relative;
 }
 
-/* Активное состояние элемента меню */
 .menu-item-button--active {
   background-color: #eff6ff;
   color: #1045b7;
@@ -136,7 +25,6 @@
   transform: translateY(-0.03rem);
 }
 
-/* Неактивное состояние элемента меню */
 .menu-item-button--inactive {
   color: #334257;
 }
@@ -146,7 +34,6 @@
   color: #1151bf;
 }
 
-/* Контейнер для иконки и текста */
 .menu-item-content {
   display: flex;
   align-items: center;
@@ -154,7 +41,6 @@
   flex: 1;
 }
 
-/* Иконка элемента меню */
 .menu-item-icon {
   height: 1.25rem;
   width: 1.25rem;
@@ -169,16 +55,10 @@
   color: #0f47a7;
 }
 
-.menu-item-icon--inactive:hover {
-  color: #1151bf;
-}
-
-/* Текст элемента меню */
 .menu-item-label {
   font-weight: 500;
 }
 
-/* Иконка раскрытия подменю */
 .menu-item-arrow {
   transition: transform 0.2s;
 }
@@ -187,7 +67,6 @@
   transform: rotate(90deg);
 }
 
-/* Индикатор активного элемента меню */
 .menu-item-indicator {
   position: absolute;
   right: 0;
@@ -206,13 +85,13 @@
     opacity: 0;
     transform: translateY(-50%) translateX(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
   }
 }
 
-/* Контейнер для подменю */
 .submenu {
   display: grid;
   transition: all 0.3s ease-in-out;
@@ -226,7 +105,6 @@
   grid-template-rows: 0fr;
 }
 
-/* Вложенные элементы подменю */
 .submenu-content {
   overflow: hidden;
   margin-top: 0.25rem;
@@ -238,7 +116,6 @@
   gap: 0.25rem;
 }
 
-/* Контейнер навигации */
 .navigation-menu {
   display: flex;
   flex-direction: column;

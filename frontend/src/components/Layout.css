@@ -1,0 +1,251 @@
+/* Layout.css — современные стили для Layout с баннером и гибкой структурой */
+
+/* ----- Общий контейнер страницы (flex-колонка) ----- */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* ----- Hero-баннер (изображение сверху) ----- */
+.hero-banner {
+    width: 100%;
+    position: relative;
+    animation: bannerReveal 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+}
+
+.hero-banner__image-wrapper {
+    width: 100%;
+    height: 280px;
+    /* аккуратная высота, не на весь экран */
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+}
+
+.hero-banner__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    transition: transform 0.4s ease-out, filter 0.3s ease;
+    will-change: transform;
+}
+
+.hero-banner__image-wrapper:hover .hero-banner__image {
+    transform: scale(1.02);
+    filter: brightness(1.02);
+}
+
+/* Лёгкий градиент поверх для лучшей читаемости (декоративно) */
+.hero-banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%);
+    pointer-events: none;
+    border-bottom-left-radius: 1.5rem;
+    border-bottom-right-radius: 1.5rem;
+}
+
+/* Анимация появления баннера */
+@keyframes bannerReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ----- Хедер (современный, под баннером, sticky) ----- */
+.layout-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.layout-header__content {
+    /* max-width: 1600px; */
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.layout-header__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.layout-header__logo-icon {
+    display: flex;
+    align-items: center;
+}
+
+.layout-header__logo-icon img {
+    width: 2.4rem;
+    height: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+.layout-header__title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #1e2a5e 0%, #2c3e66 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.layout-header__user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* ----- Основной ряд (сайдбар + контент) flex-растяжка ----- */
+.layout-main-row {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    /* max-width: 1600px; */
+    margin: 0 auto;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* ----- Сайдбар (переопределяем старые fixed-стили) ----- */
+.layout-sidebar {
+    flex: 0 0 250px;
+    width: 280px;
+    background: rgb(252, 253, 255);
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s;
+    overflow-y: auto;
+    align-self: stretch;
+    backdrop-filter: blur(2px);
+}
+
+/* Кастомный скролл для сайдбара */
+.layout-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.layout-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.layout-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Переопределяем старые классы из style.css, чтобы сайдбар работал в новой структуре */
+.layout-sidebar .sidebar {
+    position: static;
+    top: auto;
+    left: auto;
+    height: auto;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    animation: none;
+    opacity: 1;
+    padding: 1rem 0.75rem;
+}
+
+/* ----- Контентная область ----- */
+.layout-content {
+    flex: 1;
+    min-width: 0;
+    background: rgb(252, 253, 255);
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.layout-content__container {
+    padding: 1.1rem 1.1rem;
+    animation: contentFadeIn 0.4s ease-out;
+}
+
+@keyframes contentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность для планшетов и мобильных устройств */
+@media (max-width: 1024px) {
+    .layout-main-row {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.25rem;
+    }
+
+    .layout-sidebar {
+        flex: auto;
+        width: 100%;
+    }
+
+    .layout-header__title {
+        font-size: 1rem;
+        white-space: normal;
+    }
+
+    .hero-banner__image-wrapper {
+        height: 200px;
+        border-bottom-left-radius: 1rem;
+        border-bottom-right-radius: 1rem;
+    }
+
+    .layout-content__container {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-banner__image-wrapper {
+        height: 160px;
+    }
+
+    .layout-header__content {
+        padding: 0 1rem;
+        height: 60px;
+    }
+
+    .layout-header__title {
+        font-size: 0.85rem;
+    }
+
+    .layout-header__logo-icon img {
+        width: 1.8rem;
+    }
+}
