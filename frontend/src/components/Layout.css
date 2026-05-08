@@ -133,10 +133,10 @@
 
 /* ----- Сайдбар (переопределяем старые fixed-стили) ----- */
 .layout-sidebar {
-    flex: 0 0 250px;
-    width: 280px;
+    flex: 0 0 230px;
+    width: 270px;
     background: rgb(252, 253, 255);
-    border-radius: 1.25rem;
+    border-radius: 0.5rem;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
     transition: all 0.2s;
     overflow-y: auto;
@@ -179,7 +179,7 @@
     flex: 1;
     min-width: 0;
     background: rgb(252, 253, 255);
-    border-radius: 1.25rem;
+    border-radius: 0.5rem;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.02);
     transition: all 0.2s;
     overflow: hidden;

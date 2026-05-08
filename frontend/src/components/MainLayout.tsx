@@ -353,7 +353,7 @@ export function MainLayout() {
         } />
 
         {/* Административная страница управления пользователями */}
-        <Route path="/admin/users" element={
+        <Route path="/manage/users" element={
           <UsersRoute>
             <UserManagementPage />
           </UsersRoute>

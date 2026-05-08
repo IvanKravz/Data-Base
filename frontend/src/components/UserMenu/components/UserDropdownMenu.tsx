@@ -31,7 +31,7 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
 
     const handleUsersManagement = () => {
         onClose();
-        navigate('/admin/users');
+        navigate('/manage/users'); 
     };
 
     return (
