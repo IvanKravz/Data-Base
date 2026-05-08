@@ -33,11 +33,11 @@ export function TableView({
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  const hasViewPermission = useMemo(() => 
+  const hasViewPermission = useMemo(() =>
     permissions?.models?.Facility?.includes('view') ?? false, [permissions]);
-  const hasChangePermission = useMemo(() => 
+  const hasChangePermission = useMemo(() =>
     permissions?.models?.Facility?.includes('change') ?? false, [permissions]);
-  const hasDeletePermission = useMemo(() => 
+  const hasDeletePermission = useMemo(() =>
     permissions?.models?.Facility?.includes('delete') ?? false, [permissions]);
 
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
@@ -243,10 +243,27 @@ export function TableView({
         <tbody>
           {groupedData.noDivision && (
             <React.Fragment>
-              <tr className="division-header-row no-division-header">
-                <td colSpan={getColspan()} className="facility-division-header-cell">{groupedData.noDivision.groupName}</td>
+              <tr
+                className="division-header-row no-division-header"
+                onClick={() => toggleDivision('no-division')}
+                style={{ cursor: 'pointer' }}
+              >
+                <td colSpan={getColspan()} className="facility-division-header-cell">
+                  <div className="division-header-content">
+                    <button
+                      className="collapse-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDivision('no-division');
+                      }}
+                    >
+                      {collapsedDivisions.has('no-division') ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    <span>{groupedData.noDivision.groupName}</span>
+                  </div>
+                </td>
               </tr>
-              {groupedData.noDivision.facilities.map((facility) => (
+              {!collapsedDivisions.has('no-division') && groupedData.noDivision.facilities.map((facility) => (
                 <tr key={facility.id} className="facility-table-row no-division-row" onClick={() => handleRowClick(facility)}>
                   {renderRowContent(facility)}
                   {renderActions(facility)}
@@ -259,10 +276,20 @@ export function TableView({
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
             return (
               <React.Fragment key={divisionId}>
-                <tr className="division-header-row">
+                <tr
+                  className="division-header-row"
+                  onClick={() => toggleDivision(divisionId)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td colSpan={getColspan()} className="facility-division-header-cell">
                     <div className="division-header-content">
-                      <button className="collapse-button" onClick={() => toggleDivision(divisionId)}>
+                      <button
+                        className="collapse-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDivision(divisionId);
+                        }}
+                      >
                         {isDivisionCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                       </button>
                       <span>{division.divisionName}</span>
@@ -276,10 +303,20 @@ export function TableView({
                   return (
                     <React.Fragment key={subdivisionId}>
                       {subdivision.facilities.length > 0 && (
-                        <tr className="subdivision-header-row">
+                        <tr
+                          className="subdivision-header-row"
+                          onClick={() => toggleSubdivision(divisionId, subdivisionId)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <td colSpan={getColspan()} className="facility-subdivision-header-cell">
                             <div className="subdivision-header-content">
-                              <button className="collapse-button" onClick={() => toggleSubdivision(divisionId, subdivisionId)}>
+                              <button
+                                className="collapse-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleSubdivision(divisionId, subdivisionId);
+                                }}
+                              >
                                 {isSubdivisionCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                               </button>
                               <span>{subdivision.subdivisionName}</span>

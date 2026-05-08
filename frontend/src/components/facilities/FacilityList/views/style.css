@@ -1,3 +1,6 @@
+/* ============================================
+   ОСНОВНЫЕ СТИЛИ ТАБЛИЦЫ ОБЪЕКТОВ
+   ============================================ */
 .facility-table-container {
     overflow-x: auto;
     border-radius: 8px;
@@ -18,8 +21,10 @@
     background-color: #f9fafb;
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
+/* Заголовки столбцов */
 .facility-table-header {
     padding: 12px 16px;
     text-align: left;
@@ -43,6 +48,7 @@
     gap: 6px;
 }
 
+/* Сортировка */
 .facility-sort-icon-container {
     width: 16px;
     height: 16px;
@@ -60,14 +66,11 @@
     color: #6b7280;
 }
 
-.facility-sort-icon-small {
-    width: 16px;
-    height: 8px;
-}
-
+/* Строки таблицы */
 .facility-table-row {
-    transition: background-color 0.15s ease;
+    transition: all 0.2s ease;
     border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
 }
 
 .facility-table-row:last-child {
@@ -75,10 +78,11 @@
 }
 
 .facility-table-row:hover {
-    background-color: #f9fafb;
-    cursor: pointer;
+    background-color: #f8fafc;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
+/* Ячейки */
 .facility-table-cell {
     padding: 8px 16px;
     font-size: 0.875rem;
@@ -97,7 +101,7 @@
     padding-right: 16px;
 }
 
-/* Новые стили для контейнера подразделения */
+/* Контейнер подразделения */
 .facility-division-container {
     display: flex;
     flex-direction: column;
@@ -114,6 +118,73 @@
     margin-top: 2px;
 }
 
+/* ============================================
+     ЗАГОЛОВКИ ГРУПП (ПОДРАЗДЕЛЕНИЯ, ОТДЕЛЕНИЯ)
+     ============================================ */
+.division-header-row {
+    background-color: #f8f9fa;
+    border-left: 4px solid #3b82f6;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.division-header-row:hover {
+    background-color: #eef2ff;
+    border-left-color: #2563eb;
+}
+
+.division-header-row.no-division-header {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.division-header-row.no-division-header:hover {
+    background-color: #ffe8a1;
+    border-left-color: #e6a800;
+}
+
+.subdivision-header-row {
+    background-color: #f1f5f9;
+    border-left: 4px solid #94a3b8;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.subdivision-header-row:hover {
+    background-color: #e2e8f0;
+    border-left-color: #5b6e8c;
+}
+
+/* Разделители между группами */
+.division-header-row,
+.subdivision-header-row {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.division-header-row:not(:last-child) {
+    border-bottom: 2px solid #d1d5db;
+}
+
+/* Ячейки заголовков */
+.facility-division-header-cell {
+    padding: 0.3rem 0.5rem;
+    font-weight: 600;
+    color: #1e40af;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #bfdbfe;
+}
+
+.facility-subdivision-header-cell {
+    padding: 0.3rem 1rem;
+    font-weight: 500;
+    font-size: 1em;
+    color: #374151;
+    background-color: #f1f5f9;
+}
+
+/* ============================================
+     КНОПКИ ДЕЙСТВИЙ
+     ============================================ */
 .facility-delete-btn {
     padding: 6px;
     border-radius: 6px;
@@ -161,42 +232,40 @@
     justify-content: center;
 }
 
-/* Group header styles for division/subdivision */
-.division-header-row {
-    background-color: #f8f9fa;
-}
-
-.facility-division-header-cell {
-    padding: 0.3rem 0.5rem;
-    font-weight: 600;
-    color: #1e40af;
-    font-size: 1.2rem;
-    border-bottom: 2px solid #bfdbfe;
-}
-
-.subdivision-header-row {
-    background-color: #fafbfc;
-}
-
-.facility-subdivision-header-cell {
-    padding: 0.3rem 1rem;
-    font-weight: 500;
-    font-size: 1em;
-    color: #374151;
-    background-color: #f1f5f9;
-}
-
-/* Empty state */
-.facility-list-empty-message {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    font-size: 16px;
-    background-color: #f9f9f9;
+/* ============================================
+     КНОПКИ СВЁРТЫВАНИЯ (ШЕВРОНЫ)
+     ============================================ */
+.collapse-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, transform 0.1s;
+    color: inherit;
 }
 
-/* GridView specific styles */
+.collapse-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.collapse-button:active {
+    transform: scale(0.96);
+}
+
+.division-header-content,
+.subdivision-header-content {
+    display: flex;
+    align-items: center;
+}
+
+/* ============================================
+     GRID VIEW (КАРТОЧКИ)
+     ============================================ */
 .facility-grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
@@ -216,13 +285,13 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    cursor: pointer;
 }
 
 .facility-card-grid:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 10px -2px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-color: rgba(59, 130, 246, 0.5);
-    cursor: pointer;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px -4px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
 }
 
 .facility-card-header {
@@ -244,6 +313,21 @@
     flex: 1;
 }
 
+.facility-card-badge {
+    color: rgb(171, 126, 23);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+}
+
+.facility-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: auto;
+}
+
 .facility-card-delete-btn {
     color: #ef4444;
     background: none;
@@ -260,6 +344,24 @@
 .facility-card-delete-btn:hover {
     background-color: #fee2e2;
     transform: scale(1.1);
+}
+
+.facility-card-locate-btn {
+    padding: 0.25rem;
+    border-radius: 4px;
+    color: #64748b;
+    transition: all 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.facility-card-locate-btn:hover {
+    color: #3498db;
+    background-color: #f1f5f9;
 }
 
 .facility-card-content {
@@ -290,57 +392,71 @@
     flex: 1;
 }
 
-.facility-card-badge {
-    color: rgb(171, 126, 23);
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 9999px;
+/* Группировка в GridView */
+.facility-group {
+    margin-bottom: 1.5rem;
 }
 
-.facility-card-actions {
+.facility-group-header,
+.facility-subgroup-header {
     display: flex;
-    gap: 0.5rem;
     align-items: center;
-    justify-content: flex-end;
-    margin-top: auto;
-}
-
-.facility-card-locate-btn {
-    padding: 0.25rem;
-    border-radius: 4px;
-    color: #64748b;
-    transition: all 0.2s;
-    background: none;
-    border: none;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.facility-card-locate-btn:hover {
-    color: #3498db;
+.facility-group-header.division-header-row {
+    background-color: #f8f9fa;
+    border-left: 4px solid #3b82f6;
+}
+
+.facility-group-header.division-header-row:hover {
+    background-color: #eef2ff;
+}
+
+.facility-group-header.no-division-header {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.facility-group-header.no-division-header:hover {
+    background-color: #ffe8a1;
+}
+
+.facility-subgroup-header.subdivision-header-row {
     background-color: #f1f5f9;
+    border-left: 4px solid #94a3b8;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
-/* Стили для кнопок свертывания/развертывания в таблице объектов */
-.collapse-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    margin-right: 8px;
+.facility-subgroup-header.subdivision-header-row:hover {
+    background-color: #e2e8f0;
+}
+
+.facility-cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+    gap: 1rem;
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Пустое состояние */
+.facility-list-empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-size: 16px;
+    background-color: #f9f9f9;
     border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-    color: inherit;
-  }
-  
-  .collapse-button:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
+}
 
 @keyframes pulse {
 

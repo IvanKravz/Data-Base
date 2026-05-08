@@ -1,4 +1,5 @@
 /* Основные стили таблицы */
+/* Основные стили таблицы */
 .table-container {
   overflow-x: auto;
   overflow-y: auto;
@@ -20,16 +21,49 @@
 .division-header-row {
   background-color: #f8f9fa;
   border-left: 4px solid #3b82f6;
+  transition: background-color 0.2s ease;
+  /* NEW */
 }
 
-.division-header-row.no-division-header {
+/* NEW: эффект при наведении на строку подразделения */
+.division-header-row:hover {
+  background-color: #eef2ff;
+  border-left-color: #2563eb;
+}
+
+.division-header-row.management-header {
   background-color: #fff3cd;
   border-left: 4px solid #ffc107;
+}
+
+/* NEW: наведение для "техника без подразделения" */
+.division-header-row.management-header:hover {
+  background-color: #ffe7a1cb;
+  border-left-color: #e6a800;
 }
 
 .subdivision-header-row {
   background-color: #f1f5f9;
   border-left: 4px solid #94a3b8;
+  transition: background-color 0.2s ease;
+  /* NEW */
+}
+
+/* NEW: эффект при наведении на строку отделения */
+.subdivision-header-row:hover {
+  background-color: #e2e8f0;
+  border-left-color: #5b6e8c;
+}
+
+/* NEW: разделитель между группами (нижняя граница у последней строки группы) */
+.division-header-row,
+.subdivision-header-row {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* NEW: чуть более заметная граница после заголовка подразделения */
+.division-header-row:not(:last-child) {
+  border-bottom: 2px solid #d1d5db;
 }
 
 .equipment-division-header-cell {
@@ -62,31 +96,45 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-
 /* Стили строк таблицы */
 .table-row-equipment {
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  /* NEW */
   position: relative;
 }
 
 .table-row-equipment:hover {
   background-color: #f8fafc;
+  /* NEW: лёгкая тень для объёма */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
+/* NEW: особенно выделяем строки "без подразделения" при наведении */
 .no-division-row {
   background-color: #fffdf6;
 }
 
 .no-division-row:hover {
   background-color: #fef9e7;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.table-row-equipment:not(:last-child) .table-cell {
+/* NEW: плавное изменение цвета для всех интерактивных элементов */
+button.collapse-button {
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button.collapse-button:active {
+  transform: scale(0.96);
+}
+
+/* NEW: разделители между строками внутри одной группы — тонкие, приятные */
+.table-row-equipment:not(:last-child) .table-cell-equipment {
   border-bottom: 1px solid #f1f5f9;
 }
 
-/* Стили заголовков столбцов */
+/* Уже существующие стили (оставлены без изменений) */
 .table-header {
   position: sticky;
   top: 0;

@@ -6,16 +6,20 @@
 }
 
 .equipment-header {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
   background: white;
-  padding: 1.2rem 1.2rem 1.2rem;
+  padding: 1.2rem 1.5rem;
   border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
   position: relative;
   z-index: 2;
-  margin-bottom: 1rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 

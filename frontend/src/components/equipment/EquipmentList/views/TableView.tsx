@@ -26,21 +26,26 @@ export function TableView({
   subdivisionId,
   activeTab,
   disableRowClick = false,
-  showActions = true
+  showActions = true,
 }: TableViewProps) {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  const hasEditPermission = useMemo(() => 
-    permissions?.models?.Equipment?.includes('change') ?? false, [permissions]);
-  const hasDeletePermission = useMemo(() => 
-    permissions?.models?.Equipment?.includes('delete') ?? false, [permissions]);
+  const hasEditPermission = useMemo(
+    () => permissions?.models?.Equipment?.includes('change') ?? false,
+    [permissions]
+  );
+  const hasDeletePermission = useMemo(
+    () => permissions?.models?.Equipment?.includes('delete') ?? false,
+    [permissions]
+  );
 
   const shouldShowActions = showActions && hasEditPermission && hasDeletePermission;
 
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
+  const [collapsedNoDivision, setCollapsedNoDivision] = useState<boolean>(false);
 
   const sortEquipmentInGroup = (equipmentList: Equipment[]): Equipment[] => {
     return [...equipmentList].sort((a, b) => a.name.localeCompare(b.name));
@@ -74,59 +79,74 @@ export function TableView({
     return '-';
   };
 
-  const groupedData = equipment.reduce((acc, item) => {
-    if (!item.division) {
-      if (!acc.noDivision) {
-        acc.noDivision = { groupName: 'Техника без подразделения', groupOrder: -1, equipment: [] };
-      }
-      acc.noDivision.equipment.push(item);
-    } else {
-      const divisionId = item.division.id;
-      const divisionName = item.division.name;
-      const divisionOrder = item.division.order || 9999;
-      const subdivisionId = item.subdivision?.id || 'no-subdivision';
-      const subdivisionName = item.subdivision?.name || 'Без отделения';
-      const subdivisionOrder = item.subdivision?.order || 9999;
+  const groupedData = equipment.reduce(
+    (acc, item) => {
+      if (!item.division) {
+        if (!acc.noDivision) {
+          acc.noDivision = { groupName: 'Техника без подразделения', groupOrder: -1, equipment: [] };
+        }
+        acc.noDivision.equipment.push(item);
+      } else {
+        const divisionId = item.division.id;
+        const divisionName = item.division.name;
+        const divisionOrder = item.division.order || 9999;
+        const subdivisionId = item.subdivision?.id || 'no-subdivision';
+        const subdivisionName = item.subdivision?.name || 'Без отделения';
+        const subdivisionOrder = item.subdivision?.order || 9999;
 
-      if (!acc.divisions[divisionId]) {
-        acc.divisions[divisionId] = { divisionName, divisionOrder, subdivisions: {} };
+        if (!acc.divisions[divisionId]) {
+          acc.divisions[divisionId] = { divisionName, divisionOrder, subdivisions: {} };
+        }
+        if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
+          acc.divisions[divisionId].subdivisions[subdivisionId] = {
+            subdivisionName,
+            subdivisionOrder,
+            equipment: [],
+          };
+        }
+        acc.divisions[divisionId].subdivisions[subdivisionId].equipment.push(item);
       }
-      if (!acc.divisions[divisionId].subdivisions[subdivisionId]) {
-        acc.divisions[divisionId].subdivisions[subdivisionId] = { subdivisionName, subdivisionOrder, equipment: [] };
-      }
-      acc.divisions[divisionId].subdivisions[subdivisionId].equipment.push(item);
+      return acc;
+    },
+    {
+      noDivision: null as { groupName: string; groupOrder: number; equipment: Equipment[] } | null,
+      divisions: {} as Record<
+        string,
+        {
+          divisionName: string;
+          divisionOrder: number;
+          subdivisions: Record<
+            string,
+            { subdivisionName: string; subdivisionOrder: number; equipment: Equipment[] }
+          >;
+          sortedSubdivisionIds?: string[];
+        }
+      >,
     }
-    return acc;
-  }, {
-    noDivision: null as { groupName: string; groupOrder: number; equipment: Equipment[] } | null,
-    divisions: {} as Record<string, {
-      divisionName: string;
-      divisionOrder: number;
-      subdivisions: Record<string, { subdivisionName: string; subdivisionOrder: number; equipment: Equipment[] }>;
-      sortedSubdivisionIds?: string[];
-    }>
-  });
+  );
 
   if (groupedData.noDivision) {
     groupedData.noDivision.equipment = sortEquipmentInGroup(groupedData.noDivision.equipment);
   }
 
-  const sortedDivisionIds = Object.keys(groupedData.divisions).sort((a, b) =>
-    groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder
+  const sortedDivisionIds = Object.keys(groupedData.divisions).sort(
+    (a, b) => groupedData.divisions[a].divisionOrder - groupedData.divisions[b].divisionOrder
   );
 
-  sortedDivisionIds.forEach(divisionId => {
+  sortedDivisionIds.forEach((divisionId) => {
     const division = groupedData.divisions[divisionId];
     const subdivisionIds = Object.keys(division.subdivisions);
-    subdivisionIds.sort((a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder);
+    subdivisionIds.sort(
+      (a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder
+    );
     division.sortedSubdivisionIds = subdivisionIds;
-    subdivisionIds.forEach(subId => {
+    subdivisionIds.forEach((subId) => {
       division.subdivisions[subId].equipment = sortEquipmentInGroup(division.subdivisions[subId].equipment);
     });
   });
 
   const toggleDivision = (id: string) => {
-    setCollapsedDivisions(prev => {
+    setCollapsedDivisions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) newSet.delete(id);
       else newSet.add(id);
@@ -136,7 +156,7 @@ export function TableView({
 
   const toggleSubdivision = (divisionId: string, subdivisionId: string) => {
     const key = `${divisionId}-${subdivisionId}`;
-    setCollapsedSubdivisions(prev => {
+    setCollapsedSubdivisions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) newSet.delete(key);
       else newSet.add(key);
@@ -144,12 +164,18 @@ export function TableView({
     });
   };
 
+  const toggleNoDivision = () => {
+    setCollapsedNoDivision((prev) => !prev);
+  };
+
   const handleRowClick = (item: Equipment) => {
     if (disableRowClick) return;
     navigate(`/equipment/${item.id}`, {
-      state: { from: 'equipment-section', divisionId, subdivisionId, activeTab }
+      state: { from: 'equipment-section', divisionId, subdivisionId, activeTab },
     });
   };
+
+  const colSpan = shouldShowActions ? 12 : 11;
 
   return (
     <div className="table-container">
@@ -171,146 +197,259 @@ export function TableView({
           </tr>
         </thead>
         <tbody className="table-body">
+          {/* Техника без подразделения */}
           {groupedData.noDivision && (
             <React.Fragment>
-              <tr className="division-header-row no-division-header">
-                <td colSpan={shouldShowActions ? 12 : 11} className="equipment-division-header-cell">
-                  {groupedData.noDivision.groupName}
+              <tr
+                className="division-header-row no-division-header"
+                onClick={toggleNoDivision}
+                style={{ cursor: 'pointer' }}
+              >
+                <td colSpan={colSpan} className="equipment-division-header-cell">
+                  <div className="division-header-content">
+                    <button
+                      className="collapse-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleNoDivision();
+                      }}
+                    >
+                      {collapsedNoDivision ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    <span>{groupedData.noDivision.groupName}</span>
+                  </div>
                 </td>
               </tr>
-              {groupedData.noDivision.equipment.map(item => {
-                const StatusIcon = getStatusIcon(item.status);
-                return (
-                  <tr key={item.id} onClick={() => handleRowClick(item)} className="table-row-equipment no-division-row" style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}>
-                    <td className="table-cell-equipment table-cell-name">
-                      <div className="cell-content-full-width">{item.name}</div>
-                    </td>
-                    <td className="table-cell-equipment"><div className="cell-content">{item.type}</div></td>
-                    <td className="table-cell-equipment"><div className="cell-content">{item.category_display}</div></td>
-                    <td className="table-cell-equipment">
-                      <div className={`cell-content ${getStatusColor(item.status)}`}>
-                        <StatusIcon className="status-icon" />
-                      </div>
-                    </td>
-                    <td className="table-cell-equipment">
-                      <div className="division-container">
-                        <div className="division-name">{item.division?.name || '-'}</div>
-                        {item.subdivision?.name && <div className="subdivision-name">{item.subdivision.name}</div>}
-                      </div>
-                    </td>
-                    <td className="table-cell-equipment"><div className="cell-content">{item.serial_number}</div></td>
-                    <td className="table-cell-equipment"><div className="cell-content">{item.inventory_number}</div></td>
-                    <td className="table-cell-equipment"><div className="cell-content">{formatDate(item.manufacturing_date)}</div></td>
-                    <td className="table-cell-equipment"><div className="cell-content">{formatDate(item.exploitation_date)}</div></td>
-                    <td className="table-cell-equipment"><div className="cell-content">{formatInterestOrgan(item.interest_organ)}</div></td>
-                    <td className="table-cell-equipment table-cell-assigned-to">
-                      <div className="cell-content">
-                        {item.assigned_to ? (
-                          <>
-                            <span>{formatEmployeeName(item.assigned_to)}</span>
-                            {item.assigned_to.position && <span className="position-text">{item.assigned_to.position}</span>}
-                          </>
-                        ) : '-'}
-                      </div>
-                    </td>
-                    {shouldShowActions && (
-                      <td className="table-cell-actions">
-                        <div className="actions-container">
-                          <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="delete-button" aria-label="Удалить">
-                            <Trash2 className="action-icon" />
-                          </button>
+              {!collapsedNoDivision &&
+                groupedData.noDivision.equipment.map((item) => {
+                  const StatusIcon = getStatusIcon(item.status);
+                  return (
+                    <tr
+                      key={item.id}
+                      onClick={() => handleRowClick(item)}
+                      className="table-row-equipment no-division-row"
+                      style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}
+                    >
+                      <td className="table-cell-equipment table-cell-name">
+                        <div className="cell-content-full-width">{item.name}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{item.type}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{item.category_display}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className={`cell-content ${getStatusColor(item.status)}`}>
+                          <StatusIcon className="status-icon" />
                         </div>
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
+                      <td className="table-cell-equipment">
+                        <div className="division-container">
+                          <div className="division-name">{item.division?.name || '-'}</div>
+                          {item.subdivision?.name && (
+                            <div className="subdivision-name">{item.subdivision.name}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{item.serial_number}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{item.inventory_number}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{formatDate(item.manufacturing_date)}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{formatDate(item.exploitation_date)}</div>
+                      </td>
+                      <td className="table-cell-equipment">
+                        <div className="cell-content">{formatInterestOrgan(item.interest_organ)}</div>
+                      </td>
+                      <td className="table-cell-equipment table-cell-assigned-to">
+                        <div className="cell-content">
+                          {item.assigned_to ? (
+                            <>
+                              <span>{formatEmployeeName(item.assigned_to)}</span>
+                              {item.assigned_to.position && (
+                                <span className="position-text">{item.assigned_to.position}</span>
+                              )}
+                            </>
+                          ) : (
+                            '-'
+                          )}
+                        </div>
+                      </td>
+                      {shouldShowActions && (
+                        <td className="table-cell-actions">
+                          <div className="actions-container">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(item.id);
+                              }}
+                              className="delete-button"
+                              aria-label="Удалить"
+                            >
+                              <Trash2 className="action-icon" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
             </React.Fragment>
           )}
 
-          {sortedDivisionIds.map(divisionId => {
+          {/* Подразделения */}
+          {sortedDivisionIds.map((divisionId) => {
             const division = groupedData.divisions[divisionId];
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
             return (
               <React.Fragment key={divisionId}>
-                <tr className="division-header-row">
-                  <td colSpan={shouldShowActions ? 12 : 11} className="equipment-division-header-cell">
+                <tr
+                  className="division-header-row"
+                  onClick={() => toggleDivision(divisionId)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td colSpan={colSpan} className="equipment-division-header-cell">
                     <div className="division-header-content">
-                      <button className="collapse-button" onClick={() => toggleDivision(divisionId)}>
+                      <button
+                        className="collapse-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDivision(divisionId);
+                        }}
+                      >
                         {isDivisionCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                       </button>
                       <span>{division.divisionName}</span>
                     </div>
                   </td>
                 </tr>
-                {!isDivisionCollapsed && division.sortedSubdivisionIds!.map(subdivisionId => {
-                  const subdivision = division.subdivisions[subdivisionId];
-                  const subdivisionKey = `${divisionId}-${subdivisionId}`;
-                  const isSubdivisionCollapsed = collapsedSubdivisions.has(subdivisionKey);
-                  return (
-                    <React.Fragment key={subdivisionId}>
-                      {subdivision.equipment.length > 0 && (
-                        <tr className="subdivision-header-row">
-                          <td colSpan={shouldShowActions ? 12 : 11} className="equipment-subdivision-header-cell">
-                            <div className="subdivision-header-content">
-                              <button className="collapse-button" onClick={() => toggleSubdivision(divisionId, subdivisionId)}>
-                                {isSubdivisionCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                              </button>
-                              <span>{subdivision.subdivisionName}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {!isSubdivisionCollapsed && subdivision.equipment.map(item => {
-                        const StatusIcon = getStatusIcon(item.status);
-                        return (
-                          <tr key={item.id} onClick={() => handleRowClick(item)} className="table-row-equipment" style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}>
-                            <td className="table-cell-equipment table-cell-name">
-                              <div className="cell-content-full-width">{item.name}</div>
-                            </td>
-                            <td className="table-cell-equipment"><div className="cell-content">{item.type}</div></td>
-                            <td className="table-cell-equipment"><div className="cell-content">{item.category_display}</div></td>
-                            <td className="table-cell-equipment">
-                              <div className={`cell-content ${getStatusColor(item.status)}`}>
-                                <StatusIcon className="status-icon" />
+                {!isDivisionCollapsed &&
+                  division.sortedSubdivisionIds!.map((subdivisionId) => {
+                    const subdivision = division.subdivisions[subdivisionId];
+                    const subdivisionKey = `${divisionId}-${subdivisionId}`;
+                    const isSubdivisionCollapsed = collapsedSubdivisions.has(subdivisionKey);
+                    const hasEquipment = subdivision.equipment.length > 0;
+                    return (
+                      <React.Fragment key={subdivisionId}>
+                        {hasEquipment && (
+                          <tr
+                            className="subdivision-header-row"
+                            onClick={() => toggleSubdivision(divisionId, subdivisionId)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td colSpan={colSpan} className="equipment-subdivision-header-cell">
+                              <div className="subdivision-header-content">
+                                <button
+                                  className="collapse-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSubdivision(divisionId, subdivisionId);
+                                  }}
+                                >
+                                  {isSubdivisionCollapsed ? (
+                                    <ChevronRight size={16} />
+                                  ) : (
+                                    <ChevronDown size={16} />
+                                  )}
+                                </button>
+                                <span>{subdivision.subdivisionName}</span>
                               </div>
                             </td>
-                            <td className="table-cell-equipment">
-                              <div className="division-container">
-                                <div className="division-name">{item.division?.name || '-'}</div>
-                                {item.subdivision?.name && <div className="subdivision-name">{item.subdivision.name}</div>}
-                              </div>
-                            </td>
-                            <td className="table-cell-equipment"><div className="cell-content">{item.serial_number}</div></td>
-                            <td className="table-cell-equipment"><div className="cell-content">{item.inventory_number}</div></td>
-                            <td className="table-cell-equipment"><div className="cell-content">{formatDate(item.manufacturing_date)}</div></td>
-                            <td className="table-cell-equipment"><div className="cell-content">{formatDate(item.exploitation_date)}</div></td>
-                            <td className="table-cell-equipment"><div className="cell-content">{formatInterestOrgan(item.interest_organ)}</div></td>
-                            <td className="table-cell-equipment table-cell-assigned-to">
-                              <div className="cell-content">
-                                {item.assigned_to ? (
-                                  <>
-                                    <span>{formatEmployeeName(item.assigned_to)}</span>
-                                    {item.assigned_to.position && <span className="position-text">{item.assigned_to.position}</span>}
-                                  </>
-                                ) : '-'}
-                              </div>
-                            </td>
-                            {shouldShowActions && (
-                              <td className="table-cell-actions">
-                                <div className="actions-container">
-                                  <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="delete-button" aria-label="Удалить">
-                                    <Trash2 className="action-icon" />
-                                  </button>
-                                </div>
-                              </td>
-                            )}
                           </tr>
-                        );
-                      })}
-                    </React.Fragment>
-                  );
-                })}
+                        )}
+                        {!isSubdivisionCollapsed &&
+                          subdivision.equipment.map((item) => {
+                            const StatusIcon = getStatusIcon(item.status);
+                            return (
+                              <tr
+                                key={item.id}
+                                onClick={() => handleRowClick(item)}
+                                className="table-row-equipment"
+                                style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}
+                              >
+                                <td className="table-cell-equipment table-cell-name">
+                                  <div className="cell-content-full-width">{item.name}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{item.type}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{item.category_display}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className={`cell-content ${getStatusColor(item.status)}`}>
+                                    <StatusIcon className="status-icon" />
+                                  </div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="division-container">
+                                    <div className="division-name">{item.division?.name || '-'}</div>
+                                    {item.subdivision?.name && (
+                                      <div className="subdivision-name">{item.subdivision.name}</div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{item.serial_number}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{item.inventory_number}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{formatDate(item.manufacturing_date)}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">{formatDate(item.exploitation_date)}</div>
+                                </td>
+                                <td className="table-cell-equipment">
+                                  <div className="cell-content">
+                                    {formatInterestOrgan(item.interest_organ)}
+                                  </div>
+                                </td>
+                                <td className="table-cell-equipment table-cell-assigned-to">
+                                  <div className="cell-content">
+                                    {item.assigned_to ? (
+                                      <>
+                                        <span>{formatEmployeeName(item.assigned_to)}</span>
+                                        {item.assigned_to.position && (
+                                          <span className="position-text">
+                                            {item.assigned_to.position}
+                                          </span>
+                                        )}
+                                      </>
+                                    ) : (
+                                      '-'
+                                    )}
+                                  </div>
+                                </td>
+                                {shouldShowActions && (
+                                  <td className="table-cell-actions">
+                                    <div className="actions-container">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onDelete(item.id);
+                                        }}
+                                        className="delete-button"
+                                        aria-label="Удалить"
+                                      >
+                                        <Trash2 className="action-icon" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                      </React.Fragment>
+                    );
+                  })}
               </React.Fragment>
             );
           })}

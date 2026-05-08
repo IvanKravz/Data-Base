@@ -15,6 +15,8 @@ interface TableViewProps {
 export function TableView({ personnel, onPersonClick, onDelete, divisionName, hasEditPermission }: TableViewProps) {
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
+  const [collapsedGlobalManagement, setCollapsedGlobalManagement] = useState<boolean>(false);
+  const [collapsedDepartmentManagement, setCollapsedDepartmentManagement] = useState<Set<string>>(new Set());
 
   const toggleDivision = (divisionId: string) => {
     const newCollapsed = new Set(collapsedDivisions);
@@ -29,6 +31,20 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
     setCollapsedSubdivisions(newCollapsed);
   };
 
+  const toggleGlobalManagementHandler = () => {
+    setCollapsedGlobalManagement(prev => !prev);
+  };
+
+  const toggleDepartmentManagement = (divisionId: string) => {
+    const newCollapsed = new Set(collapsedDepartmentManagement);
+    if (newCollapsed.has(divisionId)) {
+      newCollapsed.delete(divisionId);
+    } else {
+      newCollapsed.add(divisionId);
+    }
+    setCollapsedDepartmentManagement(newCollapsed);
+  };
+
   // Маппинг подкатегорий для правильной сортировки
   const subcategoryOrder: Record<string, number> = {
     chief: 1,
@@ -40,20 +56,16 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
 
   const sortEmployeesInGroup = (employees: Employee[]): Employee[] => {
     return [...employees].sort((a, b) => {
-      // Сначала сравниваем категории (management всегда выше)
       if (a.category === 'management' && b.category !== 'management') return -1;
       if (a.category !== 'management' && b.category === 'management') return 1;
 
-      // Если оба management, сортируем по подкатегории (если есть)
       if (a.category === 'management' && b.category === 'management') {
         const orderA = a.subcategory ? subcategoryOrder[a.subcategory] : 99;
         const orderB = b.subcategory ? subcategoryOrder[b.subcategory] : 99;
         if (orderA !== orderB) return orderA - orderB;
       }
 
-      // Затем по приоритету
       if (a.priority !== b.priority) return a.priority - b.priority;
-      // И по ФИО
       return a.full_name.localeCompare(b.full_name);
     });
   };
@@ -71,7 +83,6 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
         return acc;
       }
 
-      // Если нет подразделения, пропускаем
       if (!hasDivision) return acc;
 
       const divisionId = person.division.id;
@@ -89,13 +100,11 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
 
       const divisionEntry = acc.divisions[divisionId];
 
-      // Руководство отдела (management без отделения)
       if (isManagement && !person.subdivision) {
         divisionEntry.managers.push(person);
         return acc;
       }
 
-      // Остальные сотрудники (в т.ч. руководство отделений)
       const subdivisionId = person.subdivision?.id || 'no-subdivision';
       const subdivisionName = person.subdivision?.name || 'Без отделения';
       const subdivisionOrder = person.subdivision?.order || 9999;
@@ -144,9 +153,7 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
 
   sortedDivisionIds.forEach((divisionId) => {
     const division = groupedData.divisions[divisionId];
-    // Сортируем руководство отдела
     division.managers = sortEmployeesInGroup(division.managers);
-    // Сортируем отделения
     const subdivisionIds = Object.keys(division.subdivisions);
     subdivisionIds.sort((a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder);
     division.sortedSubdivisionIds = subdivisionIds;
@@ -175,22 +182,38 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
           {/* Глобальное руководство */}
           {groupedData.globalManagement && groupedData.globalManagement.employees.length > 0 && (
             <>
-              <tr className="division-header-row management-header">
+              <tr
+                className="division-header-row management-header"
+                onClick={toggleGlobalManagementHandler}
+                style={{ cursor: 'pointer' }}
+              >
                 <td colSpan={colSpan} className="personnel-division-header-cell">
-                  Руководство (главный руководитель и заместители)
+                  <div className="division-header-content">
+                    <button
+                      className="collapse-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleGlobalManagementHandler();
+                      }}
+                    >
+                      {collapsedGlobalManagement ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    <span>Руководство (главный руководитель и заместители)</span>
+                  </div>
                 </td>
               </tr>
-              {groupedData.globalManagement.employees.map((person) => (
-                <tr key={person.id} onClick={() => onPersonClick(person)} className="table-row management-row">
-                  <td className="table-cell">{renderPersonCell(person)}</td>
-                  <td className="table-cell">{person.rank || '—'}</td>
-                  <td className="table-cell">{truncate(person.position, 30)}</td>
-                  <td className="table-cell">{person.division?.name || '—'}</td>
-                  <td className="table-cell">{renderPhones(person)}</td>
-                  <td className="table-cell">{renderShaInfo(person)}</td>
-                  {hasEditPermission && <td className="table-cell text-right">{renderDeleteButton(person.id)}</td>}
-                </tr>
-              ))}
+              {!collapsedGlobalManagement &&
+                groupedData.globalManagement.employees.map((person) => (
+                  <tr key={person.id} onClick={() => onPersonClick(person)} className="table-row management-row">
+                    <td className="table-cell">{renderPersonCell(person)}</td>
+                    <td className="table-cell">{person.rank || '—'}</td>
+                    <td className="table-cell">{truncate(person.position, 30)}</td>
+                    <td className="table-cell">{person.division?.name || '—'}</td>
+                    <td className="table-cell">{renderPhones(person)}</td>
+                    <td className="table-cell">{renderShaInfo(person)}</td>
+                    {hasEditPermission && <td className="table-cell text-right">{renderDeleteButton(person.id)}</td>}
+                  </tr>
+                ))}
             </>
           )}
 
@@ -200,14 +223,25 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
             const hasManagers = division.managers.length > 0;
             const hasSubdivisions = Object.keys(division.subdivisions).length > 0;
+            const isDeptMgmtCollapsed = collapsedDepartmentManagement.has(divisionId);
 
             return (
               <React.Fragment key={divisionId}>
                 {/* Заголовок подразделения */}
-                <tr className="division-header-row">
+                <tr
+                  className="division-header-row"
+                  onClick={() => toggleDivision(divisionId)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td colSpan={colSpan} className="personnel-division-header-cell">
                     <div className="division-header-content">
-                      <button className="collapse-button" onClick={() => toggleDivision(divisionId)}>
+                      <button
+                        className="collapse-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDivision(divisionId);
+                        }}
+                      >
                         {isDivisionCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                       </button>
                       <span>{division.divisionName}</span>
@@ -220,26 +254,42 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
                     {/* Руководство отдела */}
                     {hasManagers && (
                       <>
-                        <tr className="subdivision-header-row">
+                        <tr
+                          className="subdivision-header-row"
+                          onClick={() => toggleDepartmentManagement(divisionId)}
+                          style={{ cursor: 'pointer' }}
+                        >
                           <td colSpan={colSpan} className="personnel-subdivision-header-cell">
-                            Руководство отдела
+                            <div className="division-header-content">
+                              <button
+                                className="collapse-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleDepartmentManagement(divisionId);
+                                }}
+                              >
+                                {isDeptMgmtCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                              </button>
+                              <span>Руководство отдела</span>
+                            </div>
                           </td>
                         </tr>
-                        {division.managers.map((person) => (
-                          <tr
-                            key={person.id}
-                            onClick={() => onPersonClick(person)}
-                            className="table-row management-row"
-                          >
-                            <td className="table-cell">{renderPersonCell(person)}</td>
-                            <td className="table-cell">{person.rank || '—'}</td>
-                            <td className="table-cell">{truncate(person.position, 30)}</td>
-                            <td className="table-cell">{person.division?.name || '—'}</td>
-                            <td className="table-cell">{renderPhones(person)}</td>
-                            <td className="table-cell">{renderShaInfo(person)}</td>
-                            {hasEditPermission && <td className="table-cell text-right">{renderDeleteButton(person.id)}</td>}
-                          </tr>
-                        ))}
+                        {!isDeptMgmtCollapsed &&
+                          division.managers.map((person) => (
+                            <tr
+                              key={person.id}
+                              onClick={() => onPersonClick(person)}
+                              className="table-row management-row"
+                            >
+                              <td className="table-cell">{renderPersonCell(person)}</td>
+                              <td className="table-cell">{person.rank || '—'}</td>
+                              <td className="table-cell">{truncate(person.position, 30)}</td>
+                              <td className="table-cell">{person.division?.name || '—'}</td>
+                              <td className="table-cell">{renderPhones(person)}</td>
+                              <td className="table-cell">{renderShaInfo(person)}</td>
+                              {hasEditPermission && <td className="table-cell text-right">{renderDeleteButton(person.id)}</td>}
+                            </tr>
+                          ))}
                       </>
                     )}
 
@@ -252,12 +302,19 @@ export function TableView({ personnel, onPersonClick, onDelete, divisionName, ha
                       return (
                         <React.Fragment key={subdivisionId}>
                           {hasEmployees && (
-                            <tr className="subdivision-header-row">
+                            <tr
+                              className="subdivision-header-row"
+                              onClick={() => toggleSubdivision(divisionId, subdivisionId)}
+                              style={{ cursor: 'pointer' }}
+                            >
                               <td colSpan={colSpan} className="personnel-subdivision-header-cell">
                                 <div className="subdivision-header-content">
                                   <button
                                     className="collapse-button"
-                                    onClick={() => toggleSubdivision(divisionId, subdivisionId)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSubdivision(divisionId, subdivisionId);
+                                    }}
                                   >
                                     {isSubCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                                   </button>
