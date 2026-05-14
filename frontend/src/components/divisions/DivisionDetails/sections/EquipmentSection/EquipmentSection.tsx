@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { setEquipment, deleteEquipment } from '../../../../../store/slices/equipmentSlice';
+import { ExportButton } from '../../../../common/ExportButton';
+import { exportEquipmentToExcel } from '../../../../../utils/exportToExcel';
 
 const CATEGORY_ICONS = {
   'tko': <Server className="equipment-tab-icon" size={16} />,
@@ -63,7 +65,7 @@ export function EquipmentSection() {
   const stableSubdivisionId = useMemo(() => subdivisionId, [subdivisionId]);
 
   // Определяем тип пользователя из Redux
-  const isExploitationUser = useMemo(() => 
+  const isExploitationUser = useMemo(() =>
     user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
   const isChief = useMemo(() => user?.roles?.includes('exploitation_chief'), [user]);
 
@@ -102,7 +104,7 @@ export function EquipmentSection() {
   });
 
   // Проверка прав через Redux
-  const canCreateEquipment = useMemo(() => 
+  const canCreateEquipment = useMemo(() =>
     permissions?.models?.Equipment?.includes('add') ?? false, [permissions]);
 
   const updateIndicator = () => {
@@ -404,6 +406,13 @@ export function EquipmentSection() {
           {statusButtonsEquipment.length > 0 && (
             <StatusButtons equipment={statusButtonsEquipment} selectedStatus={selectedStatus} onStatusChange={setSelectedStatus} />
           )}
+
+          <div className="equipment-export-button-container">
+            <ExportButton
+              onClick={() => exportEquipmentToExcel(filteredEquipment)}
+              label="Экспорт техники"
+            />
+          </div>
 
           <EquipmentList equipment={filteredEquipment} onDeleteEquipment={handleDeleteEquipment} divisionId={id} subdivisionId={stableSubdivisionId} activeTab={activeTab} />
         </div>

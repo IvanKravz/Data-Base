@@ -7,10 +7,11 @@ import './CommunicationNetworks.css';
 import { Network } from '../../../../../types';
 import NetworksTable from '../../../../networks/NetworksTable/NetworksTable';
 import NetworkDetails from '../../../../networks/NetworkDetails/NetworkDetails';
-import NetworkVisualization from '../../../../networks/NetworkVisualization/NetworkVisualization';
 import { networksApi } from '../../../../../api/networksApi';
 import { Header } from '../../../../networks/Header/Header';
 import { divisionsApi } from '../../../../../api/divisions';
+import NetworkVisualizationWithTabs from '../../../../networks/NetworkVisualization/components/NetworkVisualizationWithTabs';
+// import NetworkVisualizationWithTabs from '../../../../networks/NetworkVisualization/NetworkVisualization';
 
 const CommunicationNetworks: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,12 +33,12 @@ const CommunicationNetworks: React.FC = () => {
   const permissions = user?.permissions;
 
   // Проверка прав
-  const canEditNetworks = useMemo(() => 
+  const canEditNetworks = useMemo(() =>
     permissions?.models?.CommunicationNetwork?.includes('change') ?? false, [permissions]);
-  const canCreateNetworks = useMemo(() => 
+  const canCreateNetworks = useMemo(() =>
     permissions?.models?.CommunicationNetwork?.includes('add') ?? false, [permissions]);
 
-  const isExploitationUser = useMemo(() => 
+  const isExploitationUser = useMemo(() =>
     user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
   const isChief = useMemo(() => user?.roles?.includes('exploitation_chief'), [user]);
 
@@ -199,7 +200,7 @@ const CommunicationNetworks: React.FC = () => {
             canEdit={canEditNetworks}
           />
           {selectedNetwork && (
-            <NetworkVisualization
+            <NetworkVisualizationWithTabs
               network={selectedNetwork}
               memberships={memberships}
               directions={directions}
@@ -207,6 +208,7 @@ const CommunicationNetworks: React.FC = () => {
               selectedNode={selectedNode}
               onNodeSelect={handleNodeSelect}
               onClearSelection={handleClearSelection}
+              onNodeHover={handleHighlightNode}
             />
           )}
         </div>

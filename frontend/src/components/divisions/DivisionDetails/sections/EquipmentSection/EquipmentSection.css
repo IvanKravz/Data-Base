@@ -103,6 +103,11 @@
   border-radius: 2px;
 }
 
+.equipment-export-button-container {
+  display: flex;
+  justify-content: end;
+}
+
 .equipment-tab-button {
   position: relative;
   padding: 0.875rem 1.25rem;

@@ -1,3 +1,4 @@
+// components/networks/NetworkVisualization/NetworkVisualization.tsx
 import React, { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import './NetworkVisualization.css';
@@ -10,9 +11,9 @@ interface NetworkVisualizationProps {
   memberships: any[];
   directions: any[];
   highlightedNode?: string | null;
-  selectedNode?: string | null; 
-  onNodeSelect?: (nodeId: string) => void; 
-  onClearSelection?: () => void; 
+  selectedNode?: string | null;
+  onNodeSelect?: (nodeId: string) => void;
+  onClearSelection?: () => void;
 }
 
 const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
@@ -20,9 +21,9 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
   memberships,
   directions,
   highlightedNode: externalHighlightedNode,
-  selectedNode: externalSelectedNode, 
-  onNodeSelect, 
-  onClearSelection 
+  selectedNode: externalSelectedNode,
+  onNodeSelect,
+  onClearSelection
 }) => {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [internalHighlightedNode, setInternalHighlightedNode] = useState<string | null>(null);
@@ -31,7 +32,6 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
     ? externalHighlightedNode
     : internalHighlightedNode;
 
-  // Синхронизируем внутреннее и внешнее состояние выбранного узла
   useEffect(() => {
     if (externalSelectedNode !== undefined) {
       setSelectedNode(externalSelectedNode);
@@ -75,7 +75,7 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
         <NetworkDetailsPanel
           selectedNode={selectedNode}
           memberships={memberships}
-          onClosePanel={handleClosePanel} // Передаем обработчик закрытия
+          onClosePanel={handleClosePanel}
         />
       </div>
     </div>

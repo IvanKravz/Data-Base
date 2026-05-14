@@ -95,7 +95,8 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
   }
 
   return (
-    <div className={`network-visualization-details ${selectedNode ? 'active' : ''}`}>
+    <div className={`network-visualization-details ${selectedNode ? 'active' : ''}`}
+      onClick={(e) => e.stopPropagation()} >
       <div className="network-visualization-details-header">
         <h4 className="network-visualization-details-title">
           {getNodeTitle()}
@@ -104,7 +105,11 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
           {selectedNode && onClosePanel && (
             <button
               className="network-details-close-button"
-              onClick={onClosePanel}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onClosePanel?.();
+              }}
               aria-label="Закрыть панель"
             >
               <X size={20} />
