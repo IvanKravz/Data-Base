@@ -20,10 +20,11 @@ import './style.css';
 interface FacilityTypeFilterProps {
   facilities: Facility[];
   selectedType: 'all' | number;
-  onTypeChange: (type: 'all' | number, resetClass?: boolean) => void;  
+  onTypeChange: (type: 'all' | number, resetClass?: boolean) => void;
   selectedClass: 'all' | '1' | '2';
   onClassChange: (facilityClass: 'all' | '1' | '2') => void;
   activeTab?: 'all' | 'open' | 'closed';
+  compact?: boolean; // новый проп для компактного режима
 }
 
 export function FacilityTypeFilter({
@@ -32,7 +33,8 @@ export function FacilityTypeFilter({
   onTypeChange,
   selectedClass,
   onClassChange,
-  activeTab = 'all'
+  activeTab = 'all',
+  compact = false
 }: FacilityTypeFilterProps) {
   const [showClassFilters, setShowClassFilters] = useState(false);
 
@@ -65,7 +67,6 @@ export function FacilityTypeFilter({
   const handleTypeChange = (typeId: 'all' | number) => {
     const isShd = typeId !== 'all' &&
       filteredFacilities.find(f => f.type.id === typeId)?.type.name.toLowerCase().includes('шд');
-    // Передаём родителю флаг сброса класса (true для не-ШД)
     onTypeChange(typeId, !isShd);
     setShowClassFilters(false);
   };
@@ -95,7 +96,7 @@ export function FacilityTypeFilter({
   const specType = facilityTypes.find(t => t.name.toLowerCase().includes('спец.'));
 
   return (
-    <div className="facility-filter-container">
+    <div className={`facility-filter-container ${compact ? 'compact' : ''}`}>
       <div className="facility-type-grid">
         {/* Все объекты */}
         <button

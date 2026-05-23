@@ -68,7 +68,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
             <div className="division-metrics">
               <div className="metric-item">
                 <Users className="metric-icon metric-icon--blue" />
-                <span>Персонал: {division.employees_count}</span>
+                <span>Сотрудники: {division.employees_count}</span>
               </div>
               <div className="metric-item">
                 <Plug className="metric-icon metric-icon--green" />

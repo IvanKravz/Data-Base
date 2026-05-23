@@ -1,11 +1,11 @@
 // EquipmentSection.tsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { ArrowLeft, Filter, Plus } from 'lucide-react';
+import { ArrowLeft, Filter, Plus, List, FolderTree, Package } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import { EquipmentList } from '../../../../equipment/EquipmentList';
-import { divisionsApi, equipmentApi, authApi } from '../../../../../api';
+import { divisionsApi, equipmentApi } from '../../../../../api';
 import { SearchBar } from '../../../../common/SearchBar';
 import { StatusButtons } from '../../../../equipment';
 import { AdvancedSearchModal } from '../../../../equipment/forms/AdvancedSearchModal/AdvancedSearchModal';
@@ -60,18 +60,35 @@ export function EquipmentSection() {
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // Стабилизированные значения
+  // Режим отображения
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
+    const saved = localStorage.getItem('equipment_view_mode');
+    return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
+  });
+
+  // Ключ для сохранения состояния свёрнутых блоков в sessionStorage
+  const storageKey = useMemo(() => {
+    const base = id ? `division_${id}` : 'global';
+    const sub = subdivisionId ? `_sub_${subdivisionId}` : '';
+    return `equipment_${base}${sub}`;
+  }, [id, subdivisionId]);
+
+  const getEquipmentDeclension = (count: number): string => {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'единиц техники';
+    if (lastDigit === 1) return 'единица техники';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'единицы техники';
+    return 'единиц техники';
+  };
+
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => subdivisionId, [subdivisionId]);
 
-  // Определяем тип пользователя из Redux
   const isExploitationUser = useMemo(() =>
     user?.roles?.includes('exploitation_chief') || user?.roles?.includes('exploitation_employee'), [user]);
   const isChief = useMemo(() => user?.roles?.includes('exploitation_chief'), [user]);
-
-  // Для эксплуатационных пользователей отключаем глобальный режим
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
-
   const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
   const userSubdivisionId = useMemo(() => {
     if (!user?.division_info || isChief) return null;
@@ -103,7 +120,11 @@ export function EquipmentSection() {
     interestOrgans: []
   });
 
-  // Проверка прав через Redux
+  const handleViewModeChange = (mode: 'flat' | 'grouped') => {
+    setViewMode(mode);
+    localStorage.setItem('equipment_view_mode', mode);
+  };
+
   const canCreateEquipment = useMemo(() =>
     permissions?.models?.Equipment?.includes('add') ?? false, [permissions]);
 
@@ -138,7 +159,6 @@ export function EquipmentSection() {
     try {
       setLoading(true);
       setError(null);
-
       if (isExploitationUser && !id) {
         if (!userDivisionId) {
           setError('У вашей учетной записи не назначено подразделение');
@@ -196,7 +216,6 @@ export function EquipmentSection() {
     fetchData();
   }, [fetchData]);
 
-  // Логика фильтрации по отделению
   const filterBySubdivision = useCallback((items: any[]) => {
     if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
@@ -327,6 +346,17 @@ export function EquipmentSection() {
     return `Техника связи и информатизации: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
   };
 
+  const getSelectedStatusLabel = (): string => {
+    switch (selectedStatus) {
+      case 'all': return 'Итого';
+      case 'in-operation': return 'В эксплуатации';
+      case 'in-storage': return 'На складе';
+      case 'defective': return 'Неисправно';
+      case 'for-disposal': return 'На списание';
+      default: return 'Техники';
+    }
+  };
+
   if (loading) return <div className="flex justify-center py-12">Загрузка данных о технике...</div>;
   if (error) return <div className="equipment-error-message">{error}</div>;
 
@@ -373,17 +403,6 @@ export function EquipmentSection() {
         </div>
 
         <div className="equipment-content">
-          <div className="equipment-search-container">
-            <div className="search-bar-with-filters">
-              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено, в чьих интересах..." />
-              <button className={`advanced-filter-button ${hasActiveAdvancedFilters ? 'active' : ''}`} onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}>
-                <Filter size={18} />
-                {hasActiveAdvancedFilters && <span className="filter-indicator"></span>}
-              </button>
-            </div>
-            <AdvancedSearchModal isOpen={showAdvancedSearch} filters={advancedFilters} onFilterChange={handleAdvancedFilterChange} onClose={() => setShowAdvancedSearch(false)} onClearFilters={clearAdvancedFilters} equipment={equipment} />
-          </div>
-
           {hasActiveAdvancedFilters && (
             <div className="active-filters">
               {advancedFilters.interestOrgans.length > 0 && (
@@ -403,18 +422,67 @@ export function EquipmentSection() {
             </div>
           )}
 
-          {statusButtonsEquipment.length > 0 && (
-            <StatusButtons equipment={statusButtonsEquipment} selectedStatus={selectedStatus} onStatusChange={setSelectedStatus} />
-          )}
+          <div className="equipment-actions-row1">
+            <div className="equipment-status-buttons-wrapper">
+              <StatusButtons
+                equipment={statusButtonsEquipment}
+                selectedStatus={selectedStatus}
+                onStatusChange={setSelectedStatus}
+              />
+            </div>
 
-          <div className="equipment-export-button-container">
-            <ExportButton
-              onClick={() => exportEquipmentToExcel(filteredEquipment)}
-              label="Экспорт техники"
-            />
           </div>
 
-          <EquipmentList equipment={filteredEquipment} onDeleteEquipment={handleDeleteEquipment} divisionId={id} subdivisionId={stableSubdivisionId} activeTab={activeTab} />
+          <div className="equipment-search-container">
+            <div className="search-bar-with-filters">
+              <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Поиск по наименованию, серийному номеру, инвентарному номеру, за кем закреплено, в чьих интересах..." />
+              <button className={`advanced-filter-button ${hasActiveAdvancedFilters ? 'active' : ''}`} onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}>
+                <Filter size={18} />
+                {hasActiveAdvancedFilters && <span className="filter-indicator"></span>}
+              </button>
+              <div className="export-button-wrapper">
+                <ExportButton
+                  onClick={() => exportEquipmentToExcel(filteredEquipment)}
+                  label="Экспорт техники"
+                />
+              </div>
+            </div>
+
+            <AdvancedSearchModal isOpen={showAdvancedSearch} filters={advancedFilters} onFilterChange={handleAdvancedFilterChange} onClose={() => setShowAdvancedSearch(false)} onClearFilters={clearAdvancedFilters} equipment={equipment} />
+          </div>
+
+          {/* Блок счётчика с переключателем режимов */}
+          <div className="equipment-count-chip">
+            <div className="equipment-view-mode-toggle">
+              <button className={`equipment-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`} onClick={() => handleViewModeChange('flat')}>
+                <List size={16} /> Список
+              </button>
+              <button className={`equipment-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`} onClick={() => handleViewModeChange('grouped')}>
+                <FolderTree size={16} /> По подразделениям
+              </button>
+            </div>
+
+            <div className="equipment-count-left">
+              <Package size={16} className="count-chip-icon" />
+              <span>{getSelectedStatusLabel()}:</span>
+              <span>{filteredEquipment.length}</span>
+              <span className="count-chip-label">{getEquipmentDeclension(filteredEquipment.length)}</span>
+            </div>
+
+            {/* Пустой элемент для симметрии и центрирования */}
+            <div className="equipment-count-right"></div>
+          </div>
+
+          <EquipmentList
+            equipment={filteredEquipment}
+            onDeleteEquipment={handleDeleteEquipment}
+            divisionId={id}
+            subdivisionId={stableSubdivisionId}
+            activeTab={activeTab}
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            storageKey={storageKey}
+          />
         </div>
       </div>
     </>

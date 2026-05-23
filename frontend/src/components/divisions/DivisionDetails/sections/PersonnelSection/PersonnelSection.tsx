@@ -195,7 +195,7 @@ export function PersonnelSection() {
       subdivisionId: stableSubdivisionId,
       divisionName: division?.name,
       subdivisionName: subdivisionName,
-      fromSubdivision: !!stableSubdivisionId 
+      fromSubdivision: !!stableSubdivisionId
     };
     navigate(`/personnel/create`, { state });
   }, [navigate, id, stableSubdivisionId, location.pathname, location.search, division?.name, subdivisionName]);
@@ -236,18 +236,7 @@ export function PersonnelSection() {
       </div>
 
       <div className="personnel-container">
-        <div className="personnel-search-container">
-          <div className="search-bar-with-filters">
-            <SearchBar searchTerm={searchTerm} setSearchTerm={handleSearchTermChange} placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, личному номеру..." />
-            <button className={`advanced-filter-button ${showAdvancedSearch ? 'active' : ''}`} onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}>
-              <Filter size={18} />
-              {hasActiveAdvancedFilters && <span className="filter-indicator"></span>}
-            </button>
-          </div>
-          {showAdvancedSearch && (
-            <PersonnelAdvancedSearchModal isOpen={showAdvancedSearch} filters={advancedFilters} onFilterChange={handleAdvancedFilterChange} onClose={() => setShowAdvancedSearch(false)} onClearFilters={handleClearFilters} personnel={personnel} />
-          )}
-        </div>
+
 
         {hasActiveAdvancedFilters && (
           <div className="active-filters">

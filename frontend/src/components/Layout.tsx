@@ -12,9 +12,10 @@ interface LayoutProps {
   activeTab: string;
   onSetActiveTab: (tab: string) => void;
   userMenu?: React.ReactNode;
+  showBanner?: boolean; // новый пропс
 }
 
-export function Layout({ children, activeTab, onSetActiveTab, userMenu }: LayoutProps) {
+export function Layout({ children, activeTab, onSetActiveTab, userMenu, showBanner = true }: LayoutProps) {
   const {
     canAccessDivisions,
     canAccessPersonnel,
@@ -27,8 +28,8 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
 
   return (
     <div className="page-container">
-      {/* Hero-баннер: изображение сверху, растянуто по ширине */}
-      <div className="hero-banner">
+      {/* Hero-баннер — показываем только если showBanner === true */}
+      <div className={`hero-banner ${!showBanner ? 'hero-banner--hidden' : ''}`}>
         <div className="hero-banner__image-wrapper">
           <img 
             src={bannerImage} 
@@ -40,7 +41,6 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
         </div>
       </div>
 
-      {/* Хедер (теперь — под баннером, стикер при скролле) */}
       <header className="layout-header">
         <div className="layout-header__content">
           <div className="layout-header__logo">
@@ -57,7 +57,6 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu }: Layout
         </div>
       </header>
 
-      {/* Основная область с сайдбаром и контентом */}
       <div className="layout-main-row">
         <aside className="layout-sidebar">
           <Sidebar

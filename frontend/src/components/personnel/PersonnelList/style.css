@@ -1,276 +1,15 @@
-/* Filters.css - обновленные стили */
-.filters-wrapper {
-  margin: 1.5rem 0;
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 1px solid #e8ecef;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+/* ===== PersonnelList уникальные стили ===== */
+
+/* Общий контейнер */
+.personnel-list-wrapper {
+  width: 100%;
 }
 
-.filters-wrapper:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.filters-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1a365d;
-  margin: 0;
-}
-
-.filter-icon {
-  color: #4299e1;
-}
-
-.filters-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.main-filters {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.filter-group-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 0.25rem;
-}
-
-.filter-button {
-  padding: 0.4rem 1.25rem;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  color: #4a5568;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.5s;
-  text-align: center;
-  width: 170px;
-  position: relative;
-  overflow: hidden;
-}
-
-.filter-button:hover {
-  background: #edf2f7;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.filter-button.active {
-  background: #4299e1;
-  border-color: #4299e1;
-  color: white;
-  box-shadow: 0 4px 14px rgba(66, 153, 225, 0.4);
-}
-
-.filter-button.active:hover {
-  background: #3182ce;
-  box-shadow: 0 6px 16px rgba(66, 153, 225, 0.5);
-}
-
-.filter-stats {
-  font-size: 1rem;
-  /* margin-top: 0.25rem; */
-  opacity: 0.8;
-  font-weight: 400;
-}
-
-.filter-button.active .filter-stats {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.additional-filters {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  padding-top: 0.5rem;
-  margin-top: 0.5rem;
-  border-top: 1px solid #f1f3f4;
-}
-
-.sha-filters,
-.officer-filters {
-  display: flex;
-  /* flex-direction: column; */
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 200px;
-}
-
-.sha-filter-button,
-.officer-filter-button {
-  padding: 0.625rem 1rem;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #4a5568;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.sha-filter-button::before,
-.officer-filter-button::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  transition: all 0.25s ease;
-}
-
-.sha-filter-button:hover,
-.officer-filter-button:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-  /* transform: translateX(4px); */
-}
-
-.sha-filter-button.active,
-.officer-filter-button.active {
-  background: #ebf8ff;
-  border-color: #4299e1;
-  color: #2b6cb0;
-  font-weight: 600;
-}
-
-.sha-filter-button.active::before,
-.officer-filter-button.active::before {
-  background: #4299e1;
-  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
-}
-
-/* Анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.filters-content {
-  animation: fadeIn 0.4s ease-out;
-}
-
-/* Адаптивность */
-@media (max-width: 1024px) {
-  .main-filters {
-    gap: 0.5rem;
-  }
-  
-  .filter-button {
-    min-width: 110px;
-    padding: 0.675rem 1rem;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .filters-wrapper {
-    padding: 1rem;
-    margin: 1rem 0;
-  }
-  
-  .main-filters {
-    justify-content: center;
-  }
-  
-  .filter-button {
-    min-width: calc(50% - 0.5rem);
-    flex: 1 1 calc(50% - 0.5rem);
-  }
-  
-  .additional-filters {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .sha-filters,
-  .officer-filters {
-    min-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .filter-button {
-    min-width: 100%;
-    flex: 1 1 100%;
-  }
-  
-  .filters-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-}
-
-/* Personnel list styles */
 .personnel-list-header {
   margin-bottom: 1rem;
 }
 
-.personnel-list-export-button {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
-
-.selected-subdivision-title {
-  font-weight: 500;
-  background: white;
-  border-radius: 6px;
-  padding: 0.5rem 16px;
-  margin-bottom: 1rem;
-  border: 1px solid #e2e8f0;
-}
-
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.selected-subdivision-title h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #2d3748;
-}
-
-.staff-info {
-  display: flex;
-  gap: 1rem;
-  font-size: 18px;
-  color: #4a5568;
-}
-
-.staff-info span {
-  display: flex;
-  align-items: center;
-}
-
+/* Сообщение об отсутствии данных */
 .personnel-list-empty-message {
   text-align: center;
   padding: 2rem;
@@ -282,32 +21,408 @@
   border: 1px solid #e2e8f0;
 }
 
+/* Первая строка: основные фильтры */
+.personnel-list-actions-row1 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
 
-/* Responsive styles */
-@media (max-width: 768px) {
+.personnel-list-main-filters {
+  flex: 1;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
-  .main-filters,
-  .sha-filters,
-  .officer-filters {
+/* Кнопки основных фильтров */
+.personnel-list-filter-button {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #4a5568;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.personnel-list-filter-button:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.personnel-list-filter-button.active {
+  background: #e8f0fe;
+  border-color: #a0c4ff;
+  color: #1e3a8a;
+  box-shadow: none;
+}
+
+.personnel-list-filter-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.personnel-list-filter-label {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.personnel-list-filter-stats {
+  font-size: 0.75rem;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.personnel-list-filter-button.active .personnel-list-filter-stats {
+  color: #1e3a8a;
+  opacity: 0.9;
+}
+
+/* Блок счётчика с переключателем режимов в виде вкладок */
+.personnel-list-count-chip {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.2rem 1rem;
+  background: #f8fafcd0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+  transition: all 0.4s ease;
+  backdrop-filter: blur(2px);
+  margin-bottom: 0.5rem;
+}
+
+.personnel-list-count-chip:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+  cursor: default;
+}
+
+/* Переключатель режимов — вкладки без фона и границ */
+.personnel-list-view-mode-toggle {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.personnel-list-view-mode-btn {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.personnel-list-view-mode-btn.active {
+  color: #1e40af;
+  border-bottom-color: #1e40af;
+}
+
+.personnel-list-view-mode-btn:hover:not(.active) {
+  color: #1e293b;
+  border-bottom-color: #cbd5e1;
+}
+
+/* Левая статистика */
+.personnel-list-count-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* margin-right: auto; */
+}
+
+.personnel-list-count-icon {
+  color: #4299e1;
+  stroke-width: 1.8;
+}
+
+.personnel-list-count-label {
+  font-weight: 400;
+  color: #475569;
+  font-size: 1rem;
+}
+
+/* Правая статистика */
+.personnel-list-count-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: 1rem;
+  color: #475569;
+}
+
+.personnel-list-count-right span {
+  white-space: nowrap;
+}
+
+/* Дополнительные фильтры (офицеры / ША) */
+.personnel-list-additional-filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: max-height 300ms ease, opacity 300ms ease, transform 300ms ease, margin-bottom 300ms ease, padding 300ms ease;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  padding: 0 1rem;
+  margin-bottom: 0;
+}
+
+.personnel-list-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.personnel-list-filter-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: 0.3px;
+  background: #eef2ff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+}
+
+.personnel-list-officer-filters,
+.personnel-list-sha-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.personnel-list-officer-filter-btn,
+.personnel-list-sha-filter-btn {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: white;
+  color: #1e293b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
+}
+
+.personnel-list-officer-filter-btn:hover,
+.personnel-list-sha-filter-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.personnel-list-officer-filter-btn.active,
+.personnel-list-sha-filter-btn.active {
+  background: #4299e1;
+  border-color: #1682db;
+  color: white;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Поиск и расширенные фильтры */
+.personnel-list-search-container {
+  margin-bottom: 0.4rem;
+  position: relative;
+  z-index: 1;
+}
+
+.personnel-list-search-bar-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.personnel-list-advanced-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.personnel-list-advanced-filter-btn:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+.personnel-list-advanced-filter-btn.active {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.personnel-list-filter-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #2563eb;
+}
+
+/* Активные теги расширенных фильтров */
+.personnel-list-active-filters {
+  margin-bottom: 1rem;
+}
+
+.personnel-list-active-filters-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.personnel-list-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+.personnel-list-filter-tag button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #1e40af;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Состояния загрузки и ошибок */
+.personnel-list-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+.personnel-list-error {
+  padding: 2rem;
+  text-align: center;
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin: 1rem;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+  .personnel-list-main-filters {
     gap: 0.5rem;
   }
 
-  .filter-button,
-  .sha-filter-button,
-  .officer-filter-button {
-    min-width: auto;
-    padding: 0.5rem 0.75rem;
-    font-size: 13px;
+  .personnel-list-filter-button {
+    padding: 0.25rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .personnel-list-actions-row1 {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
-  .title-row {
+  .personnel-list-main-filters {
+    justify-content: center;
+  }
+
+  .personnel-list-count-chip {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .personnel-list-view-mode-toggle {
+    justify-content: center;
+    width: 100%;
+    order: 1;
+  }
+
+  .personnel-list-count-left {
+    justify-content: center;
+    order: 2;
+    margin-left: 0;
+  }
+
+  .personnel-list-count-right {
+    justify-content: center;
+    order: 3;
+  }
+
+  /* Адаптивность дополнительных фильтров */
+  .personnel-list-additional-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .personnel-list-filter-group {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .staff-info {
-    width: 100%;
-    justify-content: space-between;
+  .personnel-list-filter-group-label {
+    white-space: normal;
+  }
+
+  .personnel-list-search-bar-wrapper {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

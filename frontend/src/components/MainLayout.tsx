@@ -63,6 +63,7 @@ export function MainLayout() {
     canAccessStorage,
     personnelFilters
   } = useAppPermissions();
+  const shouldShowBanner = location.pathname === '/' || location.pathname === '/divisions';
 
   // Функция определения активной вкладки по текущему пути
   const getActiveTabFromPath = (pathname: string): string => {
@@ -139,6 +140,7 @@ export function MainLayout() {
       activeTab={activeTab}
       onSetActiveTab={setActiveTab}
       userMenu={<UserMenu />}
+      showBanner={shouldShowBanner}
     >
       <Routes>
         {/* Корневой маршрут: список подразделений или редирект */}

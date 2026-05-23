@@ -1,6 +1,6 @@
 // FacilitiesSection.tsx
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import {
@@ -9,18 +9,20 @@ import {
   FolderOpen,
   FolderClosed,
   SatelliteDish,
-  Map
+  Map,
+  List,
+  FolderTree,
+  Building2
 } from 'lucide-react';
-import { facilitiesApi, communicationPostsApi, authApi } from '../../../../../api';
+import { facilitiesApi, communicationPostsApi, authApi, divisionsApi } from '../../../../../api';
 import { FacilityList } from '../../../../facilities/FacilityList';
 import { CommunicationPostsList } from '../CommunicationPosts/CommunicationPostsList';
-import { SearchBar } from '../../../../common/SearchBar';
 import { FacilityTypeFilter } from '../../../../facilities/FacilityTypeFilter';
-import { divisionsApi } from '../../../../../api';
-import { Facility, CommunicationPost } from '../../../../../types';
+import { Facility } from '../../../../../types';
+import { ExportButton } from '../../../../common/ExportButton';
+import { SearchBar } from '../../../../common/SearchBar';
+import { exportFacilitiesToExcel } from '../../../../../utils/exportToExcel';
 import './FacilitiesSection.css';
-import { normalizeSearchString } from '../../../../../utils/normalizeSearchString';
-import { useDebounce } from '../../../../../utils/useDebounce';
 import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationModal';
 import { isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
@@ -38,36 +40,49 @@ export function FacilitiesSection() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
-  const [searchTerm, setSearchTerm] = useState('');
-
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // ----- Состояния (синхронизируются с URL) -----
+  // Состояния фильтрации и вкладок
   const [filterType, setFilterType] = useState<'all' | number>('all');
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>('all');
-  const [viewType, setViewType] = useState<'table' | 'grid'>('table');
 
+  // Данные
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [communicationPosts, setCommunicationPosts] = useState<CommunicationPost[]>([]);
+  const [communicationPosts, setCommunicationPosts] = useState([]);
   const [division, setDivision] = useState(null);
   const [subdivisionName, setSubdivisionName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [showMap, setShowMap] = useState(false);
   const [mapSearchTerm, setMapSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
-  const [showMap, setShowMap] = useState(false);
 
-  // ----- Вспомогательные вычисления -----
+  // Управление видом отображения (список / группировка)
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
+    const saved = localStorage.getItem('facility_view_mode');
+    return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
+  });
+
+  // Поиск
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Вспомогательные вычисления
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
+
+  const storageKey = useMemo(() => {
+    const base = id ? `division_${id}` : 'global';
+    const sub = stableSubdivisionId ? `_sub_${stableSubdivisionId}` : '';
+    return `facilities_${base}${sub}`;
+  }, [id, stableSubdivisionId]);
 
   const isExploitationUser = useMemo(() => isExploitationChief() || isExploitationEmployee(), []);
   const isChief = useMemo(() => isExploitationChief(), []);
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
+
   const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
   const userSubdivisionId = useMemo(() => {
     if (!user?.division_info || isChief) return null;
@@ -83,7 +98,7 @@ export function FacilitiesSection() {
   const canDeleteCommunicationPosts = useMemo(() =>
     permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
 
-  // ----- Функция обновления URL с функциональным подходом (избегает гонок) -----
+  // Функции обновления URL
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
@@ -95,7 +110,7 @@ export function FacilitiesSection() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // ----- Синхронизация состояния с URL (один источник правды) -----
+  // Синхронизация состояния с URL
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     let newActiveTab: typeof activeTab = 'all';
@@ -104,11 +119,6 @@ export function FacilitiesSection() {
     else if (tabParam === 'posts') newActiveTab = 'posts';
     else newActiveTab = 'all';
     if (newActiveTab !== activeTab) setActiveTab(newActiveTab);
-
-    const viewParam = searchParams.get('view');
-    let newViewType: typeof viewType = 'table';
-    if (viewParam === 'grid') newViewType = 'grid';
-    if (newViewType !== viewType) setViewType(newViewType);
 
     const typeParam = searchParams.get('type');
     let newFilterType: typeof filterType = 'all';
@@ -124,7 +134,7 @@ export function FacilitiesSection() {
     if (newClass !== facilityClassFilter) setFacilityClassFilter(newClass);
   }, [searchParams]);
 
-  // ----- Обработчики изменений (обновляют только URL, состояние обновится через эффект) -----
+  // Обработчики изменений
   const handleTabChange = useCallback((tab: typeof activeTab) => {
     if (tab === 'posts') {
       updateUrlParams({ tab, type: null, class: null });
@@ -134,34 +144,27 @@ export function FacilitiesSection() {
     setMapSearchTerm('');
   }, [updateUrlParams]);
 
-  const handleViewChange = useCallback((type: typeof viewType) => {
-    updateUrlParams({ view: type });
-  }, [updateUrlParams]);
-
   const handleTypeChange = useCallback((type: typeof filterType, resetClass: boolean = false) => {
     const updates: Record<string, string | null> = {};
-    if (type === 'all') {
-      updates.type = null;
-    } else {
-      updates.type = type.toString();
-    }
-    if (resetClass) {
-      updates.class = null;
-    }
+    if (type === 'all') updates.type = null;
+    else updates.type = type.toString();
+    if (resetClass) updates.class = null;
     updateUrlParams(updates);
     setMapSearchTerm('');
   }, [updateUrlParams]);
 
   const handleClassChange = useCallback((cls: typeof facilityClassFilter) => {
-    if (cls === 'all') {
-      updateUrlParams({ class: null });
-    } else {
-      updateUrlParams({ class: cls });
-    }
+    if (cls === 'all') updateUrlParams({ class: null });
+    else updateUrlParams({ class: cls });
     setMapSearchTerm('');
   }, [updateUrlParams]);
 
-  // ----- Загрузка данных (без изменений) -----
+  const handleViewModeChange = useCallback((mode: 'flat' | 'grouped') => {
+    setViewMode(mode);
+    localStorage.setItem('facility_view_mode', mode);
+  }, []);
+
+  // Загрузка данных
   const fetchData = useCallback(async () => {
     if (!stableToken) return;
     try {
@@ -188,7 +191,7 @@ export function FacilitiesSection() {
           facilitiesApi.getFacilities({ token: stableToken, division: userDivisionId }),
           divisionsApi.getDivisionById(userDivisionId, stableToken)
         ]);
-        let posts: CommunicationPost[] = [];
+        let posts = [];
         if (canViewCommunicationPosts) {
           posts = await communicationPostsApi.getCommunicationPosts({
             token: stableToken,
@@ -211,7 +214,7 @@ export function FacilitiesSection() {
           facilitiesApi.getFacilities({ token: stableToken, division: id }),
           divisionsApi.getDivisionById(id, stableToken)
         ]);
-        let posts: CommunicationPost[] = [];
+        let posts = [];
         if (canViewCommunicationPosts) {
           posts = await communicationPostsApi.getCommunicationPosts({
             token: stableToken,
@@ -241,38 +244,44 @@ export function FacilitiesSection() {
     fetchData();
   }, [fetchData]);
 
-  // ----- Логика фильтрации -----
+  // Фильтрация по подразделению
   const filterBySubdivision = useCallback((items: any[]) => {
     if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-    return items.filter(item =>
-      item.subdivision?.id?.toString() === stableSubdivisionId.toString()
-    );
+    return items.filter(item => item.subdivision?.id?.toString() === stableSubdivisionId.toString());
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
   const filteredBySubdivisionFacilities = useMemo(() => filterBySubdivision(facilities), [facilities, filterBySubdivision]);
   const filteredBySubdivisionPosts = useMemo(() => filterBySubdivision(communicationPosts), [communicationPosts, filterBySubdivision]);
 
-  const matchesSearchTerm = useCallback((facility: Facility, part: string) => {
-    const normalizedAddress = normalizeSearchString(facility.address);
-    const normalizedName = normalizeSearchString(facility.name);
-    const facilityType = facility.type.name.toLowerCase().includes('станция') ? 'станция' : 'шд';
-    return (
-      normalizedAddress.includes(part) ||
-      normalizedName.includes(part) ||
-      facilityType.includes(part) ||
-      (facility.facility_class && `${facility.facility_class} класс`.includes(part)) ||
-      (facility.communication_posts?.some(post => normalizeSearchString(post.name).includes(part)))
-    );
-  }, []);
+  // Получаем уникальные типы объектов для определения названия выбранного типа
+  const facilityTypes = useMemo(() => {
+    const uniqueTypeIds = Array.from(new Set(filteredBySubdivisionFacilities.map(f => f.type.id)));
+    return uniqueTypeIds.map(id => {
+      const type = filteredBySubdivisionFacilities.find(f => f.type.id === id)?.type;
+      return type!;
+    }).filter(Boolean);
+  }, [filteredBySubdivisionFacilities]);
 
-  const hasAllFacilities = useMemo(() => filteredBySubdivisionFacilities.length > 0, [filteredBySubdivisionFacilities]);
-  const hasOpenFacilities = useMemo(() => filteredBySubdivisionFacilities.some(f => !f.is_closed), [filteredBySubdivisionFacilities]);
-  const hasClosedFacilities = useMemo(() => filteredBySubdivisionFacilities.some(f => f.is_closed), [filteredBySubdivisionFacilities]);
-  const hasCommunicationPosts = filteredBySubdivisionPosts.length > 0;
+  // Формируем название для счётчика в зависимости от выбранного типа и класса
+  const selectedTypeName = useMemo(() => {
+    if (filterType === 'all') return null;
+    const type = facilityTypes.find(t => t.id === filterType);
+    if (!type) return null;
+    const isShd = type.name.toLowerCase().includes('шд');
+    if (isShd && facilityClassFilter !== 'all') {
+      return `ШД (${facilityClassFilter} класс)`;
+    }
+    return type.name;
+  }, [filterType, facilityClassFilter, facilityTypes]);
 
-  const filteredFacilities = useMemo(() => {
+  const hasAllFacilities = filteredBySubdivisionFacilities.length > 0;
+  const hasOpenFacilities = filteredBySubdivisionFacilities.some(f => !f.is_closed);
+  const hasClosedFacilities = filteredBySubdivisionFacilities.some(f => f.is_closed);
+
+  // Фильтрация по статусу, типу и классу (без поиска)
+  const displayFacilities = useMemo(() => {
     let result = filteredBySubdivisionFacilities;
     if (activeTab === 'open') result = result.filter(f => !f.is_closed);
     else if (activeTab === 'closed') result = result.filter(f => f.is_closed);
@@ -281,16 +290,21 @@ export function FacilitiesSection() {
     return result;
   }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
 
-  const displayFacilities = useMemo(() => {
-    if (!debouncedSearchTerm) return filteredFacilities;
-    const normalizedSearchTerm = normalizeSearchString(debouncedSearchTerm);
-    const searchParts = normalizedSearchTerm.split(' ').filter(part => part.length > 0);
-    if (!searchParts.length) return filteredFacilities;
-    return filteredFacilities.filter(facility =>
-      searchParts.some(part => matchesSearchTerm(facility, part))
+  // Фильтрация по поисковому запросу
+  const filteredBySearch = useMemo(() => {
+    if (!searchTerm.trim()) return displayFacilities;
+    const searchLower = searchTerm.toLowerCase().trim();
+    return displayFacilities.filter(facility =>
+      facility.name.toLowerCase().includes(searchLower) ||
+      facility.address.toLowerCase().includes(searchLower) ||
+      (facility.type?.name && facility.type.name.toLowerCase().includes(searchLower)) ||
+      (facility.facility_class && `${facility.facility_class} класс`.includes(searchLower)) ||
+      facility.division_name?.toLowerCase().includes(searchLower) ||
+      facility.subdivision_name?.toLowerCase().includes(searchLower)
     );
-  }, [debouncedSearchTerm, filteredFacilities, matchesSearchTerm]);
+  }, [displayFacilities, searchTerm]);
 
+  // Объекты для карты (с учётом текущих фильтров)
   const mapFacilities = useMemo(() =>
     filteredBySubdivisionFacilities.filter(facility => {
       const matchesType = filterType === 'all' || facility.type.id === filterType;
@@ -303,7 +317,17 @@ export function FacilitiesSection() {
     [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
   );
 
-  // ----- Обработчики действий -----
+  // Склонение для счётчика
+  const getDeclension = (count: number): string => {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'объектов';
+    if (lastDigit === 1) return 'объект';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'объекта';
+    return 'объектов';
+  };
+
+  // Обработчики действий
   const handleFacilityDeleted = useCallback((deletedId: string) => {
     setFacilities(prev => prev.filter(f => f.id !== deletedId));
   }, []);
@@ -323,7 +347,7 @@ export function FacilitiesSection() {
       from: 'facilities-section',
       divisionId: id,
       subdivisionId: stableSubdivisionId,
-      activeTab: activeTab,
+      activeTab,
       fromSubdivision: !!stableSubdivisionId
     };
     if (isGlobalView || isExploitationUser) navigate(`/facilities/create`, { state });
@@ -335,7 +359,7 @@ export function FacilitiesSection() {
       from: 'facilities-section',
       divisionId: id,
       subdivisionId: stableSubdivisionId,
-      activeTab: activeTab,
+      activeTab,
       fromSubdivision: !!stableSubdivisionId
     };
     if (isGlobalView || isExploitationUser) navigate(`/communication-posts/new`, { state });
@@ -374,6 +398,10 @@ export function FacilitiesSection() {
     setShowDeleteModal(false);
     setFacilityToDelete(null);
   }, []);
+
+  const handleExport = useCallback(() => {
+    exportFacilitiesToExcel(filteredBySearch);
+  }, [filteredBySearch]);
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
@@ -469,66 +497,100 @@ export function FacilitiesSection() {
           </div>
 
           <div className="facilities-content">
-            <div className="facilities-search-container">
-              <SearchBar
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                placeholder={
-                  activeTab === 'posts'
-                    ? "Поиск по названию поста связи..."
-                    : "Поиск по названию, адресу, типу, классу или посту связи..."
-                }
-              />
-            </div>
-
-            {(activeTab === 'all' || activeTab === 'open' || activeTab === 'closed') && (
-              <FacilityTypeFilter
-                facilities={filteredBySubdivisionFacilities}
-                selectedType={filterType}
-                onTypeChange={handleTypeChange}
-                selectedClass={facilityClassFilter}
-                onClassChange={handleClassChange}
-                activeTab={activeTab}
-              />
-            )}
-
             {activeTab === 'posts' ? (
               <CommunicationPostsList
                 posts={filteredBySubdivisionPosts}
                 onPostDeleted={handlePostDeleted}
                 onPostUpdated={fetchData}
                 isGlobalView={isGlobalView}
-                searchTerm={debouncedSearchTerm}
                 canDeletePosts={canDeleteCommunicationPosts}
               />
             ) : (
-              <FacilityList
-                viewType={viewType}
-                onViewChange={handleViewChange}
-                facilities={displayFacilities}
-                onSelectFacility={(facility) => navigate(`/facilities/${facility.id}`)}
-                onLocateFacility={handleLocateFacility}
-                showDifferentFields={true}
-                onFacilityDeleted={handleFacilityDeleted}
-                onDeleteInitiated={handleDeleteInitiated}
-                divisionId={id}
-                subdivisionId={stableSubdivisionId}
-                activeTab={activeTab}
-                filterType={filterType}
-                facilityClassFilter={facilityClassFilter}
-              />
+              <>
+                {/* Верхняя панель управления (фильтр типов) */}
+                <div className="facilities-actions-row1">
+                  <FacilityTypeFilter
+                    facilities={filteredBySubdivisionFacilities}
+                    selectedType={filterType}
+                    onTypeChange={handleTypeChange}
+                    selectedClass={facilityClassFilter}
+                    onClassChange={handleClassChange}
+                    activeTab={activeTab}
+                    compact={true}
+                  />
+                </div>
+
+                {/* Поисковая строка */}
+                <div className="facilities-search-container">
+                  <SearchBar
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    placeholder="Поиск по названию, адресу, типу, классу, подразделению..."
+                  />
+                  <div className="export-button-wrapper">
+                    <ExportButton onClick={handleExport} label="Экспорт объектов" />
+                  </div>
+                </div>
+
+                {/* Блок счётчика с переключателем режимов и динамическим заголовком */}
+                <div className="facilities-count-chip">
+                  <div className="facilities-view-mode-toggle">
+                    <button
+                      className={`facilities-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`}
+                      onClick={() => handleViewModeChange('flat')}
+                    >
+                      <List size={16} /> Список
+                    </button>
+                    <button
+                      className={`facilities-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`}
+                      onClick={() => handleViewModeChange('grouped')}
+                    >
+                      <FolderTree size={16} /> По подразделениям
+                    </button>
+                  </div>
+
+                  <div className="facilities-count-center">
+                    <Building2 size={16} className="count-chip-icon" />
+                    <span>{selectedTypeName ? selectedTypeName : 'Показано'}:</span>
+                    <span>{filteredBySearch.length}</span>
+                    <span className="count-chip-label">{getDeclension(filteredBySearch.length)}</span>
+                  </div>
+
+                  <div className="facilities-count-right"></div>
+                </div>
+
+                {/* Двухколоночный блок: таблица + карта */}
+                <div className="facilities-two-columns">
+                  <div className="facilities-left-column">
+                    <FacilityList
+                      facilities={filteredBySearch}
+                      viewMode={viewMode}
+                      onDelete={handleDeleteInitiated}
+                      onLocate={handleLocateFacility}
+                      divisionId={id}
+                      subdivisionId={stableSubdivisionId}
+                      activeTab={activeTab}
+                      filterType={filterType?.toString() || null}
+                      facilityClassFilter={facilityClassFilter !== 'all' ? facilityClassFilter : null}
+                      searchTerm={searchTerm}
+                      storageKey={storageKey}
+                    />
+                  </div>
+                  <div className="facilities-right-column">
+                    {showMap && filteredBySearch.length > 0 && (
+                      <div className="facilities-map-overlay">
+                        <Suspense fallback={<div className="loading-spinner"></div>}>
+                          <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
+                        </Suspense>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
       </div>
-
-      {showMap && displayFacilities.length > 0 && activeTab !== 'posts' && (
-        <div className="facilities-map-overlay">
-          <Suspense fallback={<div className="loading-spinner"></div>}>
-            <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
-          </Suspense>
-        </div>
-      )}
 
       {showDeleteModal && (
         <DeleteConfirmationModal

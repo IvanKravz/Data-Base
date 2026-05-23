@@ -1,0 +1,36 @@
+/* Уникальные классы для кнопки экспорта */
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    background: #599d8e;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: all 0.4s ease;
+    transform: scale(1);
+    cursor: pointer;
+    border: none;
+}
+
+.export-btn:hover {
+    background:  #0f766e;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.export-btn:active {
+    transform: scale(0.95);
+}
+
+.export-btn:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+.export-btn-icon {
+    width: 1rem;
+    height: 1rem;
+}

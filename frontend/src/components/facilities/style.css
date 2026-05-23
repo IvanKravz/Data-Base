@@ -1,18 +1,9 @@
-:root {
-  --transition-speed: 150ms;
-  --border-radius: 3px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --primary-color: #3b82f6;
-  --border-color: #e5e7eb;
-  --text-color: #1f2937;
-  --muted-text: #6b7280;
-}
-
+/* ===== FacilityTypeFilter уникальные стили ===== */
 .facility-filter-container {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .facility-type-grid {
@@ -21,22 +12,20 @@
   gap: 0.5rem;
 }
 
-/* Base button styles */
 .facility-filter-btn {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 0.5rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
   background-color: white;
-  transition: all var(--transition-speed) ease;
+  transition: all 0.2s ease;
   cursor: pointer;
-  text-align: left;
   min-width: 190px;
+  gap: 0.5rem
 }
-
 .facility-filter-btn:hover {
   border-color: #9ca3af;
   background-color: #f9fafb;
@@ -47,83 +36,63 @@
   align-items: center;
   gap: 0.75rem;
 }
-
 .facility-filter-label {
   font-weight: 500;
-  font-size: 1rem;
-  color: var(--text-color);
+  font-size: 0.9rem;
+  color: #1f2937;
 }
-
 .facility-filter-icon {
-  height: 1.5rem;
-  width: 1.5rem;
-  flex-shrink: 0;
-  color: var(--muted-text);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
 }
-
 .facility-filter-count {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8125rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
   font-weight: 600;
   border-radius: 9999px;
-  min-width: 1.75rem;
-  text-align: center;
   background-color: #f3f4f6;
-  color: var(--muted-text);
-  margin-left: 0.3rem;
+  color: #6b7280;
 }
 
-/* Active state for all buttons */
+/* Активные состояния */
 .facility-filter-all-active,
 .facility-filter-station-active,
 .facility-filter-shd-active {
-  border-color: var(--primary-color);
+  border-color: #3b82f6;
   background-color: #f8fafc;
-  box-shadow: 0 0 0 1px var(--primary-color);
+  /* box-shadow: 0 0 0 1px #3b82f6; */
 }
-
 .facility-filter-all-active .facility-filter-icon,
 .facility-filter-station-active .facility-filter-icon,
 .facility-filter-shd-active .facility-filter-icon {
-  color: var(--primary-color);
+  color: #3b82f6;
 }
-
 .facility-filter-all-active .facility-filter-count,
 .facility-filter-station-active .facility-filter-count,
 .facility-filter-shd-active .facility-filter-count {
-  background-color: var(--primary-color);
+  background-color: #3b82f6;
   color: white;
 }
 
-/* Specific type accents */
-.facility-filter-station .facility-filter-icon {
-  color: #2563eb;
-}
-
-.facility-filter-shd .facility-filter-icon {
-  color: #dc9533;
-}
-
-/* SHD filter wrapper and dropdown */
+/* ШД с выпадающим списком */
 .shd-filter-wrapper {
   position: relative;
 }
-
 .facility-class-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
   z-index: 10;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-
 .facility-class-option {
   display: flex;
   justify-content: space-between;
@@ -133,59 +102,30 @@
   text-align: left;
   cursor: pointer;
   font-size: 0.875rem;
-  transition: background-color var(--transition-speed) ease;
+  transition: background 0.15s;
 }
-
-.facility-class-option:hover {
-  background-color: #f9fafb;
-}
-
+.facility-class-option:hover { background-color: #f9fafb; }
 .facility-class-option.active {
   background-color: #f3f4f6;
   font-weight: 500;
-  color: var(--text-color);
 }
 
-/* Chevron button styles */
 .shd-filter-actions {
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
-
 .chevron-button {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  color: var(--muted-text);
-  transition: color var(--transition-speed) ease;
+  color: #6b7280;
 }
-
-.chevron-button:hover {
-  color: var(--text-color);
-}
-
+.chevron-button:hover { color: #1f2937; }
 .chevron-icon {
-  height: 1.5rem;
-  width: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   color: #2563eb;
-}
-
-/* Animation for dropdown */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.facility-class-dropdown {
-  animation: fadeIn var(--transition-speed) ease-out forwards;
 }

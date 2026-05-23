@@ -1,4 +1,5 @@
-/* EquipmentSection.css */
+/* EquipmentSection.css — единый стиль для всех элементов */
+
 .equipment-content-wrapper {
   background: white;
   border-radius: 0.5rem;
@@ -16,11 +17,9 @@
   position: relative;
   z-index: 2;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .equipment-title-container {
@@ -58,6 +57,7 @@
   background-color: #3182ce;
 }
 
+/* Вкладки */
 .equipment-tabs-container {
   background: white;
   border-radius: 0.5rem;
@@ -82,11 +82,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(to right,
-      transparent 0%,
-      #e5e7eb 10%,
-      #e5e7eb 90%,
-      transparent 100%);
+  background: linear-gradient(to right, transparent 0%, #e5e7eb 10%, #e5e7eb 90%, transparent 100%);
 }
 
 .equipment-tabs::-webkit-scrollbar {
@@ -103,17 +99,12 @@
   border-radius: 2px;
 }
 
-.equipment-export-button-container {
-  display: flex;
-  justify-content: end;
-}
-
 .equipment-tab-button {
   position: relative;
   padding: 0.875rem 1.25rem;
   border: none;
   background-color: transparent;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #64748b;
   cursor: pointer;
@@ -157,10 +148,6 @@
   transform: scaleX(1);
 }
 
-.equipment-tab-button.active:hover {
-  background-color: rgba(241, 245, 249, 0.5);
-}
-
 .equipment-tab-indicator {
   position: absolute;
   bottom: 0;
@@ -168,18 +155,17 @@
   background-color: #2563eb;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 4;
-  /* ДОБАВЛЕНО: Плавное появление при загрузке */
   animation: fadeInSlide 0.4s ease-out forwards;
   opacity: 0;
   transform: translateY(2px);
 }
 
-/* ДОБАВЛЕНО: Анимация появления индикатора */
 @keyframes fadeInSlide {
   0% {
     opacity: 0;
     transform: translateY(2px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -194,12 +180,257 @@
   justify-content: center;
 }
 
+/* Основной контент */
 .equipment-content {
   padding: 1rem;
 }
 
+/* Новая структура панели действий (без переключателя режимов) */
+.equipment-actions-row1 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.equipment-status-buttons-wrapper {
+  flex: 1;
+  min-width: 200px;
+}
+
+.equipment-status-buttons-wrapper .status-buttons-container {
+  margin: 0;
+  gap: 0.75rem;
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
+}
+
+.equipment-status-buttons-wrapper .status-button {
+  padding: 0.4rem 0.75rem;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1.5px solid #e2e8f0;
+  background: white;
+  color: #4a5568;
+}
+
+.equipment-status-buttons-wrapper .status-button.selected {
+  background: #4299e1;
+  border-color: #4299e1;
+  color: white;
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+}
+
+.equipment-status-buttons-wrapper .status-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.equipment-status-buttons-wrapper .status-button.selected:hover {
+  background: #3182ce;
+}
+
+.equipment-status-buttons-wrapper .status-button-content {
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.equipment-status-buttons-wrapper .status-button-header {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.equipment-status-buttons-wrapper .status-button-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
+}
+
+.equipment-status-buttons-wrapper .status-button-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+.equipment-status-buttons-wrapper .status-button-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0 0.25rem;
+  border-radius: 12px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.equipment-status-buttons-wrapper .status-button.selected .status-button-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Цветовые темы кнопок статусов */
+.equipment-status-buttons-wrapper .status-button-in-operation {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.equipment-status-buttons-wrapper .status-button-in-operation.selected {
+  background: #25a052bd;
+  border-color: #16a34a;
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button-in-storage {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.equipment-status-buttons-wrapper .status-button-in-storage.selected {
+  background: #4b7deae7;
+  border-color: #2563eb;
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button-defective {
+  background-color: #fefce8;
+  border-color: #fddf47b9;
+}
+
+.equipment-status-buttons-wrapper .status-button-defective.selected {
+  background: #ca8b0491;
+  border-color: #ca8a04;
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button-for-disposal {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.equipment-status-buttons-wrapper .status-button-for-disposal.selected {
+  background: #dc2626be;
+  border-color: #dc2626;
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button-all {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.equipment-status-buttons-wrapper .status-button-all.selected {
+  background: #607490a3;
+  border-color: #4b5563;
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button.selected .status-button-icon,
+.equipment-status-buttons-wrapper .status-button.selected .status-button-text,
+.equipment-status-buttons-wrapper .status-button.selected .status-button-count {
+  color: white;
+}
+
+.equipment-status-buttons-wrapper .status-button.selected .status-button-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Блок счётчика с переключателем режимов (аналог personnel-list-count-chip) */
+.equipment-count-chip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.2rem 1rem;
+  background: #f8fafcd0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(66, 153, 225, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+  transition: all 0.4s ease;
+  backdrop-filter: blur(2px);
+  margin-bottom: 0.5rem;
+}
+
+.equipment-count-chip:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+  cursor: default;
+}
+
+/* Левая статистика */
+.equipment-view-mode-toggle {
+  flex: 1;
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.equipment-count-right {
+  flex: 1;
+}
+
+/* Центральная часть (статистика) - занимает 1 часть и центрируется */
+.equipment-count-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.count-chip-icon {
+  color: #4299e1;
+  stroke-width: 1.8;
+}
+
+.count-chip-label {
+  font-weight: 400;
+  color: #475569;
+  font-size: 1rem;
+}
+
+.equipment-view-mode-btn {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+.equipment-view-mode-btn.active {
+  color: #1e40af;
+  border-bottom-color: #1e40af;
+}
+
+.equipment-view-mode-btn:hover:not(.active) {
+  color: #1e293b;
+  border-bottom-color: #cbd5e1;
+}
+
+/* Поиск */
 .equipment-search-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   position: relative;
   z-index: 1;
 }
@@ -245,13 +476,56 @@
   background-color: #2563eb;
 }
 
-.equipment-error-message {
-  color: #ef4444;
-  padding: 1rem;
-  text-align: center;
-  font-weight: 500;
+.active-filters {
+  margin-bottom: 1rem;
 }
 
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+.filter-tag button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #1e40af;
+  padding: 0;
+  line-height: 1;
+}
+
+/* Счётчики в заголовках (для группированного режима) */
+.division-employee-count,
+.subdivision-employee-count {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: #4a5568;
+}
+
+.division-header-row .division-employee-count {
+  color: #2c5282;
+}
+
+.subdivision-header-row .subdivision-employee-count {
+  color: #4a5568;
+}
+
+/* Кнопка назад */
 .back-button {
   display: flex;
   align-items: center;
@@ -272,37 +546,22 @@
   width: 1.25rem;
 }
 
-.active-filters {
-  margin-bottom: 1rem;
+.equipment-error-message {
+  color: #ef4444;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 500;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  max-width: 90%;
-  max-height: 90%;
-  overflow: auto;
+/* Адаптивность */
+@media (max-width: 1024px) {
+  .equipment-status-buttons-wrapper .status-buttons-container {
+    gap: 0.5rem;
+    grid-template-columns: repeat(5, minmax(80px, 1fr));
+  }
 }
 
 @media (max-width: 768px) {
-  .equipment-content-wrapper {
-    padding: 16px;
-  }
-
   .equipment-header {
     flex-direction: column;
     align-items: flex-start;
@@ -316,5 +575,64 @@
   .add-equipment-btn {
     align-self: stretch;
     justify-content: center;
+  }
+
+  .equipment-content-wrapper {
+    padding: 16px;
+  }
+
+  .equipment-content {
+    padding: 0.5rem;
+  }
+
+  .equipment-actions-row1 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .equipment-status-buttons-wrapper {
+    width: 100%;
+  }
+
+  .equipment-status-buttons-wrapper .status-buttons-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .equipment-status-buttons-wrapper .status-button-content {
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .equipment-count-chip {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .equipment-view-mode-toggle {
+    justify-content: center;
+    width: 100%;
+    order: 1;
+  }
+
+  .equipment-count-left {
+    justify-content: center;
+    order: 2;
+    margin-left: 0;
+  }
+
+  .equipment-count-right {
+    display: none;
+  }
+
+  .equipment-search-container .search-bar-with-filters {
+    flex-direction: column;
+  }
+
+  .advanced-filter-button {
+    align-self: flex-end;
   }
 }

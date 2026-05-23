@@ -25,6 +25,28 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     border-bottom-left-radius: 1rem;
     border-bottom-right-radius: 1rem;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.hero-banner--hidden .hero-banner__image-wrapper {
+    height: 0 !important;
+    margin: 0;
+    padding: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+@media (max-width: 1024px) {
+    .hero-banner--hidden .hero-banner__image-wrapper {
+        height: 0 !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-banner--hidden .hero-banner__image-wrapper {
+        height: 0 !important;
+    }
 }
 
 .hero-banner__image {

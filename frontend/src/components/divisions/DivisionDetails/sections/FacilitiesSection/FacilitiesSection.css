@@ -1,4 +1,4 @@
-/* FacilitiesSection.css */
+/* ===== FacilitiesSection уникальные стили ===== */
 .facilities-container {
     background: transparent;
     padding: 0;
@@ -20,13 +20,10 @@
     padding: 1.2rem 1.5rem;
     border-radius: 0.5rem;
     border: 1px solid #e5e7eb;
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .facilities-title-container {
@@ -44,106 +41,12 @@
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0;
-    flex-shrink: 0;
-}
-
-/* === УПРОЩЕННЫЕ ВКЛАДКИ === */
-.facilities-tabs-container {
-    background: white;
-    border-radius: 1rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.facilities-tabs {
-    display: flex;
-    position: relative;
-    z-index: 3;
-    overflow-x: auto;
-    padding-bottom: 1px;
-    scrollbar-width: thin;
-    border-bottom: 1.5px solid #e5e7eb;
-}
-
-.facilities-tabs::-webkit-scrollbar {
-    height: 4px;
-}
-
-.facilities-tabs::-webkit-scrollbar-thumb {
-    background-color: #c5c7d0;
-    border-radius: 2px;
-}
-
-.facilities-tabs::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 2px;
-}
-
-.facilities-tab-button {
-    position: relative;
-    padding: 0.875rem 1.25rem;
-    border: none;
-    background-color: transparent;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-    border-radius: 6px 6px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
-
-.facilities-tab-button:hover {
-    color: #2563eb;
-    background-color: rgba(241, 245, 249, 0.5);
-}
-
-.facilities-tab-button.active {
-    color: #2563eb;
-    font-weight: 600;
-    background-color: rgba(241, 245, 249, 0.3);
-}
-
-/* Индикатор активной вкладки - простая линия */
-.facilities-tab-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1.5px;
-    left: 0;
-    right: 0;
-    position: absolute;
-    height: 2px;
-    background-color: #2563eb;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 4;
-    /* Плавное появление при загрузке */
-    animation: fadeInSlide 0.4s ease-out forwards;
-    opacity: 0;
-    transform: translateY(2px);
-}
-
-.facilities-tab-icon {
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* === ОСТАЛЬНЫЕ СТИЛИ === */
-.facilities-content {
-    padding: 1rem;
 }
 
 .facilities-add-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-bottom: 0;
     flex-wrap: wrap;
 }
 
@@ -165,17 +68,248 @@
     background-color: #3182ce;
 }
 
-.facilities-add-button svg {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-.facilities-search-container {
-    margin-bottom: 1.5rem;
+/* Вкладки */
+.facilities-tabs-container {
+    background: white;
+    border-radius: 1rem;
     position: relative;
-    z-index: 1;
+    overflow: hidden;
 }
 
+.facilities-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    border-bottom: 1.5px solid #e5e7eb;
+}
+
+.facilities-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.facilities-tabs::-webkit-scrollbar-thumb {
+    background-color: #c5c7d0;
+    border-radius: 2px;
+}
+
+.facilities-tabs::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.facilities-tab-button {
+    position: relative;
+    padding: 0.875rem 1.25rem;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.facilities-tab-button:hover {
+    color: #2563eb;
+    background-color: rgba(241, 245, 249, 0.5);
+}
+
+.facilities-tab-button.active {
+    color: #2563eb;
+    font-weight: 600;
+    background-color: rgba(241, 245, 249, 0.3);
+}
+
+.facilities-tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1.5px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #2563eb;
+}
+
+.facilities-tab-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.facilities-content {
+    padding: 1rem;
+}
+
+/* Панель управления (фильтр типов) */
+.facilities-actions-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    background: transparent;
+}
+
+.facilities-actions-row1 .facility-filter-container.compact {
+    flex: 1 1 auto;
+    min-width: 240px;
+    margin: 0;
+}
+
+/* Блок счётчика с переключателем режимов (аналог personnel-list-count-chip) */
+.facilities-count-chip {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 0.2rem 1rem;
+    background: #f8fafcd0;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(66, 153, 225, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1e293b;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(2px);
+    margin-bottom: 0.5rem;
+}
+
+.facilities-count-chip:hover {
+    background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+    cursor: default;
+}
+
+/* Переключатель режимов — вкладки без фона и границ (как в персонале) */
+.facilities-view-mode-toggle {
+    flex: 1;
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.facilities-view-mode-btn {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+}
+
+.facilities-view-mode-btn.active {
+    color: #1e40af;
+    border-bottom-color: #1e40af;
+}
+
+.facilities-view-mode-btn:hover:not(.active) {
+    color: #1e293b;
+    border-bottom-color: #cbd5e1;
+}
+
+/* Центральная часть со статистикой */
+.facilities-count-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.count-chip-icon {
+    color: #4299e1;
+    stroke-width: 1.8;
+}
+
+.count-chip-label {
+    font-weight: 400;
+    color: #475569;
+    font-size: 1rem;
+}
+
+/* Правая часть (пустая для баланса) */
+.facilities-count-right {
+    flex: 1;
+}
+
+/* Поисковая строка */
+.facilities-search-container {
+    margin-bottom: 0.5rem;
+    display: flex;
+    gap: 1rem;
+    /* align-items: center; */
+}
+
+.export-button-wrapper {
+    display: flex;
+    flex-shrink: 0;
+}
+
+/* Двухколоночный макет (таблица + карта) */
+.facilities-two-columns {
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.facilities-left-column {
+    flex: 2;
+    min-width: 0;
+}
+
+.facilities-right-column {
+    flex: 1.2;
+    min-width: 0;
+}
+
+/* Карта внутри правой колонки */
+.facilities-map-overlay {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.facilities-map-overlay .leaflet-container {
+    height: 100%;
+    width: 100%;
+    border-radius: 0.75rem;
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.loading-spinner::after {
+    content: "Загрузка карты...";
+}
+
+/* Остальные вспомогательные стили */
 .facilities-error-message {
     color: #ef4444;
     padding: 1rem;
@@ -203,19 +337,19 @@
     width: 1.25rem;
 }
 
-.facilities-map-overlay {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    margin-top: 0.5rem;
-    background: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .facilities-two-columns {
+        flex-direction: column;
+    }
+
+    .facilities-right-column {
+        margin-top: 1rem;
+    }
+
+    .facilities-map-overlay {
+        min-height: 350px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -243,11 +377,48 @@
         width: 100%;
         justify-content: center;
     }
-}
 
-@media (min-width: 769px) and (max-width: 1024px) {
-    .facilities-add-buttons {
+    .facilities-actions-row1 {
         flex-direction: column;
-        align-items: flex-end;
+        align-items: stretch;
+    }
+
+    .facilities-actions-row1 .facility-filter-container.compact {
+        width: 100%;
+    }
+
+    .facilities-count-chip {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .facilities-view-mode-toggle {
+        justify-content: center;
+        order: 1;
+    }
+
+    .facilities-count-center {
+        justify-content: center;
+        order: 2;
+    }
+
+    .facilities-count-right {
+        display: none;
+        /* на мобильных пустой блок не нужен */
+    }
+
+    .facilities-search-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .export-button-wrapper {
+        align-self: center;
+    }
+
+    .facilities-map-overlay {
+        min-height: 300px;
     }
 }

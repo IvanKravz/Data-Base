@@ -1,140 +1,100 @@
-import React, { memo, useCallback } from 'react';
-import { Grid, Table } from 'lucide-react';
+// FacilityList.tsx
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Facility } from '../../../types';
 import { TableView } from './views/TableView';
-import { GridView } from './views/GridView';
-import { ExportButton } from '../../common/ExportButton';
-import { exportFacilitiesToExcel } from '../../../utils/exportToExcel';
+import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
+import './style.css';
 
 interface FacilityListProps {
-  viewType: 'grid' | 'table';
-  onViewChange: (type: 'grid' | 'table') => void;
   facilities: Facility[];
-  onSelectFacility?: (facility: Facility) => void;
-  onLocateFacility?: (facility: Facility) => void;
-  showDifferentFields?: boolean;
-  onFacilityDeleted?: (deletedId: string) => void;
-  onDeleteInitiated?: (id: string) => void;
-  divisionId?: string; // Добавляем новые пропсы
+  viewMode: 'flat' | 'grouped';
+  onDelete: (id: string) => void;
+  onLocate?: (facility: Facility) => void;
+  divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
   filterType?: string | null;
   facilityClassFilter?: string | null;
+  searchTerm?: string;
+  storageKey?: string;
 }
 
-export const FacilityList = memo(function FacilityList({
-  viewType,
-  onViewChange,
+export function FacilityList({
   facilities,
-  onSelectFacility,
-  onLocateFacility,
-  showDifferentFields = false,
-  onFacilityDeleted,
-  onDeleteInitiated,
+  viewMode,
+  onDelete,
+  onLocate,
   divisionId,
   subdivisionId,
   activeTab,
   filterType,
-  facilityClassFilter
+  facilityClassFilter,
+  searchTerm = '',
+  storageKey = 'facilities_default'
 }: FacilityListProps) {
-  const handleViewTypeChange = useCallback((type: 'grid' | 'table') => {
-    onViewChange(type);
-  }, [onViewChange]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
 
-  // Убираем дополнительную фильтрацию по subdivisionId, так как она уже выполнена в FacilitiesSection
-  const filteredFacilities = facilities;
+  const handleDeleteClick = useCallback((id: string) => {
+    setFacilityToDelete(id);
+    setShowDeleteModal(true);
+  }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    if (onDeleteInitiated) {
-      onDeleteInitiated(id);
+  const handleConfirmDelete = useCallback(() => {
+    if (facilityToDelete) {
+      onDelete(facilityToDelete);
     }
-  }, [onDeleteInitiated]);
+    setShowDeleteModal(false);
+    setFacilityToDelete(null);
+  }, [facilityToDelete, onDelete]);
 
-  const handleExport = useCallback(() => {
-    exportFacilitiesToExcel(facilities);
-  }, [facilities]);
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteModal(false);
+    setFacilityToDelete(null);
+  }, []);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex justify-end">
-          <div className="flex items-center gap-4">
-            <div className="flex rounded-md shadow-sm">
-              <button
-                onClick={() => handleViewTypeChange('table')}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-l-md ${viewType === 'table'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-white text-gray-500 hover:bg-gray-50'
-                  }`}
-              >
-                <Table className="h-4 w-4" />
-                Таблица
-              </button>
-              <button
-                onClick={() => handleViewTypeChange('grid')}
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-r-md ${viewType === 'grid'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-white text-gray-500 hover:bg-gray-50'
-                  }`}
-              >
-                <Grid className="h-4 w-4" />
-                Плитка
-              </button>
-            </div>
-            <ExportButton
-              onClick={handleExport}
-              label="Экспорт объектов"
-            />
-          </div>
+    <div className="facility-list-wrapper">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={viewMode}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          <TableView
+            facilities={facilities}
+            onDelete={handleDeleteClick}
+            onLocate={onLocate}
+            showDifferentFields={true}
+            divisionId={divisionId}
+            subdivisionId={subdivisionId}
+            activeTab={activeTab}
+            filterType={filterType}
+            facilityClassFilter={facilityClassFilter}
+            viewMode={viewMode}
+            searchTerm={searchTerm}
+            storageKey={storageKey}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {facilities.length === 0 && (
+        <div className="facility-list-empty-message">
+          Нет объектов для отображения
         </div>
-      </div>
+      )}
 
-      <div>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={viewType}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="mt-1"
-          >
-            {viewType === 'table' ? (
-              <TableView
-                facilities={filteredFacilities}
-                onDelete={handleDelete}
-                onLocate={onLocateFacility}
-                showDifferentFields={showDifferentFields}
-                divisionId={divisionId}
-                subdivisionId={subdivisionId}
-                activeTab={activeTab}
-                // ПЕРЕДАЙТЕ ФИЛЬТРЫ
-                filterType={filterType}
-                facilityClassFilter={facilityClassFilter}
-              />
-            ) : (
-              <GridView
-                facilities={filteredFacilities}
-                onDelete={handleDelete}
-                onLocate={onLocateFacility}
-                divisionId={divisionId}
-                subdivisionId={subdivisionId}
-                activeTab={activeTab}
-                // ПЕРЕДАЙТЕ ФИЛЬТРЫ
-                filterType={filterType}
-                facilityClassFilter={facilityClassFilter}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        {filteredFacilities.length === 0 && (
-          <div className="facility-list-empty-message">
-            Нет объектов для отображения
-          </div>
-        )}
-      </div>
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          title="Удаление объекта"
+          message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
     </div>
   );
-});
+}

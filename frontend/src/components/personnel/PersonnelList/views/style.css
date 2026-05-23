@@ -1,5 +1,6 @@
-/* Основной контейнер таблицы */
-.table-container {
+/* ===== PersonnelTable styles (префикс personnel-table-) ===== */
+
+.personnel-table-container {
   overflow-x: auto;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -8,21 +9,18 @@
   z-index: 1;
 }
 
-/* Таблица */
-.table {
+.personnel-table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
 }
 
-/* Заголовок таблицы */
-.table-header {
-  background-color: #f9fafb;
+.personnel-table-header {
+  background-color: #eef3f8;
   border-bottom: 2px solid #e5e7eb;
 }
 
-/* Ячейка заголовка */
-.table-header-cell {
+.personnel-table-header-cell {
   padding: 12px 16px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -32,27 +30,27 @@
   text-align: left;
 }
 
-/* Тело таблицы */
-.table-body {
+.personnel-table-body {
   background-color: white;
 }
 
-.person-name {
-  font-size: 1.1rem;
+.personnel-person-name {
+  font-size: 1rem;
   font-weight: 600;
+  min-width: 400px;
+  max-width: 600px;
 }
 
-.division-header-row {
+.personnel-division-header-row {
   background-color: #f8f9fa;
-  /* border-left: 4px solid #3b82f6; */
 }
 
-.division-header-row.management-header {
-  background-color: #fff3cd;
+.personnel-division-header-row.personnel-management-header {
+  background-color: #fdf0be59;
   border-left: 4px solid #ffc107;
 }
 
-.subdivision-header-row {
+.personnel-subdivision-header-row {
   background-color: #f1f5f9;
   border-left: 4px solid #94a3b8;
 }
@@ -62,7 +60,7 @@
   font-weight: 600;
   color: #1e40af;
   font-size: 1.2rem;
-  border-bottom: 2px solid #bfdbfe;
+  border-bottom: 2px solid #dae6f4;
 }
 
 .personnel-subdivision-header-cell {
@@ -70,38 +68,34 @@
   font-weight: 500;
   font-size: 1.1em;
   color: #374151;
-  background-color: #f1f5f9;
+  background-color: #fcfdffda;
+  border-bottom: 1px solid #dae6f4;
 }
 
-/* Строка таблицы */
-.table-row {
+.personnel-table-row {
   transition: background-color 0.2s;
   cursor: pointer;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.table-row:hover {
+.personnel-table-row:hover {
   background-color: #f6f7fa;
 }
 
-.management-row:hover {
-  background-color: #fef9e7;
+.personnel-management-row:hover {
+  background-color: #fef9e768;
 }
 
-/* Ячейка таблицы */
-.table-cell {
-  display: flex;
-  padding: 12px 16px;
+.personnel-table-cell {
+  padding: 5px 16px;
   font-size: 0.875rem;
   color: #111827;
   word-wrap: break-word;
-  /* Перенос текста */
   max-width: 200px;
-  /* Ограничение ширины для переноса текста */
+  vertical-align: middle;
 }
 
-/* Аватар пользователя */
-.user-avatar {
+.personnel-user-avatar {
   min-width: 2rem;
   height: 2rem;
   border-radius: 50%;
@@ -114,8 +108,7 @@
   color: #4b5563;
 }
 
-/* Бейджи */
-.badge {
+.personnel-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -125,35 +118,30 @@
   font-weight: 500;
 }
 
-.badge--red {
-  /* background-color: #fee2e2; */
+.personnel-badge--red {
   color: #dc2626;
 }
 
-.badge--blue {
-  /* background-color: #dbeafe; */
+.personnel-badge--blue {
   color: #2563eb;
 }
 
-.badge--green {
-  /* background-color: #dcfce7; */
+.personnel-badge--green {
   color: #16a34a;
 }
 
-/* Кнопка удаления */
-.delete-button {
+.personnel-delete-button {
   padding: 0.375rem;
   border-radius: 0.5rem;
   transition: background-color 0.2s;
   color: #dc2626;
 }
 
-.delete-button:hover {
+.personnel-delete-button:hover {
   background-color: #fee2e2;
 }
 
-/* Стили для кнопок свертывания/развертывания */
-.collapse-button {
+.personnel-collapse-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -166,38 +154,49 @@
   transition: background-color 0.2s;
 }
 
-.collapse-button:hover {
+.personnel-collapse-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Стили для содержимого заголовков подразделений и отделений */
-.division-header-content,
-.subdivision-header-content {
+.personnel-division-header-content,
+.personnel-subdivision-header-content {
   display: flex;
   align-items: center;
 }
 
-/* Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
+.personnel-division-employee-count,
+.personnel-subdivision-employee-count {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: #4a5568;
+}
 
-  .table-header-cell,
-  .table-cell {
+.personnel-division-header-row .personnel-division-employee-count {
+  color: #2c5282;
+}
+
+.personnel-subdivision-header-row .personnel-subdivision-employee-count {
+  color: #4a5568;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .personnel-table-header-cell,
+  .personnel-table-cell {
     padding: 8px 12px;
     font-size: 0.75rem;
   }
-
-  .user-avatar {
+  .personnel-user-avatar {
     width: 1.5rem;
     height: 1.5rem;
     font-size: 0.75rem;
   }
-
-  .badge {
+  .personnel-badge {
     font-size: 0.625rem;
     padding: 0.125rem 0.375rem;
   }
-
-  .delete-button {
+  .personnel-delete-button {
     padding: 0.25rem;
   }
 }

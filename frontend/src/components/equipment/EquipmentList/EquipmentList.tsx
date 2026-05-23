@@ -1,3 +1,4 @@
+// EquipmentList.tsx (полностью)
 import React, { useState } from 'react';
 import { Equipment } from '../../../types';
 import { TableView } from './views/TableView';
@@ -11,6 +12,9 @@ interface EquipmentListProps {
   activeTab?: string;
   disableRowClick?: boolean;
   showActions?: boolean;
+  viewMode?: 'flat' | 'grouped';
+  searchTerm?: string;
+  storageKey?: string;
 }
 
 export function EquipmentList({
@@ -20,7 +24,10 @@ export function EquipmentList({
   subdivisionId,
   activeTab,
   disableRowClick = false,
-  showActions = true 
+  showActions = true,
+  viewMode = 'flat',
+  searchTerm = '',
+  storageKey = 'equipment_default',
 }: EquipmentListProps) {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, equipmentId: '' });
 
@@ -41,7 +48,7 @@ export function EquipmentList({
 
   return (
     <>
-<TableView
+      <TableView
         equipment={filteredEquipment}
         onDelete={handleDelete}
         divisionId={divisionId}
@@ -49,6 +56,9 @@ export function EquipmentList({
         activeTab={activeTab}
         disableRowClick={disableRowClick}
         showActions={showActions}
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        storageKey={storageKey}
       />
 
       {filteredEquipment.length === 0 && (

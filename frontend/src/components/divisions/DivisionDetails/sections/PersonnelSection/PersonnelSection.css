@@ -10,11 +10,9 @@
   position: relative;
   z-index: 2;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
 }
 
 .personnel-header-division {
@@ -164,7 +162,6 @@
   background-color: #dbeafe;
 }
 
-/* Стили для состояний загрузки и ошибок */
 .flex {
   display: flex;
 }
@@ -188,7 +185,6 @@
   margin: 1rem;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .personnel-header-wrapper {
     flex-direction: column;
