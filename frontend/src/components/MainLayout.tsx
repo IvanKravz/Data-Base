@@ -9,7 +9,6 @@ import { FacilityDetails } from './facilities/FacilityDetails/FacilityDetails';
 import Storage from './storage/Storage';
 import { UserMenu } from './UserMenu/UserMenu';
 import { EquipmentDetailsPage } from './equipment/EquipmentDetailsPage/EquipmentDetailsPage';
-import { QualitativeCharacteristics } from './personnel/QualitativeCharacteristics/QualitativeCharacteristics';
 import { DisposedEquipmentPage } from './equipment/DisposedEquipment/DisposedEquipmentPage';
 import { PersonnelSection } from './divisions/DivisionDetails/sections/PersonnelSection/PersonnelSection';
 import { EquipmentSection } from './divisions/DivisionDetails/sections/EquipmentSection/EquipmentSection';
@@ -302,13 +301,6 @@ export function MainLayout() {
           <PersonnelRoute>
             <PersonnelDetails />
           </PersonnelRoute>
-        } />
-
-        {/* Качественная характеристика – только при отсутствии фильтров на Employee */}
-        <Route path="/personnel/:id/qualitative" element={
-          <ProtectedRoute model="Employee" action="view" extraCheck={checkQualitativeAccess}>
-            <QualitativeCharacteristics />
-          </ProtectedRoute>
         } />
 
         {/* Facility Routes */}

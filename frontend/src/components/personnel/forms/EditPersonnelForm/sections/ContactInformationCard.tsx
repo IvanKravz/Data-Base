@@ -1,7 +1,7 @@
 import React from 'react';
 import { Employee } from '../../../../../types';
-import '.././style.css';
 import { Phone } from 'lucide-react';
+import '../style.css';
 
 interface ContactInformationCardProps {
   formData: Employee;
@@ -11,30 +11,30 @@ interface ContactInformationCardProps {
 
 export function ContactInformationCard({ formData, onChange, readOnly = false }: ContactInformationCardProps) {
   return (
-    <div className="personnel-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card">
+      <div className="ep-card-header">
         <Phone size={20} />
-        <h3 className="personnel-card-title">Контактная информация</h3>
+        <h3 className="ep-card-title">Контактная информация</h3>
       </div>
-      <div className="personnel-card-content">
-        <div className="personnel-form-group">
-          <label className="personnel-form-label">Личный телефон</label>
+      <div className="ep-card-content">
+        <div className="ep-form-group">
+          <label className="ep-form-label">Личный телефон</label>
           <input
             type="tel"
             value={formData.personal_phone}
             onChange={(e) => !readOnly && onChange({ personal_phone: e.target.value })}
-            className="personnel-form-input"
+            className="ep-form-input"
             disabled={readOnly}
           />
         </div>
 
-        <div className="personnel-form-group">
-          <label className="personnel-form-label">Рабочий телефон</label>
+        <div className="ep-form-group">
+          <label className="ep-form-label">Рабочий телефон</label>
           <input
             type="tel"
             value={formData.work_phone}
             onChange={(e) => !readOnly && onChange({ work_phone: e.target.value })}
-            className="personnel-form-input"
+            className="ep-form-input"
             disabled={readOnly}
           />
         </div>

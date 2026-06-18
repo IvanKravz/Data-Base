@@ -13,11 +13,11 @@
 }
 
 .map-header {
-    padding: 0.4rem;
-    background: #e9eaec;
+    padding: 0.6rem;
+    background: #e9eff6e3;
     color: rgb(113, 113, 113);
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
     z-index: 1000;
     animation: fadeIn 0.5s ease-in-out;
 }

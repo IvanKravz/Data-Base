@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TaskItem } from '../TaskItem/TaskItem';
 import { Task } from '../../../../types/tasks';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -14,7 +15,7 @@ interface TasksListProps {
 interface GroupedTasks {
   [divisionId: string]: {
     division: any;
-    noSubdivisionTasks: Task[]; // Задачи без отделения
+    noSubdivisionTasks: Task[];
     subdivisions: {
       [subdivisionId: string]: {
         subdivision: any;
@@ -30,80 +31,118 @@ export function TasksList({
   onDeleteTask,
   onToggleStep,
 }: TasksListProps) {
-  // Состояния для отслеживания развернутых/свернутых групп
-  const [expandedDivisions, setExpandedDivisions] = useState<Record<string, boolean>>({});
-  const [expandedSubdivisions, setExpandedSubdivisions] = useState<Record<string, Record<string, boolean>>>({});
-  const [expandedNoSubdivision, setExpandedNoSubdivision] = useState<Record<string, boolean>>({});
+  const location = useLocation();
 
-  // Группируем задачи по подразделениям и отделениям
+  // Ключ для sessionStorage на основе текущего URL
+  const storageKey = useMemo(() => {
+    return `tasksListExpandState_${location.pathname}${location.search}`;
+  }, [location.pathname, location.search]);
+
+  // Загрузка сохранённых состояний из sessionStorage
+  const loadSavedState = () => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          expandedDivisions: parsed.expandedDivisions || {},
+          expandedSubdivisions: parsed.expandedSubdivisions || {},
+          expandedNoSubdivision: parsed.expandedNoSubdivision || {},
+        };
+      }
+    } catch (e) {
+      console.warn('Failed to load expand state from sessionStorage', e);
+    }
+    return {
+      expandedDivisions: {},
+      expandedSubdivisions: {},
+      expandedNoSubdivision: {},
+    };
+  };
+
+  const savedState = loadSavedState();
+
+  // Состояния: подразделения по умолчанию открыты (true), остальные закрыты (false)
+  // но если есть сохранённые значения, используем их
+  const [expandedDivisions, setExpandedDivisions] = useState<Record<string, boolean>>(
+    savedState.expandedDivisions
+  );
+  const [expandedSubdivisions, setExpandedSubdivisions] = useState<Record<string, Record<string, boolean>>>(
+    savedState.expandedSubdivisions
+  );
+  const [expandedNoSubdivision, setExpandedNoSubdivision] = useState<Record<string, boolean>>(
+    savedState.expandedNoSubdivision
+  );
+
+  // Сохраняем состояния в sessionStorage при каждом их изменении
+  useEffect(() => {
+    const stateToSave = {
+      expandedDivisions,
+      expandedSubdivisions,
+      expandedNoSubdivision,
+    };
+    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+  }, [storageKey, expandedDivisions, expandedSubdivisions, expandedNoSubdivision]);
+
+  // Группируем задачи
   const groupedTasks: GroupedTasks = tasks.reduce((acc, task) => {
     const divisionId = task.division?.id || 'no-division';
     const divisionName = task.division?.name || 'Без подразделения';
     const subdivisionId = task.subdivision?.id || 'no-subdivision';
     const subdivisionName = task.subdivision?.name || '';
 
-    // Создаем структуру для подразделения, если её нет
     if (!acc[divisionId]) {
       acc[divisionId] = {
-        division: {
-          id: divisionId,
-          name: divisionName
-        },
+        division: { id: divisionId, name: divisionName },
         noSubdivisionTasks: [],
         subdivisions: {}
       };
     }
 
-    // Если задача без отделения, добавляем в отдельный список
     if (!task.subdivision?.id) {
       acc[divisionId].noSubdivisionTasks.push(task);
     } else {
-      // Создаем структуру для отделения, если её нет
       if (!acc[divisionId].subdivisions[subdivisionId]) {
         acc[divisionId].subdivisions[subdivisionId] = {
-          subdivision: {
-            id: subdivisionId,
-            name: subdivisionName
-          },
+          subdivision: { id: subdivisionId, name: subdivisionName },
           tasks: []
         };
       }
-
-      // Добавляем задачу в соответствующее отделение
       acc[divisionId].subdivisions[subdivisionId].tasks.push(task);
     }
 
     return acc;
   }, {} as GroupedTasks);
 
-  // Функции для переключения состояния развертывания/свертывания
+  // Переключение подразделения
   const toggleDivision = (divisionId: string) => {
     setExpandedDivisions(prev => ({
       ...prev,
-      [divisionId]: prev[divisionId] === undefined ? false : !prev[divisionId]
+      [divisionId]: !(prev[divisionId] ?? true)
     }));
   };
 
+  // Переключение отделения
   const toggleSubdivision = (divisionId: string, subdivisionId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Останавливаем всплытие события
+    e.stopPropagation();
     setExpandedSubdivisions(prev => ({
       ...prev,
       [divisionId]: {
         ...prev[divisionId],
-        [subdivisionId]: prev[divisionId]?.[subdivisionId] === undefined ? false : !prev[divisionId]?.[subdivisionId]
+        [subdivisionId]: !(prev[divisionId]?.[subdivisionId] ?? false)
       }
     }));
   };
 
+  // Переключение блока "Задачи подразделения" (без отделения)
   const toggleNoSubdivision = (divisionId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Останавливаем всплытие события
+    e.stopPropagation();
     setExpandedNoSubdivision(prev => ({
       ...prev,
-      [divisionId]: prev[divisionId] === undefined ? false : !prev[divisionId]
+      [divisionId]: !(prev[divisionId] ?? false)
     }));
   };
 
-  // Если нет задач, показываем сообщение
   if (tasks.length === 0) {
     return (
       <div className="tasks-empty-state">
@@ -113,7 +152,6 @@ export function TasksList({
     );
   }
 
-  // Проверяем, сколько всего подразделений
   const divisionCount = Object.keys(groupedTasks).length;
 
   return (
@@ -121,29 +159,21 @@ export function TasksList({
       {Object.keys(groupedTasks).map(divisionId => {
         const divisionGroup = groupedTasks[divisionId];
         const divisionTasksCount = divisionGroup.noSubdivisionTasks.length +
-          Object.values(divisionGroup.subdivisions)
-            .reduce((total, sub) => total + sub.tasks.length, 0);
-        const isDivisionExpanded = expandedDivisions[divisionId] === undefined ? true : expandedDivisions[divisionId];
-        const hasNoSubdivisionTasks = divisionGroup.noSubdivisionTasks.length > 0;
-        const isNoSubdivisionExpanded = expandedNoSubdivision[divisionId] === undefined ? true : expandedNoSubdivision[divisionId];
+          Object.values(divisionGroup.subdivisions).reduce((total, sub) => total + sub.tasks.length, 0);
 
-        // Проверяем, нужно ли показывать заголовок подразделения
+        // Подразделение открыто по умолчанию (true), если нет сохранённого значения
+        const isDivisionExpanded = expandedDivisions[divisionId] ?? true;
+        const hasNoSubdivisionTasks = divisionGroup.noSubdivisionTasks.length > 0;
+        const isNoSubdivisionExpanded = expandedNoSubdivision[divisionId] ?? false;
+
         const showDivisionHeader = divisionCount > 1;
 
         return (
           <div key={divisionId} className="tasks-division-group">
-            {/* Показываем заголовок подразделения только если подразделений больше одного */}
             {showDivisionHeader && (
-              <div
-                className="tasks-division-header"
-                onClick={() => toggleDivision(divisionId)}
-              >
+              <div className="tasks-division-header" onClick={() => toggleDivision(divisionId)}>
                 <button className="tasks-expand-button">
-                  {isDivisionExpanded ? (
-                    <ChevronDown size={20} className="tasks-chevron" />
-                  ) : (
-                    <ChevronRight size={20} className="tasks-chevron" />
-                  )}
+                  {isDivisionExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                 </button>
                 <h3 className="tasks-division-title">
                   {divisionGroup.division.name}
@@ -152,10 +182,9 @@ export function TasksList({
               </div>
             )}
 
-            {/* Если подразделение одно, всегда показываем его содержимое без свертывания */}
             {(showDivisionHeader ? isDivisionExpanded : true) && (
               <>
-                {/* Задачи без отделения - показываем сверху */}
+                {/* Задачи без отделения */}
                 {hasNoSubdivisionTasks && (
                   <div className="tasks-no-subdivision-group">
                     <div
@@ -163,17 +192,11 @@ export function TasksList({
                       onClick={(e) => toggleNoSubdivision(divisionId, e)}
                     >
                       <button className="tasks-expand-button">
-                        {isNoSubdivisionExpanded ? (
-                          <ChevronDown size={18} className="tasks-chevron" />
-                        ) : (
-                          <ChevronRight size={18} className="tasks-chevron" />
-                        )}
+                        {isNoSubdivisionExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                       </button>
                       <h4 className="tasks-no-subdivision-title">
                         Задачи подразделения
-                        <span className="tasks-no-subdivision-count">
-                          {divisionGroup.noSubdivisionTasks.length}
-                        </span>
+                        <span className="tasks-no-subdivision-count">{divisionGroup.noSubdivisionTasks.length}</span>
                       </h4>
                     </div>
                     {isNoSubdivisionExpanded && (
@@ -193,10 +216,10 @@ export function TasksList({
                   </div>
                 )}
 
-                {/* Отделения с задачами */}
+                {/* Отделения */}
                 {Object.keys(divisionGroup.subdivisions).map(subdivisionId => {
                   const subdivisionGroup = divisionGroup.subdivisions[subdivisionId];
-                  const isSubdivisionExpanded = expandedSubdivisions[divisionId]?.[subdivisionId] === undefined ? true : expandedSubdivisions[divisionId]?.[subdivisionId];
+                  const isSubdivisionExpanded = expandedSubdivisions[divisionId]?.[subdivisionId] ?? false;
 
                   return (
                     <div key={subdivisionId} className="tasks-subdivision-group">
@@ -205,17 +228,11 @@ export function TasksList({
                         onClick={(e) => toggleSubdivision(divisionId, subdivisionId, e)}
                       >
                         <button className="tasks-expand-button">
-                          {isSubdivisionExpanded ? (
-                            <ChevronDown size={18} className="tasks-chevron" />
-                          ) : (
-                            <ChevronRight size={18} className="tasks-chevron" />
-                          )}
+                          {isSubdivisionExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                         </button>
                         <h4 className="tasks-subdivision-title">
                           {subdivisionGroup.subdivision.name}
-                          <span className="tasks-subdivision-count">
-                            {subdivisionGroup.tasks.length}
-                          </span>
+                          <span className="tasks-subdivision-count">{subdivisionGroup.tasks.length}</span>
                         </h4>
                       </div>
                       {isSubdivisionExpanded && (

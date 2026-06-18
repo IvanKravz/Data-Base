@@ -1,6 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import '.././style.css'
+import '.././PersonnelDetails.css'
 
 interface InfoItemProps {
   icon: LucideIcon;

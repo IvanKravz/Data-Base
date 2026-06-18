@@ -1,5 +1,6 @@
+// DivisionTasksSection.tsx
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import { Task, TaskCategory } from '../../../../../types/tasks';
@@ -40,6 +41,7 @@ export function DivisionTasksSection() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
@@ -66,10 +68,16 @@ export function DivisionTasksSection() {
   const canCreateTask = useMemo(() => permissions?.models?.Task?.includes('add') ?? false, [permissions]);
 
   const handleBack = useCallback(() => {
+    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
+    if (location.state?.fromDivisionList) {
+      navigate('/');
+      return;
+    }
+    // Иначе стандартная логика
     if (!id) return;
     if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
-  }, [navigate, id, stableSubdivisionId]);
+  }, [navigate, id, stableSubdivisionId, location.state]);
 
   const calculateTaskCompletion = useCallback((task: Task): boolean => {
     return task.steps.length > 0 && task.steps.every(step => step.is_completed);

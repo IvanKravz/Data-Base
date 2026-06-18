@@ -27,7 +27,19 @@
   color: #374151;
   text-transform: uppercase;
   white-space: nowrap;
-  text-align: left;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.personnel-table-header-cell-pp {
+  padding: 0.3rem 0.8rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  border: 1px solid #e2e8f0;
+  text-transform: lowercase;
 }
 
 .personnel-table-body {
@@ -86,15 +98,40 @@
   background-color: #fef9e768;
 }
 
+/* Основные стили ячеек — центрирование по умолчанию */
 .personnel-table-cell {
   padding: 5px 16px;
   font-size: 0.875rem;
   color: #111827;
   word-wrap: break-word;
-  max-width: 200px;
+  max-width: 300px;
   vertical-align: middle;
+  border: 1px solid #e5e7eb;
+  text-align: center;
 }
 
+/* Колонка "Фамилия, имя, отчество" — выравнивание по левому краю */
+.personnel-table-cell-name {
+  text-align: left;
+}
+
+/* Колонка "Принадлежность" — узкая, с переносом */
+.personnel-table-cell-category {
+  width: 90px;
+  min-width: 80px;
+  max-width: 120px;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+}
+
+/* Новый класс для ячейки с номером п/п */
+.personnel-table-cell-index {
+  width: 50px;
+  text-align: center;
+}
+
+/* остальные стили без изменений (бейджи, кнопки, адаптивность) */
 .personnel-user-avatar {
   min-width: 2rem;
   height: 2rem;
@@ -134,11 +171,12 @@
   padding: 0.375rem;
   border-radius: 0.5rem;
   transition: background-color 0.2s;
-  color: #dc2626;
+  color: #414040;
 }
 
 .personnel-delete-button:hover {
   background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .personnel-collapse-button {
@@ -182,20 +220,24 @@
 
 /* Адаптивность */
 @media (max-width: 768px) {
+
   .personnel-table-header-cell,
   .personnel-table-cell {
     padding: 8px 12px;
     font-size: 0.75rem;
   }
+
   .personnel-user-avatar {
     width: 1.5rem;
     height: 1.5rem;
     font-size: 0.75rem;
   }
+
   .personnel-badge {
     font-size: 0.625rem;
     padding: 0.125rem 0.375rem;
   }
+
   .personnel-delete-button {
     padding: 0.25rem;
   }

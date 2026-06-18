@@ -270,6 +270,7 @@ export function TableView({
     );
   }, [searchTerm]);
 
+  // Содержимое строки (без колонки индекса – она добавляется снаружи)
   const renderRowContent = (facility: Facility) => {
     if (!showDifferentFields) {
       return (
@@ -309,6 +310,8 @@ export function TableView({
 
   const renderHeader = () => {
     const headers = [];
+    // Колонка "№ п/п"
+    headers.push(<th key="index" className="facility-table-header-cell-pp">№ п/п</th>);
     if (!showDifferentFields) {
       headers.push(
         <th key="name" className="facility-table-header">Наименование</th>,
@@ -336,8 +339,10 @@ export function TableView({
     return headers;
   };
 
+  // Обновлённый getColspan с учётом колонки индекса
   const getColspan = () => {
     let baseColspan = showDifferentFields ? 7 : (hasClosedFacilities ? 5 : 4);
+    baseColspan += 1; // для колонки "№ п/п"
     return baseColspan + (shouldShowActions ? 1 : 0);
   };
 
@@ -370,12 +375,13 @@ export function TableView({
             <tr>{renderHeader()}</tr>
           </thead>
           <tbody>
-            {flatSortedData.map(facility => (
+            {flatSortedData.map((facility, idx) => (
               <tr
                 key={facility.id}
                 className={`facility-table-row ${isRowHighlighted(facility) ? 'facility-table-row-highlighted' : ''}`}
                 onClick={() => handleRowClick(facility)}
               >
+                <td className="facility-table-cell facility-table-cell-index">{idx + 1}</td>
                 {renderRowContent(facility)}
                 {renderActions(facility)}
               </tr>
@@ -386,7 +392,9 @@ export function TableView({
     );
   }
 
-  // Группированный режим
+  // Группированный режим (со сквозной нумерацией)
+  let rowIndex = 0; // сквозной счётчик строк объектов
+
   return (
     <div className="facility-table-container">
       <table className="facility-table">
@@ -411,16 +419,20 @@ export function TableView({
                   </div>
                 </td>
               </tr>
-              {!collapsedNoDivision && groupedData.noDivision.facilities.map(facility => (
-                <tr
-                  key={facility.id}
-                  className={`facility-table-row no-division-row ${isRowHighlighted(facility) ? 'facility-table-row-highlighted' : ''}`}
-                  onClick={() => handleRowClick(facility)}
-                >
-                  {renderRowContent(facility)}
-                  {renderActions(facility)}
-                </tr>
-              ))}
+              {!collapsedNoDivision && groupedData.noDivision.facilities.map(facility => {
+                const currentIndex = ++rowIndex;
+                return (
+                  <tr
+                    key={facility.id}
+                    className={`facility-table-row no-division-row ${isRowHighlighted(facility) ? 'facility-table-row-highlighted' : ''}`}
+                    onClick={() => handleRowClick(facility)}
+                  >
+                    <td className="facility-table-cell facility-table-cell-index">{currentIndex}</td>
+                    {renderRowContent(facility)}
+                    {renderActions(facility)}
+                  </tr>
+                );
+              })}
             </>
           )}
 
@@ -465,16 +477,20 @@ export function TableView({
                           </div>
                         </td>
                       </tr>
-                      {!isSubCollapsed && sub.facilities.map(facility => (
-                        <tr
-                          key={facility.id}
-                          className={`facility-table-row ${isRowHighlighted(facility) ? 'facility-table-row-highlighted' : ''}`}
-                          onClick={() => handleRowClick(facility)}
-                        >
-                          {renderRowContent(facility)}
-                          {renderActions(facility)}
-                        </tr>
-                      ))}
+                      {!isSubCollapsed && sub.facilities.map(facility => {
+                        const currentIndex = ++rowIndex;
+                        return (
+                          <tr
+                            key={facility.id}
+                            className={`facility-table-row ${isRowHighlighted(facility) ? 'facility-table-row-highlighted' : ''}`}
+                            onClick={() => handleRowClick(facility)}
+                          >
+                            <td className="facility-table-cell facility-table-cell-index">{currentIndex}</td>
+                            {renderRowContent(facility)}
+                            {renderActions(facility)}
+                          </tr>
+                        );
+                      })}
                     </React.Fragment>
                   );
                 })}

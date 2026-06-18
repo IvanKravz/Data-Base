@@ -1,0 +1,188 @@
+/* QualityTabContent.css */
+
+/* ============================================
+   Стили для вкладки "Качественная характеристика"
+   ============================================ */
+
+/* Контейнер вкладки */
+.qc-tab-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Подвкладки */
+.qc-sub-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--color-border-light, #e2e8f0);
+    margin-bottom: 0.8rem;
+    margin-top: -0.3rem;
+}
+
+.qc-sub-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text-secondary, #334155);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition, all 0.2s ease);
+    white-space: nowrap;
+}
+
+.qc-sub-tab:hover {
+    color: var(--color-accent, #1e40af);
+    border-bottom-color: var(--color-border-light, #e2e8f0);
+}
+
+.qc-sub-tab.active {
+    color: var(--color-accent, #1e40af);
+    border-bottom-color: var(--color-accent, #1e40af);
+}
+
+.qc-sub-content {
+    padding: 0.5rem 0;
+}
+
+/* Карточка внутри подвкладки – единый стиль с основными карточками */
+.qc-sub-content .qc-card {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+}
+
+.qc-sub-content .qc-card:hover {
+    background: transparent;
+    box-shadow: none;
+}
+
+.qc-sub-content .qc-card-header {
+    display: none;
+    /* Заголовок дублируется в подвкладке */
+}
+
+.qc-sub-content .qc-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0;
+}
+
+/* Элементы полей – полностью копируют info-item-personel */
+.qc-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.qc-info-icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    color: var(--color-icon-gray, #94a3b8);
+}
+
+.qc-info-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8d8e8f;
+    margin-bottom: 0.25rem;
+}
+
+.qc-info-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #3b3b3c;
+    line-height: 1.4;
+}
+
+/* Группы полей ввода – адаптированы под единый стиль */
+.qc-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0;
+}
+
+.qc-input-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-label, #36404e);
+}
+
+.qc-input {
+    width: 100%;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border-light, #e2e8f0);
+    border-radius: var(--radius-md, 0.375rem);
+    font-size: 0.9rem;
+    background: white;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.qc-input:focus {
+    outline: none;
+    border-color: var(--color-accent, #1e40af);
+    box-shadow: 0 0 0 3px var(--color-accent-light, #eef2ff);
+}
+
+.qc-input:disabled {
+    background-color: var(--color-background-page, #f8fafc);
+    color: var(--color-text-label, #36404e);
+    cursor: not-allowed;
+}
+
+.qc-date-display {
+    cursor: pointer;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border-light, #e2e8f0);
+    border-radius: var(--radius-md, 0.375rem);
+    min-height: 2.4rem;
+    font-size: 0.9rem;
+    color: var(--color-text-primary, #0f172a);
+}
+
+.qc-date-display.editable {
+    cursor: pointer;
+    background-color: #f9f9f9;
+}
+
+.qc-date-display.editable:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.qc-date-display:empty::before {
+    content: 'дд-мм-гггг';
+    color: var(--color-text-label, #36404e);
+}
+
+/* Адаптив для подвкладок */
+@media (max-width: 640px) {
+    .qc-sub-tabs {
+        flex-wrap: wrap;
+    }
+
+    .qc-sub-tab {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+}

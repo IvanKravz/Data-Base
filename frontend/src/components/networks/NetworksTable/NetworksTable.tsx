@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import './NetworksTable.css';
 import { Network } from '../../../types';
-import { useNavigate, useLocation } from 'react-router-dom'; // Добавляем useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Pencil, Filter, X, Search, Trash2 } from 'lucide-react';
 
 interface NetworksTableProps {
@@ -12,7 +12,7 @@ interface NetworksTableProps {
   divisionId?: string;
   divisions?: Array<{ id: string; name: string }>;
   onDelete?: (networkId: string) => void;
-  canEdit?: boolean; 
+  canEdit?: boolean;
 }
 
 const NetworksTable: React.FC<NetworksTableProps> = ({
@@ -37,22 +37,15 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
 
   const handleEdit = (e: React.MouseEvent, networkId: string) => {
     e.stopPropagation();
-
-    // Определяем базовый путь в зависимости от наличия divisionId
     let basePath = '';
-    
     if (divisionId) {
-      // Режим подразделения
       basePath = `/divisions/${divisionId}/networks/communication-networks/edit/${networkId}`;
     } else {
-      // Глобальный режим (без divisionId)
       basePath = `/networks/communication-networks/edit/${networkId}`;
     }
-
-    // Передаем состояние навигации для корректного возврата
     navigate(basePath, {
       state: {
-        from: location.pathname + location.search, // Сохраняем текущий путь с параметрами
+        from: location.pathname + location.search,
         divisionId: divisionId
       }
     });
@@ -83,34 +76,13 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
     return securityDisplay[level] || level;
   };
 
-  // Функция для применения фильтров
   const filteredNetworks = useMemo(() => {
     return networks.filter(network => {
-      // Фильтр по подразделению
-      if (filters.division && network.division_id !== filters.division) {
-        return false;
-      }
-
-      // Фильтр по уровню секретности
-      if (filters.securityLevel && network.security_level !== filters.securityLevel) {
-        return false;
-      }
-
-      // Фильтр по классу сети
-      if (filters.networkClass && network.network_class !== filters.networkClass) {
-        return false;
-      }
-
-      // Фильтр по протоколу
-      if (filters.protocol && network.protocol !== filters.protocol) {
-        return false;
-      }
-
-      // Поиск по названию
-      if (filters.search && !network.name.toLowerCase().includes(filters.search.toLowerCase())) {
-        return false;
-      }
-
+      if (filters.division && network.division_id !== filters.division) return false;
+      if (filters.securityLevel && network.security_level !== filters.securityLevel) return false;
+      if (filters.networkClass && network.network_class !== filters.networkClass) return false;
+      if (filters.protocol && network.protocol !== filters.protocol) return false;
+      if (filters.search && !network.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
       return true;
     });
   }, [networks, filters]);
@@ -129,7 +101,7 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
 
   return (
     <div className="nt-container">
-      {/* Панель поиска и фильтров */}
+      {/* Панель поиска и фильтров (без изменений) */}
       <div className="nt-search-filters-panel">
         <div className="nt-search-container">
           <div className="nt-search-input-wrapper">
@@ -142,7 +114,6 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
               placeholder="Поиск по названию сети..."
             />
           </div>
-          
           <div className="nt-search-actions">
             <button 
               className={`nt-filters-toggle ${showFilters ? 'active' : ''}`}
@@ -152,7 +123,6 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
               <Filter size={18} />
               {hasActiveFilters && <span className="nt-active-filters-dot"></span>}
             </button>
-            
             {hasActiveFilters && (
               <button className="nt-clear-filters" onClick={clearFilters} title="Очистить фильтры">
                 <X size={16} />
@@ -161,10 +131,8 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
           </div>
         </div>
 
-        {/* Расширенные фильтры */}
         {showFilters && (
           <div className="nt-filters-content">
-            {/* Фильтр по подразделению */}
             {divisions.length > 0 && (
               <div className="nt-filter-group">
                 <label className="nt-filter-label">Подразделение</label>
@@ -175,15 +143,11 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
                 >
                   <option value="">Все подразделения</option>
                   {divisions.map(division => (
-                    <option key={division.id} value={division.id}>
-                      {division.name}
-                    </option>
+                    <option key={division.id} value={division.id}>{division.name}</option>
                   ))}
                 </select>
               </div>
             )}
-
-            {/* Фильтр по уровню секретности */}
             <div className="nt-filter-group">
               <label className="nt-filter-label">Уровень секретности</label>
               <select
@@ -198,8 +162,6 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
                 <option value="top_secret">Сов. секретная</option>
               </select>
             </div>
-
-            {/* Фильтр по классу сети */}
             <div className="nt-filter-group">
               <label className="nt-filter-label">Класс сети</label>
               <select
@@ -212,8 +174,6 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
                 <option value="2">2 класс</option>
               </select>
             </div>
-
-            {/* Фильтр по протоколу */}
             <div className="nt-filter-group">
               <label className="nt-filter-label">Протокол</label>
               <select
@@ -232,11 +192,12 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
         )}
       </div>
 
-      {/* Таблица */}
+      {/* Таблица с новым оформлением */}
       <div className="nt-wrapper">
         <table className="nt-table">
           <thead>
             <tr>
+              <th className="nt-header nt-header-index">№ п/п</th>
               <th className="nt-header">Название</th>
               <th className="nt-header">Класс</th>
               <th className="nt-header">Секретность</th>
@@ -246,37 +207,36 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {filteredNetworks?.map(network => (
+            {filteredNetworks.map((network, idx) => (
               <tr
                 key={network.id}
                 className={`nt-row ${selectedNetwork?.id === network.id ? 'selected' : ''}`}
                 onClick={() => onSelect(network)}
               >
-                <td className="nt-cell nt-name-cell">{network.name}</td>
+                <td className="nt-cell nt-cell-index">{idx + 1}</td>
+                <td className="nt-cell nt-cell-name">{network.name}</td>
                 <td className="nt-cell">
-                  <span className="nt-class-cell">
-                    {network.network_class}
-                  </span>
+                  <span className="nt-class-cell">{network.network_class}</span>
                 </td>
                 <td className="nt-cell">
-                  <span className={`${getSecurityClass(network.security_level)}`}>
+                  <span className={getSecurityClass(network.security_level)}>
                     {getSecurityDisplay(network.security_level)}
                   </span>
                 </td>
                 <td className="nt-cell">{network.protocol}</td>
                 <td className="nt-cell">{network.ip_range || '-'}</td>
                 {canEdit && (
-                  <td className="nt-cell">
+                  <td className="nt-cell nt-cell-actions">
                     <div className="nt-actions-container">
                       <button 
-                        className="nt-edit-button"
+                        className="nt-edit-btn"
                         onClick={(e) => handleEdit(e, network.id)}
                         title="Редактировать сеть"
                       >
                         <Pencil size={16} />
                       </button>
                       <button 
-                        className="nt-delete-button"
+                        className="nt-delete-btn"
                         onClick={(e) => handleDelete(e, network.id)}
                         title="Удалить сеть"
                       >
@@ -289,7 +249,6 @@ const NetworksTable: React.FC<NetworksTableProps> = ({
             ))}
           </tbody>
         </table>
-        
         {filteredNetworks.length === 0 && (
           <div className="nt-empty-state">
             {networks.length === 0 ? 'Нет доступных сетей' : 'Сети не найдены по заданным фильтрам'}

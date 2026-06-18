@@ -183,10 +183,16 @@ export function PersonnelSection() {
   }, [personnel, filterBySubdivision, filterPersonnel]);
 
   const handleBack = useCallback(() => {
+    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
+    if (location.state?.fromDivisionList) {
+      navigate('/');
+      return;
+    }
+    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
-  }, [isGlobalView, navigate, id, stableSubdivisionId]);
+  }, [isGlobalView, navigate, id, stableSubdivisionId, location.state]);
 
   const onCreateEmployee = useCallback(() => {
     const state = {
@@ -213,6 +219,10 @@ export function PersonnelSection() {
 
   const hasActiveAdvancedFilters = useMemo(() => Object.values(advancedFilters).some(filters => filters.length > 0), [advancedFilters]);
 
+  const handlePersonnelDelete = useCallback((deletedId: string) => {
+    setPersonnel(prev => prev.filter(p => p.id !== deletedId));
+  }, []);
+
   if (loading) return <div className="flex justify-center py-12">Загрузка данных...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
@@ -220,11 +230,9 @@ export function PersonnelSection() {
     <>
       <div className="personnel-header-wrapper">
         <h3 className="personnel-header-division">
-          {id && (
-            <button onClick={handleBack} className="back-button">
-              <ArrowLeft className="back-button-icon" />
-            </button>
-          )}
+          <button onClick={handleBack} className="back-button">
+            <ArrowLeft className="back-button-icon" />
+          </button>
           {getHeaderTitle()}
         </h3>
         {canCreateEmployee && (
@@ -236,8 +244,6 @@ export function PersonnelSection() {
       </div>
 
       <div className="personnel-container">
-
-
         {hasActiveAdvancedFilters && (
           <div className="active-filters">
             <div className="active-filters-tags">
@@ -312,6 +318,7 @@ export function PersonnelSection() {
           searchTerm={searchTerm}
           division={isExploitationUser ? { id: userDivisionId, name: user?.division_info?.name } : division}
           personnel={displayedPersonnel}
+          onDeleteSuccess={handlePersonnelDelete}
           loading={loading}
           divisionId={id}
           subdivisionId={stableSubdivisionId}

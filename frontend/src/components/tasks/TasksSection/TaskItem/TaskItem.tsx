@@ -1,6 +1,5 @@
-// TaskItem.tsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { Pencil, Trash2, Lock, ChevronDown, ChevronUp, X, Crown, ListTodo } from 'lucide-react';
+import { Pencil, Trash2, Lock, ChevronDown, ChevronUp, X, Crown, ListTodo, Calendar, Users, Info } from 'lucide-react';
 import { Task } from '../../../../types/tasks';
 import './TaskItem.css';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
@@ -14,19 +13,18 @@ interface TaskItemProps {
 }
 
 export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleStep, index }: TaskItemProps) => {
-  const [stepsExpanded, setStepsExpanded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [stepsExpanded, setStepsExpanded] = useState(false);
   const [progressHovered, setProgressHovered] = useState(false);
   const [localSteps, setLocalSteps] = useState(task.steps);
   const { canEditTask, canDeleteTask, getCurrentUser } = useAppPermissions();
 
-  // Форматирование дат
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -37,19 +35,17 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
-  // Обновление локальных шагов при изменении пропса
   useEffect(() => {
     setLocalSteps(task.steps);
   }, [task.steps, task.id]);
 
   const currentUser = getCurrentUser();
-
-  const isCompleted = useMemo(() =>
-    localSteps.length > 0 && localSteps.every(step => step.is_completed),
+  const isCompleted = useMemo(
+    () => localSteps.length > 0 && localSteps.every((step) => step.is_completed),
     [localSteps]
   );
 
@@ -69,23 +65,23 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
 
   const canEdit = canEditTask(task, currentUser);
   const canDelete = canDeleteTask(task, currentUser);
-
   const isCreatorLeader = task.created_by?.roles?.includes('director') ||
     task.created_by?.roles?.includes('deputy_director');
 
-  const completedStepsCount = localSteps.filter(s => s.is_completed).length;
+  const completedStepsCount = localSteps.filter((s) => s.is_completed).length;
   const progressPercentage = localSteps.length > 0 ? (completedStepsCount / localSteps.length) * 100 : 0;
 
-  // Вычисляем общий диапазон дат задачи на основе шагов
   const taskDateRange = useMemo(() => {
     if (!localSteps.length) return null;
-    const startDates = localSteps.map(s => new Date(s.start_date).getTime());
-    const endDates = localSteps.map(s => new Date(s.end_date).getTime());
+    const startDates = localSteps.map((s) => new Date(s.start_date).getTime());
+    const endDates = localSteps.map((s) => new Date(s.end_date).getTime());
     const minStart = new Date(Math.min(...startDates));
     const maxEnd = new Date(Math.max(...endDates));
+    const diffDays = Math.ceil((maxEnd.getTime() - minStart.getTime()) / (1000 * 60 * 60 * 24));
     return {
       start: formatDate(minStart.toISOString()),
-      end: formatDate(maxEnd.toISOString())
+      end: formatDate(maxEnd.toISOString()),
+      durationDays: diffDays,
     };
   }, [localSteps]);
 
@@ -94,207 +90,206 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
   };
 
   const lastCompletedStep = localSteps
-    .filter(step => step.is_completed && step.completed_by && step.completed_at)
+    .filter((step) => step.is_completed && step.completed_by && step.completed_at)
     .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0];
+
+  const toggleDetails = (e: React.MouseEvent) => {
+    // Не переключаем, если клик был на интерактивных элементах (кнопки)
+    const target = e.target as HTMLElement;
+    if (target.closest('.tasks-icon-btn') || target.closest('.tasks-steps-btn')) {
+      return;
+    }
+    setDetailsExpanded(!detailsExpanded);
+  };
 
   return (
     <>
-      <div className={`tasks-list-item ${isCompleted ? 'tasks-completed' : ''}`}>
-        {index !== undefined && (
-          <div className="task-item-index" aria-label={`Задача №${index}`}>
-            {index}
-          </div>
-        )}
-        <div className="tasks-item-content">
-          {/* Верхняя часть: бейдж, заголовок, даты и действия */}
-          <div className="tasks-item-header">
-            <div className="tasks-badge-wrapper">
-            {task.is_private && <Lock size={18} className="tasks-private-icon" />}
+      <div
+        className={`tasks-card ${isCompleted ? 'tasks-card-completed' : ''}`}
+        onClick={toggleDetails}
+      >
+        {/* Шапка: заголовок, бейдж справа, действия */}
+        <div className="tasks-card-header">
+          <div className="tasks-card-title-row">
+            {/* Номер задачи */}
+            {index !== undefined && (
+              <div className="tasks-card-number">
+                <span>{index})</span>
+              </div>
+            )}
+            <h3 className="tasks-card-title">{task.title}</h3>
+            <div className="tasks-card-right-group">
               <span className={`tasks-badge ${badgeClass}`}>{badgeText}</span>
-              {isCreatorLeader && (
-                <Crown className="tasks-creator-crown" size={16} title="Создано руководителем" />
-              )}
-              {taskDateRange && (
-                <div className="tasks-dates">
-                  <span className="tasks-date">
-                    <div className="task-date-label">Начало:</div> {taskDateRange.start}
-                  </span>
-                  <span className="tasks-date">
-                    <div className="task-date-label">Окончание:</div> {taskDateRange.end}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="tasks-item-actions">
-              {canEdit && (
-                <button
-                  onClick={() => onEditTask(task)}
-                  className="tasks-action-button tasks-action-edit"
-                  aria-label="Редактировать задачу"
-                >
-                  <Pencil size={14} />
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={() => onDeleteTask(task.id)}
-                  className="tasks-action-button tasks-action-delete"
-                  aria-label="Удалить задачу"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Заголовок и даты задачи */}
-          <div className="tasks-title-row">
-            <h3 className="tasks-item-title">
-              {task.title}
-
-            </h3>
-
-          </div>
-
-          {/* Прогресс и кнопка "Этапы" */}
-          <div className="tasks-progress-row">
-            <div className="tasks-progress-container">
-              <span className="tasks-progress-text">
-                Выполнено {completedStepsCount} из {localSteps.length} этапов
-              </span>
-              <div
-                className="tasks-progress-bar"
-                onMouseEnter={() => setProgressHovered(true)}
-                onMouseLeave={() => setProgressHovered(false)}
-              >
-                <div
-                  className="tasks-progress-fill"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-                {progressHovered && (
-                  <span className="tasks-progress-hover-text">{Math.round(progressPercentage)}%</span>
+              <div className="tasks-card-actions">
+                {canEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditTask(task);
+                    }}
+                    className="tasks-icon-btn tasks-edit-btn"
+                    aria-label="Редактировать"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTask(task.id);
+                    }}
+                    className="tasks-icon-btn tasks-delete-btn"
+                    aria-label="Удалить"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </div>
             </div>
-            <button
-              className="tasks-steps-toggle-button"
-              onClick={() => setStepsExpanded(true)}
-            >
-              <ListTodo size={16} />
-              <span>Этапы</span>
-            </button>
-                      {/* Кнопка раскрытия дополнительной информации */}
-          <button
-            className="tasks-details-toggle"
-            onClick={() => setDetailsExpanded(!detailsExpanded)}
-          >
-            <span>Подробнее</span>
-            {detailsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
           </div>
+        </div>
 
+        {/* Панель деталей (раскрывается при клике на карточку) */}
+        {detailsExpanded && (
+          <div className="tasks-details-panel">
+            {/* Прогресс-бар и кнопка этапов — занимает всю ширину */}
+            <div className="tasks-detail-progress-full">
+              <div className="tasks-detail-progress">
+                <span className="tasks-detail-label">Прогресс:</span>
+                <div className="tasks-progress-wrapper">
+                  <div className="tasks-progress-info">
+                    <span className="tasks-progress-stats">
+                      {completedStepsCount} / {localSteps.length} этапов
+                    </span>
+                    <span className="tasks-progress-percent">{Math.round(progressPercentage)}%</span>
+                  </div>
+                  <div
+                    className="tasks-progress-bar"
+                    onMouseEnter={() => setProgressHovered(true)}
+                    onMouseLeave={() => setProgressHovered(false)}
+                  >
+                    <div className="tasks-progress-fill" style={{ width: `${progressPercentage}%` }} />
+                  </div>
+                </div>
+                <button
+                  className="tasks-steps-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setStepsExpanded(true);
+                  }}
+                >
+                  <ListTodo size={16} />
+                  <span>Этапы</span>
+                </button>
+              </div>
+            </div>
 
+            {/* Остальные детали — каждый на новой строке, друг под другом */}
+            <div className="tasks-details-list">
+              {taskDateRange && (
+                <div className="tasks-detail-item">
+                  <span className="tasks-detail-label">
+                    <Calendar size={14} /> Сроки
+                  </span>
+                  <span className="tasks-detail-value">
+                    {taskDateRange.start} – {taskDateRange.end}
+                    <span className="tasks-detail-sub"> ({taskDateRange.durationDays} дн.)</span>
+                  </span>
+                </div>
+              )}
 
-          {/* Блок дополнительной информации (раскрывающийся) */}
-          {detailsExpanded && (
-            <div className="tasks-details-panel">
-              {/* Подразделение / отделение */}
-              <div className="tasks-detail-row">
-                <span className="tasks-detail-label">Подразделение:</span>
+              <div className="tasks-detail-item">
+                <span className="tasks-detail-label">
+                  <Users size={14} /> Подразделение
+                </span>
                 <span className="tasks-detail-value">
                   {task.division?.name || '—'} {task.subdivision?.name ? `/ ${task.subdivision.name}` : ''}
                 </span>
               </div>
 
-              {/* Кто создал */}
               {task.created_by && (
-                <div className="tasks-detail-row">
-                  <span className="tasks-detail-label">Создал:</span>
+                <div className="tasks-detail-item">
+                  <span className="tasks-detail-label">
+                    <Info size={14} /> Создал
+                  </span>
                   <span className="tasks-detail-value">
-                    {task.created_by.username} ({formatDateTime(task.created_at)})
-                    {(task.created_by.roles?.includes('director') || task.created_by.roles?.includes('deputy_director')) && (
-                      <Crown size={12} className="tasks-detail-crown" title="Руководитель" />
-                    )}
+                    {task.created_by.username}
+                    {isCreatorLeader && <Crown size={12} className="tasks-crown-icon" title="Руководитель" />}
+                    <span className="tasks-detail-sub">({formatDateTime(task.created_at)})</span>
                   </span>
                 </div>
               )}
 
-              {/* Последнее изменение */}
               {task.updated_by && task.updated_at && (
-                <div className="tasks-detail-row">
-                  <span className="tasks-detail-label">Изменено:</span>
+                <div className="tasks-detail-item">
+                  <span className="tasks-detail-label">Изменено</span>
                   <span className="tasks-detail-value">
-                    {task.updated_by.username} ({formatDateTime(task.updated_at)})
+                    {task.updated_by.username}
                     {(task.updated_by.roles?.includes('director') || task.updated_by.roles?.includes('deputy_director')) && (
-                      <Crown size={12} className="tasks-detail-crown" title="Руководитель" />
+                      <Crown size={12} className="tasks-crown-icon" />
                     )}
+                    <span className="tasks-detail-sub">({formatDateTime(task.updated_at)})</span>
                   </span>
                 </div>
               )}
 
-              {/* Приватность */}
-              {task.is_private && (
-                <div className="tasks-detail-row">
-                  <span className="tasks-detail-label">Приватная задача</span>
+              {isCompleted && lastCompletedStep && (
+                <div className="tasks-detail-item">
+                  <span className="tasks-detail-label">Завершил</span>
+                  <span className="tasks-detail-value">
+                    {lastCompletedStep.completed_by.username}
+                    <span className="tasks-detail-sub">({formatDateTime(lastCompletedStep.completed_at)})</span>
+                  </span>
                 </div>
               )}
 
-              {/* Кто завершил (если задача полностью выполнена) */}
-              {isCompleted && lastCompletedStep && (
-                <div className="tasks-detail-row">
-                  <span className="tasks-detail-label">Завершил:</span>
-                  <span className="tasks-detail-value">
-                    {lastCompletedStep.completed_by.username} ({formatDateTime(lastCompletedStep.completed_at)})
+              {task.is_private && (
+                <div className="tasks-detail-item">
+                  <span className="tasks-detail-label tasks-private-label">
+                    <Lock size={14} /> Приватная задача
                   </span>
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Модальное окно с этапами (без изменений) */}
+      {/* Модальное окно этапов (без изменений) */}
       {stepsExpanded && (
         <>
-          <div className="tasks-steps-backdrop" onClick={() => setStepsExpanded(false)} />
-          <div className="tasks-steps-container">
-            <div className="tasks-steps-header">
-              <div className="tasks-steps-header-left">
-                <h3 className="tasks-steps-title">{task.title}</h3>
-                <div className="tasks-steps-subtitle">
-                  <span>Этапы выполнения:</span>
-                  {task.is_private && <Lock size={14} className="tasks-steps-icon" />}
-                  {isCreatorLeader && <Crown size={14} className="tasks-steps-icon tasks-steps-crown" title="Создано руководителем" />}
+          <div className="tasks-modal-backdrop" onClick={() => setStepsExpanded(false)} />
+          <div className="tasks-modal">
+            <div className="tasks-modal-header">
+              <div>
+                <h3 className="tasks-modal-title">{task.title}</h3>
+                <div className="tasks-modal-subtitle">
+                  <span>Этапы выполнения</span>
+                  {task.is_private && <Lock size={14} />}
+                  {isCreatorLeader && <Crown size={14} className="tasks-crown-icon" />}
                 </div>
               </div>
-              <button
-                className="tasks-steps-close"
-                onClick={() => setStepsExpanded(false)}
-                aria-label="Закрыть"
-              >
+              <button className="tasks-modal-close" onClick={() => setStepsExpanded(false)}>
                 <X size={20} />
               </button>
             </div>
-
-            <div className="tasks-steps-content">
+            <div className="tasks-modal-body">
               <div className="tasks-steps-list">
-                {localSteps.map((step, index) => (
-                  <div key={step.id || `step-${index}`} className="tasks-step">
+                {localSteps.map((step, idx) => (
+                  <div key={step.id || `step-${idx}`} className="tasks-step-item">
                     <div
-                      className={`tasks-step-indicator ${step.is_completed ? 'tasks-step-completed' : ''}`}
+                      className={`tasks-step-check ${step.is_completed ? 'checked' : ''}`}
                       onClick={() => handleStepToggle(step.id, step.is_completed)}
                     />
-                    <div className="tasks-step-details">
-                      <p className={`tasks-step-name ${step.is_completed ? 'tasks-step-completed-text' : ''}`}>
-                        {step.name}
-                      </p>
-                      <p className="tasks-step-time">
+                    <div className="tasks-step-content">
+                      <p className={`tasks-step-name ${step.is_completed ? 'completed' : ''}`}>{step.name}</p>
+                      <p className="tasks-step-date">
                         {formatDate(step.start_date)} – {formatDate(step.end_date)}
                       </p>
-                      {step.comments && <p className="tasks-step-comments">{step.comments}</p>}
-
+                      {step.comments && <p className="tasks-step-comment">{step.comments}</p>}
                       {step.is_completed && step.completed_by && (
-                        <p className="tasks-step-completed-info">
+                        <p className="tasks-step-completed-by">
                           Выполнил: {step.completed_by.username} ({formatDateTime(step.completed_at)})
                         </p>
                       )}

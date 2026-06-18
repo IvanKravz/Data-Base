@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Briefcase } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Briefcase, Calendar, CalendarClock } from 'lucide-react';
 import { Employee } from '../../../../types';
 
 interface WorkExperienceCardProps {
@@ -8,26 +8,64 @@ interface WorkExperienceCardProps {
   employee?: Employee;
   viewMode?: boolean;
   canEdit?: boolean;
+  searchTerm?: string;
 }
 
-export function WorkExperienceCard({ formData, onChange, employee, viewMode, canEdit = true }: WorkExperienceCardProps) {
+export function WorkExperienceCard({ formData, onChange, employee, viewMode, canEdit = true, searchTerm = '' }: WorkExperienceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
   const formatDisplayDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '—';
-
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateString.match(isoFormat);
-
     if (match) {
       return `${match[3]}-${match[2]}-${match[1]}`;
     }
-
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
     if (displayFormat.test(dateString)) return dateString;
-
     return dateString;
   };
+
+  const formatDateForInput = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
+    const match = dateString.match(displayFormat);
+    if (match) {
+      return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+    const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
+    if (isoFormat.test(dateString)) return dateString;
+    return '';
+  };
+
+  const fields = useMemo(() => {
+    if (viewMode) {
+      return [
+        { label: 'На работе с', value: employee?.date_start_work ? formatDisplayDate(employee.date_start_work) : '—', icon: Calendar, key: 'date_start_work' },
+        { label: 'Дата начала контракта', value: employee?.contract_date ? formatDisplayDate(employee.contract_date) : '—', icon: CalendarClock, key: 'contract_date' },
+        { label: 'Дата окончания контракта', value: employee?.date_end_work ? formatDisplayDate(employee.date_end_work) : '—', icon: CalendarClock, key: 'date_end_work' },
+      ];
+    } else {
+      return [
+        { label: 'На работе с', value: formData?.date_start_work || '', icon: Calendar, key: 'date_start_work' },
+        { label: 'Дата начала контракта', value: formData?.contract_date || '', icon: CalendarClock, key: 'contract_date' },
+        { label: 'Дата окончания контракта', value: formData?.date_end_work || '', icon: CalendarClock, key: 'date_end_work' },
+      ];
+    }
+  }, [viewMode, employee, formData]);
+
+  const filteredFields = useMemo(() => {
+    if (!searchTerm.trim()) return fields;
+    const lower = searchTerm.toLowerCase().trim();
+    return fields.filter(f =>
+      f.label.toLowerCase().includes(lower) ||
+      (f.value && f.value.toLowerCase().includes(lower))
+    );
+  }, [fields, searchTerm]);
+
+  if (filteredFields.length === 0) {
+    return null;
+  }
 
   const handleDateClick = (field: keyof Employee) => {
     if (!canEdit) return;
@@ -39,38 +77,30 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
     setActiveDateField(null);
   };
 
-  const renderField = (label: string, value: string | undefined) => (
-    <div className="qc-field">
-      <span className="qc-field-label">{label}</span>
-      <span className="qc-field-value">
-        {value ? formatDisplayDate(value) : '—'}
-      </span>
-    </div>
-  );
-
-  const formatDateForInput = (dateString: string | null | undefined): string => {
-    if (!dateString) return '';
-
-    const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
-    const displayMatch = dateString.match(displayFormat);
-
-    if (displayMatch) {
-      return `${displayMatch[3]}-${displayMatch[2]}-${displayMatch[1]}`;
-    }
-
-    const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
-    if (isoFormat.test(dateString)) return dateString;
-
-    return '';
+  const renderField = (label: string, value: string, icon: React.ElementType) => {
+    const Icon = icon;
+    return (
+      <div className="qc-info-item">
+        <Icon className="qc-info-icon" size={20} />
+        <div>
+          <p className="qc-info-label">{label}</p>
+          <p className="qc-info-value">{value}</p>
+        </div>
+      </div>
+    );
   };
 
-  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee) => {
+  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType) => {
+    const Icon = icon;
     const displayValue = value ? formatDisplayDate(value) : 'дд-мм-гггг';
     const inputValue = value ? formatDateForInput(value) : '';
 
     return (
       <div className="qc-input-group">
-        <label className="qc-input-label">{label}</label>
+        <label className="qc-input-label">
+          <Icon size={16} className="qc-info-icon" />
+          {label}
+        </label>
         {activeDateField === field ? (
           <input
             type="date"
@@ -94,10 +124,6 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
     );
   };
 
-  if (!viewMode && !canEdit) {
-    return null;
-  }
-
   return (
     <div className="qc-card">
       <div className="qc-card-header">
@@ -108,17 +134,9 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
       </div>
       <div className="qc-card-content">
         {viewMode ? (
-          <>
-            {renderField("На работе с", employee?.date_start_work)}
-            {renderField("Дата начала контракта", employee?.contract_date)}
-            {renderField("Дата окончания контракта", employee?.date_end_work)}
-          </>
+          filteredFields.map(f => renderField(f.label, f.value, f.icon))
         ) : (
-          <>
-            {renderDateInput("На работе с", formData?.date_start_work, 'date_start_work')}
-            {renderDateInput("Дата начала контракта", formData?.contract_date, 'contract_date')}
-            {renderDateInput("Дата окончания контракта", formData?.date_end_work, 'date_end_work')}
-          </>
+          filteredFields.map(f => renderDateInput(f.label, formData?.[f.key as keyof Employee] as string, f.key as keyof Employee, f.icon))
         )}
       </div>
     </div>

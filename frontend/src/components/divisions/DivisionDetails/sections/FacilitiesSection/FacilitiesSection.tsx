@@ -1,6 +1,6 @@
 // FacilitiesSection.tsx
 import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import {
@@ -37,6 +37,7 @@ const TAB_ICONS = {
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const token = localStorage.getItem('accessToken');
@@ -337,10 +338,16 @@ export function FacilitiesSection() {
   }, []);
 
   const handleBack = useCallback(() => {
+    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
+    if (location.state?.fromDivisionList) {
+      navigate('/');
+      return;
+    }
+    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
-  }, [isGlobalView, navigate, id, stableSubdivisionId]);
+  }, [isGlobalView, navigate, id, stableSubdivisionId, location.state]);
 
   const handleAddFacility = useCallback(() => {
     const state = {

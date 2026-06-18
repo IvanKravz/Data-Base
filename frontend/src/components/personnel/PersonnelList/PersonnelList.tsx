@@ -25,6 +25,7 @@ interface PersonnelListProps {
   loading?: boolean;
   divisionId?: string;
   subdivisionId?: string;
+  onDeleteSuccess?: (deletedId: string) => void;
 }
 
 interface PersonnelAdvancedSearchFilters {
@@ -52,6 +53,7 @@ export function PersonnelList({
   loading = false,
   divisionId,
   subdivisionId,
+  onDeleteSuccess,
 }: PersonnelListProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -335,7 +337,12 @@ export function PersonnelList({
       dispatch(deletePersonAsync({ token, id: personToDelete }))
         .unwrap()
         .then(() => {
+          // обновляем локальное состояние
           setAllPersonnel(prev => sortEmployeesByPriority(prev.filter(p => p.id !== personToDelete)));
+          // если передан колбэк – вызываем его, чтобы родитель обновил свои данные
+          if (onDeleteSuccess) {
+            onDeleteSuccess(personToDelete);
+          }
           setShowDeleteModal(false);
           setPersonToDelete(null);
         })
@@ -573,7 +580,7 @@ export function PersonnelList({
           hasEditPermission={hasEditPermission}
           viewMode={viewMode}
           storageKey={collapsedStorageKey}
-          searchTerm={searchTerm}  
+          searchTerm={searchTerm}
         />
 
         {filteredPersonnel.length === 0 && (

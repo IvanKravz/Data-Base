@@ -1,15 +1,16 @@
 // BasicInformationCard.tsx
 import React, { useEffect, useState } from 'react';
 import { Employee } from '../../../../../types';
-import '.././style.css';
 import { employeesApi } from '../../../../../api';
-import { User } from 'lucide-react';
+import { User, ShieldCheck, KeyRound } from 'lucide-react';
+import '../style.css';
 
 interface BasicInformationCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
   token: string;
   readOnly?: boolean;
+  readOnlySha?: boolean; // для чекбокса ШаРаботник
 }
 
 interface EmployeeDictionaries {
@@ -22,7 +23,13 @@ interface EmployeeDictionaries {
   warrant_officer_ranks: { value: string; label: string }[];
 }
 
-export function BasicInformationCard({ formData, onChange, token, readOnly = false }: BasicInformationCardProps) {
+export function BasicInformationCard({
+  formData,
+  onChange,
+  token,
+  readOnly = false,
+  readOnlySha = false,
+}: BasicInformationCardProps) {
   const [dictionaries, setDictionaries] = useState<EmployeeDictionaries>({
     categories: [],
     officer_positions: [],
@@ -30,7 +37,7 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
     civilian_positions: [],
     officer_ranks: [],
     warrant_officer_ranks: [],
-    management_officer_ranks: []
+    management_officer_ranks: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -63,7 +70,7 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
           { value: 'Заместитель главного руководителя', label: 'Заместитель главного руководителя' },
           { value: 'Начальник отдела', label: 'Начальник отдела' },
           { value: 'Заместитель начальника отдела', label: 'Заместитель начальника отдела' },
-          { value: 'Начальник отделения', label: 'Начальник отделения' }
+          { value: 'Начальник отделения', label: 'Начальник отделения' },
         ];
       case 'officer':
         return dictionaries.officer_positions;
@@ -110,31 +117,54 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
     onChange({ rank: e.target.value, order_rank: '' });
   };
 
+  // Обработчики для чекбоксов (ответственность)
+  const handleMaterialResponsibleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
+    onChange({ is_material_responsible: e.target.checked });
+  };
+
+  const handleShaWorkerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnlySha) return;
+    const isShaWorker = e.target.checked;
+    onChange({
+      is_sha_worker: isShaWorker,
+      sha_details: isShaWorker
+        ? formData.sha_details || {
+            start_date: new Date().toISOString().split('T')[0], // сегодня YYYY-MM-DD
+            access_level: '1',
+            equipment_conclusions: [],
+          }
+        : null,
+    });
+  };
+
   return (
-    <div className="personnel-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card">
+      <div className="ep-card-header">
         <User size={20} />
-        <h3 className="personnel-card-title">Основная информация</h3>
+        <h3 className="ep-card-title">Основная информация</h3>
       </div>
-      <div className="personnel-card-content">
-        <div className="personnel-form-group">
-          <label className="personnel-form-label">ФИО</label>
+      <div className="ep-card-content">
+        {/* ФИО */}
+        <div className="ep-form-group">
+          <label className="ep-form-label">ФИО</label>
           <input
             type="text"
             required
             value={formData.full_name}
             onChange={(e) => !readOnly && onChange({ full_name: e.target.value })}
-            className="personnel-form-input"
+            className="ep-form-input"
             disabled={readOnly}
           />
         </div>
 
-        <div className="personnel-form-group">
-          <label className="personnel-form-label">Категория</label>
+        {/* Категория */}
+        <div className="ep-form-group">
+          <label className="ep-form-label">Категория</label>
           <select
             value={formData.category || ''}
             onChange={handleCategoryChange}
-            className="personnel-form-input"
+            className="ep-form-input"
             disabled={readOnly}
             required
           >
@@ -147,13 +177,14 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
           </select>
         </div>
 
+        {/* Должность */}
         {(isManagement || isOfficer || isWarrantOfficer || isCivilian) && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Должность</label>
+          <div className="ep-form-group ep-fade-in">
+            <label className="ep-form-label">Должность</label>
             <select
               value={formData.position || ''}
               onChange={handlePositionChange}
-              className="personnel-form-input"
+              className="ep-form-input"
               required
               disabled={readOnly}
             >
@@ -167,13 +198,14 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
           </div>
         )}
 
+        {/* Звание */}
         {showRankField && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Звание</label>
+          <div className="ep-form-group ep-fade-in">
+            <label className="ep-form-label">Звание</label>
             <select
               value={formData.rank || ''}
               onChange={handleRankChange}
-              className="personnel-form-input"
+              className="ep-form-input"
               disabled={readOnly}
             >
               <option value="">Выберите звание</option>
@@ -185,6 +217,48 @@ export function BasicInformationCard({ formData, onChange, token, readOnly = fal
             </select>
           </div>
         )}
+
+        {/* === БЛОК ОТВЕТСТВЕННОСТИ (интегрирован) === */}
+        <hr className="ep-divider" style={{ margin: '0.5rem 0', border: 'none', borderTop: '1px solid var(--ep-gray-200)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          {/* МОЛ */}
+          <div className="ep-checkbox-group ep-fade-in">
+            <input
+              type="checkbox"
+              id="isMaterialResponsible"
+              checked={formData.is_material_responsible || false}
+              onChange={handleMaterialResponsibleChange}
+              className="ep-checkbox"
+              disabled={readOnly}
+            />
+            <label htmlFor="isMaterialResponsible" className="ep-checkbox-label">
+              <ShieldCheck size={16} />
+              Материально ответственное лицо
+              {formData.is_material_responsible && (
+                <span className="ep-status-badge ep-status-badge--mol">МОЛ</span>
+              )}
+            </label>
+          </div>
+
+          {/* ШаРаботник */}
+          <div className="ep-checkbox-group ep-fade-in">
+            <input
+              type="checkbox"
+              id="isShaWorker"
+              checked={formData.is_sha_worker || false}
+              onChange={handleShaWorkerChange}
+              className="ep-checkbox"
+              disabled={readOnlySha}
+            />
+            <label htmlFor="isShaWorker" className="ep-checkbox-label">
+              <KeyRound size={16} />
+              ШаРаботник
+              {formData.is_sha_worker && (
+                <span className="ep-status-badge ep-status-badge--sha">ША</span>
+              )}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   );

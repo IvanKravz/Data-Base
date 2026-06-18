@@ -1,88 +1,144 @@
-import { useState, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Employee } from '../../../../types';
 import { InfoCard } from './InfoCard';
 import { Shield, Calendar, HardDrive, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import '.././style.css';
+import '../PersonnelDetails.css';
 
 interface ResponsibilityInfoProps {
   person: Employee;
+  searchTerm?: string;
 }
 
-export function ResponsibilityInfo({ person }: ResponsibilityInfoProps) {
+export function ResponsibilityInfo({ person, searchTerm = '' }: ResponsibilityInfoProps) {
   const [isEquipmentExpanded, setIsEquipmentExpanded] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Показываем карточку только если сотрудник является ШР и есть детали
   if (!person.is_sha_worker || !person.sha_details) {
     return null;
   }
 
-  const toggleEquipmentList = () => {
-    setIsEquipmentExpanded(!isEquipmentExpanded);
+  const sha = person.sha_details;
+
+  // Функция для преобразования даты в читаемый формат DD.MM.YYYY
+  const formatDateForDisplay = (dateString: string | null | undefined): string => {
+    if (!dateString) return '—';
+    // Если дата уже в формате DD-MM-YYYY или DD.MM.YYYY, преобразуем
+    let parts: string[] = [];
+    if (dateString.includes('-')) {
+      parts = dateString.split('-');
+    } else if (dateString.includes('.')) {
+      parts = dateString.split('.');
+    } else {
+      // Неизвестный формат, пробуем напрямую через Date
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('ru-RU');
+      }
+      return '—';
+    }
+    // Проверяем, что у нас 3 части
+    if (parts.length !== 3) {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('ru-RU');
+      }
+      return '—';
+    }
+    // Определяем формат: если первая часть > 12, то это день, значит формат DD-MM-YYYY
+    // или если вторая часть > 12, то это месяц, значит формат YYYY-MM-DD
+    // Обычно сервер отдаёт YYYY-MM-DD, но для безопасности попробуем оба.
+    let day: string, month: string, year: string;
+    // Если первая часть длиной 4, то это год, значит формат YYYY-MM-DD
+    if (parts[0].length === 4) {
+      year = parts[0];
+      month = parts[1].padStart(2, '0');
+      day = parts[2].padStart(2, '0');
+    } else {
+      // Иначе считаем, что формат DD-MM-YYYY или DD.MM.YYYY
+      day = parts[0].padStart(2, '0');
+      month = parts[1].padStart(2, '0');
+      year = parts[2];
+      // Если год всего 2 цифры, добавляем 20
+      if (year.length === 2) year = '20' + year;
+    }
+    return `${day}.${month}.${year}`;
   };
 
+  const filteredConclusions = useMemo(() => {
+    if (!sha) return [];
+    if (!searchTerm.trim()) return sha.equipment_conclusions;
+    const lower = searchTerm.toLowerCase().trim();
+    return sha.equipment_conclusions.filter(item =>
+      item.equipment_type.toLowerCase().includes(lower) ||
+      item.conclusion_number.toLowerCase().includes(lower)
+    );
+  }, [sha, searchTerm]);
+
+  const mainInfoMatches = useMemo(() => {
+    if (!sha) return false;
+    if (!searchTerm.trim()) return true;
+    const lower = searchTerm.toLowerCase().trim();
+    const accessLabel = sha.access_level === '1' ? '1 класс' : '2 класс';
+    const startDate = sha.start_date ? formatDateForDisplay(sha.start_date) : '';
+    return accessLabel.toLowerCase().includes(lower) ||
+           startDate.toLowerCase().includes(lower) ||
+           'класс сети'.toLowerCase().includes(lower) ||
+           'дата начала'.toLowerCase().includes(lower) ||
+           sha.access_level.includes(lower);
+  }, [sha, searchTerm]);
+
+  if (!mainInfoMatches && filteredConclusions.length === 0) {
+    return <div className="no-comments-text">Ничего не найдено</div>;
+  }
+
   return (
-    <div className="responsibility-grid">
-      <InfoCard title="Информация о ШР">
-        <div className="info-card-content relative">
-          <div className="info-item-personel">
-            <Shield className="info-item-icon text-blue-500" />
-            <div>
-              <p className="info-item-label">Класс сети</p>
-              <p className="info-item-value">{person.sha_details.access_level} класс</p>
-            </div>
-          </div>
-
-          <div className="info-item-personel">
-            <Calendar className="info-item-icon text-orange-500" />
-            <div>
-              <p className="info-item-label">Дата начала работы</p>
-              <p className="info-item-value">{person.sha_details.start_date}</p>
-            </div>
-          </div>
-
-          {person.sha_details.equipment_conclusions.length > 0 && (
-            <div className="relative">
-              <button
-                className="info-item-personel equipment-toggle-button w-full"
-                onClick={toggleEquipmentList}
-                aria-expanded={isEquipmentExpanded}
-              >
-                <HardDrive className="info-item-icon text-brown-500" />
-                <div className="flex justify-between items-center w-full">
-                  <p className="info-item-label">Техника и заключения</p>
-                  {isEquipmentExpanded ? (
-                    <ChevronUp className="toggle-icon" size={16} />
-                  ) : (
-                    <ChevronDown className="toggle-icon" size={16} />
-                  )}
-                </div>
-              </button>
-
-              <div
-                ref={dropdownRef}
-                className={`equipment-dropdown absolute left-0 right-0 z-10 ${
-                  isEquipmentExpanded ? 'opacity-100 visible' : 'opacity-0 invisible'
-                }`}
-              >
-                <div className="equipment-list">
-                  {person.sha_details.equipment_conclusions.map((item, index) => (
-                    <div key={index} className="equipment-item">
-                      <div className="info-item-personel">
-                        <FileText className="info-item-icon text-gray-500" size={16} />
-                        <div>
-                          <div className="equipment-type">{item.equipment_type}</div>
-                          <div className="equipment-conclusion">Заключение № {item.conclusion_number}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+    <InfoCard title="Информация о ШР">
+      <div className="info-card-content">
+        {mainInfoMatches && (
+          <>
+            <div className="info-item-personel">
+              <Shield className="info-item-icon" />
+              <div>
+                <p className="info-item-label">Класс сети</p>
+                <p className="info-item-value">{sha.access_level} класс</p>
               </div>
             </div>
-          )}
-        </div>
-      </InfoCard>
-    </div>
+
+            <div className="info-item-personel">
+              <Calendar className="info-item-icon" />
+              <div>
+                <p className="info-item-label">Дата начала работы</p>
+                <p className="info-item-value">{sha.start_date ? formatDateForDisplay(sha.start_date) : '—'}</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {filteredConclusions.length > 0 && (
+          <div className="personnel-equipment-section">
+            <button
+              className="personnel-equipment-toggle-button"
+              onClick={() => setIsEquipmentExpanded(!isEquipmentExpanded)}
+            >
+              <HardDrive className="info-item-icon" />
+              <span className="info-item-label">Техника и заключения ({filteredConclusions.length})</span>
+              {isEquipmentExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            <div className={`personnel-equipment-list-container ${isEquipmentExpanded ? 'expanded' : ''}`}>
+              <div className="personnel-equipment-list">
+                {filteredConclusions.map((item, index) => (
+                  <div key={index} className="personnel-equipment-item">
+                    <FileText className="personnel-equipment-icon" />
+                    <div className="personnel-equipment-info">
+                      <span className="personnel-equipment-type">{item.equipment_type}</span>
+                      <span className="personnel-equipment-conclusion">заключение № {item.conclusion_number}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </InfoCard>
   );
 }

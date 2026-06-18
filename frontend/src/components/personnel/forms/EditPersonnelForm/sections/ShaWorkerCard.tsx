@@ -1,6 +1,6 @@
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { Employee } from '../../../../../types';
-import '.././style.css';
+import '../style.css';
 
 interface ShaWorkerCardProps {
   shaWorker: Employee['sha_details'];
@@ -23,26 +23,29 @@ export function ShaWorkerCard({
 
   const formatDateForInput = (dateString: string): string => {
     if (!dateString) return '';
-    const [day, month, year] = dateString.split('-');
-    return `${year}-${month}-${day}`;
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+    }
+    return dateString;
   };
 
   const formatDateForServer = (dateString: string): string => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+    return dateString;
   };
 
   return (
-    <div className="personnel-card sha-worker-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card ep-sha-card">
+      <div className="ep-card-header">
         <KeyRound size={20} />
-        <h3 className="personnel-card-title">Данные ШаРаботника</h3>
+        <h3 className="ep-card-title">Данные ШаРаботника</h3>
       </div>
-      <div className="personnel-card-content">
-        <div className="sha-worker-grid">
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Дата начала</label>
+      <div className="ep-card-content">
+        <div className="ep-sha-grid">
+          <div className="ep-form-group">
+            <label className="ep-form-label">Дата начала</label>
             <input
               type="date"
               required
@@ -51,13 +54,13 @@ export function ShaWorkerCard({
                 ...shaWorker,
                 start_date: formatDateForServer(e.target.value)
               })}
-              className="personnel-form-input"
+              className="ep-form-input"
               disabled={readOnly}
             />
           </div>
 
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Форма допуска</label>
+          <div className="ep-form-group">
+            <label className="ep-form-label">Форма допуска</label>
             <select
               required
               value={shaWorker.access_level}
@@ -65,7 +68,7 @@ export function ShaWorkerCard({
                 ...shaWorker,
                 access_level: e.target.value as '1' | '2'
               })}
-              className="personnel-form-input"
+              className="ep-form-input"
               disabled={readOnly}
             >
               <option value="1">1 класс</option>
@@ -74,14 +77,14 @@ export function ShaWorkerCard({
           </div>
         </div>
 
-        <div className="sha-equipment-section">
-          <div className="sha-equipment-header">
-            <h4 className="personnel-form-label">Техника и заключения</h4>
+        <div className="ep-sha-equipment-section">
+          <div className="ep-sha-equipment-header">
+            <h4 className="ep-form-label">Техника и заключения</h4>
             {!readOnly && (
               <button
                 type="button"
                 onClick={onAddEquipment}
-                className="personnel-btn personnel-btn-primary personnel-btn-sm"
+                className="ep-btn ep-btn-primary ep-btn-sm"
               >
                 <Plus className="h-4 w-4" />
                 <span>Добавить технику</span>
@@ -89,43 +92,51 @@ export function ShaWorkerCard({
             )}
           </div>
 
-          <div className="sha-equipment-list">
-            {shaWorker.equipment_conclusions.map((item, index) => (
-              <div key={index} className="sha-equipment-item">
-                <div className="sha-equipment-fields">
-                  <input
-                    type="text"
-                    required
-                    value={item.equipment_type}
-                    onChange={(e) => !readOnly && onEquipmentChange(index, 'equipment_type', e.target.value)}
-                    placeholder="Тип техники"
-                    className="personnel-form-input"
-                    disabled={readOnly}
-                  />
-                  <input
-                    type="text"
-                    required
-                    value={item.conclusion_number}
-                    onChange={(e) => !readOnly && onEquipmentChange(index, 'conclusion_number', e.target.value)}
-                    placeholder="Номер заключения"
-                    className="personnel-form-input"
-                    disabled={readOnly}
-                  />
+          <div className="ep-sha-equipment-list">
+            {shaWorker.equipment_conclusions.map((item, index) => {
+              const type = item.equipment_type.trim();
+              const number = item.conclusion_number.trim();
+              // Красный только для пустого поля, если парное заполнено
+              const typeError = type === '' && number !== '';
+              const numberError = number === '' && type !== '';
+
+              return (
+                <div key={index} className="ep-sha-equipment-item">
+                  <div className="ep-sha-equipment-fields">
+                    <input
+                      type="text"
+                      required
+                      value={item.equipment_type}
+                      onChange={(e) => !readOnly && onEquipmentChange(index, 'equipment_type', e.target.value)}
+                      placeholder="Тип техники"
+                      className={`ep-form-input ${typeError ? 'ep-form-input-error' : ''}`}
+                      disabled={readOnly}
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={item.conclusion_number}
+                      onChange={(e) => !readOnly && onEquipmentChange(index, 'conclusion_number', e.target.value)}
+                      placeholder="Номер заключения"
+                      className={`ep-form-input ${numberError ? 'ep-form-input-error' : ''}`}
+                      disabled={readOnly}
+                    />
+                  </div>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveEquipment(index)}
+                      className="ep-btn ep-btn-danger ep-btn-icon"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={() => onRemoveEquipment(index)}
-                    className="personnel-btn personnel-btn-danger personnel-btn-icon"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
 
             {shaWorker.equipment_conclusions.length === 0 && (
-              <div className="sha-equipment-empty">
+              <div className="ep-sha-equipment-empty">
                 <p>Добавьте типы техники и номера заключений</p>
               </div>
             )}

@@ -4,7 +4,6 @@ import { Employee } from '../../../../types';
 import { BasicInformationCard } from './sections/BasicInformationCard';
 import { ContactInformationCard } from './sections/ContactInformationCard';
 import { DatesCard } from './sections/DatesCard';
-import { ResponsibilityCard } from './sections/ResponsibilityCard';
 import { ShaWorkerCard } from './sections/ShaWorkerCard';
 import { CommentsCard } from './sections/CommentsCard';
 import { FormActions } from './sections/FormActions';
@@ -12,8 +11,8 @@ import { divisionsApi } from '../../../../api/divisions';
 import { Division } from '../../../../types';
 import { AffiliationCard } from './sections/AffiliationCard';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
-// import { isRestrictedEmployeeEditor } from '../../../../api/utils/permissions';
 import { isEditorShaWorker } from '../../../../api/utils/permissions';
+import './style.css';
 
 interface EditPersonnelFormProps {
   person: Employee;
@@ -30,7 +29,7 @@ export function EditPersonnelForm({
   onCancel,
   isCreateMode = false,
   fixedDivision = false,
-  fixedSubdivision = false
+  fixedSubdivision = false,
 }: EditPersonnelFormProps) {
   const { canEdit } = useAppPermissions();
   const [hasEditPermission, setHasEditPermission] = useState(false);
@@ -57,7 +56,6 @@ export function EditPersonnelForm({
   }, [token]);
 
   useEffect(() => {
-    // Определяем права на редактирование
     const canEditEmployee = canEdit('employees');
     setHasEditPermission(canEditEmployee);
     if (canEditEmployee) {
@@ -65,61 +63,66 @@ export function EditPersonnelForm({
     }
   }, [canEdit]);
 
-  // Вычисляем, какие карточки можно редактировать
-  const canEditBasic = hasEditPermission && !isRestricted;   // основные карточки
-  const canEditShaComments = hasEditPermission;               // ша-работник и комментарии
+  const canEditBasic = hasEditPermission && !isRestricted;
+  const canEditShaComments = hasEditPermission;
 
   const handleChange = (data: Partial<Employee>) => {
-    if (!canEditBasic && !canEditShaComments) return; // нет прав на редактирование
-    setFormData(prev => ({ ...prev, ...data }));
+    if (!canEditBasic && !canEditShaComments) return;
+    setFormData((prev) => ({ ...prev, ...data }));
   };
 
   const handleShaWorkerChange = (shaWorker: Employee['sha_details']) => {
     if (!canEditShaComments) return;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      sha_details: shaWorker ? { ...shaWorker, equipment_conclusions: [...(shaWorker?.equipment_conclusions || [])] } : null
+      sha_details: shaWorker
+        ? { ...shaWorker, equipment_conclusions: [...(shaWorker?.equipment_conclusions || [])] }
+        : null,
     }));
   };
 
   const handleAddEquipment = () => {
     if (!canEditShaComments) return;
     if (!formData.sha_details) return;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       sha_details: {
         ...prev.sha_details!,
         equipment_conclusions: [
           ...(prev.sha_details!.equipment_conclusions || []),
-          { equipment_type: '', conclusion_number: '' }
-        ]
-      }
+          { equipment_type: '', conclusion_number: '' },
+        ],
+      },
     }));
   };
 
   const handleRemoveEquipment = (index: number) => {
     if (!canEditShaComments) return;
     if (!formData.sha_details || !Array.isArray(formData.sha_details.equipment_conclusions)) return;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       sha_details: {
         ...prev.sha_details!,
-        equipment_conclusions: prev.sha_details!.equipment_conclusions.filter((_, i) => i !== index)
-      }
+        equipment_conclusions: prev.sha_details!.equipment_conclusions.filter((_, i) => i !== index),
+      },
     }));
   };
 
-  const handleEquipmentChange = (index: number, field: 'equipment_type' | 'conclusion_number', value: string) => {
+  const handleEquipmentChange = (
+    index: number,
+    field: 'equipment_type' | 'conclusion_number',
+    value: string
+  ) => {
     if (!canEditShaComments) return;
     if (!formData.sha_details || !Array.isArray(formData.sha_details.equipment_conclusions)) return;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       sha_details: {
         ...prev.sha_details!,
         equipment_conclusions: prev.sha_details!.equipment_conclusions.map((item, i) =>
           i === index ? { ...item, [field]: value } : item
-        )
-      }
+        ),
+      },
     }));
   };
 
@@ -132,21 +135,41 @@ export function EditPersonnelForm({
     setLoading(true);
     setError(null);
     try {
+      // Подготовка sha_details с фильтрацией пустых записей техники
+      let shaDetails = formData.sha_details;
+      if (formData.is_sha_worker && shaDetails) {
+        // Фильтруем equipment_conclusions: удаляем записи, где оба поля пустые
+        const filteredConclusions = shaDetails.equipment_conclusions.filter(
+          item => item.equipment_type.trim() !== '' || item.conclusion_number.trim() !== ''
+        );
+        shaDetails = {
+          ...shaDetails,
+          equipment_conclusions: filteredConclusions
+        };
+        
+        // Если дата начала пустая, подставляем сегодняшнюю
+        if (!shaDetails.start_date) {
+          shaDetails = { ...shaDetails, start_date: new Date().toISOString().split('T')[0] };
+        }
+      }
+  
       const dataToSend = {
         ...formData,
         description: formData.description || null,
-        sha_details: formData.is_sha_worker ? formData.sha_details : null,
+        sha_details: formData.is_sha_worker ? shaDetails : null,
         data_state_secrets: formData.is_sha_worker ? formData.data_state_secrets : null,
         date_end_work: formData.is_sha_worker ? formData.date_end_work : null,
         date_start_work: formData.is_sha_worker ? formData.date_start_work : null,
         year_graduation: formData.is_sha_worker ? formData.year_graduation : null,
-        rank: formData.category === 'civilian' ? null : (formData.rank || null),
+        rank: formData.category === 'civilian' ? null : formData.rank || null,
       };
       onSubmit(dataToSend as Employee);
     } catch (err) {
-      setError(isCreateMode
-        ? 'Не удалось создать сотрудника'
-        : 'Не удалось обновить данные сотрудника');
+      setError(
+        isCreateMode
+          ? 'Не удалось создать сотрудника'
+          : 'Не удалось обновить данные сотрудника'
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -154,73 +177,70 @@ export function EditPersonnelForm({
   };
 
   const isManagement = formData.category === 'management';
-  const isTopManagement = isManagement &&
+  const isTopManagement =
+    isManagement &&
     (formData.position === 'Главный руководитель' ||
       formData.position === 'Заместитель главного руководителя');
   const showDivisionField = isCreateMode || !isManagement || (isManagement && !isTopManagement);
 
   return (
-    <div className="personnel-form-edit-container">
-      <form onSubmit={handleSubmit} className="personnel-edit-form">
-        {error && <div className="form-error">{error}</div>}
-        <div className="personnel-edit-content">
-          <div className="personnel-edit-grid">
-            <BasicInformationCard
+    <div className="ep-form-container">
+      <form onSubmit={handleSubmit} className="ep-form">
+        {error && <div className="ep-error">{error}</div>}
+        <div className="ep-grid">
+          {/* BasicInformationCard теперь включает ответственность */}
+          <BasicInformationCard
+            formData={formData}
+            onChange={handleChange}
+            token={token}
+            readOnly={!canEditBasic}
+            readOnlySha={!canEditShaComments}
+          />
+          {(isCreateMode || showDivisionField) && (
+            <AffiliationCard
               formData={formData}
+              divisions={divisions}
               onChange={handleChange}
-              token={token}
+              isTopManagement={isTopManagement}
+              showDivisionField={showDivisionField}
+              fixedDivision={fixedDivision}
+              fixedSubdivision={fixedSubdivision}
               readOnly={!canEditBasic}
             />
-            {(isCreateMode || showDivisionField) && (
-              <AffiliationCard
-                formData={formData}
-                divisions={divisions}
-                onChange={handleChange}
-                isTopManagement={isTopManagement}
-                showDivisionField={showDivisionField}
-                fixedDivision={fixedDivision}
-                fixedSubdivision={fixedSubdivision}
-                readOnly={!canEditBasic}
-              />
-            )}
-            <ContactInformationCard
-              formData={formData}
-              onChange={handleChange}
-              readOnly={!canEditBasic}
-            />
-            <DatesCard
-              formData={formData}
-              onChange={handleChange}
-              readOnly={!canEditBasic}
-            />
-            <ResponsibilityCard
-              formData={formData}
-              onChange={handleChange}
-              readOnlyBasic={!canEditBasic}
-              readOnlySha={!canEditShaComments}
-            />
-          </div>
-          <div className='personnel-cards-sha-comment'>
-            {formData.is_sha_worker && (
-              <ShaWorkerCard
-                shaWorker={formData.sha_details || {
+          )}
+          <ContactInformationCard
+            formData={formData}
+            onChange={handleChange}
+            readOnly={!canEditBasic}
+          />
+          <DatesCard
+            formData={formData}
+            onChange={handleChange}
+            readOnly={!canEditBasic}
+          />
+        </div>
+        <div className="ep-sha-comment-row">
+          {formData.is_sha_worker && (
+            <ShaWorkerCard
+              shaWorker={
+                formData.sha_details || {
                   start_date: '',
                   access_level: '1',
-                  equipment_conclusions: []
-                }}
-                onChange={handleShaWorkerChange}
-                onAddEquipment={handleAddEquipment}
-                onRemoveEquipment={handleRemoveEquipment}
-                onEquipmentChange={handleEquipmentChange}
-                readOnly={!canEditShaComments}
-              />
-            )}
-            <CommentsCard
-              description={formData.description || ''}
-              onChange={(description) => handleChange({ description })}
+                  equipment_conclusions: [],
+                }
+              }
+              onChange={handleShaWorkerChange}
+              onAddEquipment={handleAddEquipment}
+              onRemoveEquipment={handleRemoveEquipment}
+              onEquipmentChange={handleEquipmentChange}
               readOnly={!canEditShaComments}
             />
-          </div>
+          )}
+          <CommentsCard
+            description={formData.description || ''}
+            onChange={(description) => handleChange({ description })}
+            readOnly={!canEditShaComments}
+          />
         </div>
         <FormActions
           onCancel={onCancel}

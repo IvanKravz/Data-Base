@@ -1,5 +1,5 @@
 import React from 'react';
-import '.././style.css'
+import '.././PersonnelDetails.css'
 
 interface InfoCardProps {
   title: string;

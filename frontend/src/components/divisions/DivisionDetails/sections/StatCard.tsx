@@ -1,7 +1,7 @@
 import React from 'react';
 import { DivideIcon as LucideIcon } from 'lucide-react';
-import './style.css';
 import { CircularProgress } from '@mui/material';
+import './StatCard.css';
 
 interface StatCardProps {
   title: string;
@@ -14,14 +14,24 @@ interface StatCardProps {
   disabled?: boolean;
 }
 
+/** Преобразует HEX-цвет в rgba с заданной прозрачностью */
+const hexToRgba = (hex: string, alpha: number): string => {
+  const sanitized = hex.replace('#', '');
+  const r = parseInt(sanitized.substring(0, 2), 16);
+  const g = parseInt(sanitized.substring(2, 4), 16);
+  const b = parseInt(sanitized.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 export function StatCard({
   title,
   count,
   icon: Icon,
   iconColor,
+  details = [],
   onClick,
   loading = false,
-  disabled = false
+  disabled = false,
 }: StatCardProps) {
   const handleClick = () => {
     if (!disabled) onClick();
@@ -30,23 +40,39 @@ export function StatCard({
   return (
     <div
       onClick={handleClick}
-      className={`division-stat-card ${disabled ? 'disabled' : ''}`}
+      className={`stat-card ${disabled ? 'stat-card--disabled' : ''}`}
+      style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
     >
-      <div className="division-stat-card-content">
-        <div className="division-stat-card-header">
-          <div className="division-icon-container" style={{ backgroundColor: `${iconColor}8` }}>
-            <Icon className="division-stat-card-icon" style={{ color: iconColor }} />
-          </div>
-          <h3 className="division-stat-card-title">{title}</h3>
+      <div className="stat-card__header">
+        <div
+          className="stat-card__icon-box"
+          style={{ backgroundColor: hexToRgba(iconColor, 0.12) }}
+        >
+          <Icon className="stat-card__icon" style={{ color: iconColor }} />
         </div>
-        <div className="division-stat-card-value">
-          {loading ? (
-            <CircularProgress size={30} thickness={5} />
-          ) : (
-            <span className="division-count">{count !== null ? count : '—'}</span>
-          )}
-        </div>
+        <h3 className="stat-card__title">{title}</h3>
       </div>
+
+      <div className="stat-card__value">
+        {loading ? (
+          <CircularProgress size={32} thickness={4} />
+        ) : (
+          <span className="stat-card__count">
+            {count !== null ? count.toLocaleString() : '—'}
+          </span>
+        )}
+      </div>
+
+      {details.length > 0 && (
+        <div className="stat-card__details">
+          {details.map((d, i) => (
+            <div key={i} className="stat-card__detail-item">
+              <span className="stat-card__detail-label">{d.label}</span>
+              <span className="stat-card__detail-value">{d.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

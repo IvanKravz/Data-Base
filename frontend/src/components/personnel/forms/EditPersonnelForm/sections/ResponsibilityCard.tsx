@@ -1,38 +1,38 @@
 import React from 'react';
 import { Employee } from '../../../../../types';
-import '.././style.css';
 import { ShieldAlert } from 'lucide-react';
+import '../style.css';
 
 interface ResponsibilityCardProps {
   formData: Employee;
   onChange: (data: Partial<Employee>) => void;
-  readOnlyBasic?: boolean; // для чекбокса МОЛ
-  readOnlySha?: boolean;   // для чекбокса ШаРаботник
+  readOnlyBasic?: boolean;
+  readOnlySha?: boolean;
 }
 
 export function ResponsibilityCard({ formData, onChange, readOnlyBasic = false, readOnlySha = false }: ResponsibilityCardProps) {
   return (
-    <div className="personnel-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card">
+      <div className="ep-card-header">
         <ShieldAlert size={20} />
-        <h3 className="personnel-card-title">Ответственность</h3>
+        <h3 className="ep-card-title">Ответственность</h3>
       </div>
-      <div className="personnel-card-content">
-        <div className="personnel-checkbox-group">
+      <div className="ep-card-content">
+        <div className="ep-checkbox-group">
           <input
             type="checkbox"
             id="isMaterialResponsible"
             checked={formData.is_material_responsible || false}
             onChange={(e) => !readOnlyBasic && onChange({ is_material_responsible: e.target.checked })}
-            className="personnel-checkbox"
+            className="ep-checkbox"
             disabled={readOnlyBasic}
           />
-          <label htmlFor="isMaterialResponsible" className="personnel-checkbox-label">
+          <label htmlFor="isMaterialResponsible" className="ep-checkbox-label">
             Материально ответственное лицо
           </label>
         </div>
 
-        <div className="personnel-checkbox-group">
+        <div className="ep-checkbox-group">
           <input
             type="checkbox"
             id="isShaWorker"
@@ -49,10 +49,10 @@ export function ResponsibilityCard({ formData, onChange, readOnlyBasic = false, 
                 } : null
               });
             }}
-            className="personnel-checkbox"
+            className="ep-checkbox"
             disabled={readOnlySha}
           />
-          <label htmlFor="isShaWorker" className="personnel-checkbox-label">
+          <label htmlFor="isShaWorker" className="ep-checkbox-label">
             ШаРаботник
           </label>
         </div>

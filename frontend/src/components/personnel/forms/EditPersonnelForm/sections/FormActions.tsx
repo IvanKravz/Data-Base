@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Save, PlusCircle, Loader2 } from 'lucide-react';
+import '../style.css';
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -13,28 +14,27 @@ export function FormActions({
   isLoading = false 
 }: FormActionsProps) {
   return (
-    <div className="form-actions">
+    <div className="ep-form-actions">
       <button
         type="button"
-        form="personnel-form"
         onClick={onCancel}
         disabled={isLoading}
-        className="form-actions-button form-actions-cancel"
+        className="ep-form-actions-btn ep-form-actions-cancel"
       >
-        <X size={16} className="mr-2" />
+        <X size={16} className="ep-mr-2" />
         Отмена
       </button>
       <button
         type="submit"
         disabled={isLoading}
-        className={`form-actions-button ${isEditing ? 'form-actions-submit' : 'form-actions-create'}`}
+        className={`ep-form-actions-btn ${isEditing ? 'ep-form-actions-submit' : 'ep-form-actions-create'}`}
       >
         {isLoading ? (
-          <Loader2 size={16} className="mr-2 animate-spin" />
+          <Loader2 size={16} className="ep-mr-2 ep-animate-spin" />
         ) : isEditing ? (
-          <Save size={16} className="mr-2" />
+          <Save size={16} className="ep-mr-2" />
         ) : (
-          <PlusCircle size={16} className="mr-2" />
+          <PlusCircle size={16} className="ep-mr-2" />
         )}
         {isEditing ? 'Сохранить' : 'Создать'}
       </button>

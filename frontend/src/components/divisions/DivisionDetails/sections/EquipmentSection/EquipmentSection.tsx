@@ -332,6 +332,12 @@ export function EquipmentSection() {
   };
 
   const handleBack = () => {
+    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
+    if (location.state?.fromDivisionList) {
+      navigate('/');
+      return;
+    }
+    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
@@ -430,7 +436,6 @@ export function EquipmentSection() {
                 onStatusChange={setSelectedStatus}
               />
             </div>
-
           </div>
 
           <div className="equipment-search-container">

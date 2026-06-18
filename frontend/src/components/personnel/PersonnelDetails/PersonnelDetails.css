@@ -1,0 +1,920 @@
+/* PersonnelDetails.css */
+
+/* ============================================
+   1. Глобальные стили и CSS-переменные
+   ============================================ */
+:root {
+  --color-background-page: #f8fafc;
+  --color-card-white: #ffffff;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-label: #36404e;
+  --color-icon-gray: #94a3b8;
+  --color-border-light: #e2e8f0;
+  --color-accent: #1e40af;
+  --color-accent-light: #eef2ff;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --transition: all 0.2s ease;
+}
+
+body {
+  background-color: var(--color-background-page);
+}
+
+/* ============================================
+       2. Контейнер страницы (двухколоночный)
+       ============================================ */
+.personnel-details-container {
+  margin: 0 auto;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.personnel-details-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.personnel-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.personnel-main {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .personnel-details-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .personnel-details-container {
+    padding: 1rem;
+  }
+}
+
+/* ============================================
+       3. Карточка профиля (левая колонка)
+       ============================================ */
+.personnel-profile-card {
+  background: var(--color-card-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+  text-align: center;
+  transition: var(--transition);
+  border: 1px solid #e5e7eb65;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.personnel-profile-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.personnel-profile-avatar {
+  margin-bottom: 1rem;
+  position: relative;
+  display: inline-block;
+}
+
+.personnel-avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.personnel-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.personnel-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.personnel-avatar-wrapper:hover .personnel-avatar-overlay {
+  opacity: 1;
+}
+
+.personnel-profile-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.personnel-profile-position {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+}
+
+.personnel-upload-button {
+  margin-top: 0.5rem;
+}
+
+/* Контактная информация в левой колонке */
+.personnel-contact-card {
+  background: var(--color-card-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  transition: var(--transition);
+}
+
+.personnel-contact-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.personnel-contact-card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-label);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.personnel-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.personnel-contact-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-icon-gray);
+}
+
+.personnel-contact-text {
+  word-break: break-word;
+}
+
+/* ============================================
+       4. Поисковая строка
+       ============================================ */
+.personnel-details-search-container {
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================
+       5. Вкладки
+       ============================================ */
+.personnel-tabs-container {
+  background: var(--color-card-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.personnel-tabs-container:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.personnel-tabs-header {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.5rem 0;
+  background: var(--color-card-white);
+  border: 1px solid #e5e7eb65;
+}
+
+.personnel-tab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.personnel-tab-button:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-border-light);
+}
+
+.personnel-tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.personnel-tab-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.personnel-tab-content {
+  padding: 1rem;
+  border: 1px solid #e5e7eb65;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Индикация режима редактирования */
+.personnel-tabs-container.editing {
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-light);
+  transition: var(--transition);
+}
+
+@media (max-width: 640px) {
+  .personnel-tab-button {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+    gap: 0.3rem;
+  }
+
+  .personnel-tab-content {
+    padding: 1rem;
+  }
+}
+
+/* ============================================
+       6. Сетка редактируемых карточек
+       ============================================ */
+.personnel-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* ============================================
+       7. Карточки данных (просмотр)
+       ============================================ */
+.personnel-tab-content .info-card-title {
+  display: none;
+}
+
+.info-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.info-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.info-item-personel {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.info-item-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+  color: var(--color-icon-gray);
+}
+
+.info-item-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8d8e8f;
+  margin-bottom: 0.25rem;
+}
+
+.info-item-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #3b3b3c;
+  line-height: 1.4;
+}
+
+.material-badge {
+  background-color: #ecfdf5;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+/* ============================================
+       8. Блок техники (древовидный список) – для AssignedEquipment
+       ============================================ */
+.personnel-equipment-tree-container {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.personnel-equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.personnel-equipment-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-transform: none;
+}
+
+.personnel-equipment-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.personnel-equipment-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.personnel-tree-node {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.personnel-tree-node-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: var(--radius-md);
+}
+
+.personnel-tree-node-header:hover {
+  background-color: #f8fafc;
+}
+
+.personnel-tree-node-icon {
+  color: var(--color-icon-gray);
+  transition: transform 0.2s;
+}
+
+.personnel-tree-node-icon.rotated {
+  transform: rotate(90deg);
+}
+
+.personnel-tree-node-title {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+}
+
+.personnel-tree-node-children {
+  padding-left: 2rem;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  max-height: 0;
+}
+
+.personnel-tree-node-children.expanded {
+  max-height: 200px;
+}
+
+.personnel-tree-node-child-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1.5rem 2rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+  margin-left: 0.75rem;
+  border-left: 2px solid var(--color-border-light);
+}
+
+.personnel-tree-node-child-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.personnel-tree-node-child-label {
+  color: var(--color-text-label);
+  font-weight: 500;
+}
+
+.personnel-tree-node-child-value {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.personnel-empty-tree {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-label);
+  font-style: italic;
+}
+
+/* ============================================
+       9. Хедер
+       ============================================ */
+.personnel-header {
+  background: transparent;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.personnel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.personnel-header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.personnel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.personnel-header-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  border-radius: 0.375rem;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+}
+
+.personnel-header-action-button-green {
+  background-color: #059669;
+}
+
+.personnel-header-action-button-green:hover {
+  background-color: #047857;
+}
+
+.personnel-header-action-button-blue {
+  background-color: #2563eb;
+}
+
+.personnel-header-action-button-blue:hover {
+  background-color: #1d4ed8;
+}
+
+.personnel-header-action-button-red {
+  background-color: #dc2626;
+}
+
+.personnel-header-action-button-red:hover {
+  background-color: #b91c1c;
+}
+
+.personnel-header-action-button-gray {
+  background-color: #6b7280;
+}
+
+.personnel-header-action-button-gray:hover {
+  background-color: #4b5563;
+}
+
+.personnel-header-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.375rem;
+  background-color: transparent;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  color: var(--color-text-secondary);
+}
+
+.personnel-header-icon-button:hover {
+  background-color: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+/* ============================================
+       10. Стили для техники в ResponsibilityInfo (аккордеон)
+       ============================================ */
+.personnel-equipment-section {
+  margin-top: 0.25rem;
+}
+
+.personnel-equipment-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: var(--transition);
+}
+
+.personnel-equipment-toggle-button:hover {
+  opacity: 0.8;
+}
+
+.personnel-equipment-toggle-button .info-item-label {
+  margin-bottom: 0;
+}
+
+.personnel-equipment-list-container {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.personnel-equipment-list-container.expanded {
+  max-height: 400px;
+}
+
+.personnel-equipment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.personnel-equipment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0.5rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--color-accent);
+  transition: var(--transition);
+}
+
+.personnel-equipment-item:hover {
+  background-color: #f1f5f9;
+}
+
+.personnel-equipment-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-icon-gray);
+}
+
+.personnel-equipment-info {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1rem 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.personnel-equipment-type {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.personnel-equipment-conclusion {
+  font-size: 0.9rem;
+  color: var(--color-text-label);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .personnel-equipment-item {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .personnel-equipment-list {
+    padding-left: 1rem;
+  }
+
+  .personnel-equipment-info {
+    gap: 0.5rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .personnel-equipment-type,
+  .personnel-equipment-conclusion {
+    white-space: normal;
+  }
+}
+
+/* ============================================
+       11. Прочие утилиты
+       ============================================ */
+.no-comments-text {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-text-label);
+  font-style: italic;
+}
+
+.equipment-loading,
+.equipment-error,
+.equipment-not-found {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.equipment-error {
+  color: #dc2626;
+}
+
+/* ============================================
+       12. Адаптив для техники в ResponsibilityInfo
+       ============================================ */
+@media (max-width: 640px) {
+  .personnel-tree-node-child-row {
+    gap: 0.5rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 1rem;
+  }
+
+  .personnel-tree-node-child-item {
+    flex-wrap: wrap;
+  }
+
+  .personnel-equipment-item {
+    padding: 0.4rem 0.6rem;
+  }
+
+  .personnel-equipment-list {
+    padding-left: 1rem;
+  }
+
+  .personnel-equipment-info {
+    gap: 0.5rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .personnel-equipment-type,
+  .personnel-equipment-conclusion {
+    white-space: normal;
+  }
+}
+
+/* Кнопки действий в панели вкладок */
+.personnel-tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
+.personnel-tabs-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.personnel-tabs-action-btn-green {
+  background-color: #059669;
+}
+
+.personnel-tabs-action-btn-green:hover {
+  background-color: #047857;
+}
+
+.personnel-tabs-action-btn-blue {
+  background-color: #2563eb;
+}
+
+.personnel-tabs-action-btn-blue:hover {
+  background-color: #1d4ed8;
+}
+
+.personnel-tabs-action-btn-gray {
+  background-color: #6b7280;
+}
+
+.personnel-tabs-action-btn-gray:hover {
+  background-color: #4b5563;
+}
+
+.personnel-tabs-action-btn-red {
+  background-color: #dc2626;
+}
+
+.personnel-tabs-action-btn-red:hover {
+  background-color: #b91c1c;
+}
+
+@media (max-width: 640px) {
+  .personnel-tabs-actions {
+    margin-left: 0;
+    padding-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================
+     13. Таблица техники (для AssignedEquipment)
+     ============================================ */
+.equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+}
+
+.equipment-table th {
+  text-align: left;
+  padding: 0.1rem 0.4rem;
+  border-bottom: 2px solid var(--color-border-light);
+  font-weight: 600;
+  color: var(--color-text-label);
+  background-color: #f8fafc;
+}
+
+.equipment-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.equipment-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* Адаптив для маленьких экранов – таблица остаётся горизонтальной, 
+       но можно добавить горизонтальную прокрутку при необходимости */
+@media (max-width: 640px) {
+  .equipment-table {
+    font-size: 0.8rem;
+  }
+
+  .equipment-table th,
+  .equipment-table td {
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+/* ============================================
+     14. Модификаторы для иконок и надписей (МОЛ / ШАР)
+     ============================================ */
+.info-item-icon-success {
+  color: #10b981;
+}
+
+.info-item-icon-primary {
+  color: #2563eb;
+}
+
+.info-item-label-success {
+  color: #10b981;
+}
+
+.info-item-label-primary {
+  color: #2563eb;
+}
+
+.info-item-value-small {
+  font-size: 0.75rem;
+}
+
+/* ============================================
+     16. Стили для ошибок валидации
+     ============================================ */
+.validation-errors {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.validation-error-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.validation-error-icon {
+  flex-shrink: 0;
+  color: #dc2626;
+}
+
+/* Подсветка полей с ошибками (можно добавить в компоненты) */
+.ep-form-input-error {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+
+.ep-form-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+/* ============================================
+     17. Стили для модалки фото и создания сотрудника
+     ============================================ */
+
+/* Контент модалки фото – центрирование */
+.personnel-photo-modal-content {
+  text-align: center;
+}
+
+/* Изображение в модалке */
+.personnel-photo-modal-image {
+  max-width: 100%;
+  max-height: 70vh;
+}
+
+/* Сетка для ШР + комментарии в режиме создания */
+.create-personnel-sha-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Адаптив для сетки ШР+комментарии */
+@media (max-width: 768px) {
+  .create-personnel-sha-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

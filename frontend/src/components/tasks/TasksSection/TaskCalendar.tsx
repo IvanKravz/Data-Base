@@ -12,10 +12,7 @@ interface TaskCalendarProps {
     date: Date;
     view: 'month' | 'year';
   };
-  onCalendarStateChange: (state: {
-    date?: Date;
-    view?: 'month' | 'year';
-  }) => void;
+  onCalendarStateChange: (state: { date?: Date; view?: 'month' | 'year' }) => void;
 }
 
 export function TaskCalendar({
@@ -44,7 +41,7 @@ export function TaskCalendar({
     onCalendarStateChange({ date: activeStartDate });
   };
 
-  // Get tasks for a specific date
+  // Задачи на конкретный день
   const getTasksForDate = (date: Date): Task[] => {
     const formattedDate = format(date, 'yyyy-MM-dd');
     return tasks.filter(task =>
@@ -60,7 +57,7 @@ export function TaskCalendar({
     );
   };
 
-  // Get tasks for a whole month
+  // Задачи на целый месяц
   const getTasksForMonth = (date: Date): Task[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -77,7 +74,7 @@ export function TaskCalendar({
     );
   };
 
-  // Group tasks by category
+  // Группировка задач по категориям
   const getCountsByCategory = (taskList: Task[]): Record<string, number> => {
     return taskList.reduce((acc, task) => {
       acc[task.category] = (acc[task.category] || 0) + 1;
@@ -88,6 +85,7 @@ export function TaskCalendar({
   return (
     <div className="tasks-calendar-container">
       <div className="tasks-calendar-main">
+        {/* Кнопка переключения вида */}
         <div className="tasks-calendar-controls">
           <button
             onClick={() => handleViewChange(view === 'month' ? 'year' : 'month')}
@@ -96,45 +94,49 @@ export function TaskCalendar({
             {view === 'month' ? 'Показать год' : 'Показать месяц'}
           </button>
         </div>
-        <Calendar
-          key={`${view}-${selectedDate.toISOString()}`}
-          onChange={handleDateChange}
-          value={selectedDate}
-          view={view}
-          onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
-          className="tasks-calendar"
-          onActiveStartDateChange={handleActiveStartDateChange}
-          tileClassName={({ date }) => {
-            const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
-            return tasksOnDate.length > 0 ? 'tasks-calendar-has-events' : '';
-          }}
-          tileContent={({ date }) => {
-            const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
-            if (tasksOnDate.length === 0) return null;
 
-            const counts = getCountsByCategory(tasksOnDate);
+        {/* Обёртка для ограничения ширины календаря */}
+        <div className="tasks-calendar-wrapper">
+          <Calendar
+            key={`${view}-${selectedDate.toISOString()}`}
+            onChange={handleDateChange}
+            value={selectedDate}
+            view={view}
+            onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
+            className="tasks-calendar"
+            onActiveStartDateChange={handleActiveStartDateChange}
+            tileClassName={({ date }) => {
+              const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+              return tasksOnDate.length > 0 ? 'tasks-calendar-has-events' : '';
+            }}
+            tileContent={({ date }) => {
+              const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+              if (tasksOnDate.length === 0) return null;
 
-            return (
-              <div className="tasks-calendar-indicator">
-                {counts.urgent > 0 && (
-                  <span className="tasks-calendar-count tasks-calendar-count-urgent">
-                    {counts.urgent}
-                  </span>
-                )}
-                {counts.planned > 0 && (
-                  <span className="tasks-calendar-count tasks-calendar-count-planned">
-                    {counts.planned}
-                  </span>
-                )}
-                {counts.attention > 0 && (
-                  <span className="tasks-calendar-count tasks-calendar-count-attention">
-                    {counts.attention}
-                  </span>
-                )}
-              </div>
-            );
-          }}
-        />
+              const counts = getCountsByCategory(tasksOnDate);
+
+              return (
+                <div className="tasks-calendar-indicator">
+                  {counts.urgent > 0 && (
+                    <span className="tasks-calendar-count tasks-calendar-count-urgent">
+                      {counts.urgent}
+                    </span>
+                  )}
+                  {counts.planned > 0 && (
+                    <span className="tasks-calendar-count tasks-calendar-count-planned">
+                      {counts.planned}
+                    </span>
+                  )}
+                  {counts.attention > 0 && (
+                    <span className="tasks-calendar-count tasks-calendar-count-attention">
+                      {counts.attention}
+                    </span>
+                  )}
+                </div>
+              );
+            }}
+          />
+        </div>
       </div>
     </div>
   );

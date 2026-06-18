@@ -121,7 +121,7 @@
 
 .task-modal-close-btn:hover {
   background: var(--color-gray-200);
-  color: var(--color-gray-900);
+  color: black;
   transform: scale(1.05);
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
-import '.././style.css';
+import '../style.css';
 
 interface CommentsCardProps {
   description: string;
@@ -30,18 +30,18 @@ export function CommentsCard({ description, onChange, readOnly = false }: Commen
   };
 
   return (
-    <div className="personnel-card comments-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card ep-comments-card">
+      <div className="ep-card-header">
         <MessageSquare size={20} />
-        <h3 className="personnel-card-title">Комментарии и заметки</h3>
+        <h3 className="ep-card-title">Комментарии и заметки</h3>
       </div>
-      <div className="personnel-card-content">
+      <div className="ep-card-content">
         {comments.map((comment, index) => (
-          <div key={index} className="personnel-comment-group">
+          <div key={index} className="ep-comment-group">
             <textarea
               value={comment}
               onChange={(e) => handleCommentChange(index, e.target.value)}
-              className="personnel-form-input personnel-form-textarea"
+              className="ep-form-input ep-form-textarea"
               placeholder="Введите комментарий..."
               disabled={readOnly}
             />
@@ -49,7 +49,7 @@ export function CommentsCard({ description, onChange, readOnly = false }: Commen
               <button
                 type="button"
                 onClick={() => handleRemoveComment(index)}
-                className="personnel-btn personnel-btn-danger personnel-btn-sm"
+                className="ep-btn ep-btn-danger ep-btn-sm"
               >
                 Удалить
               </button>
@@ -61,7 +61,7 @@ export function CommentsCard({ description, onChange, readOnly = false }: Commen
             <button
               type="button"
               onClick={handleAddComment}
-              className="personnel-btn personnel-btn-primary personnel-btn-sm"
+              className="ep-btn ep-btn-primary ep-btn-sm"
             >
               + Добавить комментарий
             </button>

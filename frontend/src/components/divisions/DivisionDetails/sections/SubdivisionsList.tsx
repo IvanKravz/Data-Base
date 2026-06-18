@@ -1,3 +1,4 @@
+//SubdivisionsList.tsx
 import React, { useEffect, useState } from 'react';
 import { Users, Plug, Building2, ListTodo } from 'lucide-react';
 import { Division } from '../../../../types';

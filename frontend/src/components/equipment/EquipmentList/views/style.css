@@ -152,9 +152,9 @@ button.collapse-button:active {
 .table-header-cell-equipment {
   padding: 0.3rem 1rem;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #374151;
   text-transform: uppercase;
   border: 1px solid #e2e8f0;
 }
@@ -171,9 +171,9 @@ button.collapse-button:active {
 .table-header-cell-equipment-pp {
   padding: 0.3rem 0.8rem;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: #374151;
   text-transform: uppercase;
   border: 1px solid #e2e8f0;
   text-transform: lowercase;

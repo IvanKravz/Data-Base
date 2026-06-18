@@ -1,8 +1,8 @@
 // AffiliationCard.tsx
 import React from 'react';
 import { Employee, Division } from '../../../../../types';
-import '.././style.css';
 import { Users } from 'lucide-react';
+import '../style.css';
 
 interface AffiliationCardProps {
   formData: Employee;
@@ -25,7 +25,6 @@ export function AffiliationCard({
   fixedSubdivision = false,
   readOnly = false
 }: AffiliationCardProps) {
-  // Ищем текущее подразделение с приведением id к строке
   const currentDivision = formData.division
     ? divisions.find(d => String(d.id) === String(formData.division?.id))
     : null;
@@ -54,22 +53,20 @@ export function AffiliationCard({
     });
   };
 
-  const isDisabled = isTopManagement || fixedDivision || fixedSubdivision || readOnly;
-
   return (
-    <div className="personnel-card">
-      <div className="personnel-card-header-edit">
+    <div className="ep-card">
+      <div className="ep-card-header">
         <Users size={20} />
-        <h3 className="personnel-card-title">Принадлежность</h3>
+        <h3 className="ep-card-title">Принадлежность</h3>
       </div>
-      <div className="personnel-card-content">
+      <div className="ep-card-content">
         {showDivisionField && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Подразделение</label>
+          <div className="ep-form-group">
+            <label className="ep-form-label">Подразделение</label>
             <select
               value={formData.division?.id || ''}
               onChange={handleDivisionChange}
-              className="personnel-form-input"
+              className="ep-form-input"
               disabled={isDivisionDisabled}
             >
               <option value="">Выберите подразделение</option>
@@ -82,15 +79,14 @@ export function AffiliationCard({
           </div>
         )}
 
-        {/* Отделение отображается, если выбрано подразделение и у него есть отделения */}
         {showDivisionField && formData.division && hasSubdivisions && (
-          <div className="personnel-form-group">
-            <label className="personnel-form-label">Отделение</label>
+          <div className="ep-form-group">
+            <label className="ep-form-label">Отделение</label>
             <select
               value={formData.subdivision?.id || ''}
               onChange={handleSubdivisionChange}
-              className="personnel-form-input"
-              disabled={isSubdivisionDisabled} 
+              className="ep-form-input"
+              disabled={isSubdivisionDisabled}
             >
               <option value="">Выберите отделение</option>
               {currentSubdivisions.map((subdivision) => (

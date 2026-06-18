@@ -1,1 +1,0 @@
-export { QualitativeCharacteristics } from './QualitativeCharacteristics';

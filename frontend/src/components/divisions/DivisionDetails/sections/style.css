@@ -1,4 +1,4 @@
-/* DivisionDetails.css */
+/* ===== DivisionDetails.css ===== */
 .division-details-container {
   display: flex;
   flex-direction: column;
@@ -36,7 +36,7 @@
   overflow: hidden;
 }
 
-/* Header.css */
+/* ===== Header.css ===== */
 .division-header {
   background: white;
   padding: 1.2rem 1.5rem;
@@ -70,7 +70,7 @@
   margin-left: 1rem;
 }
 
-/* Overview.css */
+/* ===== Overview.css (контейнер и сетка) ===== */
 .division-overview-container {
   display: flex;
   flex-direction: column;
@@ -89,128 +89,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
+  margin-top: 2rem;
 }
 
-/* StatCard.css */
-.division-stat-card {
-  background: white;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 1rem;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  animation: division-fadeIn 0.3s ease-out forwards;
-  animation-delay: calc(var(--order) * 0.1s);
-}
-
-.division-stat-card:hover {
-  box-shadow: 0 12px 18px -5px rgba(0, 0, 0, 0.1);
-}
-
-.division-stat-card-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
-}
-
-.division-stat-card-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-
-.division-icon-container {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.division-stat-card-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.division-stat-card-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #6b7280;
-  margin: 0;
-}
-
-.division-stat-card-value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 🔒 УСИЛЕННЫЕ стили для disabled карточек */
-.division-stat-card.disabled,
-.division-stat-card.disabled:hover {
-  opacity: 0.7 !important;
-  cursor: not-allowed !important;
-  filter: grayscale(0.2) brightness(0.97) !important;
-  background: #f9fafb !important;
-  border-color: #e2e8f0 !important;
-  transform: none !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-/* Иконка запрета при наведении на disabled карточку */
-.division-stat-card.disabled:hover::after {
-  content: "⛔";
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 20px;
-  opacity: 0.8;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
-  pointer-events: none;
-}
-
-/* Счётчик */
-.division-count {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-/* Gradient backgrounds */
-.division-blue-gradient {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-}
-
-.division-purple-gradient {
-  background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
-}
-
-.division-green-gradient {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-}
-
-.division-yellow-gradient {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-}
-
-.division-orange-gradient {
-  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-}
-
-/* SubdivisionsList.css */
+/* ===== SubdivisionsList.css — Glassmorphism обновление ===== */
 .division-subdivisions-section {
   margin-top: 20px;
 }
@@ -221,16 +103,35 @@
   gap: 24px;
 }
 
+/* Карточка отделения – стекло */
 .division-subdivision-card {
-  background: white;
-  border-radius: 0.5rem;
+  background: rgba(238, 237, 237, 0.189);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f1f5f9;
-  transition: all 0.3s ease;
+  border: 1px solid rgba(228, 227, 227, 0.595);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.3s ease-out forwards;
+}
+
+/* Тёмная тема */
+@media (prefers-color-scheme: dark) {
+  .division-subdivision-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+.division-subdivision-card:hover {
+  box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(228, 227, 227, 0.595);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.45); /* стала менее прозрачной, не исчезает */
 }
 
 @keyframes fadeInUp {
@@ -244,17 +145,13 @@
   }
 }
 
-.division-subdivision-card:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
 .division-subdivision-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
 .division-subdivision-name {
@@ -262,6 +159,7 @@
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 .division-chevron-icon {
@@ -270,43 +168,86 @@
   color: #9ca3af;
 }
 
+/* Сетка метрик внутри карточки */
 .division-subdivision-metrics {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
+/* Элемент метрики – стекло */
 .division-metric-item {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-radius: 0.5rem;
-  background: #f8fafc;
+  border-radius: 16px;
+  background: rgba(36, 98, 149, 0.028);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
   position: relative;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .division-metric-item:hover {
-  background: #eef2ff;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* 🔒 УСИЛЕННЫЕ стили для disabled метрик */
+/* Контейнер иконки */
+.division-metric-icon-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.division-metric-icon {
+  width: 22px;
+  height: 22px;
+  color: #193ec6;
+}
+
+.division-metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.division-metric-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.division-metric-label {
+  font-size: 0.75rem;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Disabled состояние */
 .division-metric-item.disabled,
 .division-metric-item.disabled:hover {
   opacity: 0.65 !important;
-  /* cursor: not-allowed !important; */
-  background: #f1f5f9 !important;
-  filter: grayscale(0.15) !important;
+  background: rgba(200, 200, 200, 0.2) !important;
+  filter: grayscale(0.15);
   transform: none !important;
   box-shadow: none !important;
-  transition: all 0.2s ease;
+  cursor: not-allowed;
 }
 
-/* Иконка запрета при наведении на disabled метрику */
 .division-metric-item.disabled:hover::after {
   content: "🚫";
   position: absolute;
@@ -317,70 +258,7 @@
   pointer-events: none;
 }
 
-.division-metric-icon-container {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.division-metric-icon {
-  width: 18px;
-  height: 18px;
-  color: #193ec6;
-}
-
-.division-metric-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.division-metric-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.division-metric-label {
-  font-size: 16px;
-  color: #6b7280;
-  margin-top: 2px;
-}
-
-/* Animations */
-@keyframes division-fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.division-animate-fadeIn {
-  animation: division-fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes division-pulse {
-
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
-}
-
-/* Responsive Design */
+/* ===== Responsive Design (оригинал с доработками под новые стили) ===== */
 @media (min-width: 1700px) {
   .division-stats-grid {
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -410,6 +288,14 @@
   .division-subdivisions-grid {
     grid-template-columns: 1fr;
   }
+
+  .division-metric-value {
+    font-size: 1.1rem;
+  }
+
+  .division-metric-label {
+    font-size: 0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -418,6 +304,6 @@
   }
 
   .division-metric-label {
-    font-size: 14px;
+    font-size: 0.7rem;
   }
 }
