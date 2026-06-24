@@ -1,7 +1,9 @@
+// TasksCalendarView.tsx
 import React, { useMemo } from 'react';
 import { TaskCalendar } from './TaskCalendar';
 import { Task } from '../../../types/tasks';
-import './styles/TasksCalendarView.css'; 
+import { format } from 'date-fns';
+import './styles/TasksCalendarView.css';
 
 interface TasksCalendarViewProps {
   tasks: Task[];
@@ -10,21 +12,25 @@ interface TasksCalendarViewProps {
     date: Date;
     view: 'month' | 'year';
   };
-  onCalendarStateChange: (state: { 
-    date?: Date; 
-    view?: 'month' | 'year'; 
-  }) => void;
+  onCalendarStateChange: (state: { date?: Date; view?: 'month' | 'year' }) => void;
+  highlightedRange?: {
+    start: Date;
+    end: Date;
+    category: Task['category'];
+    taskId: string;
+    stepId?: string;
+  } | null;
 }
 
-export function TasksCalendarView({ 
-  tasks, 
+export function TasksCalendarView({
+  tasks,
   onTaskClick,
   calendarState,
-  onCalendarStateChange 
+  onCalendarStateChange,
+  highlightedRange,
 }: TasksCalendarViewProps) {
   const { date: selectedDate, view } = calendarState;
 
-  // Получаем уникальные годы из задач
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     tasks.forEach(task => {
@@ -45,8 +51,8 @@ export function TasksCalendarView({
 
   const handleYearClick = (year: number) => {
     onCalendarStateChange({
-      date: new Date(year, 0, 1), // 1 января
-      view: 'year'
+      date: new Date(year, 0, 1),
+      view: 'year',
     });
   };
 
@@ -54,13 +60,14 @@ export function TasksCalendarView({
     const today = new Date();
     onCalendarStateChange({
       date: today,
-      view: 'month'
+      view: 'month',
     });
   };
 
+
   return (
     <div className="tasks-calendar-view">
-      {/* Панель выбора годов */}
+
       <div className="tasks-calendar-years">
         <button
           className="tasks-calendar-year-today"
@@ -84,12 +91,12 @@ export function TasksCalendarView({
         ))}
       </div>
 
-      {/* Компонент календаря (без своей панели годов) */}
       <TaskCalendar
         tasks={tasks}
         onTaskClick={onTaskClick}
         calendarState={calendarState}
         onCalendarStateChange={onCalendarStateChange}
+        highlightedRange={highlightedRange}
       />
     </div>
   );

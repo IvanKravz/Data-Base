@@ -1,200 +1,149 @@
 /* TasksList.css */
 
-/* Основной контейнер списка задач */
 .tasks-list {
-    /* max-width: 1200px; */
     margin: 0 auto;
-    padding: 1rem;
+    padding: 0 0.5rem 0.5rem 0.5rem;
 }
 
-/* Группа подразделения */
-.tasks-division-group {
+/* Вкладки подразделений (основные) */
+.tasks-tabs {
+    display: flex;
     margin-bottom: 0.5rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    transition: box-shadow 0.2s ease;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
 }
 
-.tasks-division-group:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* Заголовок подразделения */
-.tasks-division-header {
-    background: linear-gradient(135deg, #6690ea 0%, #3b3460 100%);
-    padding: 0.5rem 1rem;
-    color: white;
+.tasks-tab {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #64748b;
+    background: none;
+    border: none;
+    border-radius: 0.3rem 0.3rem 0 0;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     position: relative;
 }
 
-.tasks-division-header:hover {
-    background: linear-gradient(135deg, #5a7fd8 0%, #2d2850 100%);
+.tasks-tab:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
 }
 
-/* Кнопка раскрытия/сворачивания */
-.tasks-expand-button {
-    background: none;
-    border: none;
-    color: rgb(38, 38, 38);
-    padding: 0.25rem;
-    cursor: pointer;
-    display: flex;
+.tasks-tab-active {
+    color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.tasks-tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #2563eb;
+    border-radius: 2px 2px 0 0;
+}
+
+.tasks-tab-count {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: transform 0.2s ease, background-color 0.2s;
-}
-
-.tasks-expand-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.tasks-chevron {
-    transition: transform 0.2s ease;
-}
-
-/* Заголовок и счётчик задач */
-.tasks-division-title {
-    margin: 0;
-    font-size: 1.1rem;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.4rem;
+    font-size: 0.7rem;
     font-weight: 600;
+    background-color: #e2e8f0;
+    color: #475569;
+    border-radius: 9999px;
+    transition: background-color 0.2s;
+}
+
+.tasks-tab-active .tasks-tab-count {
+    background-color: #bfdbfe;
+    color: #1e40af;
+}
+
+/* Вкладки отделений (внутренние) */
+.tasks-subdivision-tabs {
+    display: flex;
+    margin-bottom: 1.3rem;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.tasks-subdivision-tab {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex: 1;
-}
-
-.tasks-division-count {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.15rem 0.8rem;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
     font-size: 0.9rem;
-    border-radius: 1rem;
-    font-weight: 500;
-}
-
-/* Группа задач без отделения (внутри подразделения) */
-.tasks-no-subdivision-group {
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.tasks-no-subdivision-header {
-    background: #e0f0f8;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.tasks-no-subdivision-header:hover {
-    background-color: #d0efff;
-}
-
-.tasks-no-subdivision-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #0369a1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-}
-
-.tasks-no-subdivision-count {
-    background: #bae6fd;
-    padding: 0.15rem 0.8rem;
-    font-size: 0.8rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-    color: #0369a1;
-}
-
-/* Список задач без отделения (вертикальный) */
-.tasks-no-subdivision-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem 0.5rem;
-    background-color: #f7fdff;
-    border-top: 1px solid #e6f7ff;
-    transition: all 0.3s ease;
-}
-
-/* Группа отделения */
-.tasks-subdivision-group {
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.tasks-subdivision-group:last-child {
-    border-bottom: none;
-}
-
-.tasks-subdivision-header {
-    background: #eceff8;
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.tasks-subdivision-header:hover {
-    background-color: #e4e7ec;
-}
-
-.tasks-subdivision-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-}
-
-.tasks-subdivision-count {
-    background: #e2e8f0;
-    padding: 0.15rem 0.8rem;
-    font-size: 0.8rem;
-    border-radius: 0.75rem;
     font-weight: 500;
     color: #64748b;
+    background: none;
+    border: none;
+    border-radius: 0.3rem 0.3rem 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
-/* Список задач отделения (вертикальный) */
-.tasks-subdivision-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.5rem;
-    background-color: #fafbfc;
-    border-top: 1px solid #eef2f7;
-    transition: all 0.3s ease;
+.tasks-subdivision-tab:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
 }
 
-/* Плавная анимация появления контента */
-.tasks-no-subdivision-list,
-.tasks-subdivision-list {
-    animation: fadeIn 0.3s ease;
+.tasks-subdivision-tab-active {
+    color: #2563eb;
+    /* background-color: #eff6ff; */
 }
 
-@keyframes fadeIn {
+.tasks-subdivision-tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #2564ebce;
+    border-radius: 2px 2px 0 0;
+}
+
+.tasks-subdivision-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.4rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    background-color: #e2e8f0;
+    color: #475569;
+    border-radius: 9999px;
+    transition: background-color 0.2s;
+}
+
+.tasks-subdivision-tab-active .tasks-subdivision-tab-count {
+    background-color: #bfdbfe;
+    color: #1e40af;
+}
+
+/* Контент вкладки с анимацией */
+.tasks-tab-content {
+    animation: fadeSlideIn 0.3s ease forwards;
+}
+
+@keyframes fadeSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(8px);
     }
     to {
         opacity: 1;
@@ -202,67 +151,52 @@
     }
 }
 
-/* Состояние «нет задач» */
-.tasks-empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #64748b;
+.tasks-tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
 }
 
-.tasks-empty-state h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #475569;
+/* Список задач */
+.tasks-subdivision-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.3rem 0;
+}
+
+/* Пустое состояние внутри вкладки */
+.tasks-empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #94a3b8;
 }
 
 .tasks-empty-state p {
     font-size: 1rem;
-    color: #94a3b8;
 }
 
-/* Улучшение внешнего вида карточек задач */
-.tasks-no-subdivision-list .task-item,
-.tasks-subdivision-list .task-item {
-    margin-bottom: 0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-    border-radius: 0.5rem;
-}
-
-.tasks-no-subdivision-list .task-item:hover,
-.tasks-subdivision-list .task-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* Адаптивные стили */
+/* Адаптивность */
 @media (max-width: 768px) {
     .tasks-list {
         padding: 0.8rem;
     }
-
-    .tasks-division-header {
-        padding: 0.5rem 1rem;
+    .tasks-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
     }
-
-    .tasks-no-subdivision-header,
-    .tasks-subdivision-header {
-        padding: 0.4rem 1rem;
+    .tasks-tab-count {
+        font-size: 0.65rem;
+        min-width: 1rem;
+        height: 1rem;
     }
-
-    .tasks-division-title {
-        font-size: 1.125rem;
+    .tasks-subdivision-tab {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.8rem;
     }
-
-    .tasks-no-subdivision-title,
-    .tasks-subdivision-title {
-        font-size: 0.875rem;
-    }
-
-    .tasks-no-subdivision-list,
-    .tasks-subdivision-list {
-        padding: 0.6rem;
-        gap: 0.6rem;
+    .tasks-subdivision-tab-count {
+        font-size: 0.6rem;
+        min-width: 1rem;
+        height: 1rem;
     }
 }

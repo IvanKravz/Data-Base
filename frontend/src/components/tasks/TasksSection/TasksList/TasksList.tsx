@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import { TaskItem } from '../TaskItem/TaskItem';
 import { Task } from '../../../../types/tasks';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import './TasksList.css';
 
 interface TasksListProps {
@@ -14,16 +12,18 @@ interface TasksListProps {
 
 interface GroupedTasks {
   [divisionId: string]: {
-    division: any;
+    division: { id: string; name: string };
     noSubdivisionTasks: Task[];
     subdivisions: {
       [subdivisionId: string]: {
-        subdivision: any;
+        subdivision: { id: string; name: string };
         tasks: Task[];
       };
     };
   };
 }
+
+type SubdivisionTabKey = string | 'no-subdivision' | 'all';
 
 export function TasksList({
   tasks,
@@ -31,116 +31,53 @@ export function TasksList({
   onDeleteTask,
   onToggleStep,
 }: TasksListProps) {
-  const location = useLocation();
+  const [activeDivisionId, setActiveDivisionId] = useState<string | null>(null);
+  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<SubdivisionTabKey>('all');
 
-  // Ключ для sessionStorage на основе текущего URL
-  const storageKey = useMemo(() => {
-    return `tasksListExpandState_${location.pathname}${location.search}`;
-  }, [location.pathname, location.search]);
+  const groupedTasks: GroupedTasks = useMemo(() => {
+    return tasks.reduce((acc, task) => {
+      const divisionId = task.division?.id || 'no-division';
+      const divisionName = task.division?.name || 'Без подразделения';
+      const subdivisionId = task.subdivision?.id || 'no-subdivision';
+      const subdivisionName = task.subdivision?.name || '';
 
-  // Загрузка сохранённых состояний из sessionStorage
-  const loadSavedState = () => {
-    try {
-      const saved = sessionStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          expandedDivisions: parsed.expandedDivisions || {},
-          expandedSubdivisions: parsed.expandedSubdivisions || {},
-          expandedNoSubdivision: parsed.expandedNoSubdivision || {},
+      if (!acc[divisionId]) {
+        acc[divisionId] = {
+          division: { id: divisionId, name: divisionName },
+          noSubdivisionTasks: [],
+          subdivisions: {}
         };
       }
-    } catch (e) {
-      console.warn('Failed to load expand state from sessionStorage', e);
-    }
-    return {
-      expandedDivisions: {},
-      expandedSubdivisions: {},
-      expandedNoSubdivision: {},
-    };
-  };
 
-  const savedState = loadSavedState();
-
-  // Состояния: подразделения по умолчанию открыты (true), остальные закрыты (false)
-  // но если есть сохранённые значения, используем их
-  const [expandedDivisions, setExpandedDivisions] = useState<Record<string, boolean>>(
-    savedState.expandedDivisions
-  );
-  const [expandedSubdivisions, setExpandedSubdivisions] = useState<Record<string, Record<string, boolean>>>(
-    savedState.expandedSubdivisions
-  );
-  const [expandedNoSubdivision, setExpandedNoSubdivision] = useState<Record<string, boolean>>(
-    savedState.expandedNoSubdivision
-  );
-
-  // Сохраняем состояния в sessionStorage при каждом их изменении
-  useEffect(() => {
-    const stateToSave = {
-      expandedDivisions,
-      expandedSubdivisions,
-      expandedNoSubdivision,
-    };
-    sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
-  }, [storageKey, expandedDivisions, expandedSubdivisions, expandedNoSubdivision]);
-
-  // Группируем задачи
-  const groupedTasks: GroupedTasks = tasks.reduce((acc, task) => {
-    const divisionId = task.division?.id || 'no-division';
-    const divisionName = task.division?.name || 'Без подразделения';
-    const subdivisionId = task.subdivision?.id || 'no-subdivision';
-    const subdivisionName = task.subdivision?.name || '';
-
-    if (!acc[divisionId]) {
-      acc[divisionId] = {
-        division: { id: divisionId, name: divisionName },
-        noSubdivisionTasks: [],
-        subdivisions: {}
-      };
-    }
-
-    if (!task.subdivision?.id) {
-      acc[divisionId].noSubdivisionTasks.push(task);
-    } else {
-      if (!acc[divisionId].subdivisions[subdivisionId]) {
-        acc[divisionId].subdivisions[subdivisionId] = {
-          subdivision: { id: subdivisionId, name: subdivisionName },
-          tasks: []
-        };
+      if (!task.subdivision?.id) {
+        acc[divisionId].noSubdivisionTasks.push(task);
+      } else {
+        if (!acc[divisionId].subdivisions[subdivisionId]) {
+          acc[divisionId].subdivisions[subdivisionId] = {
+            subdivision: { id: subdivisionId, name: subdivisionName },
+            tasks: []
+          };
+        }
+        acc[divisionId].subdivisions[subdivisionId].tasks.push(task);
       }
-      acc[divisionId].subdivisions[subdivisionId].tasks.push(task);
+
+      return acc;
+    }, {} as GroupedTasks);
+  }, [tasks]);
+
+  const divisionIds = useMemo(() => Object.keys(groupedTasks), [groupedTasks]);
+
+  // При первом рендере выбираем первое подразделение и вкладку "Все задачи"
+  useState(() => {
+    if (divisionIds.length > 0 && !activeDivisionId) {
+      setActiveDivisionId(divisionIds[0]);
+      setActiveSubdivisionTab('all');
     }
+  });
 
-    return acc;
-  }, {} as GroupedTasks);
-
-  // Переключение подразделения
-  const toggleDivision = (divisionId: string) => {
-    setExpandedDivisions(prev => ({
-      ...prev,
-      [divisionId]: !(prev[divisionId] ?? true)
-    }));
-  };
-
-  // Переключение отделения
-  const toggleSubdivision = (divisionId: string, subdivisionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedSubdivisions(prev => ({
-      ...prev,
-      [divisionId]: {
-        ...prev[divisionId],
-        [subdivisionId]: !(prev[divisionId]?.[subdivisionId] ?? false)
-      }
-    }));
-  };
-
-  // Переключение блока "Задачи подразделения" (без отделения)
-  const toggleNoSubdivision = (divisionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedNoSubdivision(prev => ({
-      ...prev,
-      [divisionId]: !(prev[divisionId] ?? false)
-    }));
+  const handleDivisionChange = (divisionId: string) => {
+    setActiveDivisionId(divisionId);
+    setActiveSubdivisionTab('all'); // при смене подразделения переключаемся на "Все задачи"
   };
 
   if (tasks.length === 0) {
@@ -152,111 +89,102 @@ export function TasksList({
     );
   }
 
-  const divisionCount = Object.keys(groupedTasks).length;
+  const activeGroup = activeDivisionId ? groupedTasks[activeDivisionId] : null;
+
+  // Получаем список вкладок для второго уровня: "Все задачи" + отделения
+  const subdivisionTabs = useMemo(() => {
+    if (!activeGroup) return [];
+    const tabs: Array<{ key: SubdivisionTabKey; label: string; count: number }> = [
+      { key: 'all', label: 'Все задачи', count: tasks.length } // общее количество задач в подразделении
+    ];
+    if (activeGroup.noSubdivisionTasks.length > 0) {
+      tabs.push({ key: 'no-subdivision', label: 'Задачи подразделения', count: activeGroup.noSubdivisionTasks.length });
+    }
+    Object.keys(activeGroup.subdivisions).forEach(subId => {
+      const sub = activeGroup.subdivisions[subId];
+      tabs.push({ key: subId, label: sub.subdivision.name, count: sub.tasks.length });
+    });
+    return tabs;
+  }, [activeGroup, tasks]);
+
+  // Получаем задачи для активной вкладки второго уровня
+  const activeTasks = useMemo(() => {
+    if (!activeGroup) return [];
+    if (activeSubdivisionTab === 'all') {
+      // Все задачи подразделения: задачи без отделения + задачи из всех отделений
+      const allTasks = [...activeGroup.noSubdivisionTasks];
+      Object.values(activeGroup.subdivisions).forEach(sub => {
+        allTasks.push(...sub.tasks);
+      });
+      return allTasks;
+    }
+    if (activeSubdivisionTab === 'no-subdivision') {
+      return activeGroup.noSubdivisionTasks;
+    }
+    const sub = activeGroup.subdivisions[activeSubdivisionTab];
+    return sub ? sub.tasks : [];
+  }, [activeGroup, activeSubdivisionTab]);
 
   return (
     <div className="tasks-list">
-      {Object.keys(groupedTasks).map(divisionId => {
-        const divisionGroup = groupedTasks[divisionId];
-        const divisionTasksCount = divisionGroup.noSubdivisionTasks.length +
-          Object.values(divisionGroup.subdivisions).reduce((total, sub) => total + sub.tasks.length, 0);
+      {/* Вкладки подразделений (первый уровень) */}
+      <div className="tasks-tabs">
+        {divisionIds.map(id => {
+          const group = groupedTasks[id];
+          const totalCount = group.noSubdivisionTasks.length +
+            Object.values(group.subdivisions).reduce((sum, sub) => sum + sub.tasks.length, 0);
+          return (
+            <button
+              key={id}
+              className={`tasks-tab ${activeDivisionId === id ? 'tasks-tab-active' : ''}`}
+              onClick={() => handleDivisionChange(id)}
+            >
+              <span>{group.division.name}</span>
+              <span className="tasks-tab-count">{totalCount}</span>
+            </button>
+          );
+        })}
+      </div>
 
-        // Подразделение открыто по умолчанию (true), если нет сохранённого значения
-        const isDivisionExpanded = expandedDivisions[divisionId] ?? true;
-        const hasNoSubdivisionTasks = divisionGroup.noSubdivisionTasks.length > 0;
-        const isNoSubdivisionExpanded = expandedNoSubdivision[divisionId] ?? false;
+      {/* Внутренние вкладки (второй уровень): "Все задачи" + отделения */}
+      {activeGroup && subdivisionTabs.length > 0 && (
+        <div className="tasks-subdivision-tabs">
+          {subdivisionTabs.map(tab => (
+            <button
+              key={tab.key}
+              className={`tasks-subdivision-tab ${activeSubdivisionTab === tab.key ? 'tasks-subdivision-tab-active' : ''}`}
+              onClick={() => setActiveSubdivisionTab(tab.key)}
+            >
+              <span>{tab.label}</span>
+              <span className="tasks-subdivision-tab-count">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
-        const showDivisionHeader = divisionCount > 1;
-
-        return (
-          <div key={divisionId} className="tasks-division-group">
-            {showDivisionHeader && (
-              <div className="tasks-division-header" onClick={() => toggleDivision(divisionId)}>
-                <button className="tasks-expand-button">
-                  {isDivisionExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                </button>
-                <h3 className="tasks-division-title">
-                  {divisionGroup.division.name}
-                  <span className="tasks-division-count">{divisionTasksCount}</span>
-                </h3>
-              </div>
-            )}
-
-            {(showDivisionHeader ? isDivisionExpanded : true) && (
-              <>
-                {/* Задачи без отделения */}
-                {hasNoSubdivisionTasks && (
-                  <div className="tasks-no-subdivision-group">
-                    <div
-                      className="tasks-no-subdivision-header"
-                      onClick={(e) => toggleNoSubdivision(divisionId, e)}
-                    >
-                      <button className="tasks-expand-button">
-                        {isNoSubdivisionExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                      </button>
-                      <h4 className="tasks-no-subdivision-title">
-                        Задачи подразделения
-                        <span className="tasks-no-subdivision-count">{divisionGroup.noSubdivisionTasks.length}</span>
-                      </h4>
-                    </div>
-                    {isNoSubdivisionExpanded && (
-                      <div className="tasks-no-subdivision-list">
-                        {divisionGroup.noSubdivisionTasks.map((task, index) => (
-                          <TaskItem
-                            key={task.id}
-                            task={task}
-                            onEditTask={onEditTask}
-                            onDeleteTask={onDeleteTask}
-                            onToggleStep={onToggleStep}
-                            index={index + 1}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Отделения */}
-                {Object.keys(divisionGroup.subdivisions).map(subdivisionId => {
-                  const subdivisionGroup = divisionGroup.subdivisions[subdivisionId];
-                  const isSubdivisionExpanded = expandedSubdivisions[divisionId]?.[subdivisionId] ?? false;
-
-                  return (
-                    <div key={subdivisionId} className="tasks-subdivision-group">
-                      <div
-                        className="tasks-subdivision-header"
-                        onClick={(e) => toggleSubdivision(divisionId, subdivisionId, e)}
-                      >
-                        <button className="tasks-expand-button">
-                          {isSubdivisionExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                        </button>
-                        <h4 className="tasks-subdivision-title">
-                          {subdivisionGroup.subdivision.name}
-                          <span className="tasks-subdivision-count">{subdivisionGroup.tasks.length}</span>
-                        </h4>
-                      </div>
-                      {isSubdivisionExpanded && (
-                        <div className="tasks-subdivision-list">
-                          {subdivisionGroup.tasks.map((task, index) => (
-                            <TaskItem
-                              key={task.id}
-                              task={task}
-                              onEditTask={onEditTask}
-                              onDeleteTask={onDeleteTask}
-                              onToggleStep={onToggleStep}
-                              index={index + 1}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        );
-      })}
+      {/* Список задач */}
+      <div className="tasks-tab-content">
+        <div className="tasks-tab-panel">
+          {activeTasks.length > 0 ? (
+            <div className="tasks-subdivision-list">
+              {activeTasks.map((task, index) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onEditTask={onEditTask}
+                  onDeleteTask={onDeleteTask}
+                  onToggleStep={onToggleStep}
+                  index={index + 1}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="tasks-empty-state">
+              <p>Нет задач для отображения</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

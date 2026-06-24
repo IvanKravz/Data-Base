@@ -7,7 +7,7 @@
     --border-light: #e2e6ea;
     --text-primary: #1a2c3e;
     --text-secondary: #5a6e7c;
-    --text-muted: #7d8894;
+    --text-muted: #667381;
     --accent-blue: #5f73a5;
     --accent-green: #2c7a4d;
     --accent-red: #c23d3d;
@@ -29,13 +29,37 @@
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
-    cursor: pointer; /* Добавлен курсор pointer, чтобы показать, что карточка кликабельна */
+    cursor: pointer;
 }
 
 .tasks-card:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
     border-color: #e2e8f0;
+}
+
+/* При раскрытии — приглушённый фон по категории */
+.tasks-card-expanded-urgent {
+    background: rgba(200, 11, 11, 0.034);
+    border-left: 4px solid var(--accent-red);
+}
+
+.tasks-card-expanded-planned {
+    background: rgba(97, 121, 183, 0.045);
+    border-left: 4px solid var(--accent-blue);
+}
+
+.tasks-card-expanded-attention {
+    background: rgba(197, 152, 29, 0.047);
+    border-left: 4px solid var(--accent-yellow);
+}
+
+/* Для завершённых задач — свой фон, но можно переопределить */
+.tasks-card-completed.tasks-card-expanded-urgent,
+.tasks-card-completed.tasks-card-expanded-planned,
+.tasks-card-completed.tasks-card-expanded-attention {
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+    border-left: 4px solid var(--accent-green);
 }
 
 .tasks-card-completed {
@@ -58,7 +82,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
 }
 
@@ -78,7 +102,7 @@
     flex-shrink: 0;
 }
 
-/* Бейдж (справа) */
+/* Бейдж */
 .tasks-badge {
     padding: 0.2rem 0.7rem;
     border-radius: 2rem;
@@ -150,8 +174,6 @@
     color: var(--accent-red);
     background: #fee8e8;
 }
-
-/* Стили для кнопки "Детали задачи" удалены, так как она больше не используется */
 
 /* Панель деталей */
 .tasks-details-panel {
@@ -259,8 +281,8 @@
     transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
-/* Кнопка "Этапы" */
-.tasks-steps-btn {
+/* Кнопка "Показать этапы" */
+.tasks-steps-toggle-btn {
     background: var(--accent-blue);
     border: none;
     border-radius: 2rem;
@@ -276,16 +298,18 @@
     white-space: nowrap;
 }
 
-.tasks-steps-btn:hover {
+.tasks-steps-toggle-btn:hover {
     background: #1e4a76;
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
 
-/* Список остальных деталей — каждый элемент на новой строке */
+/* Список остальных деталей */
 .tasks-details-list {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
+    gap: 1.5rem 2rem;
+    margin-bottom: 0.5rem;
 }
 
 .tasks-detail-item {
@@ -303,195 +327,109 @@
     margin-left: 0.2rem;
 }
 
-/* Модальное окно этапов */
-.tasks-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(3px);
-    z-index: 1000;
-    animation: fadeIn 0.2s;
+/* ===== Встроенный список этапов (горизонтально) ===== */
+.tasks-inline-steps {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--border-light);
+    animation: slideDown 0.25s ease;
 }
 
-.tasks-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 720px;
-    max-height: 85vh;
-    background: white;
-    border-radius: 1.5rem;
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    flex-direction: column;
-    z-index: 1001;
-    overflow: hidden;
-    animation: modalPop 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-}
-
-@keyframes modalPop {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-.tasks-modal-header {
-    padding: 1rem 1rem;
-    border-bottom: 1px solid var(--border-light);
-    background: #467daaf1;
+.tasks-inline-steps-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-}
-
-.tasks-modal-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin: 0 0 0.2rem;
-    color: white;
-}
-
-.tasks-modal-subtitle {
-    display: flex;
     align-items: center;
-    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.tasks-inline-steps-header h5 {
     font-size: 0.9rem;
-    color: white;
+    font-weight: 600;
+    color: #141414;
+    margin: 0;
 }
 
-.tasks-modal-close {
-    background: #f1f5f9;
-    padding: 0.5rem;
-    border: none;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.tasks-modal-close:hover {
-    background: #e2e8f0;
-    transform: rotate(90deg);
-}
-
-.tasks-modal-body {
-    padding: 0.5rem 1rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.tasks-steps-list {
+.tasks-inline-steps-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.3rem;
 }
 
-.tasks-step-item {
-    display: flex;
-    gap: 1rem;
-    padding: 0.75rem;
-    background: #fafcff;
-    border-radius: 1rem;
-    border: 1px solid var(--border-light);
-    transition: var(--transition);
-}
-
-.tasks-step-item:hover {
-    border-color: #cbd5e1;
-    background: white;
-}
-
-.tasks-step-check {
-    width: 1.5rem;
-    height: 1.4rem;
-    border-radius: 50%;
-    border: 2px solid #cbd5e1;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: var(--transition);
-}
-
-.tasks-step-check.checked {
-    background: var(--accent-green);
-    border-color: var(--accent-green);
-    position: relative;
-}
-
-.tasks-step-check.checked::after {
-    content: "✓";
-    color: white;
-    font-size: 1rem;
+.tasks-inline-step-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    line-height: 1;
-    margin-top: -2px;
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.4rem 0.5rem;
+    background: #fafcff;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    transition: var(--transition);
 }
 
-.tasks-step-check:hover {
-    border-color: var(--accent-blue);
+.tasks-inline-step-item:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    cursor: default;
+}
+
+.tasks-step-checkbox {
+    width: 1.2rem;
+    height: 1.2rem;
+    accent-color: var(--accent-green);
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 0.25rem;
+    border: 2px solid #cbd5e1;
+    transition: var(--transition);
+}
+
+.tasks-step-checkbox:hover {
     transform: scale(1.05);
 }
 
-.tasks-step-content {
-    flex: 1;
+.tasks-step-checkbox:checked {
+    accent-color: var(--accent-green);
+    border-color: var(--accent-green);
 }
 
-.tasks-step-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 0.2rem;
+.tasks-inline-step-name {
+    font-size: 0.9rem;
+    font-weight: 500;
     color: var(--text-primary);
+    flex: 0 1 auto;
 }
 
-.tasks-step-name.completed {
+.tasks-inline-step-name.completed {
     text-decoration: line-through;
     color: var(--text-muted);
 }
 
-.tasks-step-date {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin: 0 0 0.4rem;
+.tasks-inline-step-date {
+    font-size: 0.8rem;
+    color: #3e4349;
+    white-space: nowrap;
 }
 
-.tasks-step-comment {
-    font-size: 0.8rem;
-    background: #f8fafc;
-    padding: 0.25rem 0.6rem;
-    border-radius: 0.75rem;
-    border-left: 3px solid var(--accent-blue);
-    margin-top: 0.4rem;
+.tasks-inline-step-comment {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: #f1f5f9;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.5rem;
+    border-left: 2px solid var(--accent-blue);
 }
 
-.tasks-step-completed-by {
-    font-size: 0.8rem;
-    margin-top: 0.4rem;
+.tasks-inline-step-completed-by {
+    font-size: 0.75rem;
     color: var(--accent-green);
     background: #e6f7ef;
-    display: inline-block;
-    padding: 0.1rem 0.6rem;
+    padding: 0.1rem 0.5rem;
     border-radius: 1rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
 }
 
 /* Адаптив */
@@ -506,13 +444,20 @@
     .tasks-detail-label {
         white-space: normal;
     }
-    .tasks-steps-btn span {
+    .tasks-steps-toggle-btn span {
         display: none;
     }
-    .tasks-steps-btn {
+    .tasks-steps-toggle-btn {
         padding: 0.35rem 0.8rem;
     }
     .tasks-details-list {
         gap: 0.5rem;
+    }
+    .tasks-inline-step-item {
+        gap: 0.3rem;
+        padding: 0.2rem 0.3rem;
+    }
+    .tasks-inline-step-name {
+        font-size: 0.85rem;
     }
 }

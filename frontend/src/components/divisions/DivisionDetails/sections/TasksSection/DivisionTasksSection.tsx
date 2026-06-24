@@ -40,6 +40,15 @@ export function DivisionTasksSection() {
   const [subdivisionName, setSubdivisionName] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // Состояние для выделенного диапазона в календаре
+  const [highlightedRange, setHighlightedRange] = useState<{
+    start: Date;
+    end: Date;
+    category: Task['category'];
+    taskId: string;
+    stepId?: string;
+  } | null>(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
@@ -68,12 +77,10 @@ export function DivisionTasksSection() {
   const canCreateTask = useMemo(() => permissions?.models?.Task?.includes('add') ?? false, [permissions]);
 
   const handleBack = useCallback(() => {
-    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
     if (location.state?.fromDivisionList) {
       navigate('/');
       return;
     }
-    // Иначе стандартная логика
     if (!id) return;
     if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
@@ -295,8 +302,23 @@ export function DivisionTasksSection() {
     }
     return (
       <div className="calendar-view-container">
-        <TasksCalendarView tasks={filteredTasks} onTaskClick={handleEditTask} calendarState={calendarState} onCalendarStateChange={updateCalendarState} />
-        <TasksCalendarSidebar tasks={filteredTasks} selectedDate={calendarState.date} onTaskClick={handleEditTask} onStepClick={handleStepClick} />
+        <TasksCalendarView
+          tasks={filteredTasks}
+          onTaskClick={handleEditTask}
+          calendarState={calendarState}
+          onCalendarStateChange={updateCalendarState}
+          highlightedRange={highlightedRange}
+        />
+        <TasksCalendarSidebar
+          tasks={filteredTasks}
+          selectedDate={calendarState.date}
+          onTaskClick={handleEditTask}
+          onStepClick={handleStepClick}
+          onToggleStep={toggleTaskStep}
+          currentRange={highlightedRange}
+          onHighlightRange={setHighlightedRange}
+          onClearHighlight={() => setHighlightedRange(null)}
+        />
       </div>
     );
   };

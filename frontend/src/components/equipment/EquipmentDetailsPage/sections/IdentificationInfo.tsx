@@ -1,31 +1,15 @@
+// IdentificationInfo.tsx
 import React from 'react';
 import { Hash, NotebookTabs } from 'lucide-react';
 import { Equipment } from '../../../../types';
-import { InfoCard } from './InfoCard';
-import { InfoItem } from './InfoItem';
-import '.././style.css'
+import { Section } from './Section';
+import { EquipmentInfoItem } from './EquipmentInfoItem';
 
-interface IdentificationInfoProps {
-  equipment: Equipment;
-}
-
-export function IdentificationInfo({ equipment }: IdentificationInfoProps) {
+export function IdentificationInfo({ equipment }: { equipment: Equipment }) {
   return (
-    <InfoCard title="Идентификация">
-      <div className="equipment-card-content">
-        <InfoItem
-          icon={Hash}
-          iconColor="text-green-500"
-          label="Серийный номер"
-          value={equipment.serial_number}
-        />
-        <InfoItem
-          icon={NotebookTabs}
-          iconColor="text-orange-500"
-          label="Инвентарный номер"
-          value={equipment.inventory_number}
-        />
-      </div>
-    </InfoCard>
+    <Section title="Идентификация">
+      <EquipmentInfoItem icon={Hash} label="Серийный номер" value={equipment.serial_number || '—'} />
+      <EquipmentInfoItem icon={NotebookTabs} label="Инвентарный номер" value={equipment.inventory_number || '—'} />
+    </Section>
   );
 }

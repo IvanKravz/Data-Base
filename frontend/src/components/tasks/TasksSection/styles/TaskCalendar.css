@@ -98,7 +98,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 8rem;          /* ← компактно, но не плоско */
+    min-height: 8rem;
     padding: 0.4rem 0.15rem;
     font-size: 0.85rem;
     background: none;
@@ -121,19 +121,28 @@
 }
 
 .react-calendar__tile--now {
-    background-color: #eff6ff;
+    background-color: #e3e5e7cd;
     font-weight: 600;
     color: #2563eb;
 }
 
 .react-calendar__tile--active {
-    background-color: #2563eb;
-    color: white;
+    background-color: rgba(110, 171, 251, 0.44);
+    color: rgb(244, 18, 18);
 }
 
 .react-calendar__tile--active:enabled:hover,
 .react-calendar__tile--active:enabled:focus {
-    background-color: #1d4ed8;
+    background-color: #1d4fd89a;
+}
+
+/* Дни с событиями – подсветка (оставляем как есть) */
+.react-calendar__tile.tasks-calendar-has-events {
+    /* background-color: #f0f9ff; */
+}
+
+.react-calendar__tile.tasks-calendar-has-events:hover {
+    background-color: #e0f2fe;
 }
 
 /* Годовой вид */
@@ -149,7 +158,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 9rem;            /* ← было 60px, увеличено для пропорций */
+    min-height: 9rem;
     padding: 0.3rem;
     font-size: 0.85rem;
     font-weight: 500;
@@ -177,7 +186,30 @@
     margin-bottom: 0.2rem;
 }
 
-/* Индикаторы */
+/* === НОВЫЕ СТИЛИ ДЛЯ ВЫДЕЛЕНИЯ ДИАПАЗОНА === */
+/* Подсветка дней/месяцев, попадающих в выделенный диапазон */
+.tasks-calendar-in-range {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+.tasks-calendar-in-range-urgent {
+    background-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.tasks-calendar-in-range-planned {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+.tasks-calendar-in-range-attention {
+    background-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+/* Чтобы выделение не перекрывало индикаторы (кружки) */
+.react-calendar__tile.tasks-calendar-in-range {
+    position: relative;
+    z-index: 0;
+}
+
 .tasks-calendar-indicator {
     display: flex;
     justify-content: center;
@@ -186,21 +218,23 @@
     gap: 0.15rem;
     width: 100%;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
+/* Индикаторы (кружки с количеством) */
 .tasks-calendar-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 0.9rem;
-    height: 0.9rem;
-    font-size: 0.5rem;
-    padding: 0.1rem;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0 0.2rem;
     border-radius: 9999px;
-    font-weight: 600;
     color: white;
-    line-height: 1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .tasks-calendar-count-urgent {
@@ -217,10 +251,9 @@
 
 /* Прокрутка годов */
 .react-calendar__year-view {
-    /* max-height больше не ограничиваем, чтобы всё вмещалось */
-    overflow-y: visible;        /* или просто удали overflow-y */
-    padding-right: 0;           /* не нужен отступ под скроллбар */
-    scrollbar-width: none;      /* на всякий случай убираем скроллбар */
+    overflow-y: visible;
+    padding-right: 0;
+    scrollbar-width: none;
 }
 
 .react-calendar__year-view::-webkit-scrollbar {

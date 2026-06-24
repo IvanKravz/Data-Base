@@ -40,35 +40,35 @@ export function StatCard({
   return (
     <div
       onClick={handleClick}
-      className={`stat-card ${disabled ? 'stat-card--disabled' : ''}`}
+      className={`sc-root ${disabled ? 'sc-disabled' : ''}`}
       style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
     >
-      <div className="stat-card__header">
+      <div className="sc-header">
         <div
-          className="stat-card__icon-box"
+          className="sc-icon-box"
           style={{ backgroundColor: hexToRgba(iconColor, 0.12) }}
         >
-          <Icon className="stat-card__icon" style={{ color: iconColor }} />
+          <Icon className="sc-icon" style={{ color: iconColor }} />
         </div>
-        <h3 className="stat-card__title">{title}</h3>
+        <h3 className="sc-title">{title}</h3>
       </div>
 
-      <div className="stat-card__value">
+      <div className="sc-value">
         {loading ? (
           <CircularProgress size={32} thickness={4} />
         ) : (
-          <span className="stat-card__count">
+          <span className="sc-count">
             {count !== null ? count.toLocaleString() : '—'}
           </span>
         )}
       </div>
 
       {details.length > 0 && (
-        <div className="stat-card__details">
+        <div className="sc-details">
           {details.map((d, i) => (
-            <div key={i} className="stat-card__detail-item">
-              <span className="stat-card__detail-label">{d.label}</span>
-              <span className="stat-card__detail-value">{d.value}</span>
+            <div key={i} className="sc-detail-item">
+              <span className="sc-detail-label">{d.label}</span>
+              <span className="sc-detail-value">{d.value}</span>
             </div>
           ))}
         </div>

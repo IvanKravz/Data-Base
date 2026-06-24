@@ -1,19 +1,15 @@
+// ProductStructureTable.tsx
 import React from 'react';
 import { Equipment } from '../../../../types';
-import '../style.css';
+import { Section } from './Section';
 
-interface ProductStructureTableProps {
-  equipment: Equipment;
-}
-
-export function ProductStructureTable({ equipment }: ProductStructureTableProps) {
+export function ProductStructureTable({ equipment }: { equipment: Equipment }) {
   if (!equipment.product_structures || equipment.product_structures.length === 0) {
     return null;
   }
 
   return (
-    <div className="equipment-card equipment-structure-table">
-      <h2 className="equipment-card__title">Состав изделия</h2>
+    <Section title="Состав изделия">
       <div className="table-container">
         <table className="structure-table">
           <thead>
@@ -25,8 +21,8 @@ export function ProductStructureTable({ equipment }: ProductStructureTableProps)
             </tr>
           </thead>
           <tbody>
-            {equipment.product_structures.map((item, index) => (
-              <tr key={index}>
+            {equipment.product_structures.map((item, idx) => (
+              <tr key={idx}>
                 <td>{item.name}</td>
                 <td>{item.model || '-'}</td>
                 <td>{item.serial_number || '-'}</td>
@@ -36,6 +32,6 @@ export function ProductStructureTable({ equipment }: ProductStructureTableProps)
           </tbody>
         </table>
       </div>
-    </div>
+    </Section>
   );
 }

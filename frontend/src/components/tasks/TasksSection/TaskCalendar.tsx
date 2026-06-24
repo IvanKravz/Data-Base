@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { format, isValid } from 'date-fns';
+// TaskCalendar.tsx
+import React from 'react';
+import { format, isValid, isWithinInterval, startOfDay } from 'date-fns';
 import Calendar from 'react-calendar';
 import { Task } from '../../../types/tasks';
 import 'react-calendar/dist/Calendar.css';
@@ -13,15 +14,24 @@ interface TaskCalendarProps {
     view: 'month' | 'year';
   };
   onCalendarStateChange: (state: { date?: Date; view?: 'month' | 'year' }) => void;
+  highlightedRange?: {
+    start: Date;
+    end: Date;
+    category: Task['category'];
+    taskId: string;
+    stepId?: string;
+  } | null;
 }
 
 export function TaskCalendar({
   tasks,
   onTaskClick,
   calendarState,
-  onCalendarStateChange
+  onCalendarStateChange,
+  highlightedRange,
 }: TaskCalendarProps) {
-  const { date: selectedDate, view } = calendarState;
+  // Защита от undefined
+  const { date: selectedDate, view } = calendarState ?? { date: new Date(), view: 'month' };
 
   const handleDateChange = (date: Date) => {
     onCalendarStateChange({ date });
@@ -41,7 +51,6 @@ export function TaskCalendar({
     onCalendarStateChange({ date: activeStartDate });
   };
 
-  // Задачи на конкретный день
   const getTasksForDate = (date: Date): Task[] => {
     const formattedDate = format(date, 'yyyy-MM-dd');
     return tasks.filter(task =>
@@ -49,7 +58,6 @@ export function TaskCalendar({
         const stepStartDate = getValidDate(step.start_date);
         const stepEndDate = getValidDate(step.end_date);
         if (!stepStartDate || !stepEndDate) return false;
-
         const stepStartDateStr = format(stepStartDate, 'yyyy-MM-dd');
         const stepEndDateStr = format(stepEndDate, 'yyyy-MM-dd');
         return formattedDate >= stepStartDateStr && formattedDate <= stepEndDateStr;
@@ -57,13 +65,11 @@ export function TaskCalendar({
     );
   };
 
-  // Задачи на целый месяц
   const getTasksForMonth = (date: Date): Task[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0);
-
     return tasks.filter(task =>
       task.steps.some(step => {
         const stepStart = getValidDate(step.start_date);
@@ -74,7 +80,6 @@ export function TaskCalendar({
     );
   };
 
-  // Группировка задач по категориям
   const getCountsByCategory = (taskList: Task[]): Record<string, number> => {
     return taskList.reduce((acc, task) => {
       acc[task.category] = (acc[task.category] || 0) + 1;
@@ -82,10 +87,26 @@ export function TaskCalendar({
     }, {} as Record<string, number>);
   };
 
+  const isDateInRange = (date: Date, rangeStart: Date, rangeEnd: Date): boolean => {
+    const d = startOfDay(date);
+    const s = startOfDay(rangeStart);
+    const e = startOfDay(rangeEnd);
+    return isWithinInterval(d, { start: s, end: e });
+  };
+
+  const isMonthInRange = (monthDate: Date, rangeStart: Date, rangeEnd: Date): boolean => {
+    const year = monthDate.getFullYear();
+    const month = monthDate.getMonth();
+    const firstDay = startOfDay(new Date(year, month, 1));
+    const lastDay = startOfDay(new Date(year, month + 1, 0));
+    return isWithinInterval(firstDay, { start: rangeStart, end: rangeEnd }) ||
+           isWithinInterval(lastDay, { start: rangeStart, end: rangeEnd }) ||
+           (firstDay <= rangeStart && lastDay >= rangeEnd);
+  };
+
   return (
     <div className="tasks-calendar-container">
       <div className="tasks-calendar-main">
-        {/* Кнопка переключения вида */}
         <div className="tasks-calendar-controls">
           <button
             onClick={() => handleViewChange(view === 'month' ? 'year' : 'month')}
@@ -94,8 +115,6 @@ export function TaskCalendar({
             {view === 'month' ? 'Показать год' : 'Показать месяц'}
           </button>
         </div>
-
-        {/* Обёртка для ограничения ширины календаря */}
         <div className="tasks-calendar-wrapper">
           <Calendar
             key={`${view}-${selectedDate.toISOString()}`}
@@ -105,32 +124,37 @@ export function TaskCalendar({
             onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
             className="tasks-calendar"
             onActiveStartDateChange={handleActiveStartDateChange}
-            tileClassName={({ date }) => {
-              const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
-              return tasksOnDate.length > 0 ? 'tasks-calendar-has-events' : '';
+            tileClassName={({ date, view: tileView }) => {
+              const classes = [];
+              const tasksOnDate = tileView === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+              if (tasksOnDate.length > 0) {
+                classes.push('tasks-calendar-has-events');
+              }
+              if (highlightedRange) {
+                const { start, end, category } = highlightedRange;
+                const isInRange = tileView === 'year'
+                  ? isMonthInRange(date, start, end)
+                  : isDateInRange(date, start, end);
+                if (isInRange) {
+                  classes.push(`tasks-calendar-in-range tasks-calendar-in-range-${category}`);
+                }
+              }
+              return classes.join(' ');
             }}
             tileContent={({ date }) => {
               const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
               if (tasksOnDate.length === 0) return null;
-
               const counts = getCountsByCategory(tasksOnDate);
-
               return (
                 <div className="tasks-calendar-indicator">
                   {counts.urgent > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-urgent">
-                      {counts.urgent}
-                    </span>
+                    <span className="tasks-calendar-count tasks-calendar-count-urgent">{counts.urgent}</span>
                   )}
                   {counts.planned > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-planned">
-                      {counts.planned}
-                    </span>
+                    <span className="tasks-calendar-count tasks-calendar-count-planned">{counts.planned}</span>
                   )}
                   {counts.attention > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-attention">
-                      {counts.attention}
-                    </span>
+                    <span className="tasks-calendar-count tasks-calendar-count-attention">{counts.attention}</span>
                   )}
                 </div>
               );

@@ -55,11 +55,21 @@
 }
 
 .calendar-view-container {
-    display: grid;
-    grid-template-columns: 1fr 550px;
-    min-height: 600px; 
-    height: auto;    
-    overflow: auto; 
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    height: 100%;
+    min-height: 600px;
+}
+
+.calendar-view-container > :first-child {
+    flex: 2;
+    min-width: 0;
+}
+
+.calendar-view-container > :last-child {
+    flex: 1;
+    min-width: 0;
 }
 
 /* Loading styles */

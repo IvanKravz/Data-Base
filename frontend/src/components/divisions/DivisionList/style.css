@@ -57,6 +57,17 @@
   cursor: default;
 }
 
+.division-list-header-text {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: #090909;
+}
+
 /* Название – кликабельное, с плавным выделением */
 .division-card-title {
   font-size: 1.2rem;

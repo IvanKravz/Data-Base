@@ -1,7 +1,8 @@
+// TasksCalendarSidebar.tsx
 import React, { useState, useMemo } from 'react';
 import { Task, Step } from '../../../types/tasks';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import './styles/TasksCalendarSidebar.css';
 
 interface TasksCalendarSidebarProps {
@@ -9,13 +10,37 @@ interface TasksCalendarSidebarProps {
   selectedDate: Date;
   onTaskClick: (task: Task) => void;
   onStepClick: (step: Step) => void;
+  onToggleStep?: (taskId: string, stepId: string, currentCompleted: boolean) => void;
+  currentRange?: {
+    start: Date;
+    end: Date;
+    category: Task['category'];
+    taskId: string;
+    stepId?: string;
+  } | null;
+  onHighlightRange: (range: {
+    start: Date;
+    end: Date;
+    category: Task['category'];
+    taskId: string;
+    stepId?: string;
+  } | null) => void;
+  onClearHighlight: () => void;
 }
 
-export function TasksCalendarSidebar({ tasks, selectedDate, onTaskClick, onStepClick }: TasksCalendarSidebarProps) {
+export function TasksCalendarSidebar({
+  tasks,
+  selectedDate,
+  onTaskClick,
+  onStepClick,
+  onToggleStep,
+  currentRange,
+  onHighlightRange,
+  onClearHighlight,
+}: TasksCalendarSidebarProps) {
   const [expandedTaskIds, setExpandedTaskIds] = useState<string[]>([]);
-  const [expandedDivisions, setExpandedDivisions] = useState<string[]>([]);
+  const [activeDivisionId, setActiveDivisionId] = useState<string | null>(null);
 
-  // Фильтруем задачи, которые имеют шаги на выбранную дату
   const tasksOnDate = useMemo(() => {
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     return tasks.filter(task =>
@@ -30,7 +55,6 @@ export function TasksCalendarSidebar({ tasks, selectedDate, onTaskClick, onStepC
     );
   }, [tasks, selectedDate]);
 
-  // Группируем задачи по подразделениям
   const groupedTasks = useMemo(() => {
     const groups: Record<string, { name: string; tasks: Task[] }> = {};
     tasksOnDate.forEach(task => {
@@ -41,22 +65,14 @@ export function TasksCalendarSidebar({ tasks, selectedDate, onTaskClick, onStepC
       }
       groups[divisionId].tasks.push(task);
     });
-    // Преобразуем в массив для удобства рендера
     return Object.entries(groups).map(([id, { name, tasks }]) => ({ id, name, tasks }));
   }, [tasksOnDate]);
 
-  // Инициализируем развёрнутыми все подразделения при первом рендере
   useState(() => {
-    if (groupedTasks.length > 0 && expandedDivisions.length === 0) {
-      setExpandedDivisions(groupedTasks.map(g => g.id));
+    if (groupedTasks.length > 0 && activeDivisionId === null) {
+      setActiveDivisionId(groupedTasks[0].id);
     }
   });
-
-  const toggleDivision = (divisionId: string) => {
-    setExpandedDivisions(prev =>
-      prev.includes(divisionId) ? prev.filter(id => id !== divisionId) : [...prev, divisionId]
-    );
-  };
 
   const toggleTaskExpanded = (taskId: string) => {
     setExpandedTaskIds(prev =>
@@ -64,12 +80,52 @@ export function TasksCalendarSidebar({ tasks, selectedDate, onTaskClick, onStepC
     );
   };
 
-  const handleStepClick = (step: Step, e: React.MouseEvent) => {
+  const handleTaskTitleClick = (task: Task) => {
+    const starts = task.steps.map(s => new Date(s.start_date).getTime());
+    const ends = task.steps.map(s => new Date(s.end_date).getTime());
+    const minStart = new Date(Math.min(...starts));
+    const maxEnd = new Date(Math.max(...ends));
+
+    const isAlreadyHighlighted =
+      currentRange && currentRange.taskId === task.id && !currentRange.stepId;
+
+    if (isAlreadyHighlighted) {
+      onHighlightRange(null);
+    } else {
+      onHighlightRange({
+        start: minStart,
+        end: maxEnd,
+        category: task.category,
+        taskId: task.id,
+      });
+    }
+  };
+
+  const handleStepClickWithRange = (step: Step, task: Task, e: React.MouseEvent) => {
     e.stopPropagation();
+    const start = new Date(step.start_date);
+    const end = new Date(step.end_date);
+
+    const isAlreadyHighlighted =
+      currentRange &&
+      currentRange.taskId === task.id &&
+      currentRange.stepId === step.id;
+
+    if (isAlreadyHighlighted) {
+      onHighlightRange(null);
+    } else {
+      onHighlightRange({
+        start,
+        end,
+        category: task.category,
+        taskId: task.id,
+        stepId: step.id,
+      });
+    }
+
     onStepClick(step);
   };
 
-  // Вспомогательная функция для получения диапазона дат задачи
   const getTaskDateRange = (task: Task): string => {
     if (!task.steps.length) return 'Нет этапов';
     const startDates = task.steps.map(s => new Date(s.start_date).getTime());
@@ -79,82 +135,166 @@ export function TasksCalendarSidebar({ tasks, selectedDate, onTaskClick, onStepC
     return `${format(minStart, 'dd.MM.yyyy')} - ${format(maxEnd, 'dd.MM.yyyy')}`;
   };
 
+  const activeTasks = useMemo(() => {
+    if (!activeDivisionId) return [];
+    const group = groupedTasks.find(g => g.id === activeDivisionId);
+    return group ? group.tasks : [];
+  }, [groupedTasks, activeDivisionId]);
+
+  if (groupedTasks.length === 0) {
+    return (
+      <div className="tasks-calendar-sidebar">
+        <div className="tasks-sidebar-content">
+          <div className="tasks-sidebar-header">
+            <h3 className="tasks-sidebar-title">
+              Задачи на {format(selectedDate, 'dd.MM.yyyy')}
+            </h3>
+            <button
+              className="tasks-sidebar-clear-button"
+              onClick={onClearHighlight}
+              title="Очистить выделение"
+            >
+              <X size={16} />
+              <span>Очистить</span>
+            </button>
+          </div>
+          <p className="tasks-sidebar-no-tasks">Нет задач на выбранную дату</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tasks-calendar-sidebar">
       <div className="tasks-sidebar-content">
-        <h3 className="tasks-sidebar-title">
-          Задачи на {format(selectedDate, 'dd.MM.yyyy')}
-        </h3>
-        <div className="tasks-sidebar-list">
-          {groupedTasks.length > 0 ? (
-            groupedTasks.map(group => {
-              const isDivisionExpanded = expandedDivisions.includes(group.id);
+        <div className="tasks-sidebar-header">
+          <h3 className="tasks-sidebar-title">
+            Задачи на {format(selectedDate, 'dd.MM.yyyy')}
+          </h3>
+          <button
+            className="tasks-sidebar-clear-button"
+            onClick={onClearHighlight}
+            title="Очистить выделение"
+          >
+            <X size={16} />
+            <span>Очистить</span>
+          </button>
+        </div>
+
+        <div className="tasks-sidebar-tabs">
+          {groupedTasks.map(group => (
+            <button
+              key={group.id}
+              className={`tasks-sidebar-tab ${activeDivisionId === group.id ? 'tasks-sidebar-tab-active' : ''}`}
+              onClick={() => setActiveDivisionId(group.id)}
+            >
+              <span>{group.name}</span>
+              <span className="tasks-sidebar-tab-count">{group.tasks.length}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="tasks-sidebar-list-wrapper">
+          <div className="tasks-sidebar-list">
+            {activeTasks.map(task => {
+              const isExpanded = expandedTaskIds.includes(task.id);
+              const completedSteps = task.steps.filter(s => s.is_completed).length;
+              const totalSteps = task.steps.length;
+              const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+              const divisionName = task.division?.name || '—';
+              const subdivisionName = task.subdivision?.name || '—';
+              const creatorName =
+                task.created_by?.name ||
+                task.created_by?.username ||
+                task.created_by?.email ||
+                'Неизвестно';
+
+              const itemClass = [
+                'tasks-sidebar-item',
+                `tasks-sidebar-item-${task.category}`,
+                isExpanded ? `tasks-sidebar-item-expanded-bg tasks-sidebar-item-expanded-bg-${task.category}` : '',
+              ].filter(Boolean).join(' ');
+
               return (
-                <div key={group.id} className="tasks-sidebar-division-group">
-                  <div className="tasks-sidebar-division-header" onClick={() => toggleDivision(group.id)}>
-                    <h4 className="tasks-sidebar-division-title">
-                      {group.name}
-                      <span className="tasks-sidebar-division-count">{group.tasks.length}</span>
-                    </h4>
-                    <button className="tasks-sidebar-division-toggle">
-                      {isDivisionExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                <div key={task.id} className={itemClass}>
+                  <div className="tasks-sidebar-item-header">
+                    <div
+                      className="tasks-sidebar-item-text"
+                      onClick={() => handleTaskTitleClick(task)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <h4 className="tasks-sidebar-item-title">{task.title}</h4>
+                    </div>
+                    <button
+                      className="tasks-sidebar-toggle"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTaskExpanded(task.id);
+                      }}
+                    >
+                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
                   </div>
-                  {isDivisionExpanded && (
-                    <div className="tasks-sidebar-division-content">
-                      {group.tasks.map(task => {
-                        const isExpanded = expandedTaskIds.includes(task.id);
-                        const completedSteps = task.steps.filter(s => s.is_completed).length;
-                        const divisionName = task.division?.name || '—';
-                        const subdivisionName = task.subdivision?.name || '—';
+                  {isExpanded && (
+                    <div className="tasks-sidebar-item-expanded">
+                      <div className="tasks-sidebar-item-meta">
+                        <div className="tasks-sidebar-item-creator">
+                          <span>Создал задачу: {creatorName}</span>
+                        </div>
+                        <span className="tasks-sidebar-item-division">
+                          {divisionName} {subdivisionName !== '—' && ` / ${subdivisionName}`}
+                        </span>
+                        <span className="tasks-sidebar-item-dates">Сроки: {getTaskDateRange(task)}</span>
+                      </div>
 
-                        return (
-                          <div key={task.id} className={`tasks-sidebar-item tasks-sidebar-item-${task.category}`}>
-                            <div className="tasks-sidebar-item-header" onClick={() => toggleTaskExpanded(task.id)}>
-                              <div className="tasks-sidebar-item-text">
-                                <h4 className="tasks-sidebar-item-title">{task.title}</h4>
-                                <div className="tasks-sidebar-item-meta">
-                                  <span className="tasks-sidebar-item-division">
-                                    {divisionName} {subdivisionName !== '—' && ` / ${subdivisionName}`}
-                                  </span>
-                                  <span className="tasks-sidebar-item-dates">{getTaskDateRange(task)}</span>
-                                </div>
-                                <p className="tasks-sidebar-item-details">
-                                  Этапов: {task.steps.length} • Завершено: {completedSteps}
-                                </p>
+                      <p className="tasks-sidebar-item-details">
+                        Этапов: {totalSteps} • Завершено: {completedSteps}
+                      </p>
+                      <div className="tasks-sidebar-progress">
+                        <div className="tasks-sidebar-progress-header">
+                          <span>Прогресс</span>
+                          <span>{progressPercent}%</span>
+                        </div>
+                        <div className="tasks-sidebar-progress-bar">
+                          <div className="tasks-sidebar-progress-fill" style={{ width: `${progressPercent}%` }} />
+                        </div>
+                      </div>
+                      <div className="tasks-sidebar-steps">
+                        {task.steps.map((step, index) => (
+                          <div
+                            key={step.id}
+                            className="tasks-sidebar-step"
+                            onClick={(e) => handleStepClickWithRange(step, task, e)}
+                          >
+                            <div className="tasks-sidebar-step-info">
+                              <div className="tasks-sidebar-step-row">
+                                <input
+                                  type="checkbox"
+                                  checked={step.is_completed}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    onToggleStep?.(task.id, step.id, step.is_completed);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <span className="tasks-sidebar-step-name">
+                                  Этап {index + 1}: {step.name}
+                                </span>
                               </div>
-                              <button className="tasks-sidebar-toggle" onClick={(e) => { e.stopPropagation(); toggleTaskExpanded(task.id); }}>
-                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                              </button>
+                              <span className="tasks-sidebar-step-date">
+                                {format(new Date(step.start_date), 'dd.MM.yyyy')} - {format(new Date(step.end_date), 'dd.MM.yyyy')}
+                              </span>
                             </div>
-                            {isExpanded && (
-                              <div className="tasks-sidebar-steps">
-                                {task.steps.map((step, index) => (
-                                  <div key={step.id} className="tasks-sidebar-step" onClick={(e) => handleStepClick(step, e)}>
-                                    <div className="tasks-sidebar-step-info">
-                                      <span className="tasks-sidebar-step-name">
-                                        Этап {index + 1}: {step.name}
-                                      </span>
-                                      <span className="tasks-sidebar-step-date">
-                                        {format(new Date(step.start_date), 'dd.MM.yyyy')} - {format(new Date(step.end_date), 'dd.MM.yyyy')}
-                                      </span>
-                                    </div>
-                                    {step.is_completed && <div className="tasks-sidebar-step-completed">✓</div>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                            {step.is_completed && <div className="tasks-sidebar-step-completed">✓</div>}
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
               );
-            })
-          ) : (
-            <p className="tasks-sidebar-no-tasks">Нет задач на выбранную дату</p>
-          )}
+            })}
+          </div>
         </div>
       </div>
     </div>
