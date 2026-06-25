@@ -1,0 +1,290 @@
+/* ===== СТИЛИ ДЛЯ СТРАНИЦЫ СОЗДАНИЯ ===== */
+.ep-create-container {
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.ep-create-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    background: #ffffff;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.ep-create-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ep-create-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    color: #0f172a;
+}
+
+.ep-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.ep-back-btn:hover {
+    background: #e2e8f0;
+}
+
+.ep-back-btn-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ===== ДВУХКОЛОНОЧНЫЙ МАКЕТ ===== */
+.ep-create-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr; /* увеличено с 280px до 340px */
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .ep-create-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* ===== ЛЕВАЯ КОЛОНКА (САЙДБАР) ===== */
+.ep-sidebar-card {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
+    transition: all 0.2s;
+}
+
+.ep-sidebar-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+}
+
+.ep-sidebar-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+}
+
+.ep-sidebar-status {
+    display: inline-block;
+    padding: 0.2rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.ep-sidebar-divider {
+    border-top: 1px solid #e2e8f0;
+    margin: 0.75rem 0;
+}
+
+.ep-sidebar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ep-sidebar-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.ep-sidebar-label {
+    color: #64748b;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.ep-sidebar-value {
+    color: #0f172a;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+/* ===== ПРАВАЯ КОЛОНКА (ВКЛАДКИ) ===== */
+.ep-create-main {
+    min-width: 0;
+}
+
+.ep-tabs-container {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.ep-tabs-container:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+}
+
+.ep-tabs-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem 0.5rem 0;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    align-items: center;
+}
+
+.ep-tabs-list {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.ep-tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.ep-tab-button:hover {
+    color: #2563eb;
+    border-bottom-color: #e2e8f0;
+}
+
+.ep-tab-button.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+}
+
+.ep-tabs-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    padding-left: 1rem;
+}
+
+.ep-tab-content {
+    padding: 1.25rem;
+}
+
+/* ===== КНОПКИ ===== */
+.ep-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ep-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ep-btn-secondary {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.ep-btn-secondary:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+
+.ep-btn-success {
+    background: #059669;
+    color: white;
+}
+
+.ep-btn-success:hover:not(:disabled) {
+    background: #047857;
+}
+
+/* ===== ОШИБКИ ===== */
+.ep-error {
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #fecaca;
+    font-size: 0.875rem;
+}
+
+.ep-error-preline {
+    white-space: pre-line;
+}
+
+.ep-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    font-size: 1.125rem;
+    color: #64748b;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 640px) {
+    .ep-tabs-header {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ep-tab-button {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .ep-tab-content {
+        padding: 1rem;
+    }
+
+    .ep-tabs-actions {
+        margin-left: 0;
+        padding-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+}

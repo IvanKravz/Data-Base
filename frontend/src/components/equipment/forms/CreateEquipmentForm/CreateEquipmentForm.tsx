@@ -1,21 +1,24 @@
+// CreateEquipmentForm.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { Equipment } from '../../../../types';
+import { divisionsApi, employeesApi, equipmentApi } from '../../../../api';
+import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
+
+// Компоненты секций (используются в формах)
 import { BasicInformation } from '../EditEquipmentForm/sections/BasicInformation';
+import { AssignmentInfo } from '../EditEquipmentForm/sections/AssignmentInfo';
 import { IdentificationInfo } from '../EditEquipmentForm/sections/IdentificationInfo';
 import { DatesInfo } from '../EditEquipmentForm/sections/DatesInfo';
-import { AssignmentInfo } from '../EditEquipmentForm/sections/AssignmentInfo';
-import { FormActions } from '../EditEquipmentForm/sections/FormActions';
-import { divisionsApi, employeesApi, equipmentApi } from '../../../../api';
-import '../EditEquipmentForm/style.css';
-import { EditCommentsCard } from '../EditEquipmentForm/sections/EditCommentsCard';
-import { DocumentsInfo } from '../EditEquipmentForm/sections/DocumentsInfo';
-import { ProductStructureEditor } from '../EditEquipmentForm/sections/ProductStructureEditor';
 import { AdditionalInfo } from '../EditEquipmentForm/sections/AdditionalInfo';
-import { useEquipmentFieldPermissions } from '../../../../api/utils/useEquipmentFieldPermissions';
+import { DocumentsInfo } from '../EditEquipmentForm/sections/DocumentsInfo';
+import { EditCommentsCard } from '../EditEquipmentForm/sections/EditCommentsCard';
+import { ProductStructureEditor } from '../EditEquipmentForm/sections/ProductStructureEditor';
+
+import './CreateEquipmentForm.css';
 
 interface Division {
     id: string;
@@ -36,6 +39,8 @@ interface EquipmentCategory {
     is_closed: boolean;
 }
 
+type TabId = 'main' | 'assignment' | 'identification' | 'dates' | 'additional' | 'documents' | 'comments' | 'structure';
+
 export function CreateEquipmentForm() {
     const navigate = useNavigate();
     const { id: paramDivisionId } = useParams<{ id: string }>();
@@ -50,7 +55,6 @@ export function CreateEquipmentForm() {
     );
 
     const fieldPermissions = useEquipmentFieldPermissions();
-    // Права могут быть ещё не загружены – показываем лоадер, а не подставляем заглушку
     const [isPermissionsReady, setIsPermissionsReady] = useState(false);
 
     useEffect(() => {
@@ -69,7 +73,6 @@ export function CreateEquipmentForm() {
     } | undefined;
 
     const isClosedEquipment = navigationState?.isClosed || false;
-    const isGlobalMode = !paramDivisionId;
 
     const [formData, setFormData] = useState<Partial<Equipment>>({
         status: 'in-operation',
@@ -84,6 +87,7 @@ export function CreateEquipmentForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+    const [activeTab, setActiveTab] = useState<TabId>('main');
 
     const fixedDivision = navigationState?.divisionId
         ? { id: navigationState.divisionId, name: navigationState.divisionName || '' }
@@ -147,7 +151,6 @@ export function CreateEquipmentForm() {
     const handleChange = useCallback(
         async (data: Partial<Equipment>) => {
             setFormData((prev) => ({ ...prev, ...data }));
-            // Если изменилось подразделение – перезагружаем персонал
             if (data.division?.id && data.division.id !== formData.division?.id && token && !fixedDivision) {
                 setLoading(true);
                 try {
@@ -220,7 +223,6 @@ export function CreateEquipmentForm() {
             };
             await equipmentApi.createEquipment(token, dataToSend);
 
-            // Успешное создание – переход
             if (paramDivisionId) {
                 const url = navigationState?.subdivisionId
                     ? `/divisions/${paramDivisionId}/equipment?subdivision=${navigationState.subdivisionId}`
@@ -233,7 +235,6 @@ export function CreateEquipmentForm() {
             console.error('Ошибка создания техники:', err);
             const errorData = err.response?.data;
             if (errorData && typeof errorData === 'object') {
-                // Если есть валидационные ошибки – показываем их
                 const errors: Record<string, string> = {};
                 Object.entries(errorData).forEach(([field, msgs]) => {
                     errors[field] = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
@@ -258,28 +259,26 @@ export function CreateEquipmentForm() {
         isClosedEquipment ? cat.is_closed : !cat.is_closed || cat.value === 'shd'
     );
 
-    // Ожидание загрузки прав (если ещё не готовы)
     if (!isPermissionsReady && fieldPermissions === null) {
-        return <div className="equipment-form-container">Загрузка прав доступа...</div>;
+        return <div className="ep-loading">Загрузка прав доступа...</div>;
     }
 
-    return (
-        <div className="equipment-form-container">
-            <div className="page-header">
-                <button onClick={handleCancel} className="back-button">
-                    <ArrowLeft className="back-button-icon" />
-                </button>
-                <h2>Добавление новой техники</h2>
-            </div>
+    const getDivisionDisplay = () => {
+        if (fixedDivision) return fixedDivision.name;
+        return formData.division?.name || 'Не выбрано';
+    };
 
-            {error && (
-                <div className="form-error-message" style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
-                    {error}
-                </div>
-            )}
+    // Получаем название техники для сайдбара
+    const getEquipmentName = () => {
+        return formData.name?.trim() || 'Новая техника';
+    };
 
-            <form onSubmit={handleSubmit}>
-                <div className="equipment-form">
+    // Рендер содержимого вкладки
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'main':
+                // Только карточка Основная информация
+                return (
                     <BasicInformation
                         formData={formData}
                         onChange={handleChange}
@@ -289,6 +288,9 @@ export function CreateEquipmentForm() {
                         permissions={fieldPermissions ?? {}}
                         validationErrors={validationErrors}
                     />
+                );
+            case 'assignment':
+                return (
                     <AssignmentInfo
                         formData={formData}
                         onChange={handleChange}
@@ -301,19 +303,18 @@ export function CreateEquipmentForm() {
                         permissions={fieldPermissions ?? {}}
                         validationErrors={validationErrors}
                     />
-                    <DocumentsInfo
-                        formData={formData}
-                        onChange={handleChange}
-                        isDisposed={false}
-                        permissions={fieldPermissions ?? {}}
-                        validationErrors={validationErrors}
-                    />
+                );
+            case 'identification':
+                return (
                     <IdentificationInfo
                         formData={formData}
                         onChange={handleChange}
                         permissions={fieldPermissions ?? {}}
                         validationErrors={validationErrors}
                     />
+                );
+            case 'dates':
+                return (
                     <DatesInfo
                         formData={formData}
                         onChange={handleChange}
@@ -322,6 +323,9 @@ export function CreateEquipmentForm() {
                         permissions={fieldPermissions ?? {}}
                         validationErrors={validationErrors}
                     />
+                );
+            case 'additional':
+                return (
                     <AdditionalInfo
                         formData={formData}
                         onChange={handleChange}
@@ -330,28 +334,184 @@ export function CreateEquipmentForm() {
                         permissions={fieldPermissions ?? {}}
                         validationErrors={validationErrors}
                     />
+                );
+            case 'documents':
+                return (
+                    <DocumentsInfo
+                        formData={formData}
+                        onChange={handleChange}
+                        isDisposed={false}
+                        permissions={fieldPermissions ?? {}}
+                        validationErrors={validationErrors}
+                    />
+                );
+            case 'comments':
+                return (
                     <EditCommentsCard
                         comments={formData.comments || ''}
                         onChange={(value) => handleChange({ comments: value })}
                         permissions={fieldPermissions ?? {}}
                     />
-                </div>
-                <div className="equipment-form-structure">
+                );
+            case 'structure':
+                return (
                     <ProductStructureEditor
                         productStructures={formData.product_structures || []}
                         onChange={handleStructureChange}
                         isDisposed={false}
-                        permissions={fieldPermissions ?? {}}
+                        permissions={fieldPermissions ?? { canEditProductStructure: true } as any}
                     />
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="ep-create-container">
+            <form onSubmit={handleSubmit} className="ep-create-form">
+                {/* Шапка */}
+                <div className="ep-create-header">
+                    <div className="ep-create-header-left">
+                        <button type="button" onClick={handleCancel} className="ep-back-btn">
+                            <ArrowLeft className="ep-back-btn-icon" />
+                        </button>
+                        <h1 className="ep-create-title">Добавление новой техники</h1>
+                    </div>
                 </div>
-                <FormActions
-                    onCancel={handleCancel}
-                    showDisposeButton={false}
-                    onDispose={undefined}
-                    isLoading={loading}
-                    hasEditPermission={hasCreatePermission}
-                    isCreating={true}
-                />
+
+                {error && (
+                    <div className="ep-error ep-error-preline" style={{ marginBottom: '1rem' }}>
+                        {error}
+                    </div>
+                )}
+
+                <div className="ep-create-layout">
+                    {/* Левая колонка */}
+                    <div className="ep-create-sidebar">
+                        <div className="ep-sidebar-card">
+                            <div className="ep-sidebar-name">{getEquipmentName()}</div>
+                            <div className="ep-sidebar-status" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                                Создание
+                            </div>
+                            <div className="ep-sidebar-divider" />
+                            <div className="ep-sidebar-info">
+                                <div className="ep-sidebar-item">
+                                    <span className="ep-sidebar-label">Подразделение</span>
+                                    <span className="ep-sidebar-value">{getDivisionDisplay()}</span>
+                                </div>
+                                {formData.subdivision?.name && (
+                                    <div className="ep-sidebar-item">
+                                        <span className="ep-sidebar-label">Отделение</span>
+                                        <span className="ep-sidebar-value">{formData.subdivision.name}</span>
+                                    </div>
+                                )}
+                                {formData.category?.name && (
+                                    <div className="ep-sidebar-item">
+                                        <span className="ep-sidebar-label">Категория</span>
+                                        <span className="ep-sidebar-value">{formData.category.name}</span>
+                                    </div>
+                                )}
+                                {formData.type && (
+                                    <div className="ep-sidebar-item">
+                                        <span className="ep-sidebar-label">Модель</span>
+                                        <span className="ep-sidebar-value">{formData.type}</span>
+                                    </div>
+                                )}
+                                {formData.serial_number && (
+                                    <div className="ep-sidebar-item">
+                                        <span className="ep-sidebar-label">Серийный номер</span>
+                                        <span className="ep-sidebar-value">{formData.serial_number}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Правая колонка с вкладками */}
+                    <div className="ep-create-main">
+                        <div className="ep-tabs-container">
+                            <div className="ep-tabs-header">
+                                <div className="ep-tabs-list">
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'main' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('main')}
+                                    >
+                                        Основное
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'assignment' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('assignment')}
+                                    >
+                                        Принадлежность
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'identification' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('identification')}
+                                    >
+                                        Идентификация
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'dates' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('dates')}
+                                    >
+                                        Даты
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'additional' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('additional')}
+                                    >
+                                        Дополнительно
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'documents' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('documents')}
+                                    >
+                                        Документы
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'comments' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('comments')}
+                                    >
+                                        Комментарии
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`ep-tab-button ${activeTab === 'structure' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('structure')}
+                                    >
+                                        Состав
+                                    </button>
+                                </div>
+                                <div className="ep-tabs-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleCancel}
+                                        className="ep-btn ep-btn-secondary"
+                                        disabled={loading}
+                                    >
+                                        Отмена
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="ep-btn ep-btn-success"
+                                        disabled={!hasCreatePermission || loading}
+                                    >
+                                        {loading ? 'Сохранение...' : 'Добавить'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="ep-tab-content">{renderTabContent()}</div>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     );

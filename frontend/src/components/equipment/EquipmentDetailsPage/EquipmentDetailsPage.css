@@ -14,6 +14,8 @@
     --radius-lg: 0.75rem;
     --radius-md: 0.5rem;
     --transition: all 0.2s ease;
+    --ep-green-500: #10b981;
+    --ep-green-600: #059669;
 }
 
 body {
@@ -60,7 +62,6 @@ body {
     border-color: #cbd5e1;
 }
 
-/* Заголовок карточки — кнопка + имя в строку, статус и категория ниже */
 .equipment-sidebar-header {
     display: flex;
     flex-direction: column;
@@ -102,7 +103,6 @@ body {
     color: var(--color-text-secondary);
 }
 
-/* Группы информации */
 .equipment-sidebar-group {
     display: flex;
     flex-direction: column;
@@ -159,18 +159,22 @@ body {
     line-height: 1.4;
 }
 
-/* Разделитель между группами (опционально) */
 .equipment-sidebar-divider {
     border-top: 1px solid var(--color-border);
     margin: 0.25rem 0;
 }
 
 /* ===== Правая колонка — вкладки ===== */
+.equipment-details-search-container {
+    margin-bottom: 1rem;
+}
+
 .equipment-main {
     min-width: 0;
 }
 
-.equipment-tabs-container {
+/* Вкладки (главные) */
+.equipment-details-tabs-container {
     background: var(--color-card);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
@@ -179,11 +183,11 @@ body {
     transition: var(--transition);
 }
 
-.equipment-tabs-container:hover {
+.equipment-details-tabs-container:hover {
     box-shadow: var(--shadow-md);
 }
 
-.equipment-tabs-header {
+.equipment-details-tabs-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -194,20 +198,21 @@ body {
     border-bottom: 1px solid var(--color-border);
 }
 
-.equipment-tabs-list {
+.equipment-details-tabs-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
+    flex: 1;
 }
 
-.equipment-tabs-actions {
+.equipment-details-tabs-actions {
     display: flex;
     gap: 0.5rem;
     align-items: center;
     flex-shrink: 0;
 }
 
-.equipment-tab-button {
+.equipment-details-tab-button {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -223,18 +228,19 @@ body {
     white-space: nowrap;
 }
 
-.equipment-tab-button:hover {
+.equipment-details-tab-button:hover {
     color: var(--color-accent);
     border-bottom-color: var(--color-border);
 }
 
-.equipment-tab-button.active {
+.equipment-details-tab-button.active {
     color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    border-bottom: 2px solid var(--color-accent);
+    background-color: #eff6ff88;
 }
 
-.equipment-tab-content {
-    padding: 0.5rem 1rem 1rem 0.5rem;
+.equipment-details-tab-content {
+    padding: 1rem;
 }
 
 /* ===== Кнопки ===== */
@@ -242,8 +248,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
     font-weight: 500;
     border-radius: var(--radius-md);
     border: none;
@@ -269,6 +275,31 @@ body {
     background: #b91c1c;
 }
 
+.equipment-btn--secondary {
+    background: #f1f5f9;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.equipment-btn--secondary:hover {
+    background: #e2e8f0;
+}
+
+.equipment-btn--success {
+    background: var(--ep-green-500);
+    color: white;
+}
+
+.equipment-btn--success:hover {
+    background: var(--ep-green-600);
+}
+
+.equipment-btn--secondary:disabled,
+.equipment-btn--success:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .equipment-btn--icon {
     display: flex;
     align-items: center;
@@ -276,8 +307,7 @@ body {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--radius-md);
-    background: #eff0f1;
-    ;
+    background: #f0f2f470;
     border: none;
     cursor: pointer;
     color: var(--color-text-secondary);
@@ -285,7 +315,7 @@ body {
 }
 
 .equipment-btn--icon:hover {
-    background: var(--color-border);
+    background: #e0e3e571;
 }
 
 /* ===== Статусы ===== */
@@ -359,7 +389,6 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     text-transform: uppercase;
-    /* letter-spacing: 0.05em; */
     color: #8d8e8f;
     margin-bottom: 0.25rem;
 }
@@ -383,11 +412,17 @@ body {
     word-break: break-word;
 }
 
-/* ===== Сетка для таба "Основное" ===== */
-.equipment-main-grid {
+/* ===== Сетка для таба "Основное" (в редактировании) ===== */
+.equipment-details-edit-basic-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .equipment-details-edit-basic-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ===== Таблицы ===== */
@@ -571,36 +606,52 @@ body {
     color: #dc2626;
 }
 
+/* ===== Плейсхолдер для недоступных вкладок ===== */
+.equipment-details-edit-placeholder {
+    color: var(--color-text-label);
+    font-style: italic;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.equipment-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--color-text-label);
+    font-style: italic;
+    font-size: 1rem;
+}
+
 /* ===== Адаптив ===== */
 @media (max-width: 640px) {
-    .equipment-tabs-header {
+    .equipment-details-tabs-header {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .equipment-tabs-list {
+    .equipment-details-tabs-list {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    .equipment-tab-button {
+    .equipment-details-tab-button {
         padding: 0.4rem 0.6rem;
         font-size: 0.85rem;
         flex-shrink: 0;
     }
 
-    .equipment-tabs-actions {
+    .equipment-details-tabs-actions {
         justify-content: flex-end;
         padding: 0 0 0.5rem 0;
         flex-wrap: wrap;
     }
 
-    .equipment-tab-content {
-        padding: 1rem;
+    .equipment-details-tab-content {
+        padding: 0.75rem;
     }
 
-    .equipment-main-grid {
+    .equipment-details-edit-basic-grid {
         grid-template-columns: 1fr;
     }
 
@@ -611,49 +662,4 @@ body {
     .equipment-sidebar-header-top {
         flex-wrap: wrap;
     }
-}
-
-/* ===== Подвкладки внутри "Основное" ===== */
-.equipment-sub-tabs-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.equipment-sub-tabs-list {
-    display: flex;
-    gap: 0.25rem;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.equipment-sub-tab-button {
-    padding: 0.3rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-}
-
-.equipment-sub-tab-button:hover {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-border);
-}
-
-.equipment-sub-tab-button.active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
-}
-
-.equipment-sub-tab-content {
-    padding: 0.5rem 0;
-}
-
-/* Скрываем заголовки секций, когда они используются внутри подвкладок */
-.equipment-section .equipment-section-title {
-    display: none;
 }

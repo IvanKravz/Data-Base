@@ -41,9 +41,10 @@
 
 .add-equipment-btn {
   display: flex;
+  font-size: 0.9rem;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background-color: #3891da;
   color: white;
   border: none;
@@ -122,7 +123,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1px;
   background-color: transparent;
   transform: scaleX(0);
   transition: transform 0.3s ease, background-color 0.3s ease;

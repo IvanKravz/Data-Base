@@ -1,11 +1,12 @@
 import React from 'react';
+import { MessageSquare } from 'lucide-react';
 import { EquipmentFieldPermissions } from '../../../../../types';
 import '../style.css';
 
 interface EditCommentsCardProps {
   comments: string | null;
   onChange: (value: string) => void;
-  permissions?: EquipmentFieldPermissions; // Делаем permissions опциональным
+  permissions?: EquipmentFieldPermissions;
 }
 
 export function EditCommentsCard({ comments, onChange, permissions }: EditCommentsCardProps) {
@@ -17,7 +18,7 @@ export function EditCommentsCard({ comments, onChange, permissions }: EditCommen
 
   // Обработчик изменения текста
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!permissions?.canEditComments) return; // Используем опциональную цепочку
+    if (!permissions?.canEditComments) return;
     onChange(e.target.value);
   };
 
@@ -27,6 +28,7 @@ export function EditCommentsCard({ comments, onChange, permissions }: EditCommen
   return (
     <div className="equipment-card-edit">
       <div className="equipment-card-header">
+        <MessageSquare size={18} className="equipment-card-icon" />
         <h3 className="equipment-card-title">Комментарии</h3>
       </div>
       <div className="equipment-card-content-edit">
@@ -49,7 +51,7 @@ export function EditCommentsCard({ comments, onChange, permissions }: EditCommen
           className="form-input-edit form-textarea"
           rows={4}
           placeholder="Добавьте комментарии к технике..."
-          disabled={!permissions?.canEditComments} 
+          disabled={!permissions?.canEditComments}
         />
       </div>
     </div>

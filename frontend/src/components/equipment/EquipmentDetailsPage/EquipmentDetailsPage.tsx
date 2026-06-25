@@ -3,9 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
-import { equipmentApi, authApi } from '../../../api';
-import { Equipment } from '../../../types';
-import { getStatusColor, getStatusLabel } from '../../../utils/statusUtils';
+import { equipmentApi, authApi, divisionsApi, employeesApi } from '../../../api';
+import { Equipment, Division } from '../../../types';
 import {
     Pencil,
     Trash2,
@@ -15,11 +14,19 @@ import {
     Package,
     Network,
     Trash2 as TrashIcon,
+    Save,
+    X,
+    Calendar,
+    User,
+    ClipboardList,
+    Hash,
 } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
 import { EquipmentSidebar } from './EquipmentSidebar';
+import { SearchBar } from '../../common/SearchBar';
+import { useEquipmentFieldPermissions } from '../../../api/utils/useEquipmentFieldPermissions';
 
-// Секции
+// Секции для просмотра
 import { AssignmentInfo } from './sections/AssignmentInfo';
 import { DatesInfo } from './sections/DatesInfo';
 import { AdditionalInfo } from './sections/AdditionalInfo';
@@ -27,13 +34,55 @@ import { DocumentsInfo } from './sections/DocumentsInfo';
 import { CommentsInfo } from './sections/CommentsInfo';
 import { ProductStructureTable } from './sections/ProductStructureTable';
 import { NetworkInfo } from './sections/NetworkInfo';
-import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
 import { DisposalInfo } from './sections/DisposalInfo';
+import { NetworkConfigBlock } from './sections/NetworkConfig/NetworkConfigBlock';
+
+// Секции для редактирования
+import { BasicInformation } from '../forms/EditEquipmentForm/sections/BasicInformation';
+import { AssignmentInfo as EditAssignmentInfo } from '../forms/EditEquipmentForm/sections/AssignmentInfo';
+import { IdentificationInfo as EditIdentificationInfo } from '../forms/EditEquipmentForm/sections/IdentificationInfo';
+import { DatesInfo as EditDatesInfo } from '../forms/EditEquipmentForm/sections/DatesInfo';
+import { AdditionalInfo as EditAdditionalInfo } from '../forms/EditEquipmentForm/sections/AdditionalInfo';
+import { DocumentsInfo as EditDocumentsInfo } from '../forms/EditEquipmentForm/sections/DocumentsInfo';
+import { EditCommentsCard } from '../forms/EditEquipmentForm/sections/EditCommentsCard';
+import { ProductStructureEditor } from '../forms/EditEquipmentForm/sections/ProductStructureEditor';
 
 import './EquipmentDetailsPage.css';
 
-type TabId = 'main' | 'documents' | 'comments' | 'structure' | 'networks' | 'disposal';
-type SubTabId = 'assignment' | 'dates' | 'additional';
+// Типы вкладок для просмотра
+type ViewTabId =
+    | 'assignment'
+    | 'dates'
+    | 'additional'
+    | 'documents'
+    | 'networks'
+    | 'comments'
+    | 'structure'
+    | 'disposal';
+
+// Типы вкладок для редактирования
+type EditTabId =
+    | 'basic'
+    | 'identification'
+    | 'assignment'
+    | 'dates'
+    | 'additional'
+    | 'documents'
+    | 'comments'
+    | 'structure'
+    | 'disposal';
+
+// Маппинг вкладок просмотра → редактирования
+const viewToEditMap: Record<ViewTabId, EditTabId> = {
+    assignment: 'assignment',
+    dates: 'dates',
+    additional: 'additional',
+    documents: 'documents',
+    networks: 'basic',
+    comments: 'comments',
+    structure: 'structure',
+    disposal: 'disposal',
+};
 
 export function EquipmentDetailsPage() {
     const { id } = useParams<{ id: string }>();
@@ -44,12 +93,29 @@ export function EquipmentDetailsPage() {
     const [equipment, setEquipment] = useState<Equipment | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<TabId>('main');
-    const [activeSubTab, setActiveSubTab] = useState<SubTabId>('assignment');
+    const [activeViewTab, setActiveViewTab] = useState<ViewTabId>('assignment');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // === РЕДАКТИРОВАНИЕ НА МЕСТЕ ===
+    const [isEditing, setIsEditing] = useState(false);
+    const [editFormData, setEditFormData] = useState<Partial<Equipment> | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [activeEditTab, setActiveEditTab] = useState<EditTabId>('basic');
+    const [previousViewTab, setPreviousViewTab] = useState<ViewTabId>('assignment');
+
+    // === ПОИСК ===
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // === СПРАВОЧНИКИ ===
+    const [divisions, setDivisions] = useState<Division[]>([]);
+    const [personnel, setPersonnel] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [interestOrgans, setInterestOrgans] = useState<any[]>([]);
 
     const user = useSelector((state: RootState) => state.auth.user);
     const permissions = user?.permissions;
+    const fieldPermissions = useEquipmentFieldPermissions();
+
     const canEditEquipment = useMemo(
         () => permissions?.models?.Equipment?.includes('change') ?? false,
         [permissions]
@@ -60,6 +126,7 @@ export function EquipmentDetailsPage() {
     );
     const isGlobalView = authApi.getGlobalView();
 
+    // Загрузка техники
     useEffect(() => {
         const fetchEquipment = async () => {
             if (!id || !token) return;
@@ -76,14 +143,111 @@ export function EquipmentDetailsPage() {
         fetchEquipment();
     }, [id, token]);
 
-    // При смене основной вкладки сбрасываем подвкладку на первую
+    // Загрузка справочников
     useEffect(() => {
-        if (activeTab === 'main') {
-            setActiveSubTab('assignment');
-        }
-    }, [activeTab]);
+        const fetchDictionaries = async () => {
+            if (!token) return;
+            try {
+                const [divisionsData, categoriesData, organsData] = await Promise.all([
+                    divisionsApi.getDivisions(token),
+                    equipmentApi.getEquipmentCategories(token),
+                    equipmentApi.getInterestOrgans(token),
+                ]);
+                setDivisions(divisionsData);
+                setCategories(categoriesData);
+                setInterestOrgans(organsData);
+            } catch (err) {
+                console.error('Ошибка загрузки справочников:', err);
+            }
+        };
+        fetchDictionaries();
+    }, [token]);
 
+    // Загрузка персонала при редактировании
+    useEffect(() => {
+        const fetchPersonnel = async () => {
+            if (!token || !editFormData?.division?.id) return;
+            try {
+                const data = await employeesApi.getPersonnel(token, { division: editFormData.division.id });
+                setPersonnel(data);
+            } catch (err) {
+                console.error('Ошибка загрузки персонала:', err);
+            }
+        };
+        if (isEditing) fetchPersonnel();
+    }, [token, editFormData?.division?.id, isEditing]);
+
+    const handleEditStart = () => {
+        if (!equipment) return;
+        setEditFormData({ ...equipment });
+        setIsEditing(true);
+        setPreviousViewTab(activeViewTab);
+        const editTab = viewToEditMap[activeViewTab] || 'basic';
+        setActiveEditTab(editTab);
+    };
+
+    const handleEditChange = (data: Partial<Equipment>) => {
+        setEditFormData((prev) => ({ ...prev!, ...data }));
+    };
+
+    const handleSave = async () => {
+        if (!editFormData || !token || !id) return;
+
+        // Валидация: при безвозмездном пользовании номер акта обязателен
+        if (editFormData.is_free_use && !editFormData.free_use_act_number?.trim()) {
+            setError('При выдаче в безвозмездное пользование необходимо указать номер акта');
+            return;
+        }
+
+        setIsSaving(true);
+        setError('');
+        try {
+            const dataToSend = {
+                ...editFormData,
+                category: editFormData.category
+                    ? {
+                        value: editFormData.category.value || editFormData.category,
+                        name: editFormData.category.name || editFormData.category,
+                    }
+                    : null,
+                division_id: editFormData.division?.id || null,
+                subdivision_id: editFormData.subdivision?.id || null,
+                facility_id: editFormData.facility?.id || null,
+                assigned_to_id: editFormData.assigned_to?.id || null,
+                interest_organ_id: editFormData.interest_organ?.id || editFormData.interest_organ_id || null,
+                product_structures: editFormData.product_structures || [],
+            };
+            await equipmentApi.updateEquipment(token, id, dataToSend);
+            const updated = await equipmentApi.getEquipmentById(token, id);
+            setEquipment(updated);
+            setIsEditing(false);
+            setEditFormData(null);
+            setActiveViewTab(previousViewTab);
+        } catch (err: any) {
+            console.error('Ошибка сохранения:', err);
+            // Если сервер вернул ошибку с полем free_use_act_number, показываем её
+            if (err?.response?.data?.free_use_act_number) {
+                setError(err.response.data.free_use_act_number[0] || 'Ошибка валидации');
+            } else {
+                setError('Не удалось сохранить изменения. Проверьте подключение и попробуйте снова.');
+            }
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditFormData(null);
+        setActiveViewTab(previousViewTab);
+    };
+
+    // === НАВИГАЦИЯ НАЗАД ===
     const handleBack = () => {
+        if (isEditing) {
+            handleCancelEdit();
+            return;
+        }
         const state = location.state;
         if (state?.from === 'equipment-section') {
             let backUrl = state.divisionId
@@ -110,6 +274,7 @@ export function EquipmentDetailsPage() {
         }
     };
 
+    // === УДАЛЕНИЕ ===
     const handleDeleteConfirm = async () => {
         try {
             await equipmentApi.deleteEquipment(token, equipment!.id);
@@ -122,86 +287,193 @@ export function EquipmentDetailsPage() {
         }
     };
 
-    const handleEdit = () => {
-        navigate(`/equipment/${id}/edit`, { state: { from: location.pathname } });
-    };
-
+    // === ОПРЕДЕЛЕНИЕ ВИДИМОСТИ ВКЛАДОК ===
     const showDisposalTab = equipment?.status === 'disposed';
     const showNetworksTab =
         (equipment?.network_memberships?.length ?? 0) > 0 || equipment?.is_network;
-    const showStructureTab = equipment?.product_structure && equipment.product_structure.length > 0;
+    const showStructureTab = equipment?.product_structures && equipment.product_structures.length > 0;
 
-    const renderMainSubTabs = () => {
+    const showEditStructureTab = (editFormData?.product_structures?.length ?? 0) > 0;
+    const showEditDisposalTab = editFormData?.status === 'disposed';
+
+    const viewTabs: { id: ViewTabId; label: string; icon: React.ReactNode; show: boolean }[] = [
+        { id: 'assignment', label: 'Принадлежность', icon: <User size={16} />, show: true },
+        { id: 'dates', label: 'Даты', icon: <Calendar size={16} />, show: true },
+        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
+        { id: 'documents', label: 'Документы', icon: <FileText size={16} />, show: true },
+        { id: 'networks', label: 'Сети', icon: <Network size={16} />, show: showNetworksTab },
+        { id: 'comments', label: 'Комментарии', icon: <MessageSquare size={16} />, show: true },
+        { id: 'structure', label: 'Состав', icon: <Package size={16} />, show: showStructureTab },
+        { id: 'disposal', label: 'Списание', icon: <TrashIcon size={16} />, show: showDisposalTab },
+    ];
+
+    const editTabs: { id: EditTabId; label: string; icon: React.ReactNode; show: boolean }[] = [
+        { id: 'basic', label: 'Основное', icon: <Info size={16} />, show: true },
+        { id: 'identification', label: 'Идентификация', icon: <Hash size={16} />, show: true },
+        { id: 'assignment', label: 'Принадлежность', icon: <User size={16} />, show: true },
+        { id: 'dates', label: 'Даты', icon: <Calendar size={16} />, show: true },
+        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
+        { id: 'documents', label: 'Документы', icon: <FileText size={16} />, show: true },
+        { id: 'comments', label: 'Комментарии', icon: <MessageSquare size={16} />, show: true },
+        { id: 'structure', label: 'Состав', icon: <Package size={16} />, show: showEditStructureTab },
+        { id: 'disposal', label: 'Списание', icon: <TrashIcon size={16} />, show: showEditDisposalTab },
+    ];
+
+    const renderViewTabContent = (tabId: ViewTabId) => {
         if (!equipment) return null;
 
-        const subTabs: { id: SubTabId; label: string; component: JSX.Element }[] = [
-            {
-                id: 'assignment',
-                label: 'Назначение',
-                component: <AssignmentInfo equipment={equipment} hideTitle />,
-            },
-            {
-                id: 'dates',
-                label: 'Даты',
-                component: <DatesInfo equipment={equipment} hideTitle />,
-            },
-            {
-                id: 'additional',
-                label: 'Дополнительно',
-                component: <AdditionalInfo equipment={equipment} hideTitle />,
-            },
-        ];
-
-        return (
-            <div className="equipment-sub-tabs-container">
-                <div className="equipment-sub-tabs-list">
-                    {subTabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            className={`equipment-sub-tab-button ${activeSubTab === tab.id ? 'active' : ''}`}
-                            onClick={() => setActiveSubTab(tab.id)}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-                <div className="equipment-sub-tab-content">
-                    {subTabs.find((t) => t.id === activeSubTab)?.component}
-                </div>
-            </div>
+        const renderEmpty = (message: string = 'Нет данных') => (
+            <div className="equipment-empty-state">{message}</div>
         );
-    };
 
-    const renderTabContent = () => {
-        if (!equipment) return null;
-
-        switch (activeTab) {
-            case 'main':
-                return renderMainSubTabs();
-            case 'documents':
-                return <DocumentsInfo equipment={equipment} />;
-            case 'comments':
-                return <CommentsInfo equipment={equipment} />;
-            case 'structure':
-                return <ProductStructureTable equipment={equipment} />;
-            case 'networks':
+        switch (tabId) {
+            case 'assignment':
+                return <AssignmentInfo equipment={equipment} searchTerm={searchTerm} />;
+            case 'dates':
+                return <DatesInfo equipment={equipment} searchTerm={searchTerm} />;
+            case 'additional': {
+                const hasData =
+                    equipment.interest_organ ||
+                    equipment.secret_level ||
+                    equipment.is_network ||
+                    equipment.is_free_use ||
+                    equipment.free_use_act_number ||
+                    equipment.interest_organ_id;
+                if (!hasData) return renderEmpty('Нет дополнительной информации');
+                return <AdditionalInfo equipment={equipment} searchTerm={searchTerm} />;
+            }
+            case 'documents': {
+                // Проверяем наличие реальных полей документов
+                const hasDocuments = !!(equipment.first_invoice || equipment.material_invoice);
+                if (!hasDocuments) return renderEmpty('Нет документов');
+                return <DocumentsInfo equipment={equipment} searchTerm={searchTerm} />;
+            }
+            case 'networks': {
+                const hasNetworks = equipment.network_memberships && equipment.network_memberships.length > 0;
+                if (!hasNetworks) return renderEmpty('Нет сетевых подключений');
                 return (
                     <>
-                        <NetworkInfo equipment={equipment} />
-                        {equipment.is_network && (
-                            <NetworkConfigBlock equipment={equipment} token={token} />
-                        )}
+                        <NetworkInfo equipment={equipment} searchTerm={searchTerm} />
+                        {equipment.is_network && <NetworkConfigBlock equipment={equipment} token={token} />}
                     </>
                 );
+            }
+            case 'comments': {
+                const hasComments = equipment.comments && equipment.comments.trim() !== '';
+                if (!hasComments) return renderEmpty('Нет комментариев');
+                return <CommentsInfo equipment={equipment} searchTerm={searchTerm} />;
+            }
+            case 'structure': {
+                const hasStructures = equipment.product_structures && equipment.product_structures.length > 0;
+                if (!hasStructures) return renderEmpty('Нет данных о составе');
+                return <ProductStructureTable equipment={equipment} searchTerm={searchTerm} />;
+            }
+            case 'disposal': {
+                const hasDisposalData = equipment.disposal_act_number || equipment.disposal_cert_number;
+                if (!hasDisposalData) return renderEmpty('Нет данных о списании');
+                return <DisposalInfo equipment={equipment} searchTerm={searchTerm} />;
+            }
+            default:
+                return null;
+        }
+    };
+
+    const renderEditTabContent = (tabId: EditTabId) => {
+        if (!editFormData) return null;
+        const renderPlaceholder = (message: string = 'Редактирование временно недоступно') => (
+            <div className="equipment-details-edit-placeholder">{message}</div>
+        );
+
+        switch (tabId) {
+            case 'basic':
+                return (
+                    <BasicInformation
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        isClosedEquipment={editFormData.is_closed || false}
+                        isDisposed={editFormData.status === 'disposed'}
+                        equipmentCategories={categories}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'identification':
+                return (
+                    <EditIdentificationInfo
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'assignment':
+                return (
+                    <EditAssignmentInfo
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        availableSubdivisions={
+                            divisions.find((d) => d.id === editFormData.division?.id)?.subdivisions || []
+                        }
+                        availablePersonnel={personnel}
+                        divisions={divisions}
+                        isLoading={loading}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'dates':
+                return (
+                    <EditDatesInfo
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        serviceLife={editFormData.service_life}
+                        onServiceLifeChange={(value) => handleEditChange({ service_life: value })}
+                        isDisposed={editFormData.status === 'disposed'}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'additional':
+                return (
+                    <EditAdditionalInfo
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        interestOrgans={interestOrgans}
+                        isDisposed={editFormData.status === 'disposed'}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'documents':
+                return (
+                    <EditDocumentsInfo
+                        formData={editFormData}
+                        onChange={handleEditChange}
+                        isDisposed={editFormData.status === 'disposed'}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'comments':
+                return (
+                    <EditCommentsCard
+                        comments={editFormData.comments || ''}
+                        onChange={(value) => handleEditChange({ comments: value })}
+                        permissions={fieldPermissions || undefined}
+                    />
+                );
+            case 'structure':
+                return (
+                    <ProductStructureEditor
+                        productStructures={editFormData.product_structures || []}
+                        onChange={(structures) => handleEditChange({ product_structures: structures })}
+                        isDisposed={editFormData.status === 'disposed'}
+                        permissions={fieldPermissions || { canEditProductStructure: true } as any}
+                    />
+                );
             case 'disposal':
-                return <DisposalInfo equipment={equipment} />;
+                return renderPlaceholder('Редактирование списания доступно в отдельном разделе');
             default:
                 return null;
         }
     };
 
     if (loading) return <div className="equipment-loading">Загрузка...</div>;
-    if (error) return <div className="equipment-error">{error}</div>;
+    if (error && !isEditing) return <div className="equipment-error">{error}</div>;
     if (!equipment) return <div className="equipment-not-found">Техника не найдена</div>;
 
     return (
@@ -212,78 +484,101 @@ export function EquipmentDetailsPage() {
                 </div>
 
                 <div className="equipment-main">
-                    <div className="equipment-tabs-container">
-                        <div className="equipment-tabs-header">
-                            <div className="equipment-tabs-list">
-                                <button
-                                    className={`equipment-tab-button ${activeTab === 'main' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('main')}
-                                >
-                                    <Info size={16} />
-                                    Основное
-                                </button>
-                                <button
-                                    className={`equipment-tab-button ${activeTab === 'documents' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('documents')}
-                                >
-                                    <FileText size={16} />
-                                    Документы
-                                </button>
-                                <button
-                                    className={`equipment-tab-button ${activeTab === 'comments' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('comments')}
-                                >
-                                    <MessageSquare size={16} />
-                                    Комментарии
-                                </button>
-                                {showStructureTab && (
-                                    <button
-                                        className={`equipment-tab-button ${activeTab === 'structure' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('structure')}
-                                    >
-                                        <Package size={16} />
-                                        Состав
-                                    </button>
-                                )}
-                                {showNetworksTab && (
-                                    <button
-                                        className={`equipment-tab-button ${activeTab === 'networks' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('networks')}
-                                    >
-                                        <Network size={16} />
-                                        Сети
-                                    </button>
-                                )}
-                                {showDisposalTab && (
-                                    <button
-                                        className={`equipment-tab-button ${activeTab === 'disposal' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('disposal')}
-                                    >
-                                        <TrashIcon size={16} />
-                                        Списание
-                                    </button>
-                                )}
+                    {!isEditing && (
+                        <div className="equipment-details-search-container">
+                            <SearchBar
+                                searchTerm={searchTerm}
+                                setSearchTerm={setSearchTerm}
+                                placeholder="Поиск по данным техники..."
+                            />
+                        </div>
+                    )}
+
+                    {!isEditing ? (
+                        <div className="equipment-details-tabs-container">
+                            <div className="equipment-details-tabs-header">
+                                <div className="equipment-details-tabs-list">
+                                    {viewTabs
+                                        .filter((tab) => tab.show)
+                                        .map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                className={`equipment-details-tab-button ${activeViewTab === tab.id ? 'active' : ''}`}
+                                                onClick={() => setActiveViewTab(tab.id)}
+                                            >
+                                                {tab.icon}
+                                                {tab.label}
+                                            </button>
+                                        ))}
+                                </div>
+                                <div className="equipment-details-tabs-actions">
+                                    {canEditEquipment && activeViewTab !== 'networks' && (
+                                        <button onClick={handleEditStart} className="equipment-btn equipment-btn--primary">
+                                            <Pencil size={14} />
+                                            Редактировать
+                                        </button>
+                                    )}
+                                    {canDeleteEquipment && (
+                                        <button
+                                            onClick={() => setShowDeleteModal(true)}
+                                            className="equipment-btn equipment-btn--danger"
+                                        >
+                                            <Trash2 size={14} />
+                                            Удалить
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                            <div className="equipment-tabs-actions">
-                                {canEditEquipment && (
-                                    <button onClick={handleEdit} className="equipment-btn equipment-btn--primary">
-                                        <Pencil size={16} />
-                                        Редактировать
-                                    </button>
-                                )}
-                                {canDeleteEquipment && (
-                                    <button
-                                        onClick={() => setShowDeleteModal(true)}
-                                        className="equipment-btn equipment-btn--danger"
-                                    >
-                                        <Trash2 size={16} />
-                                        Удалить
-                                    </button>
-                                )}
+                            <div className="equipment-details-tab-content">
+                                {renderViewTabContent(activeViewTab)}
                             </div>
                         </div>
-                        <div className="equipment-tab-content">{renderTabContent()}</div>
-                    </div>
+                    ) : (
+                        <div className="equipment-details-tabs-container editing">
+                            <div className="equipment-details-tabs-header">
+                                <div className="equipment-details-tabs-list">
+                                    {editTabs
+                                        .filter((tab) => tab.show)
+                                        .map((tab) => (
+                                            <button
+                                                key={tab.id}
+                                                className={`equipment-details-tab-button ${activeEditTab === tab.id ? 'active' : ''}`}
+                                                onClick={() => setActiveEditTab(tab.id)}
+                                            >
+                                                {tab.icon}
+                                                {tab.label}
+                                            </button>
+                                        ))}
+                                </div>
+                                <div className="equipment-details-tabs-actions">
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="equipment-btn equipment-btn--secondary"
+                                        disabled={isSaving}
+                                    >
+                                        <X size={16} />
+                                        Отмена
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        className="equipment-btn equipment-btn--success"
+                                        disabled={isSaving}
+                                    >
+                                        <Save size={16} />
+                                        {isSaving ? 'Сохранение...' : 'Сохранить'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="equipment-details-tab-content">
+                                {renderEditTabContent(activeEditTab)}
+                            </div>
+                        </div>
+                    )}
+                    {error && isEditing && (
+                        <div className="ep-error" style={{ marginTop: '1rem' }}>
+                            {error}
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -1,8 +1,13 @@
-// NetworkInfo.tsx
-import React from 'react';
+// sections/NetworkInfo.tsx
+import React, { useMemo } from 'react';
 import { Network } from 'lucide-react';
 import { Equipment } from '../../../../types';
 import { Section } from './Section';
+
+interface NetworkInfoProps {
+  equipment: Equipment;
+  searchTerm?: string;
+}
 
 const getSecurityBadgeClass = (level: string) => {
   switch (level) {
@@ -24,16 +29,29 @@ const getSecurityLabel = (level: string) => {
   }
 };
 
-export function NetworkInfo({ equipment }: { equipment: Equipment }) {
+export function NetworkInfo({ equipment, searchTerm = '' }: NetworkInfoProps) {
   const memberships = equipment.network_memberships || [];
   if (memberships.length === 0) return null;
+
+  const filteredMemberships = useMemo(() => {
+    if (!searchTerm.trim()) return memberships;
+    const lower = searchTerm.toLowerCase().trim();
+    return memberships.filter(m =>
+      m.network.name.toLowerCase().includes(lower) ||
+      (m.network.network_class || '').toLowerCase().includes(lower) ||
+      (m.network.ip_range || '').toLowerCase().includes(lower) ||
+      (m.network.protocol || '').toLowerCase().includes(lower)
+    );
+  }, [memberships, searchTerm]);
+
+  if (filteredMemberships.length === 0) return null;
 
   return (
     <Section title="Сети связи">
       <div className="network-section">
         <div className="network-section-header">
           <Network className="network-section-icon" />
-          <span className="network-count">{memberships.length}</span>
+          <span className="network-count">{filteredMemberships.length}</span>
         </div>
         <div className="networks-table-container">
           <table className="networks-table">
@@ -48,7 +66,7 @@ export function NetworkInfo({ equipment }: { equipment: Equipment }) {
               </tr>
             </thead>
             <tbody>
-              {memberships.map(m => (
+              {filteredMemberships.map(m => (
                 <tr key={m.id} className="network-row">
                   <td>
                     <div className="network-name-cell">

@@ -1,5 +1,5 @@
-// DatesInfo.tsx
-import React from 'react';
+// sections/DatesInfo.tsx
+import React, { useMemo } from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Equipment } from '../../../../types';
@@ -8,38 +8,38 @@ import { EquipmentInfoItem } from './EquipmentInfoItem';
 
 interface DatesInfoProps {
   equipment: Equipment;
-  hideTitle?: boolean;
+  searchTerm?: string;
 }
 
-export function DatesInfo({ equipment, hideTitle = false }: DatesInfoProps) {
-  const formatDate = (date: string | null | undefined): string => {
-    if (!date) return '—';
-    try {
-      return format(new Date(date), 'dd.MM.yyyy');
-    } catch {
-      return '—';
+export function DatesInfo({ equipment, searchTerm = '' }: DatesInfoProps) {
+  const items = useMemo(() => {
+    const list: { label: string; value: string }[] = [
+      { label: 'Дата производства', value: format(new Date(equipment.manufacturing_date), 'dd.MM.yyyy') },
+      { label: 'Дата ввода в эксплуатацию', value: format(new Date(equipment.exploitation_date), 'dd.MM.yyyy') },
+    ];
+    if (equipment.service_life) {
+      list.push({ label: 'Срок службы', value: equipment.service_life });
     }
-  };
+    return list;
+  }, [equipment]);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    const lower = searchTerm.toLowerCase().trim();
+    return items.filter(item =>
+      item.label.toLowerCase().includes(lower) ||
+      item.value.toLowerCase().includes(lower)
+    );
+  }, [items, searchTerm]);
+
+  if (filteredItems.length === 0) return null;
 
   return (
-    <Section title="Даты" hideTitle={hideTitle}>
-      <EquipmentInfoItem
-        icon={Calendar}
-        label="Дата производства"
-        value={formatDate(equipment.manufacturing_date)}
-      />
-      <EquipmentInfoItem
-        icon={Calendar}
-        label="Дата ввода в эксплуатацию"
-        value={formatDate(equipment.exploitation_date)}
-      />
-      {equipment.service_life && (
-        <EquipmentInfoItem
-          icon={Clock}
-          label="Срок службы"
-          value={equipment.service_life}
-        />
-      )}
+    <Section title="Даты">
+      {filteredItems.map((item, idx) => {
+        const Icon = item.label === 'Срок службы' ? Clock : Calendar;
+        return <EquipmentInfoItem key={idx} icon={Icon} label={item.label} value={item.value} />;
+      })}
     </Section>
   );
 }

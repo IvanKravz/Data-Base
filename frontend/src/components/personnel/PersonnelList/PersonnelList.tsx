@@ -585,7 +585,7 @@ export function PersonnelList({
 
         {filteredPersonnel.length === 0 && (
           <div className="personnel-list-empty-message">
-            {activeFilter !== 'all' ? `Нет сотрудников в категории "${activeFilter}"` : 'Нет сотрудников для отображения'}
+            {activeFilter !== 'all' ? `Нет сотрудников в категории` : 'Нет сотрудников для отображения'}
           </div>
         )}
       </div>
