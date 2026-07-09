@@ -189,7 +189,7 @@
 
 /* Ячейки по умолчанию – центрирование */
 .nt-cell {
-    padding: 8px 16px;
+    padding: 4px 16px;
     font-size: 0.875rem;
     color: #111827;
     vertical-align: middle;
@@ -239,10 +239,9 @@
 .nt-class-cell {
     display: inline-block;
     font-weight: 600;
-    color: #2563eb;
-    background: #eff6ff;
-    padding: 4px 12px;
-    border-radius: 20px;
+    color: #888989;
+    padding: 2px 8px;
+    border-radius: 10px;
 }
 
 /* Бейджи секретности (оставлены без изменений) */
@@ -267,8 +266,7 @@
 .nt-security-secret {
     display: inline-block;
     color: #ef4444;
-    background: #fef2f2;
-    padding: 4px 12px;
+    padding: 2px 12px;
     border-radius: 20px;
     font-weight: 500;
 }

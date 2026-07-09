@@ -22,7 +22,7 @@ import {
     Hash,
 } from 'lucide-react';
 import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
-import { EquipmentSidebar } from './EquipmentSidebar';
+import { EquipmentSidebar } from './sections/EquipmentSidebar';
 import { SearchBar } from '../../common/SearchBar';
 import { useEquipmentFieldPermissions } from '../../../api/utils/useEquipmentFieldPermissions';
 
@@ -143,25 +143,43 @@ export function EquipmentDetailsPage() {
         fetchEquipment();
     }, [id, token]);
 
-    // Загрузка справочников
+    // Загрузка справочников (только необходимых для просмотра)
     useEffect(() => {
         const fetchDictionaries = async () => {
             if (!token) return;
             try {
-                const [divisionsData, categoriesData, organsData] = await Promise.all([
+                // Основные справочники – доступны всем
+                const [divisionsData, categoriesData] = await Promise.all([
                     divisionsApi.getDivisions(token),
                     equipmentApi.getEquipmentCategories(token),
-                    equipmentApi.getInterestOrgans(token),
                 ]);
                 setDivisions(divisionsData);
                 setCategories(categoriesData);
-                setInterestOrgans(organsData);
+
+                // Справочник органов нужен только при редактировании
+                if (canEditEquipment) {
+                    try {
+                        const organsData = await equipmentApi.getInterestOrgans(token);
+                        setInterestOrgans(organsData);
+                    } catch (orgErr: any) {
+                        // Если 403 – просто игнорируем, пользователь не сможет редактировать это поле
+                        if (orgErr?.response?.status === 403) {
+                            console.warn('Доступ к списку органов ограничен');
+                        } else {
+                            console.error('Ошибка загрузки органов:', orgErr);
+                        }
+                        setInterestOrgans([]);
+                    }
+                } else {
+                    setInterestOrgans([]);
+                }
             } catch (err) {
                 console.error('Ошибка загрузки справочников:', err);
+                // Не показываем ошибку пользователю, т.к. это не критично
             }
         };
         fetchDictionaries();
-    }, [token]);
+    }, [token, canEditEquipment]);
 
     // Загрузка персонала при редактировании
     useEffect(() => {
@@ -225,7 +243,6 @@ export function EquipmentDetailsPage() {
             setActiveViewTab(previousViewTab);
         } catch (err: any) {
             console.error('Ошибка сохранения:', err);
-            // Если сервер вернул ошибку с полем free_use_act_number, показываем её
             if (err?.response?.data?.free_use_act_number) {
                 setError(err.response.data.free_use_act_number[0] || 'Ошибка валидации');
             } else {
@@ -299,8 +316,8 @@ export function EquipmentDetailsPage() {
     const viewTabs: { id: ViewTabId; label: string; icon: React.ReactNode; show: boolean }[] = [
         { id: 'assignment', label: 'Принадлежность', icon: <User size={16} />, show: true },
         { id: 'dates', label: 'Даты', icon: <Calendar size={16} />, show: true },
-        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
         { id: 'documents', label: 'Документы', icon: <FileText size={16} />, show: true },
+        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
         { id: 'networks', label: 'Сети', icon: <Network size={16} />, show: showNetworksTab },
         { id: 'comments', label: 'Комментарии', icon: <MessageSquare size={16} />, show: true },
         { id: 'structure', label: 'Состав', icon: <Package size={16} />, show: showStructureTab },
@@ -312,8 +329,8 @@ export function EquipmentDetailsPage() {
         { id: 'identification', label: 'Идентификация', icon: <Hash size={16} />, show: true },
         { id: 'assignment', label: 'Принадлежность', icon: <User size={16} />, show: true },
         { id: 'dates', label: 'Даты', icon: <Calendar size={16} />, show: true },
-        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
         { id: 'documents', label: 'Документы', icon: <FileText size={16} />, show: true },
+        { id: 'additional', label: 'Дополнительно', icon: <ClipboardList size={16} />, show: true },
         { id: 'comments', label: 'Комментарии', icon: <MessageSquare size={16} />, show: true },
         { id: 'structure', label: 'Состав', icon: <Package size={16} />, show: showEditStructureTab },
         { id: 'disposal', label: 'Списание', icon: <TrashIcon size={16} />, show: showEditDisposalTab },
@@ -343,7 +360,6 @@ export function EquipmentDetailsPage() {
                 return <AdditionalInfo equipment={equipment} searchTerm={searchTerm} />;
             }
             case 'documents': {
-                // Проверяем наличие реальных полей документов
                 const hasDocuments = !!(equipment.first_invoice || equipment.material_invoice);
                 if (!hasDocuments) return renderEmpty('Нет документов');
                 return <DocumentsInfo equipment={equipment} searchTerm={searchTerm} />;

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+// Classification.tsx (исправленный)
+import React, { useEffect, useState, useMemo } from 'react';
 import { Tag, Star, Wifi, Plus, X } from 'lucide-react';
 import { Facility } from '../../../../../types';
 import { api } from '../../../../../api';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface ClassificationProps {
   formData: Partial<Facility>;
@@ -32,9 +33,18 @@ export function Classification({
   const [availablePosts, setAvailablePosts] = useState<any[]>([]);
   const [newPostId, setNewPostId] = useState('');
 
+  // Фильтруем переданные посты по divisionId, если он указан
+  const filteredPropPosts = useMemo(() => {
+    if (!propCommunicationPosts?.length) return [];
+    if (!divisionId) return propCommunicationPosts;
+    return propCommunicationPosts.filter(
+      post => String(post.division?.id) === String(divisionId) || String(post.division) === String(divisionId)
+    );
+  }, [propCommunicationPosts, divisionId]);
+
   // Используем переданные данные или внутренние
   const facilityTypes = propFacilityTypes?.length ? propFacilityTypes : internalFacilityTypes;
-  const communicationPosts = propCommunicationPosts?.length ? propCommunicationPosts : internalCommunicationPosts;
+  const communicationPosts = filteredPropPosts.length ? filteredPropPosts : internalCommunicationPosts;
   const isLoading = propIsLoading !== undefined ? propIsLoading : internalLoading;
 
   // Загрузка типов объектов (только если не переданы через пропсы)
@@ -58,18 +68,17 @@ export function Classification({
     fetchFacilityTypes();
   }, [token, propFacilityTypes]);
 
-  // Загрузка постов связи (только если не переданы через пропсы)
+  // Загрузка постов связи (только если не переданы через пропсы или пропсы пусты после фильтрации)
   useEffect(() => {
-    if (propCommunicationPosts?.length) {
-      // Если посты переданы, но возможно они не отфильтрованы по divisionId – фильтруем
-      if (divisionId) {
-        const filtered = propCommunicationPosts.filter(
-          post => String(post.division?.id) === String(divisionId) || String(post.division) === String(divisionId)
-        );
-        setInternalCommunicationPosts(filtered);
-      } else {
-        setInternalCommunicationPosts(propCommunicationPosts);
-      }
+    // Если есть отфильтрованные пропсы, используем их
+    if (filteredPropPosts.length) {
+      setInternalCommunicationPosts(filteredPropPosts);
+      return;
+    }
+
+    // Если пропсы переданы, но отфильтрованных нет (пустой массив), используем пустой
+    if (propCommunicationPosts?.length && filteredPropPosts.length === 0) {
+      setInternalCommunicationPosts([]);
       return;
     }
 
@@ -94,7 +103,7 @@ export function Classification({
       }
     };
     fetchCommunicationPosts();
-  }, [token, divisionId, propCommunicationPosts]);
+  }, [token, divisionId, propCommunicationPosts, filteredPropPosts]);
 
   // Обновление списка доступных постов (исключаем уже выбранные)
   useEffect(() => {

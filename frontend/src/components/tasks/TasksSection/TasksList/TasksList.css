@@ -7,10 +7,23 @@
 
 /* Вкладки подразделений (основные) */
 .tasks-tabs {
+    position: relative;
     display: flex;
     margin-bottom: 0.5rem;
     border-bottom: 2px solid #e2e8f0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.tasks-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tasks-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }
 
 .tasks-tab {
@@ -23,10 +36,13 @@
     color: #64748b;
     background: none;
     border: none;
-    border-radius: 0.3rem 0.3rem 0 0;
+    border-radius: 0.2rem 0.2rem 0 0;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+    z-index: 1;
 }
 
 .tasks-tab:hover {
@@ -40,14 +56,7 @@
 }
 
 .tasks-tab-active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: #2563eb;
-    border-radius: 2px 2px 0 0;
+    display: none; /* убираем старый псевдоэлемент, используем индикатор */
 }
 
 .tasks-tab-count {
@@ -70,12 +79,38 @@
     color: #1e40af;
 }
 
+/* Индикатор для вкладок подразделений */
+.tasks-tabs-indicator {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    height: 2px;
+    border-radius: 2px;
+    background-color: #2563eb;
+    transition: left 0.3s ease, width 0.3s ease;
+    z-index: 2;
+    pointer-events: none;
+}
+
 /* Вкладки отделений (внутренние) */
 .tasks-subdivision-tabs {
+    position: relative;
     display: flex;
     margin-bottom: 1.3rem;
     border-bottom: 1px solid #e2e8f0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.tasks-subdivision-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tasks-subdivision-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
 }
 
 .tasks-subdivision-tab {
@@ -88,10 +123,13 @@
     color: #64748b;
     background: none;
     border: none;
-    border-radius: 0.3rem 0.3rem 0 0;
+    border-radius: 0.2rem 0.2rem 0 0;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+    z-index: 1;
 }
 
 .tasks-subdivision-tab:hover {
@@ -101,18 +139,10 @@
 
 .tasks-subdivision-tab-active {
     color: #2563eb;
-    /* background-color: #eff6ff; */
 }
 
 .tasks-subdivision-tab-active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: #2564ebce;
-    border-radius: 2px 2px 0 0;
+    display: none;
 }
 
 .tasks-subdivision-tab-count {
@@ -133,6 +163,19 @@
 .tasks-subdivision-tab-active .tasks-subdivision-tab-count {
     background-color: #bfdbfe;
     color: #1e40af;
+}
+
+/* Индикатор для вкладок отделений */
+.tasks-subdivision-tabs-indicator {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    border-radius: 2px;
+    background-color: #2564ebce;
+    transition: left 0.3s ease, width 0.3s ease;
+    z-index: 2;
+    pointer-events: none;
 }
 
 /* Контент вкладки с анимацией */

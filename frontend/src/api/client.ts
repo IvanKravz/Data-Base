@@ -12,12 +12,6 @@ export interface ApiError {
   timestamp?: number;
 }
 
-declare global {
-  interface WindowEventMap {
-    'apiError': CustomEvent<ApiError>;
-  }
-}
-
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -25,92 +19,94 @@ export const api = axios.create({
   },
 });
 
+// Флаг и очередь для предотвращения множественных обновлений токена
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any | null, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Add auth token to requests
 api.interceptors.request.use(
-  config => {
+  (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  error => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Handle responses and errors
 api.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
-
-    // Проверяем, является ли запрос на логин
     const isLoginRequest = originalRequest.url?.includes('/auth/login/');
 
-    // Handle 401 - Unauthorized (token refresh) - не для логина
+    // Если 401 и запрос не на логин и не повторялся
     if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
+      if (isRefreshing) {
+        // Если уже идёт обновление, добавляем запрос в очередь
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         await authApi.refreshToken();
         const token = localStorage.getItem('accessToken');
         originalRequest.headers.Authorization = `Bearer ${token}`;
+        processQueue(null, token);
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh token failed, redirect to login
+        processQueue(refreshError, null);
         authApi.logout();
         window.location.href = '/auth';
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
-    // Handle other API errors globally
+    // Обработка других ошибок (без генерации событий, чтобы избежать ошибок с слушателями)
     if (error.response) {
       const { status, data } = error.response;
       const message = data?.message || data?.detail || 'Произошла ошибка';
 
-      // Generate custom event for global error handling
-      window.dispatchEvent(new CustomEvent('apiError', {
-        detail: {
-          status,
-          message,
-          url: originalRequest?.url,
-          method: originalRequest?.method
-        }
-      }));
+      // Логируем в консоль, но не генерируем событие
+      console.error(`API Error ${status}:`, message, originalRequest?.url);
 
-      // Handle specific status codes
-      switch (status) {
-        case 403:
-          // Access denied - redirect to access denied page
-          console.warn('Access denied:', message);
-          // The global handler in AppRouter will catch this
-          break;
-
-        case 404:
-          // Resource not found
-          console.warn('Resource not found:', originalRequest?.url);
-          break;
-
-        case 500:
-          // Server error
-          console.error('Server error:', message);
-          break;
-
-        default:
-          console.error(`API Error ${status}:`, message);
+      // Специфичные коды
+      if (status === 403) {
+        console.warn('Доступ запрещён:', message);
+      } else if (status === 404) {
+        console.warn('Ресурс не найден:', originalRequest?.url);
+      } else if (status === 500) {
+        console.error('Ошибка сервера:', message);
       }
     } else if (error.request) {
-      // Network error
-      console.error('Network error:', error.request);
-      window.dispatchEvent(new CustomEvent('apiError', {
-        detail: {
-          status: 0,
-          message: 'Ошибка сети. Проверьте подключение к интернету.',
-          url: originalRequest?.url
-        }
-      }));
+      console.error('Ошибка сети:', error.request);
     }
 
     return Promise.reject(error);
@@ -128,7 +124,6 @@ export const handleApiError = (error: any): string => {
   }
 };
 
-// Utility function for specific error checking
 export const isApiError = (error: any, status?: number): boolean => {
   if (!error?.response) return false;
   return status ? error.response.status === status : true;

@@ -1,7 +1,7 @@
 // EquipmentSidebar.tsx
 import React from 'react';
-import { Equipment } from '../../../types';
-import { getStatusLabel, getStatusColor } from '../../../utils/statusUtils';
+import { Equipment } from '../../../../types';
+import { getStatusLabel, getStatusColor } from '../../../../utils/statusUtils';
 import {
     Hash,
     NotebookTabs,

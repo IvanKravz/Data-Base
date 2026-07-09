@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, ChevronDown, Lock } from 'lucide-react';
+import { X, Check, ChevronDown } from 'lucide-react';
 import { communicationPostsApi, divisionsApi } from '../../../../../api';
 import './CommunicationPosts.css';
 
@@ -13,8 +13,8 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
   const token = localStorage.getItem('accessToken');
 
   const [name, setName] = useState('');
-  const [division, setDivision] = useState('');
-  const [subdivisionId, setSubdivisionId] = useState('');
+  const [division, setDivision] = useState<string>('');
+  const [subdivisionId, setSubdivisionId] = useState<string>('');
   const [description, setDescription] = useState('');
   const [divisions, setDivisions] = useState<any[]>([]);
   const [subdivisions, setSubdivisions] = useState<any[]>([]);
@@ -29,10 +29,31 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
     const fetchPost = async () => {
       try {
         const post = await communicationPostsApi.getCommunicationPost(postId, token);
+        console.log('Загружен пост для редактирования:', post);
+
         setName(post.name);
-        setDivision(post.division);
-        setSubdivisionId(post.subdivision || '');
+
+        // Извлекаем ID подразделения (может быть число или объект с id)
+        let divisionId = '';
+        if (post.division && typeof post.division === 'object' && 'id' in post.division) {
+          divisionId = String(post.division.id);
+        } else if (post.division) {
+          divisionId = String(post.division);
+        }
+        setDivision(divisionId);
+
+        // Извлекаем ID отделения
+        let subId = '';
+        if (post.subdivision && typeof post.subdivision === 'object' && 'id' in post.subdivision) {
+          subId = String(post.subdivision.id);
+        } else if (post.subdivision) {
+          subId = String(post.subdivision);
+        }
+        setSubdivisionId(subId);
+
         setDescription(post.description || '');
+
+        console.log('Установлены значения:', { divisionId, subId });
       } catch (err) {
         setError('Не удалось загрузить данные поста');
         console.error(err);
@@ -49,6 +70,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
       try {
         const data = await divisionsApi.getDivisions(token);
         setDivisions(data);
+        console.log('Загружены подразделения:', data);
       } catch (err) {
         console.error('Ошибка при загрузке подразделений:', err);
       }
@@ -66,6 +88,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
       try {
         const data = await divisionsApi.getDivisionById(division, token);
         setSubdivisions(data.subdivisions || []);
+        console.log(`Загружены отделения для division ${division}:`, data.subdivisions);
       } catch (err) {
         console.error('Ошибка при загрузке отделений:', err);
       }
@@ -78,18 +101,47 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
     setLoading(true);
     setError('');
 
+    if (!division) {
+      setError('Пожалуйста, выберите подразделение');
+      setLoading(false);
+      return;
+    }
+
+    // Преобразуем ID в числа (сервер ожидает числовые значения)
+    const payload = {
+      name,
+      division: parseInt(division, 10),
+      subdivision: subdivisionId ? parseInt(subdivisionId, 10) : undefined,
+      description,
+    };
+    console.log('Отправляем данные на обновление:', payload);
+
     try {
-      await communicationPostsApi.updateCommunicationPost(postId, {
-        name,
-        division,
-        subdivision: subdivisionId || undefined,
-        description
-      }, token);
+      await communicationPostsApi.updateCommunicationPost(postId, payload, token);
+      console.log('Обновление успешно');
       onSaved();
       onClose();
-    } catch (err) {
-      setError('Не удалось обновить пост связи');
-      console.error(err);
+    } catch (err: any) {
+      console.error('Ошибка при обновлении:', err);
+      let msg = 'Не удалось обновить пост связи';
+      if (err.response) {
+        console.log('Ответ сервера с ошибкой:', err.response.data);
+        if (err.response.data && typeof err.response.data === 'object') {
+          if (err.response.data.detail) {
+            msg = err.response.data.detail;
+          } else {
+            const errors = Object.entries(err.response.data)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('; ');
+            if (errors) msg = errors;
+          }
+        } else if (typeof err.response.data === 'string') {
+          msg = err.response.data;
+        }
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -143,7 +195,9 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
                 className="add-post-select-display"
                 onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
               >
-                <span>{divisions.find(d => d.id == division)?.name || 'Выберите подразделение'}</span>
+                <span>
+                  {divisions.find(d => d.id.toString() === division)?.name || 'Выберите подразделение'}
+                </span>
                 <ChevronDown
                   className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
                 />
@@ -155,7 +209,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
                       key={div.id}
                       className="add-post-select-option"
                       onClick={() => {
-                        setDivision(div.id);
+                        setDivision(div.id.toString());
                         setSubdivisionId('');
                         setIsDivisionsOpen(false);
                       }}
@@ -176,7 +230,9 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
                   className="add-post-select-display"
                   onClick={() => setIsSubdivisionsOpen(!isSubdivisionsOpen)}
                 >
-                  <span>{subdivisions.find(s => s.id == subdivisionId)?.name || 'Не выбрано'}</span>
+                  <span>
+                    {subdivisions.find(s => s.id.toString() === subdivisionId)?.name || 'Не выбрано'}
+                  </span>
                   <ChevronDown
                     className={`h-5 w-5 text-gray-400 transition-transform ${isSubdivisionsOpen ? 'transform rotate-180' : ''}`}
                   />
@@ -197,7 +253,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
                         key={sub.id}
                         className="add-post-select-option"
                         onClick={() => {
-                          setSubdivisionId(sub.id);
+                          setSubdivisionId(sub.id.toString());
                           setIsSubdivisionsOpen(false);
                         }}
                       >

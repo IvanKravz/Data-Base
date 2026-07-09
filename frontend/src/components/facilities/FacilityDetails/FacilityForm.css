@@ -1,630 +1,527 @@
-/* ===== Variables ===== */
+/* FacilityForm.css – единые стили для страницы деталей объекта */
+
 :root {
-    /* Colors */
-    --color-primary: #2563eb;
-    --color-primary-hover: #1d4ed8;
-    --color-danger: #dc2626;
-    --color-danger-hover: #b91c1c;
-    --color-success: #16a34a;
-    --color-warning: #d97706;
-    --color-text: #1f2937;
-    --color-text-light: #6b7280;
-    --color-border: #e5e7eb;
-    --color-bg: #f9fafb;
-    --color-white: #ffffff;
-    --color-card-shadow: rgba(0, 0, 0, 0.05);
-
-    /* Spacing */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-
-    /* Typography */
-    --text-sm: 0.875rem;
-    --text-base: 1rem;
-    --text-lg: 1.125rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.5rem;
-
-    /* Borders */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
-
-    /* Transitions */
-    --transition-fast: 0.15s ease-in-out;
-    --transition-normal: 0.2s ease-in-out;
+    --color-bg-page: #f8fafc;
+    --color-card: #ffffff;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #334155;
+    --color-text-label: #64748b;
+    --color-border: #e2e8f0;
+    --color-accent: #2563eb;
+    --color-accent-light: #eff6ff;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    --radius-lg: 0.75rem;
+    --radius-md: 0.5rem;
+    --transition: all 0.2s ease;
 }
 
-/* ===== Base Styles ===== */
+body {
+    background-color: var(--color-bg-page);
+}
+
+/* ===== Контейнер ===== */
 .facility-details-container {
     margin: 0 auto;
-    max-width: 100%;
+    padding: 1.5rem;
 }
 
-.facility-page-edit {
-    background-color: white;
-    padding: 1rem;
+/* ===== Двухколоночный макет ===== */
+.facility-details-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
 }
 
-/* ===== Header Styles ===== */
-.facility-header {
-    background: white;
-    padding: 1.2rem 1.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    position: relative;
-    z-index: 2;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: nowrap;
+@media (max-width: 768px) {
+    .facility-details-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
 }
 
-.facility-header-main {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
-}
-
-.facility-title-container {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-}
-
-/* Стили для заголовка объекта (просмотр) */
-.facility-view-title {
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    color: var(--color-text);
-    margin: 0;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 2.6em;
-    flex: 1;
-    min-width: 0;
-}
-
-/* Стили для заголовка объекта (редактирование) */
-.facility-edit-mode-title {
-    font-size: var(--text-2xl);
-    font-weight: 600;
-    color: var(--color-text);
-    margin: 0;
-}
-
-.facility-header-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex-shrink: 0;
-    margin-top: 0;
-}
-
-.facility-edit-header {
-    background: white;
-    padding: 1.2rem 1.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    margin-bottom: 24px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-/* ===== Loading & Error States ===== */
-.facility-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-    font-size: var(--text-lg);
-    color: var(--color-text-light);
-}
-
-.facility-error {
-    color: var(--color-danger);
-    padding: var(--spacing-lg);
-    text-align: center;
-}
-
-.facility-not-found {
-    text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--color-text-light);
-}
-
-/* ===== Card Components ===== */
-.facility-card {
-    background: var(--color-white);
+/* ===== Левая колонка – сайдбар ===== */
+.facility-details-sidebar-card {
+    background: var(--color-card);
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    padding: var(--spacing-lg);
-    transition: all var(--transition-normal);
-    overflow: hidden;
-    position: relative;
+    box-shadow: var(--shadow-sm);
+    padding: 1.25rem;
+    transition: var(--transition);
+}
+
+.facility-details-sidebar-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.facility-details-sidebar-header {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 0.2rem;
+    border-bottom: 2px solid var(--color-border);
+    margin-bottom: 0.75rem;
 }
 
-.facility-card:hover {
-    cursor: default;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    border-color: rgba(37, 99, 235, 0.2);
+.facility-details-sidebar-header-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
-.info-item-facility {
+.facility-details-sidebar-back {
+    flex-shrink: 0;
+}
+
+.facility-details-sidebar-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    word-break: break-word;
+    flex: 1;
+}
+
+.facility-details-sidebar-type {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.facility-details-sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.facility-details-sidebar-group:last-child {
+    margin-bottom: 0;
+}
+
+.facility-details-sidebar-item {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    width: 100%;
+    padding: 0.15rem 0;
 }
 
-.facility-card__title {
-    font-size: var(--text-lg);
+.facility-details-sidebar-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 0.1rem;
+    color: var(--color-text-label);
+}
+
+.facility-details-sidebar-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.facility-details-sidebar-label {
+    font-size: 0.87rem;
     font-weight: 600;
-    color: var(--color-text);
-    margin: 0;
-    padding-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-label);
+    line-height: 1.2;
+    margin-bottom: 0.3rem;
+}
+
+.facility-details-sidebar-value {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.facility-details-sidebar-status {
+    display: inline-block;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    align-self: flex-start;
+    padding: 0.2rem 0.75rem;
+}
+
+.facility-details-sidebar-status--closed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.facility-details-sidebar-status--open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.facility-details-btn--icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-md);
+    background: #eff0f1;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: var(--transition);
+}
+
+.facility-details-btn--icon:hover {
+    background: var(--color-border);
+}
+
+/* ===== Правая колонка – вкладки ===== */
+.facility-details-main {
+    min-width: 0;
+}
+
+.facility-details-search-container {
+    margin-bottom: 1rem;
+}
+
+.facility-details-tabs-container {
+    background: var(--color-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.facility-details-tabs-container:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.facility-details-tabs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0 0.5rem 0 0;
+    background: var(--color-card);
     border-bottom: 1px solid var(--color-border);
-    position: relative;
 }
 
-.facility-card__title::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--color-primary);
-    border-radius: 1px;
+.facility-details-tabs-list {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1;
 }
 
-/* ===== Grid Layout ===== */
-.facility-grid {
-    display: grid;
-    gap: var(--spacing-md);
-    background-color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.facility-details-tabs-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 0.5rem;
 }
 
-.facility-grid--2cols {
-    grid-template-columns: repeat(4, 1fr);
+.facility-details-tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
 }
 
-@media (max-width: 1620px) {
-    .facility-grid--2cols {
-        grid-template-columns: repeat(3, 1fr);
-    }
+.facility-details-tab-button:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-border);
 }
 
-@media (max-width: 1140px) {
-    .facility-grid--2cols {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.facility-details-tab-button.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
 }
 
-@media (max-width: 980px) {
-    .facility-grid--2cols {
-        grid-template-columns: 1fr;
-    }
+.facility-details-tab-content {
+    padding: 0.7rem;
 }
 
-/* ===== Info Components ===== */
-.facility-info-item {
+/* ===== Секции внутри вкладок ===== */
+.facility-details-section {
+    margin-bottom: 1.5rem;
+}
+
+.facility-details-section:last-child {
+    margin-bottom: 0;
+}
+
+.facility-details-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 0.75rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.facility-details-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+/* ===== Информационные поля ===== */
+.facility-details-info-item {
     display: flex;
     align-items: flex-start;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-    min-height: 2.5rem;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
 }
 
-.facility-info-item:hover {
-    background-color: rgba(249, 250, 251, 0.6);
-}
-
-.facility-info-item__icon {
+.facility-details-info-item__icon {
     flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
     margin-top: 0.125rem;
-    transition: transform var(--transition-fast);
-    color: var(--color-primary);
+    color: var(--color-text-label);
 }
 
-.facility-info-item:hover .facility-info-item__icon {
-    transform: scale(1.05);
-}
-
-.facility-info-item__label {
-    font-size: var(--text-sm);
-    color: var(--color-text-light);
-    line-height: 1.4;
+.facility-details-info-item__label {
+    font-size: 0.9rem;
     font-weight: 500;
+    text-transform: uppercase;
+    color: #8d8e8f;
+    margin-bottom: 0.25rem;
 }
 
-.facility-info-item__value {
+.facility-details-info-item__value {
+    font-size: 0.95rem;
     font-weight: 500;
-    color: var(--color-text);
+    color: #3b3b3c;
     line-height: 1.4;
-    font-size: 0.9375rem;
-    word-break: break-word;
 }
 
-.facility-info-item__content {
+.facility-details-info-item__content {
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
-    flex-grow: 1;
+    flex: 1;
 }
 
-.facility-info-card {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 1px 2px var(--color-card-shadow);
-    padding: var(--spacing-md);
-    transition: all var(--transition-normal);
-    overflow: hidden;
-    position: relative;
-}
-
-.facility-info-card:hover {
-    cursor: default;
-}
-
-.facility-info-card__title {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--color-text);
-    margin: 0 0 var(--spacing-md) 0;
-    padding-bottom: var(--spacing-sm);
-    border-bottom: 1px solid var(--color-border);
-    position: relative;
-}
-
-.facility-info-card__title::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--color-primary);
-    border-radius: 1px;
-}
-
-.facility-info-card__content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-/* ===== Buttons ===== */
-.facility-btn {
+/* ===== Кнопки общие ===== */
+.facility-details-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
     border-radius: var(--radius-md);
-    font-weight: 500;
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
+    border: none;
     cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
+    transition: var(--transition);
 }
 
-.facility-btn--primary {
-    background-color: #3891da;
-    color: var(--color-white);
-    border: none;
+.facility-details-btn--primary {
+    background: var(--color-accent);
+    color: white;
 }
 
-.facility-btn--primary:hover {
-    background-color: #3182ce;
+.facility-details-btn--primary:hover {
+    background: #1d4ed8;
 }
 
-.facility-btn--danger {
-    background-color: var(--color-danger);
-    color: var(--color-white);
-    border: none;
+.facility-details-btn--danger {
+    background: #dc2626;
+    color: white;
 }
 
-.facility-btn--danger:hover {
-    background-color: var(--color-danger-hover);
+.facility-details-btn--danger:hover {
+    background: #b91c1c;
 }
 
-.facility-btn--icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    background-color: #f1f5f9;
-    transition: all 0.2s;
-    flex-shrink: 0;
+.facility-details-btn--secondary {
+    background: #6b7280;
+    color: white;
 }
 
-.facility-btn--icon:hover {
-    background-color: #e2e8f0;
+.facility-details-btn--secondary:hover {
+    background: #4b5563;
 }
 
-/* ===== Utility Classes ===== */
-.facility-space-y {
-    display: flex;
-    flex-direction: column;
+.facility-details-btn--success {
+    background: #059669;
+    color: white;
 }
 
-.facility-space-y>*+* {
-    margin-top: var(--spacing-md);
+.facility-details-btn--success:hover {
+    background: #047857;
 }
 
-.facility-gap-sm {
-    gap: var(--spacing-sm);
-}
-
-.facility-gap-md {
-    gap: var(--spacing-md);
-}
-
-.facility-flex {
-    display: flex;
-}
-
-.facility-items-center {
-    align-items: center;
-}
-
-.facility-justify-between {
-    justify-content: space-between;
-}
-
-/* Модификаторы для InfoItem */
-.facility-info-item__value--multiline {
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-/* Дополнительные отступы */
-.facility-space-y--lg>*+* {
-    margin-top: var(--spacing-lg);
-}
-
-/* Цвета иконок */
-.facility-info-item .text-blue-500 {
-    color: var(--color-primary);
-}
-
-.facility-info-item .text-green-500 {
-    color: var(--color-success);
-}
-
-.facility-info-item .text-brown-500 {
-    color: #997959;
-}
-
-.facility-info-item .text-orange-500 {
-    color: #0ec28f;
-}
-
-.facility-info-item .text-indigo-500 {
-    color: #6366f1;
-}
-
-/* Editing mode styles */
-.facility-card--editing {
-    border: 1px solid rgba(37, 99, 235, 0.3);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.facility-card--editing .facility-card__title::after {
-    background: var(--color-danger);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .facility-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-md);
-        padding: var(--spacing-md);
-    }
-
-    .facility-header-main {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-
-    .facility-header-actions {
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .facility-view-title {
-        font-size: var(--text-xl);
-        -webkit-line-clamp: 3;
-        max-height: 3.9em;
-    }
-
-    .facility-edit-mode-title {
-        font-size: var(--text-xl);
-    }
-
-    .facility-card {
-        padding: var(--spacing-md);
-    }
-
-    .facility-info-item {
-        flex-direction: column;
-        gap: 0.25rem;
-        padding: 0.5rem 0;
-    }
-
-    .facility-info-item__icon {
-        margin-top: 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .facility-header-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .facility-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* Специфичные стили для FacilityDetails */
-.facility-form-container {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    padding: var(--spacing-lg);
-}
-
-.facility-edit-container {
+/* ===== Комментарии – просмотр с нумерацией ===== */
+.facility-details-comments-container {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
-}
-
-.facility-details-grid {
-    display: grid;
-    gap: var(--spacing-md);
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-
-/* Стили для списка ответственных лиц */
-.facility-responsible-persons-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    max-height: 300px;
-    overflow-y: auto;
-    padding-right: var(--spacing-xs);
-}
-
-.facility-responsible-person {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-xs) 0;
-}
-
-.facility-responsible-person__name {
-    font-weight: 500;
-    color: var(--color-text);
-    font-size: var(--text-sm);
-}
-
-.facility-responsible-person__position {
-    font-size: var(--text-sm);
-    color: var(--color-text-light);
-}
-
-.facility-no-responsible-persons {
-    font-size: var(--text-sm);
-    color: var(--color-text-light);
-    text-align: center;
-    padding: var(--spacing-sm) 0;
-}
-
-/* Стили для оборудования */
-.facility-assigned-equipment {
-    margin-top: var(--spacing-lg);
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 1px 2px var(--color-card-shadow);
-    padding: var(--spacing-lg);
-}
-
-.facility-assigned-equipment-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-md);
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-}
-
-.facility-assigned-equipment-title-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.facility-assigned-equipment-icon {
-    color: var(--color-primary);
-}
-
-.facility-assigned-equipment-title {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    color: var(--color-text);
-    margin: 0;
-}
-
-.facility-assigned-equipment-count {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    color: var(--color-text-light);
-    font-size: var(--text-sm);
-}
-
-.facility-assigned-equipment-count-value {
-    display: flex;
-    align-items: center;
     gap: 0.25rem;
 }
 
-.facility-assigned-equipment-count-value strong {
-    font-weight: 600;
-    color: var(--color-primary);
-}
-
-/* Комментарии */
-.facility-comments-content {
+.facility-details-comment-line {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.15rem 0;
 }
 
-.facility-comments-text {
+.facility-details-comment-number {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+}
+
+.facility-details-comment-text {
     margin: 0;
     white-space: pre-line;
     line-height: 1.5;
     word-break: break-word;
-    overflow-wrap: break-word;
-    max-width: 100%;
+    flex: 1;
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+}
+
+/* ===== Техника (компактная таблица) ===== */
+.facility-equipment-table-wrapper {
+    overflow-x: auto;
+}
+
+.facility-equipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.facility-equipment-table thead th {
+    background: #f8fafc;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border: 2px solid var(--color-border);
+    font-weight: 600;
+    color: var(--color-text-label);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.facility-equipment-table tbody td {
+    padding: 0.1rem 0.75rem;
+    border: 2px solid var(--color-border);
+    color: var(--color-text-primary);
+    vertical-align: middle;
+}
+
+.facility-equipment-row {
+    cursor: default;
+    transition: background 0.15s ease;
+}
+
+.facility-equipment-row:hover {
+    background-color: #f1f5f9;
+}
+
+.facility-equipment-status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.facility-equipment-status-badge.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.facility-equipment-status-badge.status-in_storage {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.facility-equipment-status-badge.status-disposed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.facility-equipment-status-badge.status-repair {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.facility-equipment-status-badge.status-reserved {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+/* ===== Загрузка / ошибка ===== */
+.facility-details-loading,
+.facility-details-error,
+.facility-details-not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+}
+
+.facility-details-error {
+    color: #dc2626;
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 640px) {
+    .facility-details-tabs-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .facility-details-tabs-list {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .facility-details-tab-button {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .facility-details-tabs-actions {
+        justify-content: flex-end;
+        padding: 0 0 0.5rem 0;
+        flex-wrap: wrap;
+    }
+
+    .facility-details-tab-content {
+        padding: 0.4rem;
+    }
+
+    .facility-details-sidebar-card {
+        padding: 1rem;
+    }
 }

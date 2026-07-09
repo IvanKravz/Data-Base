@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Building2 } from 'lucide-react';
 import { Facility } from '../../../../../types';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface AssignmentProps {
   formData: Partial<Facility>;

@@ -1,6 +1,5 @@
-// CommunicationPostsList.tsx
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Trash2, Building, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Trash2, Building, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import { CommunicationPost } from '../../../../../types';
@@ -28,34 +27,74 @@ export function CommunicationPostsList({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [tooltip, setTooltip] = useState({ show: false, content: '', x: 0, y: 0 });
-  const [expandedDivisions, setExpandedDivisions] = useState<Set<string>>(new Set());
-  const descriptionRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
+  const [activeTab, setActiveTab] = useState<string>(''); // теперь без 'all'
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+  const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
+
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
-  const canDeletePosts = useMemo(() => permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
-  const canEditPosts = useMemo(() => permissions?.models?.CommunicationPost?.includes('change') ?? false, [permissions]);
+  const canDeletePosts = useMemo(
+    () => permissions?.models?.CommunicationPost?.includes('delete') ?? false,
+    [permissions]
+  );
+  const canEditPosts = useMemo(
+    () => permissions?.models?.CommunicationPost?.includes('change') ?? false,
+    [permissions]
+  );
 
   const filteredPosts = useMemo(() => {
     if (!searchTerm.trim()) return posts;
     const normalizedSearch = normalizeSearchString(searchTerm);
-    return posts.filter(post => normalizeSearchString(post.name).includes(normalizedSearch));
+    return posts.filter(post =>
+      normalizeSearchString(post.name).includes(normalizedSearch)
+    );
   }, [posts, searchTerm]);
 
-  const groupedPosts = useMemo(() => {
-    if (isGlobalView) {
-      return filteredPosts.reduce((acc, post) => {
-        const divisionName = post.division_name || 'Без подразделения';
-        if (!acc[divisionName]) acc[divisionName] = [];
-        acc[divisionName].push(post);
-        return acc;
-      }, {} as Record<string, CommunicationPost[]>);
-    }
-    return { 'Все посты': filteredPosts };
+  // Вкладки подразделений (без "Все")
+  const divisionTabs = useMemo(() => {
+    if (!isGlobalView) return [];
+    const divisions = new Set(
+      filteredPosts.map(p => p.division_name || 'Без подразделения')
+    );
+    return Array.from(divisions).sort();
   }, [isGlobalView, filteredPosts]);
 
-  const divisionNames = useMemo(() => Object.keys(groupedPosts).sort(), [groupedPosts]);
+  // Устанавливаем активную вкладку на первое подразделение при инициализации
+  useEffect(() => {
+    if (divisionTabs.length > 0 && !activeTab) {
+      setActiveTab(divisionTabs[0]);
+    }
+  }, [divisionTabs, activeTab]);
+
+  // Фильтруем посты по активной вкладке
+  const visiblePosts = useMemo(() => {
+    if (!isGlobalView) return filteredPosts;
+    return filteredPosts.filter(
+      p => (p.division_name || 'Без подразделения') === activeTab
+    );
+  }, [isGlobalView, activeTab, filteredPosts]);
+
+  // Позиционирование индикатора
+  useEffect(() => {
+    if (!tabsRef.current || !isGlobalView || !activeTab) return;
+    const activeButton = tabsRef.current.querySelector('.communication-tab--active') as HTMLElement;
+    if (activeButton) {
+      const { offsetLeft, offsetWidth } = activeButton;
+      setIndicatorStyle({ left: offsetLeft, width: offsetWidth });
+    }
+  }, [activeTab, divisionTabs, isGlobalView]);
+
+  const toggleExpand = (postId: string) => {
+    setExpandedPosts(prev => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
 
   const handleDelete = (id: string) => {
     setPostToDelete(id);
@@ -94,52 +133,6 @@ export function CommunicationPostsList({
     if (onPostUpdated) onPostUpdated();
   };
 
-  const toggleDivision = (divisionName: string) => {
-    setExpandedDivisions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(divisionName)) newSet.delete(divisionName);
-      else newSet.add(divisionName);
-      return newSet;
-    });
-  };
-
-  const checkTextOverflow = (element: HTMLParagraphElement) => {
-    if (element) return element.scrollHeight > element.clientHeight || element.offsetWidth < element.scrollWidth;
-    return false;
-  };
-
-  const handleDescriptionMouseEnter = (postId: string, content: string, event: React.MouseEvent) => {
-    const element = descriptionRefs.current[postId];
-    if (element && checkTextOverflow(element)) {
-      setTooltip({
-        show: true,
-        content,
-        x: event.clientX + 15,
-        y: event.clientY - 15
-      });
-    }
-  };
-
-  const handleDescriptionMouseLeave = () => {
-    setTooltip({ show: false, content: '', x: 0, y: 0 });
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (tooltip.show) {
-        setTooltip(prev => ({ ...prev, x: e.clientX + 15, y: e.clientY - 15 }));
-      }
-    };
-    if (tooltip.show) document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, [tooltip.show]);
-
-  useEffect(() => {
-    if (isGlobalView && divisionNames.length > 0) {
-      setExpandedDivisions(new Set(divisionNames));
-    }
-  }, [isGlobalView, divisionNames]);
-
   if (filteredPosts.length === 0) {
     return (
       <div className="communication-posts-container">
@@ -159,95 +152,111 @@ export function CommunicationPostsList({
       {searchTerm.trim() && (
         <div className="search-results-info">
           Найдено постов связи: {filteredPosts.length}
-          {posts.length !== filteredPosts.length && <span> из {posts.length}</span>}
+          {posts.length !== filteredPosts.length && (
+            <span> из {posts.length}</span>
+          )}
+        </div>
+      )}
+
+      {isGlobalView && divisionTabs.length > 0 && (
+        <div className="communication-tabs" ref={tabsRef}>
+          {divisionTabs.map(tab => (
+            <button
+              key={tab}
+              className={`communication-tab ${activeTab === tab ? 'communication-tab--active' : ''}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab} ({filteredPosts.filter(p => (p.division_name || 'Без подразделения') === tab).length})
+            </button>
+          ))}
+          <div
+            className="communication-tabs-indicator"
+            style={{
+              left: `${indicatorStyle.left}px`,
+              width: `${indicatorStyle.width}px`,
+            }}
+          />
         </div>
       )}
 
       <div className="communication-posts-content">
-        {divisionNames.map(divisionName => {
-          const postsInDivision = groupedPosts[divisionName];
-          const isExpanded = !isGlobalView || expandedDivisions.has(divisionName);
-
-          return (
-            <div key={divisionName} className="division-group">
-              {isGlobalView && (
-                <button className="division-post-header" onClick={() => toggleDivision(divisionName)}>
-                  <div className="division-toggle">
-                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    <span className="division-title">{divisionName} ({postsInDivision.length})</span>
-                  </div>
-                </button>
-              )}
-
-              {(isExpanded || !isGlobalView) && (
-                <div className="communication-posts-grid">
-                  {postsInDivision.map(post => (
-                    <div key={post.id} className="communication-post-card">
-                      <div className="communication-post-header">
-                        <h3 className="communication-post-title">{post.name}</h3>
-                        <div className="communication-post-actions">
+        {visiblePosts.length === 0 ? (
+          <div className="communication-posts-empty-message">
+            Нет постов для выбранного подразделения
+          </div>
+        ) : (
+          <div className="communication-posts-mini-grid">
+            {visiblePosts.map(post => {
+              const isExpanded = !!expandedPosts[post.id];
+              return (
+                <div
+                  key={post.id}
+                  className={`mini-post-card ${isExpanded ? 'mini-post-card--expanded' : ''}`}
+                >
+                  <div className="mini-post-card__content">
+                    <div
+                      className="mini-post-card__title-row"
+                      onClick={() => toggleExpand(post.id)}
+                    >
+                      <h3 className="mini-post-card__title">{post.name}</h3>
+                      <div className="mini-post-card__right-group">
+                        <div className="mini-post-card__actions">
+                          <span
+                            className="mini-post-card__chevron"
+                            onClick={e => {
+                              e.stopPropagation();
+                              toggleExpand(post.id);
+                            }}
+                          >
+                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                          </span>
                           {canEditPosts && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleEdit(post.id); }}
-                              className="communication-post-edit-btn"
+                              className="mini-post-card__action-btn"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleEdit(post.id);
+                              }}
                               aria-label="Редактировать пост связи"
                             >
-                              <Pencil className="h-4 w-4" />
+                              <Pencil size={14} />
                             </button>
                           )}
                           {canDeletePosts && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}
-                              className="communication-post-delete-btn"
+                              className="mini-post-card__action-btn"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDelete(post.id);
+                              }}
                               aria-label="Удалить пост связи"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 size={14} />
                             </button>
                           )}
                         </div>
                       </div>
-
-                      <div className="communication-post-content">
-                        <p
-                          ref={el => (descriptionRefs.current[post.id] = el)}
-                          className="communication-post-description"
-                          onMouseEnter={(e) => handleDescriptionMouseEnter(post.id, post.description || 'Описание отсутствует', e)}
-                          onMouseLeave={handleDescriptionMouseLeave}
-                        >
-                          {post.description || 'Описание отсутствует'}
-                        </p>
-
-                        <div className="communication-post-meta">
-                          {post.division_name && (
-                            <div className="communication-post-meta-item">
-                              <Building className="communication-post-meta-icon" />
-                              <span className="communication-post-division">{post.division_name}</span>
-                            </div>
-                          )}
-                          {post.subdivision_name && (
-                            <div className="communication-post-meta-item">
-                              <span className="communication-post-subdivision">{post.subdivision_name}</span>
-                            </div>
-                          )}
-                        </div>
+                    </div>
+                    <div
+                      className={`mini-post-card__body ${
+                        isExpanded ? 'mini-post-card__body--expanded' : ''
+                      }`}
+                    >
+                      <p className="mini-post-card__description">
+                        {post.description || 'Описание отсутствует'}
+                      </p>
+                      <div className="mini-post-card__meta">
+                        <Building size={14} />
+                        <span>{post.subdivision_name || post.division_name}</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
-
-      {tooltip.show && (
-        <div
-          className="communication-post-tooltip"
-          style={{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }}
-        >
-          {tooltip.content}
-        </div>
-      )}
 
       {showDeleteModal && (
         <DeleteConfirmationModal

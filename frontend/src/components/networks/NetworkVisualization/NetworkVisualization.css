@@ -7,7 +7,7 @@
     position: relative;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
     border-radius: 12px;
-    padding: 12px;
+    padding: 0 4px 4px 4px;
     min-height: 600px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -119,13 +119,12 @@
 
 .view-tabs {
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
+    justify-content: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    padding-bottom: 8px;
+    /* gap: 2rem; */
 }
 
-.tab-button {
+.tab-button-visual {
     background: transparent;
     border: none;
     color: rgba(255, 255, 255, 0.7);
@@ -134,15 +133,14 @@
     padding: 8px 16px;
     cursor: pointer;
     transition: all 0.2s ease;
-    border-radius: 20px;
 }
 
-.tab-button:hover {
+.tab-button-visual:hover {
     color: white;
     background: rgba(255, 255, 255, 0.1);
 }
 
-.tab-button.active {
+.tab-button-visual.active {
     color: #63b3ed;
     background: rgba(99, 179, 237, 0.15);
     box-shadow: 0 1px 0 #63b3ed;

@@ -1,14 +1,15 @@
 // components/ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { PermissionType, canAccessPage } from '../api/utils/permissions';
+import { PermissionType } from '../api/utils/permissions';
+import { useAppPermissions } from '../api/utils/AppPermissionsContext';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
     model: string;
     action?: PermissionType;
     fallback?: string;
-    extraCheck?: () => boolean; // optional additional check
+    extraCheck?: () => boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -19,6 +20,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     extraCheck
 }) => {
     const location = useLocation();
+    const { canAccessPage, getCurrentUser } = useAppPermissions();
+    const user = getCurrentUser();
+
+    // Если пользователь ещё не загружен – не делаем редирект, ждём загрузки
+    if (!user) {
+        return null;
+    }
 
     const hasModelAccess = canAccessPage(model, action);
     const hasExtraAccess = extraCheck ? extraCheck() : true;
@@ -31,7 +39,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <>{children}</>;
 };
 
-// Специализированные защищенные маршруты для конкретных страниц
 export const PersonnelRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
     ({ children, action = 'view' }) => (
         <ProtectedRoute model="Employee" action={action}>

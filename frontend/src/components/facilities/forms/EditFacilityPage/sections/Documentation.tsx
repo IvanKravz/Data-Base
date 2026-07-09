@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileText } from 'lucide-react';
 import { Facility } from '../../../../../types';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface DocumentationProps {
   formData: Partial<Facility>;

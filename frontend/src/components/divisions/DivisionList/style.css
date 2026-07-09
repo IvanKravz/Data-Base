@@ -1,34 +1,174 @@
-/* style.css – добавлен z-index для открытой карточки и меню */
-
-/* Grid container – убедимся, что не обрезает содержимое */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 0.6rem;
-  padding: 1.5rem 1rem 0 1rem;
-  margin-bottom: 1.5rem;
-  overflow: visible; /* важно для абсолютного меню */
+/* === Общие и вспомогательные === */
+.loading-divisions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1rem;
+  color: #64748b;
 }
 
-/* Division card – относительное позиционирование, обычный z-index */
-.division-card {
-  position: relative;
-  background-color: #ffffff;
-  padding: 0.7rem;
-  border-radius: 0.6rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  overflow: visible;
+/* Заголовок «Подразделение» – самостоятельный элемент над таблицей */
+.division-subheader {
+  padding: 0 1rem 0.5rem 1rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #050505;
+  margin-bottom: 0.7rem;
+}
+
+/* === Обёртка всей таблицы (без заголовка, только сетка) === */
+.tables-wrapper {
+  margin: 0 1rem 1rem 1rem;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #f0f2f5;
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeInUp 0.2s ease-out forwards;
-  z-index: 1; /* по умолчанию низкий */
+  overflow: hidden;
 }
 
-/* Когда карточка раскрыта – поднимаем выше соседей */
-.division-card.expanded {
-  z-index: 30;
+/* Три колонки */
+.tables-grid {
+  display: flex;
+  gap: 0;
+}
+
+.table-column {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Таблица внутри каждой колонки */
+.division-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+/* Ячейки */
+.name-cell {
+  padding: 0.65rem 0.75rem;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.name-cell:hover {
+  color: #3b82f6;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.toggle-cell {
+  width: 2.5rem;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+}
+
+/* Строки таблицы */
+.table-row {
+  transition: background-color 0.15s;
+}
+
+.table-row.expanded {
+  background-color: #f1f5f9;
+}
+
+.table-row:hover {
+  background-color: #f8fafc;
+}
+
+/* Кнопка шеврона */
+.chevron-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.2rem;
+  border-radius: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron-button:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ===== Раскрывающаяся строка с метриками ===== */
+/* Свёрнутое состояние */
+.expanded-row td {
+  padding: 0 0.75rem;
+  border-bottom: none;
+  overflow: hidden;
+  transition: padding 0.4s ease;
+}
+
+/* Раскрытое состояние */
+.expanded-row.expanded td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Контейнер-обёртка для анимации высоты */
+.expanded-metrics-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* Раскрытое состояние обёртки */
+.expanded-row.expanded .expanded-metrics-wrapper {
+  max-height: 200px;
+}
+
+/* Сетка метрик */
+.expanded-metrics-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+/* Элемент метрики */
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #334155;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+.metric-item:hover {
+  background-color: #f1f5f9;
+  transform: translateX(1px);
+}
+
+/* Иконки метрик */
+.metric-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  stroke-width: 1.5;
+}
+
+.metric-icon--blue { color: #3b82f6; }
+.metric-icon--green { color: #10b981; }
+.metric-icon--purple { color: #888686; }
+.metric-icon--orange { color: #f59e0b; }
+
+/* === Карта === */
+.map-country {
+  margin-top: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-out forwards;
 }
 
 @keyframes fadeInUp {
@@ -42,158 +182,7 @@
   }
 }
 
-.division-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-  background-color: #fafcff;
-  border-color: #d9e2ef;
-}
-
-/* Card header */
-.division-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: default;
-}
-
-.division-list-header-text {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-left: 0.8rem;
-  font-size: 1.4rem;
-  font-weight: 500;
-  color: #090909;
-}
-
-/* Название – кликабельное, с плавным выделением */
-.division-card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1e293b;
-  line-height: 1.4;
-  margin: 0;
-  transition: color 0.2s ease, text-decoration 0.2s ease;
-}
-
-.clickable-title {
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.clickable-title:hover {
-  color: #3b82f6;
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
-}
-
-/* Кнопка шеврона */
-.chevron-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  border-radius: 0.375rem;
-  color: #64748b;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.chevron-button:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
-}
-
-/* Абсолютное выпадающее меню – теперь с высоким z-index */
-.expanded-content {
-  position: absolute;
-  top: calc(100% + 0.1rem);
-  left: 0;
-  right: 0;
-  background-color: #ffffff;
-  border-radius: 0.6rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  padding: 0.75rem;
-  z-index: 40; /* выше, чем у открытой карточки (30) */
-  border: 1px solid #e2e8f0;
-  animation: slideDownFade 0.2s ease-out forwards;
-  transform-origin: top;
-}
-
-@keyframes slideDownFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Сетка метрик внутри выпадающего меню */
-.expanded-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-/* Метрики */
-.metric-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #334155;
-}
-
-.metric-item-clickable {
-  cursor: pointer;
-  padding: 0.4rem 0.5rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.metric-item-clickable:hover {
-  background-color: #f8fafc;
-  transform: translateX(2px);
-}
-
-.metric-icon {
-  height: 1rem;
-  width: 1rem;
-  stroke-width: 1.5;
-}
-
-.metric-icon--blue { color: #3b82f6; }
-.metric-icon--green { color: #10b981; }
-.metric-icon--purple { color: #888686; }
-.metric-icon--orange { color: #f59e0b; }
-
-/* Загрузка и ошибки */
-.loading-divisions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1rem;
-  color: #64748b;
-}
-
-/* Карта */
-.map-country {
-  margin-top: 1rem;
-  padding: 0 1rem 1rem;
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.4s ease-out forwards;
-}
-
-/* Остальные стили (модальные окна и пр.) без изменений */
+/* === Модальные окна === */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -259,7 +248,7 @@
   color: #0f172a;
 }
 
-/* Дополнительные стили для карты, поиска и т.д. (сохранены из оригинала) */
+/* === Стили для карты и поиска === */
 .map-region {
   position: relative;
   overflow: hidden;
@@ -285,6 +274,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.8rem 0 0 0;
+  margin-top: 1rem;
   font-size: 1.4rem;
   font-weight: 500;
   color: #090909;

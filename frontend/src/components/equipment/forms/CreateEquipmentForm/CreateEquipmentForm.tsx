@@ -97,7 +97,7 @@ export function CreateEquipmentForm() {
             ? { id: navigationState.subdivisionId, name: navigationState.subdivisionName || '' }
             : null;
 
-    // Загрузка справочников
+    // Загрузка справочников с защитой от 403
     useEffect(() => {
         const fetchData = async () => {
             if (!token) return;
@@ -107,11 +107,11 @@ export function CreateEquipmentForm() {
                 const [divisionsData, categoriesData, organsData] = await Promise.all([
                     divisionsApi.getDivisions(token),
                     equipmentApi.getEquipmentCategories(token),
-                    equipmentApi.getInterestOrgans(token),
+                    equipmentApi.getInterestOrgans(token).catch(() => []), // защита от 403
                 ]);
                 setDivisions(divisionsData);
                 setCategories(categoriesData);
-                setInterestOrgans(organsData);
+                setInterestOrgans(organsData || []);
 
                 const divisionIdToUse = paramDivisionId || navigationState?.divisionId;
                 if (divisionIdToUse) {
@@ -197,6 +197,11 @@ export function CreateEquipmentForm() {
             setError('Введите название техники');
             return;
         }
+        // Валидация: при безвозмездном пользовании номер акта обязателен
+        if (formData.is_free_use && !formData.free_use_act_number?.trim()) {
+            setError('При выдаче в безвозмездное пользование необходимо указать номер акта');
+            return;
+        }
 
         setLoading(true);
         setError(null);
@@ -268,16 +273,13 @@ export function CreateEquipmentForm() {
         return formData.division?.name || 'Не выбрано';
     };
 
-    // Получаем название техники для сайдбара
     const getEquipmentName = () => {
         return formData.name?.trim() || 'Новая техника';
     };
 
-    // Рендер содержимого вкладки
     const renderTabContent = () => {
         switch (activeTab) {
             case 'main':
-                // Только карточка Основная информация
                 return (
                     <BasicInformation
                         formData={formData}
@@ -370,7 +372,6 @@ export function CreateEquipmentForm() {
     return (
         <div className="ep-create-container">
             <form onSubmit={handleSubmit} className="ep-create-form">
-                {/* Шапка */}
                 <div className="ep-create-header">
                     <div className="ep-create-header-left">
                         <button type="button" onClick={handleCancel} className="ep-back-btn">
@@ -387,7 +388,6 @@ export function CreateEquipmentForm() {
                 )}
 
                 <div className="ep-create-layout">
-                    {/* Левая колонка */}
                     <div className="ep-create-sidebar">
                         <div className="ep-sidebar-card">
                             <div className="ep-sidebar-name">{getEquipmentName()}</div>
@@ -428,7 +428,6 @@ export function CreateEquipmentForm() {
                         </div>
                     </div>
 
-                    {/* Правая колонка с вкладками */}
                     <div className="ep-create-main">
                         <div className="ep-tabs-container">
                             <div className="ep-tabs-header">

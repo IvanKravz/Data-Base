@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ruler } from 'lucide-react';
 import { Facility } from '../../../../../types';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface KzInformationProps {
   formData: Facility;

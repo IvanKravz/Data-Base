@@ -34,13 +34,13 @@ const NetworkVisualizationWithTabs: React.FC<NetworkVisualizationWithTabsProps> 
       <div className="network-visualization">
         <div className="view-tabs">
           <button
-            className={`tab-button ${viewMode === '3d' ? 'active' : ''}`}
+            className={`tab-button-visual ${viewMode === '3d' ? 'active' : ''}`}
             onClick={() => setViewMode('3d')}
           >
             3D Визуализация
           </button>
           <button
-            className={`tab-button ${viewMode === 'schema' ? 'active' : ''}`}
+            className={`tab-button-visual ${viewMode === 'schema' ? 'active' : ''}`}
             onClick={() => setViewMode('schema')}
           >
             Структурная схема

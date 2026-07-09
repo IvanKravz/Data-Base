@@ -53,7 +53,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  font-size: 0.8rem;
+  padding: 8px 12px;
   background-color: #3891da;
   color: white;
   border: none;

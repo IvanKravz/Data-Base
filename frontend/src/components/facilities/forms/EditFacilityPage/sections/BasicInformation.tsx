@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Building2, MapPin } from 'lucide-react';
 import { Facility } from '../../../../../types';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface BasicInformationProps {
   formData: Partial<Facility>;

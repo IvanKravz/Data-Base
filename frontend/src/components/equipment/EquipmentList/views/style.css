@@ -1,6 +1,7 @@
-/* Основные стили таблицы */
-/* Основные стили таблицы */
-.table-container {
+/* style.css — переименованные классы с префиксом tv- для избежания конфликтов */
+
+/* Основные стили таблицы TableView */
+.tv-table-container {
   overflow-x: auto;
   overflow-y: auto;
   max-height: 80vh;
@@ -11,62 +12,55 @@
   font-size: 0.8125rem;
 }
 
-.equipment-table {
+.tv-equipment-table {
   width: 100%;
   border-spacing: 0;
   min-width: 1000px;
 }
 
 /* Стили заголовков групп */
-.division-header-row {
+.tv-division-header-row {
   background-color: #f8f9fa;
   border-left: 4px solid #3b82f6;
   transition: background-color 0.2s ease;
-  /* NEW */
 }
 
-/* NEW: эффект при наведении на строку подразделения */
-.division-header-row:hover {
+.tv-division-header-row:hover {
   background-color: #eef2ff;
   border-left-color: #2563eb;
 }
 
-.division-header-row.management-header {
+.tv-division-header-row.tv-management-header {
   background-color: #fff3cd;
   border-left: 4px solid #ffc107;
 }
 
-/* NEW: наведение для "техника без подразделения" */
-.division-header-row.management-header:hover {
+.tv-division-header-row.tv-management-header:hover {
   background-color: #ffe7a1cb;
   border-left-color: #e6a800;
 }
 
-.subdivision-header-row {
+.tv-subdivision-header-row {
   background-color: #f1f5f9;
   border-left: 4px solid #94a3b8;
   transition: background-color 0.2s ease;
-  /* NEW */
 }
 
-/* NEW: эффект при наведении на строку отделения */
-.subdivision-header-row:hover {
+.tv-subdivision-header-row:hover {
   background-color: #e2e8f0;
   border-left-color: #5b6e8c;
 }
 
-/* NEW: разделитель между группами (нижняя граница у последней строки группы) */
-.division-header-row,
-.subdivision-header-row {
+.tv-division-header-row,
+.tv-subdivision-header-row {
   border-bottom: 1px solid #e2e8f0;
 }
 
-/* NEW: чуть более заметная граница после заголовка подразделения */
-.division-header-row:not(:last-child) {
+.tv-division-header-row:not(:last-child) {
   border-bottom: 2px solid #d1d5db;
 }
 
-.equipment-division-header-cell {
+.tv-equipment-division-header-cell {
   padding: 0.3rem 0.5rem;
   font-weight: 600;
   color: #1e40af;
@@ -74,7 +68,7 @@
   border-bottom: 2px solid #bfdbfe;
 }
 
-.equipment-subdivision-header-cell {
+.tv-equipment-subdivision-header-cell {
   padding: 0.3rem 1rem;
   font-weight: 500;
   font-size: 1.1em;
@@ -82,12 +76,12 @@
   background-color: #f1f5f9;
 }
 
-.no-division-header .division-header-cell {
+.tv-no-division-header .tv-equipment-division-header-cell {
   background-color: #fff3cd;
   color: #856404;
 }
 
-.table-cell-equipment {
+.tv-table-cell-equipment {
   padding: 8px 8px;
   font-size: 0.875rem;
   color: #111827;
@@ -99,79 +93,88 @@
 }
 
 /* Стили строк таблицы */
-.table-row-equipment {
+.tv-table-row-equipment {
   cursor: pointer;
   transition: all 0.2s ease;
-  /* NEW */
   position: relative;
 }
 
-.table-row-equipment:hover {
+.tv-table-row-equipment:hover {
   background-color: #f8fafc;
-  /* NEW: лёгкая тень для объёма */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.table-cell-index {
+.tv-table-cell-index {
   width: 50px;
   text-align: center;
 }
 
-/* NEW: особенно выделяем строки "без подразделения" при наведении */
-.no-division-row {
+.tv-no-division-row {
   background-color: #fffdf6;
 }
 
-.no-division-row:hover {
+.tv-no-division-row:hover {
   background-color: #fef9e7;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-/* NEW: плавное изменение цвета для всех интерактивных элементов */
-button.collapse-button {
+button.tv-collapse-button {
   transition: background-color 0.2s, transform 0.1s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
 }
 
-button.collapse-button:active {
+button.tv-collapse-button:active {
   transform: scale(0.96);
 }
 
-/* NEW: разделители между строками внутри одной группы — тонкие, приятные */
-.table-row-equipment:not(:last-child) .table-cell-equipment {
+button.tv-collapse-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.tv-table-row-equipment:not(:last-child) .tv-table-cell-equipment {
   border-bottom: 1px solid #f1f5f9;
 }
 
-/* Уже существующие стили (оставлены без изменений) */
-.table-header {
+/* Заголовок таблицы (sticky) */
+.tv-table-header {
   position: sticky;
   top: 0;
   background-color: #eef3f8;
   z-index: 10;
 }
 
-.table-header-cell-equipment {
-  padding: 0.3rem 1rem;
+.tv-table-header-cell-equipment {
+  padding: 0.5rem 0.5rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #374151;
   text-transform: uppercase;
   border: 1px solid #e2e8f0;
 }
 
-.table-header-cell-equipment:hover {
+.tv-table-header-cell-equipment:hover {
   background-color: #f1f5f9;
   color: #334155;
 }
 
-.table-header-cell-equipment.active {
+.tv-table-header-cell-equipment.active {
   color: #2563eb;
 }
 
-.table-header-cell-equipment-pp {
-  padding: 0.3rem 0.8rem;
+.tv-table-header-cell-equipment-pp {
+  padding: 0.2rem 0.2rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #374151;
   text-transform: uppercase;
@@ -179,27 +182,8 @@ button.collapse-button:active {
   text-transform: lowercase;
 }
 
-.header-cell-content {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.header-cell-label {
-  flex: 1;
-}
-
-/* Обновляем стили ячеек */
-.table-cell {
-  padding: 0.625rem 1rem;
-  font-size: 0.85rem;
-  color: #334155;
-  vertical-align: middle;
-  line-height: 1.25;
-}
-
-/* Новые стили для ячейки с названием */
-.table-cell-name {
+/* Ячейка с названием */
+.tv-table-cell-name {
   min-width: 200px;
   max-width: 300px;
   word-wrap: break-word;
@@ -210,84 +194,84 @@ button.collapse-button:active {
   border: 1px solid #e2e8f0;
 }
 
-.cell-content {
+.tv-cell-content {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   justify-content: center;
 }
 
-.cell-content-full-width {
+.tv-cell-content-full-width {
   display: block;
   width: 100%;
 }
 
-/* Новые стили для контейнера подразделения */
-.division-container {
+/* Контейнер подразделения */
+.tv-division-container {
   display: flex;
   flex-direction: column;
 }
 
-.division-name {
+.tv-division-name {
   font-weight: 500;
   color: #111827;
   font-size: 0.85rem;
 }
 
-.subdivision-name {
+.tv-subdivision-name {
   font-size: 0.8rem;
   color: #6b7280;
   margin-top: 2px;
 }
 
-.status-icon {
+.tv-status-icon {
   width: 0.875rem;
   height: 0.875rem;
 }
 
-/* Стили для действий */
-.table-cell-actions {
+/* Действия */
+.tv-table-cell-actions {
   padding: 1rem 1.25rem;
   text-align: right;
   border: 1px solid #e2e8f0;
 }
 
-.actions-container {
+.tv-actions-container {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
 }
 
-.delete-button {
+.tv-delete-button {
   padding: 0.375rem;
   border-radius: 6px;
 }
 
-.delete-button:hover {
+.tv-delete-button:hover {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
-.action-icon {
+.tv-action-icon {
   width: 1rem;
   height: 1rem;
 }
 
-/* Стили для ячейки с закрепленным сотрудником */
-.table-cell-assigned-to {
+/* Ячейка "Закреплено за" */
+.tv-table-cell-assigned-to {
   min-width: 160px;
   max-width: 200px;
   white-space: normal;
 }
 
-.table-cell-assigned-to .cell-content {
+.tv-table-cell-assigned-to .tv-cell-content {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
 
-.position-text {
+.tv-position-text {
   text-align: center;
   font-size: 0.6875rem;
   color: #64748b;
@@ -295,7 +279,7 @@ button.collapse-button:active {
 }
 
 /* Сообщение о пустом списке */
-.equipment-list-empty-message {
+.tv-equipment-list-empty-message {
   text-align: center;
   padding: 20px;
   color: #666;
@@ -305,45 +289,29 @@ button.collapse-button:active {
   border-radius: 4px;
 }
 
-/* Стили для кнопок свертывания/развертывания */
-.collapse-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  margin-right: 8px;
-  border-radius: 4px;
+/* Заголовки групп (контейнеры для кнопки и текста) */
+.tv-division-header-content,
+.tv-subdivision-header-content {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-  color: inherit;
 }
 
-.collapse-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Стили для содержимого заголовков подразделений и отделений */
-.division-header-content,
-.subdivision-header-content {
-  display: flex;
-  align-items: center;
+/* Подсветка найденных строк */
+.tv-table-row-highlighted {
+  background-color: #fef9c3;
 }
 
 /* Адаптивные стили */
 @media (max-width: 1200px) {
-
-  .table-cell,
-  .table-header-cell-equipment {
+  .tv-table-header-cell-equipment {
     padding: 0.5rem 0.75rem;
   }
 
-  .table-cell-assigned-to {
+  .tv-table-cell-assigned-to {
     min-width: 160px;
   }
 
-  .table-cell-name {
+  .tv-table-cell-name {
     min-width: 180px;
     max-width: 250px;
   }

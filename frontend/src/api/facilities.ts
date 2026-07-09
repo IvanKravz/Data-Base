@@ -1,3 +1,4 @@
+// facilities.ts
 import { api } from './client';
 import { Facility } from '../types';
 
@@ -16,10 +17,8 @@ export const facilitiesApi = {
     search?: string;
     is_closed?: boolean;
   }): Promise<Facility[]> => {
-    // Создаем ключ кэша на основе параметров
     const cacheKey = JSON.stringify(params);
 
-    // Проверяем кэш
     if (facilityCache.has(cacheKey)) {
       const cached = facilityCache.get(cacheKey);
       if (Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -29,13 +28,11 @@ export const facilitiesApi = {
       }
     }
 
-    // Обрабатываем случай, когда division - массив
     let divisionParam = params?.division;
     if (Array.isArray(divisionParam) && divisionParam.length === 0) {
       divisionParam = undefined;
     }
 
-    // Формируем параметры запроса
     const queryParams = {
       ...(divisionParam && { division: Array.isArray(divisionParam) ? divisionParam.join(',') : divisionParam }),
       ...(params?.type && { type: params.type }),
@@ -51,7 +48,6 @@ export const facilitiesApi = {
       } : undefined
     });
 
-    // Сохраняем в кэш
     facilityCache.set(cacheKey, {
       data,
       timestamp: Date.now()
@@ -73,7 +69,6 @@ export const facilitiesApi = {
   // Create new facility
   createFacility: async (facilityData: Omit<Facility, 'id'>) => {
     const { data } = await api.post('/facilities/', facilityData);
-    // Очищаем кэш при создании нового объекта
     facilityCache.clear();
     return data;
   },
@@ -81,11 +76,11 @@ export const facilitiesApi = {
   // Update existing facility
   updateFacility: async (id: string, facilityData: Partial<Facility>, token: string) => {
     try {
-      // Формируем правильный запрос
+      // Формируем правильный запрос – отправляем communication_post_ids
       const { data } = await api.patch(`/facilities/${id}/`, {
         ...facilityData,
         type: facilityData.type_id,
-        communication_posts: facilityData.communication_post_ids,
+        communication_post_ids: facilityData.communication_post_ids, // исправлено!
         facility_class: facilityData.facility_class,
         division: facilityData.division_id,
         subdivision: facilityData.subdivision_id
@@ -95,7 +90,6 @@ export const facilitiesApi = {
           'Content-Type': 'application/json'
         }
       });
-      // Очищаем кэш при обновлении
       facilityCache.clear();
       return data;
     } catch (error) {
@@ -107,7 +101,6 @@ export const facilitiesApi = {
   // Delete facility
   deleteFacility: async (id: string) => {
     await api.delete(`/facilities/${id}/`);
-    // Очищаем кэш при удалении
     facilityCache.clear();
   },
 
@@ -189,7 +182,6 @@ export const communicationPostsApi = {
     return data;
   },
 
-  // Обновление поста связи
   updateCommunicationPost: async (
     id: string,
     postData: {
@@ -200,7 +192,7 @@ export const communicationPostsApi = {
     },
     token?: string | null
   ) => {
-    const { data } = await api.put(`facilities/communication-posts/${id}/`, postData, {
+    const { data } = await api.patch(`facilities/communication-posts/${id}/`, postData, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     return data;

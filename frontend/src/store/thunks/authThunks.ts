@@ -24,9 +24,8 @@ export const loginUser = createAsyncThunk(
         dispatch(setTwoFactorRequired(data.temp_token));
         return { requires2FA: true };
       }
-      window.location.reload();
       
-      // Обычный успешный вход
+      // Успешный вход — сохраняем пользователя в store, перезагрузка НЕ нужна
       dispatch(setUser(data.user));
       return { requires2FA: false };
     } catch (error: any) {
@@ -52,8 +51,7 @@ export const verify2FA = createAsyncThunk(
     dispatch(setTwoFactorVerifyStart());
     try {
       const data = await authApi.verify2fa(tempToken, code);
-      window.location.reload();
-      // data содержит access, refresh, user
+      // Успешная верификация — обновляем состояние, перезагрузка НЕ нужна
       dispatch(setTwoFactorVerifySuccess(data.user));
       return data;
     } catch (error: any) {

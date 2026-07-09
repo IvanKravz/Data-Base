@@ -2,50 +2,27 @@
 import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import {
-    canAccessPersonnel as checkAccessPersonnel,
-    canAccessEquipment as checkAccessEquipment,
-    canAccessFacilities as checkAccessFacilities,
-    canAccessTasks as checkAccessTasks,
-    canAccessNetworks as checkAccessNetworks,
-    canAccessCommunicationPosts as checkAccessCommunicationPosts,
-    canAccessDivisions as checkAccessDivisions,
-    canAccessPage,
-    canView,
-    canCreate,
-    canEdit,
-    canDelete,
-    isAdmin,
-    isDirector,
-    isExploitationChief,
-    isExploitationEmployee,
-    hasRole,
-    getCurrentUser,
-    canEditTask,
-    canDeleteTask,
-    PermissionType,
-} from '../utils/permissions';
+import { PermissionType } from '../utils/permissions';
 
-// Расширяем интерфейс для любых фильтров
 interface ModelFilters {
     [key: string]: any;
 }
 
 interface AppPermissionsContextType {
-    canAccessPersonnel: (action?: string) => boolean;
-    canAccessEquipment: (action?: string) => boolean;
-    canAccessFacilities: (action?: string) => boolean;
-    canAccessTasks: (action?: string) => boolean;
-    canAccessNetworks: (action?: string) => boolean;
-    canAccessCommunicationPosts: (action?: string) => boolean;
-    canAccessDivisions: (action?: string) => boolean;
+    canAccessPersonnel: (action?: PermissionType) => boolean;
+    canAccessEquipment: (action?: PermissionType) => boolean;
+    canAccessFacilities: (action?: PermissionType) => boolean;
+    canAccessTasks: (action?: PermissionType) => boolean;
+    canAccessNetworks: (action?: PermissionType) => boolean;
+    canAccessCommunicationPosts: (action?: PermissionType) => boolean;
+    canAccessDivisions: (action?: PermissionType) => boolean;
     canAccessMap: (action?: PermissionType) => boolean;
     canAccessStorage: (action?: PermissionType) => boolean;
     canAccessPage: (model: string, action?: PermissionType) => boolean;
-    canView: (module: any) => boolean;
-    canCreate: (module: any) => boolean;
-    canEdit: (module: any) => boolean;
-    canDelete: (module: any) => boolean;
+    canView: (module: string) => boolean;
+    canCreate: (module: string) => boolean;
+    canEdit: (module: string) => boolean;
+    canDelete: (module: string) => boolean;
     isAdmin: () => boolean;
     isDirector: () => boolean;
     isExploitationChief: () => boolean;
@@ -59,12 +36,11 @@ interface AppPermissionsContextType {
     facilitiesFilters: ModelFilters | null;
     networksFilters: ModelFilters | null;
     taskFilters: ModelFilters | null;
-    isEditorShaWorker: boolean;   // новый флаг
+    isEditorShaWorker: boolean;
 }
 
 const AppPermissionsContext = createContext<AppPermissionsContextType | null>(null);
 
-// Возвращаем любые фильтры, а не только division/subdivision
 const extractFilters = (modelFilters: any): ModelFilters | null => {
     if (!modelFilters) return null;
     return Object.keys(modelFilters).length > 0 ? modelFilters : null;
@@ -72,24 +48,51 @@ const extractFilters = (modelFilters: any): ModelFilters | null => {
 
 export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const user = useSelector((state: RootState) => state.auth.user);
-    // const loading = useSelector((state: RootState) => state.auth.loading);
     const permissions = user?.permissions;
 
-    const canAccessMap = useCallback((action: PermissionType = 'view') => {
-        return canAccessPage('Map', action);
-    }, []);
+    const hasPermission = useCallback((model: string, action: PermissionType): boolean => {
+        if (!permissions) return false;
+        const modelPerms = permissions.models?.[model];
+        if (!modelPerms || !Array.isArray(modelPerms)) return false;
+        return modelPerms.includes(action);
+    }, [permissions]);
 
-    const canAccessStorage = useCallback((action: PermissionType = 'view') => {
-        return canAccessPage('StorageFile', action);
-    }, []);
+    const canAccessPage = useCallback((model: string, action: PermissionType = 'view'): boolean => {
+        return hasPermission(model, action);
+    }, [hasPermission]);
 
-    const canAccessPersonnel = useCallback((action?: string) => checkAccessPersonnel(action as any), []);
-    const canAccessEquipment = useCallback((action?: string) => checkAccessEquipment(action as any), []);
-    const canAccessFacilities = useCallback((action?: string) => checkAccessFacilities(action as any), []);
-    const canAccessTasks = useCallback((action?: string) => checkAccessTasks(action as any), []);
-    const canAccessNetworks = useCallback((action?: string) => checkAccessNetworks(action as any), []);
-    const canAccessCommunicationPosts = useCallback((action?: string) => checkAccessCommunicationPosts(action as any), []);
-    const canAccessDivisions = useCallback((action?: string) => checkAccessDivisions(action as any), []);
+    const canAccessPersonnel = useCallback((action: PermissionType = 'view') => canAccessPage('Employee', action), [canAccessPage]);
+    const canAccessEquipment = useCallback((action: PermissionType = 'view') => canAccessPage('Equipment', action), [canAccessPage]);
+    const canAccessFacilities = useCallback((action: PermissionType = 'view') => canAccessPage('Facility', action), [canAccessPage]);
+    const canAccessTasks = useCallback((action: PermissionType = 'view') => canAccessPage('Task', action), [canAccessPage]);
+    const canAccessNetworks = useCallback((action: PermissionType = 'view') => canAccessPage('CommunicationNetwork', action), [canAccessPage]);
+    const canAccessCommunicationPosts = useCallback((action: PermissionType = 'view') => canAccessPage('CommunicationPost', action), [canAccessPage]);
+    const canAccessDivisions = useCallback((action: PermissionType = 'view') => canAccessPage('Division', action), [canAccessPage]);
+    const canAccessMap = useCallback((action: PermissionType = 'view') => canAccessPage('Map', action), [canAccessPage]);
+    const canAccessStorage = useCallback((action: PermissionType = 'view') => canAccessPage('StorageFile', action), [canAccessPage]);
+
+    const canView = useCallback((module: string) => canAccessPage(module, 'view'), [canAccessPage]);
+    const canCreate = useCallback((module: string) => canAccessPage(module, 'add'), [canAccessPage]);
+    const canEdit = useCallback((module: string) => canAccessPage(module, 'change'), [canAccessPage]);
+    const canDelete = useCallback((module: string) => {
+        if ((module === 'Equipment' || module === 'CommunicationNetwork') &&
+            (isExploitationChief() || isExploitationEmployee())) {
+            return false;
+        }
+        return canAccessPage(module, 'delete');
+    }, [canAccessPage]);
+
+    const hasRole = useCallback((role: string): boolean => {
+        if (!user?.roles) return false;
+        return user.roles.includes(role);
+    }, [user]);
+
+    const isAdmin = useCallback(() => hasRole('admin'), [hasRole]);
+    const isDirector = useCallback(() => hasRole('director') || hasRole('deputy_director'), [hasRole]);
+    const isExploitationChief = useCallback(() => hasRole('exploitation_chief'), [hasRole]);
+    const isExploitationEmployee = useCallback(() => hasRole('exploitation_employee'), [hasRole]);
+
+    const getCurrentUser = useCallback(() => user, [user]);
 
     const personnelFilters = useMemo(() => extractFilters(permissions?.filters?.Employee), [permissions]);
     const equipmentFilters = useMemo(() => extractFilters(permissions?.filters?.Equipment), [permissions]);
@@ -97,6 +100,38 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
     const networksFilters = useMemo(() => extractFilters(permissions?.filters?.CommunicationNetwork), [permissions]);
     const taskFilters = useMemo(() => extractFilters(permissions?.filters?.Task), [permissions]);
     const isEditorShaWorker = permissions?.is_editor_sha_worker ?? false;
+
+    const canEditTask = useCallback((task: any): boolean => {
+        if (!user) return false;
+        const roles = user.roles || [];
+        if (roles.includes('admin')) return true;
+        if (roles.includes('exploitation_employee')) {
+            return task.created_by?.id === user.id;
+        }
+        if (roles.includes('exploitation_chief')) {
+            return task.division?.id === user.division_info?.id;
+        }
+        if (roles.includes('director') || roles.includes('deputy_director')) {
+            return task.created_by?.id === user.id;
+        }
+        return task.created_by?.id === user.id;
+    }, [user]);
+
+    const canDeleteTask = useCallback((task: any): boolean => {
+        if (!user) return false;
+        const roles = user.roles || [];
+        if (roles.includes('admin')) return true;
+        if (roles.includes('exploitation_employee')) {
+            return task.created_by?.id === user.id;
+        }
+        if (roles.includes('exploitation_chief')) {
+            return task.division?.id === user.division_info?.id;
+        }
+        if (roles.includes('director') || roles.includes('deputy_director')) {
+            return task.created_by?.id === user.id;
+        }
+        return task.created_by?.id === user.id;
+    }, [user]);
 
     const value = useMemo(() => ({
         canAccessPersonnel,
@@ -128,8 +163,28 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         taskFilters,
         isEditorShaWorker,
     }), [
+        canAccessPersonnel,
+        canAccessEquipment,
+        canAccessFacilities,
+        canAccessTasks,
+        canAccessNetworks,
+        canAccessCommunicationPosts,
+        canAccessDivisions,
         canAccessMap,
         canAccessStorage,
+        canAccessPage,
+        canView,
+        canCreate,
+        canEdit,
+        canDelete,
+        isAdmin,
+        isDirector,
+        isExploitationChief,
+        isExploitationEmployee,
+        hasRole,
+        getCurrentUser,
+        canEditTask,
+        canDeleteTask,
         personnelFilters,
         equipmentFilters,
         facilitiesFilters,
@@ -137,10 +192,6 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         taskFilters,
         isEditorShaWorker,
     ]);
-
-    // if (loading && !user) {
-    //     return <div className="loading-skeleton">Загрузка...</div>;
-    // }
 
     return (
         <AppPermissionsContext.Provider value={value}>

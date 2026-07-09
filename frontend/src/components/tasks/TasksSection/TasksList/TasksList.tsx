@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TaskItem } from '../TaskItem/TaskItem';
 import { Task } from '../../../../types/tasks';
 import './TasksList.css';
@@ -34,6 +34,19 @@ export function TasksList({
   const [activeDivisionId, setActiveDivisionId] = useState<string | null>(null);
   const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<SubdivisionTabKey>('all');
 
+  const divisionTabsRef = useRef<HTMLDivElement>(null);
+  const subdivisionTabsRef = useRef<HTMLDivElement>(null);
+
+  const [divisionIndicatorStyle, setDivisionIndicatorStyle] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+  const [subdivisionIndicatorStyle, setSubdivisionIndicatorStyle] = useState<{ left: number; width: number }>({
+    left: 0,
+    width: 0,
+  });
+
+  // 1. Группировка задач
   const groupedTasks: GroupedTasks = useMemo(() => {
     return tasks.reduce((acc, task) => {
       const divisionId = task.division?.id || 'no-division';
@@ -65,37 +78,19 @@ export function TasksList({
     }, {} as GroupedTasks);
   }, [tasks]);
 
+  // 2. Список ID подразделений
   const divisionIds = useMemo(() => Object.keys(groupedTasks), [groupedTasks]);
 
-  // При первом рендере выбираем первое подразделение и вкладку "Все задачи"
-  useState(() => {
-    if (divisionIds.length > 0 && !activeDivisionId) {
-      setActiveDivisionId(divisionIds[0]);
-      setActiveSubdivisionTab('all');
-    }
-  });
+  // 3. Активная группа (подразделение)
+  const activeGroup = useMemo(() => {
+    return activeDivisionId ? groupedTasks[activeDivisionId] : null;
+  }, [groupedTasks, activeDivisionId]);
 
-  const handleDivisionChange = (divisionId: string) => {
-    setActiveDivisionId(divisionId);
-    setActiveSubdivisionTab('all'); // при смене подразделения переключаемся на "Все задачи"
-  };
-
-  if (tasks.length === 0) {
-    return (
-      <div className="tasks-empty-state">
-        <h3>Задачи отсутствуют</h3>
-        <p>Попробуйте изменить параметры фильтрации</p>
-      </div>
-    );
-  }
-
-  const activeGroup = activeDivisionId ? groupedTasks[activeDivisionId] : null;
-
-  // Получаем список вкладок для второго уровня: "Все задачи" + отделения
+  // 4. Вкладки отделений (второй уровень)
   const subdivisionTabs = useMemo(() => {
     if (!activeGroup) return [];
     const tabs: Array<{ key: SubdivisionTabKey; label: string; count: number }> = [
-      { key: 'all', label: 'Все задачи', count: tasks.length } // общее количество задач в подразделении
+      { key: 'all', label: 'Все задачи', count: tasks.length }
     ];
     if (activeGroup.noSubdivisionTasks.length > 0) {
       tabs.push({ key: 'no-subdivision', label: 'Задачи подразделения', count: activeGroup.noSubdivisionTasks.length });
@@ -107,11 +102,10 @@ export function TasksList({
     return tabs;
   }, [activeGroup, tasks]);
 
-  // Получаем задачи для активной вкладки второго уровня
+  // 5. Активные задачи для текущей вкладки
   const activeTasks = useMemo(() => {
     if (!activeGroup) return [];
     if (activeSubdivisionTab === 'all') {
-      // Все задачи подразделения: задачи без отделения + задачи из всех отделений
       const allTasks = [...activeGroup.noSubdivisionTasks];
       Object.values(activeGroup.subdivisions).forEach(sub => {
         allTasks.push(...sub.tasks);
@@ -125,10 +119,53 @@ export function TasksList({
     return sub ? sub.tasks : [];
   }, [activeGroup, activeSubdivisionTab]);
 
+  // 6. Инициализация активного подразделения при первом рендере
+  useEffect(() => {
+    if (divisionIds.length > 0 && !activeDivisionId) {
+      setActiveDivisionId(divisionIds[0]);
+      setActiveSubdivisionTab('all');
+    }
+  }, [divisionIds, activeDivisionId]);
+
+  // 7. Обновление индикатора для вкладок подразделений
+  useEffect(() => {
+    if (!divisionTabsRef.current || !activeDivisionId) return;
+    const activeButton = divisionTabsRef.current.querySelector('.tasks-tab-active') as HTMLElement;
+    if (activeButton) {
+      const { offsetLeft, offsetWidth } = activeButton;
+      setDivisionIndicatorStyle({ left: offsetLeft, width: offsetWidth });
+    }
+  }, [activeDivisionId, divisionIds]);
+
+  // 8. Обновление индикатора для вкладок отделений
+  useEffect(() => {
+    if (!subdivisionTabsRef.current || !activeDivisionId) return;
+    const activeButton = subdivisionTabsRef.current.querySelector('.tasks-subdivision-tab-active') as HTMLElement;
+    if (activeButton) {
+      const { offsetLeft, offsetWidth } = activeButton;
+      setSubdivisionIndicatorStyle({ left: offsetLeft, width: offsetWidth });
+    }
+  }, [activeSubdivisionTab, activeDivisionId, subdivisionTabs]);
+
+  // Обработчик смены подразделения
+  const handleDivisionChange = (divisionId: string) => {
+    setActiveDivisionId(divisionId);
+    setActiveSubdivisionTab('all');
+  };
+
+  if (tasks.length === 0) {
+    return (
+      <div className="tasks-empty-state">
+        <h3>Задачи отсутствуют</h3>
+        <p>Попробуйте изменить параметры фильтрации</p>
+      </div>
+    );
+  }
+
   return (
     <div className="tasks-list">
       {/* Вкладки подразделений (первый уровень) */}
-      <div className="tasks-tabs">
+      <div className="tasks-tabs" ref={divisionTabsRef}>
         {divisionIds.map(id => {
           const group = groupedTasks[id];
           const totalCount = group.noSubdivisionTasks.length +
@@ -144,11 +181,18 @@ export function TasksList({
             </button>
           );
         })}
+        <div
+          className="tasks-tabs-indicator"
+          style={{
+            left: `${divisionIndicatorStyle.left}px`,
+            width: `${divisionIndicatorStyle.width}px`,
+          }}
+        />
       </div>
 
       {/* Внутренние вкладки (второй уровень): "Все задачи" + отделения */}
       {activeGroup && subdivisionTabs.length > 0 && (
-        <div className="tasks-subdivision-tabs">
+        <div className="tasks-subdivision-tabs" ref={subdivisionTabsRef}>
           {subdivisionTabs.map(tab => (
             <button
               key={tab.key}
@@ -159,6 +203,13 @@ export function TasksList({
               <span className="tasks-subdivision-tab-count">{tab.count}</span>
             </button>
           ))}
+          <div
+            className="tasks-subdivision-tabs-indicator"
+            style={{
+              left: `${subdivisionIndicatorStyle.left}px`,
+              width: `${subdivisionIndicatorStyle.width}px`,
+            }}
+          />
         </div>
       )}
 

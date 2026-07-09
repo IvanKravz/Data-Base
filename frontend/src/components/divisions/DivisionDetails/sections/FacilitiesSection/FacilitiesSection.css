@@ -3,7 +3,7 @@
     background: transparent;
     padding: 0;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     z-index: 1;
 }
 
@@ -11,6 +11,7 @@
     background: white;
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: visible;
 }
 
 .facilities-header {
@@ -54,7 +55,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    font-size: 0.8rem;
+    padding: 8px 12px;
     background-color: #3891da;
     color: white;
     border: none;
@@ -140,6 +142,7 @@
 
 .facilities-content {
     padding: 1rem;
+    overflow: visible; 
 }
 
 /* Панель управления (фильтр типов) */
@@ -250,7 +253,6 @@
     margin-bottom: 0.5rem;
     display: flex;
     gap: 1rem;
-    /* align-items: center; */
 }
 
 .export-button-wrapper {
@@ -263,16 +265,19 @@
     display: flex;
     gap: 1.5rem;
     align-items: stretch;
+    overflow: visible;
 }
 
 .facilities-left-column {
     flex: 2;
     min-width: 0;
+    overflow: visible;
 }
 
 .facilities-right-column {
     flex: 1.2;
     min-width: 0;
+    overflow: visible;
 }
 
 /* Карта внутри правой колонки */

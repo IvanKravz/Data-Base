@@ -17,6 +17,7 @@ import {
 import { facilitiesApi, communicationPostsApi, authApi, divisionsApi } from '../../../../../api';
 import { FacilityList } from '../../../../facilities/FacilityList';
 import { CommunicationPostsList } from '../CommunicationPosts/CommunicationPostsList';
+import { AddCommunicationPostForm } from '../CommunicationPosts/AddCommunicationPostForm';
 import { FacilityTypeFilter } from '../../../../facilities/FacilityTypeFilter';
 import { Facility } from '../../../../../types';
 import { ExportButton } from '../../../../common/ExportButton';
@@ -60,6 +61,9 @@ export function FacilitiesSection() {
   const [mapSearchTerm, setMapSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
+
+  // Состояние для модалки создания поста связи
+  const [showAddPostModal, setShowAddPostModal] = useState(false);
 
   // Управление видом отображения (список / группировка)
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
@@ -338,12 +342,10 @@ export function FacilitiesSection() {
   }, []);
 
   const handleBack = useCallback(() => {
-    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
     if (location.state?.fromDivisionList) {
       navigate('/');
       return;
     }
-    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
@@ -361,17 +363,15 @@ export function FacilitiesSection() {
     else navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
   }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
+  // Новая обработка добавления поста связи (модалка)
   const handleAddPost = useCallback(() => {
-    const state = {
-      from: 'facilities-section',
-      divisionId: id,
-      subdivisionId: stableSubdivisionId,
-      activeTab,
-      fromSubdivision: !!stableSubdivisionId
-    };
-    if (isGlobalView || isExploitationUser) navigate(`/communication-posts/new`, { state });
-    else navigate(`/divisions/${id}/communication-posts/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
-  }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
+    setShowAddPostModal(true);
+  }, []);
+
+  // Обновление после сохранения поста
+  const handleAddPostSaved = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleLocateFacility = useCallback((facility: Facility) => {
     setMapSearchTerm('');
@@ -510,11 +510,9 @@ export function FacilitiesSection() {
                 onPostDeleted={handlePostDeleted}
                 onPostUpdated={fetchData}
                 isGlobalView={isGlobalView}
-                canDeletePosts={canDeleteCommunicationPosts}
               />
             ) : (
               <>
-                {/* Верхняя панель управления (фильтр типов) */}
                 <div className="facilities-actions-row1">
                   <FacilityTypeFilter
                     facilities={filteredBySubdivisionFacilities}
@@ -527,7 +525,6 @@ export function FacilitiesSection() {
                   />
                 </div>
 
-                {/* Поисковая строка */}
                 <div className="facilities-search-container">
                   <SearchBar
                     searchTerm={searchTerm}
@@ -539,7 +536,6 @@ export function FacilitiesSection() {
                   </div>
                 </div>
 
-                {/* Блок счётчика с переключателем режимов и динамическим заголовком */}
                 <div className="facilities-count-chip">
                   <div className="facilities-view-mode-toggle">
                     <button
@@ -566,7 +562,6 @@ export function FacilitiesSection() {
                   <div className="facilities-count-right"></div>
                 </div>
 
-                {/* Двухколоночный блок: таблица + карта */}
                 <div className="facilities-two-columns">
                   <div className="facilities-left-column">
                     <FacilityList
@@ -605,6 +600,15 @@ export function FacilitiesSection() {
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+        />
+      )}
+
+      {showAddPostModal && (
+        <AddCommunicationPostForm
+          onClose={() => setShowAddPostModal(false)}
+          onSaved={handleAddPostSaved}
+          divisionId={id || undefined}
+          subdivisionId={stableSubdivisionId || undefined}
         />
       )}
     </>

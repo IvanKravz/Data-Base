@@ -219,7 +219,7 @@ ROLE_PERMISSIONS = {
         'filters': {
             'Equipment': {'category__value__in': ['tko', 'shd', 'shdTelephone']},
             'Facility': {'is_closed': True},
-            'Task': {'division_id': 1, 'subdivision_id': 2}
+            'Task': {'division_id': 16, 'subdivision_id': 2}
         },
         'can_see_all_divisions': True,
         'is_editor_sha_worker': True,              

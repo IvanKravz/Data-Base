@@ -61,11 +61,9 @@ export function EditEquipmentForm({
 
   const permissionsFields = useEquipmentFieldPermissions();
 
-  // Состояния вкладок
   const [activeMainTab, setActiveMainTab] = useState<MainTab>('main');
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('assignment');
 
-  // Вычисление признаков для отображения вкладок
   const isClosedEquipment = useMemo(() => {
     if (formData.category) {
       if (typeof formData.category === 'object' && 'is_closed' in formData.category) {
@@ -87,7 +85,7 @@ export function EditEquipmentForm({
   );
   const showDisposalTab = formData.status === 'disposed';
 
-  // Загрузка справочников
+  // Загрузка справочников с защитой от 403
   useEffect(() => {
     const fetchAllData = async () => {
       if (!token) return;
@@ -97,11 +95,11 @@ export function EditEquipmentForm({
         const [divisionsData, categoriesData, organsData] = await Promise.all([
           divisionsApi.getDivisions(token),
           equipmentApi.getEquipmentCategories(token),
-          equipmentApi.getInterestOrgans(token),
+          equipmentApi.getInterestOrgans(token).catch(() => []), // защита от 403
         ]);
         setDivisions(divisionsData);
         setCategories(categoriesData);
-        setInterestOrgans(organsData);
+        setInterestOrgans(organsData || []);
         if (formData.division?.id) {
           const personnelData = await employeesApi.getPersonnel(token, {
             division: formData.division.id,
@@ -165,7 +163,6 @@ export function EditEquipmentForm({
       return;
     }
 
-    // Валидация: при безвозмездном пользовании номер акта обязателен
     if (formData.is_free_use && !formData.free_use_act_number?.trim()) {
       setError('При выдаче в безвозмездное пользование необходимо указать номер акта');
       return;
@@ -192,7 +189,6 @@ export function EditEquipmentForm({
       await onSubmit(dataToSend);
     } catch (error: any) {
       console.error('Ошибка сохранения:', error);
-      // Если сервер вернул ошибку с полем free_use_act_number, показываем её
       if (error?.response?.data?.free_use_act_number) {
         setError(error.response.data.free_use_act_number[0] || 'Ошибка валидации');
       } else {
@@ -228,7 +224,6 @@ export function EditEquipmentForm({
     return division?.subdivisions || [];
   };
 
-  // Рендер содержимого основных вкладок
   const renderMainTabContent = () => {
     switch (activeMainTab) {
       case 'main':
@@ -426,6 +421,7 @@ export function EditEquipmentForm({
           showDisposeButton={formData.status !== 'disposed' && hasEditPermission}
           onDispose={() => setShowDisposalModal(true)}
           hasEditPermission={hasEditPermission}
+          isLoading={isLoading}
         />
       </form>
 

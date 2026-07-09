@@ -1,9 +1,8 @@
-// DivisionList.tsx
+import React, { useState, useEffect } from 'react';
 import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp } from 'lucide-react';
 import { Division } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { divisionsApi } from '../../../api/divisions';
-import { useState, useEffect } from 'react';
 import './style.css';
 import { MapCountry } from '../../map/MapCountry/MapCountry';
 import { useAppPermissions } from '../../../api/utils/AppPermissionsContext';
@@ -12,7 +11,6 @@ interface DivisionListProps {
   onSelectDivision: (division: Division) => void;
 }
 
-// Функция проверки видимости раздела для данного подразделения
 const isVisibleForDivision = (
   canAccess: boolean,
   filters: { division_id?: number; subdivision_id?: number } | null,
@@ -31,9 +29,8 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
-  // Получаем права доступа и фильтры
   const {
     canAccessPersonnel, canAccessEquipment, canAccessFacilities,
     canAccessTasks,
@@ -52,12 +49,19 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         setLoading(false);
       }
     };
-
     fetchDivisions();
   }, [token]);
 
-  const toggleExpand = (divisionId: number) => {
-    setExpandedId(expandedId === divisionId ? null : divisionId);
+  const toggleExpand = (id: number) => {
+    setExpandedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
   };
 
   const handleMetricClick = (divisionId: number, section: string) => {
@@ -69,108 +73,97 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     navigate(`/divisions/${division.id}`);
   };
 
-  if (loading) {
-    return <div className="loading-divisions">Загрузка подразделений...</div>;
-  }
+  if (loading) return <div className="loading-divisions">Загрузка подразделений...</div>;
+  if (error) return <div className="loading-divisions">{error}</div>;
 
-  if (error) {
-    return <div className="loading-divisions">{error}</div>;
+  const chunkSize = Math.ceil(divisions.length / 3);
+  const divisionChunks: Division[][] = [];
+  for (let i = 0; i < divisions.length; i += chunkSize) {
+    divisionChunks.push(divisions.slice(i, i + chunkSize));
   }
 
   return (
     <>
-      <div className="division-list-header-text">Отделы и отделения</div>
-      <div className="grid-container">
-        {divisions.map((division, index) => {
-          const isExpanded = expandedId === division.id;
+      <div className="division-subheader">Подразделения</div>
 
-          // Определяем доступность каждого раздела
-          const showPersonnel = isVisibleForDivision(
-            canAccessPersonnel(), personnelFilters, division.id
-          );
-          const showEquipment = isVisibleForDivision(
-            canAccessEquipment(), equipmentFilters, division.id
-          );
-          const showFacilities = isVisibleForDivision(
-            canAccessFacilities(), facilitiesFilters, division.id
-          );
-          const showTasks = isVisibleForDivision(
-            canAccessTasks(), taskFilters, division.id
-          );
+      <div className="tables-wrapper">
+        <div className="tables-grid">
+          {divisionChunks.map((chunk, chunkIndex) => (
+            <div className="table-column" key={chunkIndex}>
+              <table className="division-table">
+                <tbody>
+                  {chunk.map((division) => {
+                    const isExpanded = expandedIds.has(division.id);
+                    const showPersonnel = isVisibleForDivision(canAccessPersonnel(), personnelFilters, division.id);
+                    const showEquipment = isVisibleForDivision(canAccessEquipment(), equipmentFilters, division.id);
+                    const showFacilities = isVisibleForDivision(canAccessFacilities(), facilitiesFilters, division.id);
+                    const showTasks = isVisibleForDivision(canAccessTasks(), taskFilters, division.id);
+                    const hasAnyVisible = showPersonnel || showEquipment || showFacilities || showTasks;
 
-          // Показываем выпадающее меню, только если есть хотя бы один доступный раздел
-          const hasAnyVisible = showPersonnel || showEquipment || showFacilities || showTasks;
+                    return (
+                      <React.Fragment key={division.id}>
+                        <tr className={`table-row ${isExpanded ? 'expanded' : ''}`}>
+                          <td className="name-cell" onClick={() => handleTitleClick(division)}>
+                            {division.name}
+                          </td>
+                          <td className="toggle-cell">
+                            {hasAnyVisible && (
+                              <button
+                                className="chevron-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleExpand(division.id);
+                                }}
+                                aria-label={isExpanded ? 'Свернуть' : 'Развернуть'}
+                              >
+                                {isExpanded ? <ChevronUp size={25} /> : <ChevronDown size={25} />}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
 
-          return (
-            <div
-              key={division.id}
-              className={`division-card ${isExpanded ? 'expanded' : ''}`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <div className="division-card-header">
-                <h3
-                  className="division-card-title clickable-title"
-                  onClick={() => handleTitleClick(division)}
-                >
-                  {division.name}
-                </h3>
-                {hasAnyVisible && (
-                  <button
-                    className="chevron-button"
-                    onClick={() => toggleExpand(division.id)}
-                    aria-label={isExpanded ? 'Свернуть' : 'Развернуть'}
-                  >
-                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </button>
-                )}
-              </div>
-
-              {isExpanded && hasAnyVisible && (
-                <div className="expanded-content">
-                  <div className="expanded-metrics-grid">
-                    {showPersonnel && (
-                      <div
-                        className="metric-item metric-item-clickable"
-                        onClick={() => handleMetricClick(division.id, 'personnel')}
-                      >
-                        <Users className="metric-icon metric-icon--blue" />
-                        <span>Сотрудники: {division.employees_count}</span>
-                      </div>
-                    )}
-                    {showEquipment && (
-                      <div
-                        className="metric-item metric-item-clickable"
-                        onClick={() => handleMetricClick(division.id, 'equipment')}
-                      >
-                        <Plug className="metric-icon metric-icon--green" />
-                        <span>Техника: {division.equipment_count}</span>
-                      </div>
-                    )}
-                    {showFacilities && (
-                      <div
-                        className="metric-item metric-item-clickable"
-                        onClick={() => handleMetricClick(division.id, 'facilities')}
-                      >
-                        <Building2 className="metric-icon metric-icon--purple" />
-                        <span>Объекты: {division.facilities_count}</span>
-                      </div>
-                    )}
-                    {showTasks && (
-                      <div
-                        className="metric-item metric-item-clickable"
-                        onClick={() => handleMetricClick(division.id, 'tasks')}
-                      >
-                        <ListTodo className="metric-icon metric-icon--orange" />
-                        <span>Задачи: {division.tasks_count}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                        <tr className={`expanded-row ${isExpanded ? 'expanded' : ''}`}>
+                          <td colSpan={2}>
+                            <div className="expanded-metrics-wrapper">
+                              <div className="expanded-metrics-row">
+                                {showPersonnel && (
+                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'personnel')}>
+                                    <Users className="metric-icon metric-icon--blue" />
+                                    <span>Сотрудники: {division.employees_count}</span>
+                                  </div>
+                                )}
+                                {showEquipment && (
+                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'equipment')}>
+                                    <Plug className="metric-icon metric-icon--green" />
+                                    <span>Техника: {division.equipment_count}</span>
+                                  </div>
+                                )}
+                                {showFacilities && (
+                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'facilities')}>
+                                    <Building2 className="metric-icon metric-icon--purple" />
+                                    <span>Объекты: {division.facilities_count}</span>
+                                  </div>
+                                )}
+                                {showTasks && (
+                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'tasks')}>
+                                    <ListTodo className="metric-icon metric-icon--orange" />
+                                    <span>Задачи: {division.tasks_count}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
+
       <div className="map-country animate-fadeInUp">
         <MapCountry />
       </div>

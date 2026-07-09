@@ -1,115 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import { Database, Plug } from 'lucide-react';
+// AssignedEquipment.tsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { Facility, Equipment } from '../../../../types';
-import { EquipmentList } from '../../../equipment/EquipmentList';
 import { equipmentApi } from '../../../../api/equipment';
-import '../FacilityForm.css';
+import { Section } from './Section';
+import { getStatusLabel, getStatusColor } from '../../../../utils/statusUtils';
 
 interface AssignedEquipmentProps {
   facility: Facility;
+  searchTerm?: string;
 }
 
-export function AssignedEquipment({ facility }: AssignedEquipmentProps) {
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-  const [facilityEquipment, setFacilityEquipment] = useState<Equipment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function AssignedEquipment({ facility, searchTerm = '' }: AssignedEquipmentProps) {
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     const fetchEquipment = async () => {
+      if (!token || !facility.id) return;
       try {
-        if (!token || !facility.id) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        const data = await equipmentApi.getEquipment(token, {
-          facility: facility.id.toString() // Убедимся, что передаем строку
-        });
-
-        if (data) {
-          setFacilityEquipment(data);
-        } else {
-          setFacilityEquipment([]);
-        }
+        setLoading(true);
+        const data = await equipmentApi.getEquipment(token, { facility: facility.id.toString() });
+        setEquipment(data || []);
       } catch (err) {
-        console.error('Ошибка при загрузке техники:', err);
+        console.error('Ошибка загрузки техники:', err);
         setError('Не удалось загрузить список техники');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
     fetchEquipment();
   }, [facility.id, token]);
 
-  const handleUpdateEquipment = async (updatedEquipment: Equipment) => {
-    try {
-      if (!token) return;
+  const filteredEquipment = useMemo(() => {
+    if (!searchTerm.trim()) return equipment;
+    const lower = searchTerm.toLowerCase().trim();
+    return equipment.filter(item =>
+      item.name.toLowerCase().includes(lower) ||
+      item.serial_number.toLowerCase().includes(lower) ||
+      item.inventory_number?.toLowerCase().includes(lower) ||
+      (item.category_display || '').toLowerCase().includes(lower) ||
+      (item.assigned_to?.full_name || '').toLowerCase().includes(lower) ||
+      getStatusLabel(item.status).toLowerCase().includes(lower)
+    );
+  }, [equipment, searchTerm]);
 
-      await equipmentApi.updateEquipment(
-        token,
-        updatedEquipment.id,
-        updatedEquipment
-      );
+  if (loading) {
+    return (
+      <Section title="Техника на объекте">
+        <div className="facility-details-loading">Загрузка техники...</div>
+      </Section>
+    );
+  }
 
-      setFacilityEquipment(prev =>
-        prev.map(item =>
-          item.id === updatedEquipment.id ? updatedEquipment : item
-        )
-      );
-      setSelectedEquipment(null);
-    } catch (err) {
-      console.error('Ошибка при обновлении техники:', err);
-      setError('Не удалось обновить данные техники');
-    }
-  };
+  if (error) {
+    return (
+      <Section title="Техника на объекте">
+        <div className="facility-details-error">{error}</div>
+      </Section>
+    );
+  }
 
-  const handleDeleteEquipment = async (id: string) => {
-    try {
-      if (!token) return;
-
-      await equipmentApi.deleteEquipment(id);
-      setFacilityEquipment(prev => prev.filter(item => item.id !== id));
-    } catch (err) {
-      console.error('Ошибка при удалении техники:', err);
-      setError('Не удалось удалить технику');
-    }
-  };
+  if (filteredEquipment.length === 0) {
+    return (
+      <Section title="Техника на объекте">
+        <div className="facility-details-comments-empty">Нет техники на объекте</div>
+      </Section>
+    );
+  }
 
   return (
-    <div className="facility-assigned-equipment">
-      <div className="facility-assigned-equipment-header">
-        <div className="facility-assigned-equipment-title-wrapper">
-          <Plug className="facility-assigned-equipment-icon" size={22} />
-          <h2 className="facility-assigned-equipment-title">Техника на объекте</h2>
-        </div>
-        <div className="facility-assigned-equipment-count">
-          <span className="facility-assigned-equipment-count-value">
-            Всего: <strong>{facilityEquipment.length}</strong>
-          </span>
-        </div>
+    <Section title="Техника на объекте">
+      <div className="facility-equipment-table-wrapper">
+        <table className="facility-equipment-table">
+          <thead>
+            <tr>
+              <th>№ п/п</th>
+              <th>Название</th>
+              <th>Серийный номер</th>
+              <th>Инв. номер</th>
+              <th>Категория</th>
+              <th>Закреплено</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEquipment.map((item, index) => (
+              <tr key={item.id} className="facility-equipment-row">
+                <td>{index + 1}</td>
+                <td>{item.name}</td>
+                <td>{item.serial_number || '—'}</td>
+                <td>{item.inventory_number || '—'}</td>
+                <td>{item.category_display || '—'}</td>
+                <td>{item.assigned_to?.full_name || '—'}</td>
+                <td>
+                  <span className={`facility-equipment-status-badge ${getStatusColor(item.status)}`}>
+                    {getStatusLabel(item.status)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {isLoading ? (
-        <div className="facility-loading">
-          <p>Загрузка списка техники...</p>
-        </div>
-      ) : error ? (
-        <div className="facility-error">
-          <p>{error}</p>
-        </div>
-      ) : (
-        <EquipmentList
-          equipment={facilityEquipment}
-          onUpdateEquipment={handleUpdateEquipment}
-          onDeleteEquipment={handleDeleteEquipment}
-          viewType="table"
-          disableRowClick={true}  
-          showActions={false}   
-        />
-      )}
-    </div>
+    </Section>
   );
 }

@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { X, Check, ChevronDown, Lock } from 'lucide-react';
 import { communicationPostsApi, divisionsApi } from '../../../../../api';
 import './CommunicationPosts.css';
 
-export function AddCommunicationPostForm() {
-  const { id: divisionId } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+interface AddCommunicationPostFormProps {
+  onClose: () => void;
+  onSaved: () => void;
+  divisionId?: string;        // ID подразделения (если открыто из контекста)
+  subdivisionId?: string;    // ID отделения (если открыто из контекста)
+}
+
+export function AddCommunicationPostForm({
+  onClose,
+  onSaved,
+  divisionId: initialDivisionId,
+  subdivisionId: initialSubdivisionId,
+}: AddCommunicationPostFormProps) {
   const token = localStorage.getItem('accessToken');
 
   const [name, setName] = useState('');
@@ -17,12 +25,12 @@ export function AddCommunicationPostForm() {
   const [divisions, setDivisions] = useState<any[]>([]);
   const [subdivisions, setSubdivisions] = useState<any[]>([]);
   const [isDivisionsOpen, setIsDivisionsOpen] = useState(false);
+  const [isSubdivisionsOpen, setIsSubdivisionsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSubdivisionsOpen, setIsSubdivisionsOpen] = useState(false);
 
   // Определяем режим: из подразделения или глобальный
-  const isFromDivision = Boolean(divisionId);
+  const isFromDivision = Boolean(initialDivisionId);
 
   const fetchDivisions = async () => {
     try {
@@ -44,17 +52,15 @@ export function AddCommunicationPostForm() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (isFromDivision && divisionId) {
+      if (isFromDivision && initialDivisionId) {
         // Режим из подразделения: загружаем только нужное подразделение
         try {
-          const divisionData = await divisionsApi.getDivisionById(divisionId, token);
-          setDivisions([divisionData]); // Устанавливаем только текущее подразделение
-          setDivision(divisionId);
+          const divisionData = await divisionsApi.getDivisionById(initialDivisionId, token);
+          setDivisions([divisionData]);
+          setDivision(initialDivisionId);
           setSubdivisions(divisionData.subdivisions || []);
-          
-          const urlSubdivisionId = searchParams.get('subdivision');
-          if (urlSubdivisionId) {
-            setSubdivisionId(urlSubdivisionId);
+          if (initialSubdivisionId) {
+            setSubdivisionId(initialSubdivisionId);
           }
         } catch (err) {
           console.error('Ошибка при загрузке подразделения:', err);
@@ -65,31 +71,48 @@ export function AddCommunicationPostForm() {
       }
     };
     loadData();
-  }, [divisionId, searchParams, isFromDivision, token]);
+  }, [initialDivisionId, initialSubdivisionId, isFromDivision, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // Преобразуем ID в числа (сервер ожидает числовые значения)
+    const payload = {
+      name,
+      division: parseInt(division, 10),
+      subdivision: subdivisionId ? parseInt(subdivisionId, 10) : undefined,
+      description,
+    };
+
     try {
-      await communicationPostsApi.createCommunicationPost({
-        name,
-        division,
-        subdivision: subdivisionId || undefined,
-        description
-      }, token);
-      navigate(-1);
-    } catch (err) {
-      setError('Не удалось создать пост связи');
-      console.error(err);
+      await communicationPostsApi.createCommunicationPost(payload, token);
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      console.error('Ошибка при создании:', err);
+      let msg = 'Не удалось создать пост связи';
+      if (err.response) {
+        if (err.response.data && typeof err.response.data === 'object') {
+          if (err.response.data.detail) {
+            msg = err.response.data.detail;
+          } else {
+            const errors = Object.entries(err.response.data)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('; ');
+            if (errors) msg = errors;
+          }
+        } else if (typeof err.response.data === 'string') {
+          msg = err.response.data;
+        }
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    navigate(-1);
   };
 
   return (
@@ -97,19 +120,14 @@ export function AddCommunicationPostForm() {
       <div className="add-post-modal-container">
         <div className="add-post-modal-header">
           <h2 className="add-post-modal-title">Добавить пост связи</h2>
-          <button
-            onClick={handleCancel}
-            className="add-post-modal-close-btn"
-          >
+          <button onClick={onClose} className="add-post-modal-close-btn">
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="add-post-form">
           <div className="add-post-form-group">
-            <label htmlFor="name" className="add-post-form-label">
-              Наименование *
-            </label>
+            <label htmlFor="name" className="add-post-form-label">Наименование *</label>
             <input
               id="name"
               type="text"
@@ -121,14 +139,11 @@ export function AddCommunicationPostForm() {
           </div>
 
           <div className="add-post-form-group">
-            <label className="add-post-form-label">
-              Подразделение *
-            </label>
+            <label className="add-post-form-label">Подразделение *</label>
             {isFromDivision ? (
-              // Режим из подразделения: фиксированное значение
               <div className="add-post-select-container">
                 <div className="add-post-select-display add-post-select-disabled">
-                  <span>{divisions.find(d => d.id == division)?.name || 'Загрузка...'}</span>
+                  <span>{divisions.find(d => d.id.toString() === division)?.name || 'Загрузка...'}</span>
                   <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -136,18 +151,16 @@ export function AddCommunicationPostForm() {
                 </div>
               </div>
             ) : (
-              // Глобальный режим: выбор из списка
               <div className="add-post-select-container">
                 <div
                   className="add-post-select-display"
                   onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
                 >
-                  <span>{divisions.find(d => d.id == division)?.name || 'Выберите подразделение'}</span>
+                  <span>{divisions.find(d => d.id.toString() === division)?.name || 'Выберите подразделение'}</span>
                   <ChevronDown
                     className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
                   />
                 </div>
-
                 {isDivisionsOpen && (
                   <div className="add-post-select-options">
                     {divisions.map((divisionItem) => (
@@ -155,7 +168,7 @@ export function AddCommunicationPostForm() {
                         key={divisionItem.id}
                         className="add-post-select-option"
                         onClick={() => {
-                          setDivision(divisionItem.id);
+                          setDivision(divisionItem.id.toString());
                           fetchSubdivisions(divisionItem.id);
                           setSubdivisionId('');
                           setIsDivisionsOpen(false);
@@ -172,20 +185,17 @@ export function AddCommunicationPostForm() {
 
           {subdivisions.length > 0 && (
             <div className="add-post-form-group">
-              <label className="add-post-form-label">
-                Отделение
-              </label>
+              <label className="add-post-form-label">Отделение</label>
               <div className="add-post-select-container">
                 <div
                   className="add-post-select-display"
                   onClick={() => setIsSubdivisionsOpen(!isSubdivisionsOpen)}
                 >
-                  <span>{subdivisions.find(s => s.id == subdivisionId)?.name || 'Не выбрано'}</span>
+                  <span>{subdivisions.find(s => s.id.toString() === subdivisionId)?.name || 'Не выбрано'}</span>
                   <ChevronDown
                     className={`h-5 w-5 text-gray-400 transition-transform ${isSubdivisionsOpen ? 'transform rotate-180' : ''}`}
                   />
                 </div>
-
                 {isSubdivisionsOpen && (
                   <div className="add-post-select-options">
                     <div
@@ -197,16 +207,16 @@ export function AddCommunicationPostForm() {
                     >
                       Не выбрано
                     </div>
-                    {subdivisions.map((subdivision) => (
+                    {subdivisions.map((sub) => (
                       <div
-                        key={subdivision.id}
+                        key={sub.id}
                         className="add-post-select-option"
                         onClick={() => {
-                          setSubdivisionId(subdivision.id);
+                          setSubdivisionId(sub.id.toString());
                           setIsSubdivisionsOpen(false);
                         }}
                       >
-                        {subdivision.name}
+                        {sub.name}
                       </div>
                     ))}
                   </div>
@@ -216,9 +226,7 @@ export function AddCommunicationPostForm() {
           )}
 
           <div className="add-post-form-group">
-            <label htmlFor="description" className="add-post-form-label">
-              Описание
-            </label>
+            <label htmlFor="description" className="add-post-form-label">Описание</label>
             <textarea
               id="description"
               value={description}
@@ -228,19 +236,10 @@ export function AddCommunicationPostForm() {
             />
           </div>
 
-          {error && (
-            <div className="add-post-form-error">
-              {error}
-            </div>
-          )}
+          {error && <div className="add-post-form-error">{error}</div>}
 
           <div className="add-post-form-actions">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="add-post-form-cancel-btn"
-              disabled={loading}
-            >
+            <button type="button" onClick={onClose} className="add-post-form-cancel-btn" disabled={loading}>
               Отмена
             </button>
             <button

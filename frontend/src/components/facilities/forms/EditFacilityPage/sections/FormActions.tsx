@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Save, PlusCircle, Loader2 } from 'lucide-react';
-import '../EditFacilityForm.css';
+import '../EditFacilityPage.css';
 
 interface FormActionsProps {
   onCancel: () => void;
