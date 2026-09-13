@@ -9,21 +9,18 @@ import uuid
 from datetime import datetime
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
-from facilities.models import Division, Subdivision
 
 logger = logging.getLogger(__name__)
 
 def employee_photo_path(instance, filename):
     full_name = re.sub(r'[^\w\s]', '', instance.full_name)
     full_name = full_name.replace(' ', '_')
-    
     ext = os.path.splitext(filename)[1]
-    
     if instance.id:
         return f'employee_photos/{full_name}_id_{instance.id}{ext}'
     else:
         return f'employee_photos/temp/{uuid.uuid4()}{ext}'
-    
+
 
 class Employee(models.Model):
     CATEGORY_CHOICES = [
@@ -39,6 +36,7 @@ class Employee(models.Model):
         ('department_head', 'Начальник отдела'),
         ('deputy_department_head', 'Заместитель начальника отдела'),
         ('section_head', 'Начальник отделения'),
+        ('deputy_section_head', 'Заместитель начальника отделения'),
     ]
 
     @classmethod
@@ -48,6 +46,18 @@ class Employee(models.Model):
     @classmethod
     def get_subcategory_choices(cls):
         return cls.SUB_CATEGORY_CHOICES
+
+    @classmethod
+    def get_management_positions(cls):
+        """Возвращает список должностей для категории 'Руководство'."""
+        return [
+            ('Главный руководитель', 'Главный руководитель'),
+            ('Заместитель главного руководителя', 'Заместитель главного руководителя'),
+            ('Начальник отдела', 'Начальник отдела'),
+            ('Заместитель начальника отдела', 'Заместитель начальника отдела'),
+            ('Начальник отделения', 'Начальник отделения'),
+            ('Заместитель начальника отделения', 'Заместитель начальника отделения'),
+        ]
 
     @classmethod
     def get_officer_positions(cls):
@@ -134,8 +144,9 @@ class Employee(models.Model):
     date_start_work = models.DateField(verbose_name='Дата начала службы', null=True, blank=True)
     date_end_work = models.DateField(verbose_name='Дата окончания контракта', null=True, blank=True)
     description = models.TextField(verbose_name='Комментарии', null=True, blank=True)
+
     division = models.ForeignKey(
-        Division,
+        'facilities.Division',
         on_delete=models.CASCADE,
         related_name='employees',
         verbose_name='Подразделение',
@@ -143,13 +154,14 @@ class Employee(models.Model):
         blank=True
     )
     subdivision = models.ForeignKey(
-        Subdivision,
+        'facilities.Subdivision',
         on_delete=models.SET_NULL,
         related_name='employees',
         verbose_name='Отделение',
         null=True,
         blank=True,
     )
+
     is_sha_worker = models.BooleanField(default=False, verbose_name='ШаРаботник')
     is_material_responsible = models.BooleanField(default=False, verbose_name='МОЛ')
     category = models.CharField(
@@ -220,9 +232,9 @@ class Employee(models.Model):
         self.photo = None
         self.save(update_fields=['photo'])
         return deleted
-    
 
     def save(self, *args, **kwargs):
+        # Удаление старого фото при смене
         if self.pk:
             try:
                 old_employee = Employee.objects.get(pk=self.pk)
@@ -231,18 +243,17 @@ class Employee(models.Model):
             except Employee.DoesNotExist:
                 pass
 
+        # Новая логика расчёта приоритета
         if self.category == 'management':
-            if self.subcategory == 'chief':
-                self.priority = 100
-            elif self.subcategory == 'deputy_chief':
-                self.priority = 200
-            elif self.subcategory == 'department_head':
-                self.priority = 300
-            elif self.subcategory == 'deputy_department_head':
-                self.priority = 400
-            elif self.subcategory == 'section_head':
-                self.priority = 500
-        
+            position_priority = {
+                'Главный руководитель': 100,
+                'Заместитель главного руководителя': 200,
+                'Начальник отдела': 300,
+                'Заместитель начальника отдела': 400,
+                'Начальник отделения': 500,
+                'Заместитель начальника отделения': 600,
+            }
+            self.priority = position_priority.get(self.position, 700)
         elif self.category == 'officer':
             if self.position in ['Старший офицер', 'Флагманский связист']:
                 base_priority = 600
@@ -271,7 +282,6 @@ class Employee(models.Model):
                 self.priority = base_priority + 50
             else:
                 self.priority = base_priority + 60
-        
         elif self.category == 'warrant_officer':
             if self.position == 'Старший инструктор':
                 base_priority = 1300
@@ -288,10 +298,9 @@ class Employee(models.Model):
                 self.priority = base_priority + 20
             else:
                 self.priority = base_priority + 30
-        
         elif self.category == 'civilian':
             self.priority = 1700
-        
+
         super().save(*args, **kwargs)
 
 
@@ -345,7 +354,7 @@ class ShaEquipmentConclusion(models.Model):
 
     def __str__(self):
         return f"Заключение {self.conclusion_number} для {self.sha_worker.employee.full_name}"
-    
+
 
 @receiver(post_save, sender=Employee)
 def update_employee_photo(sender, instance, created, **kwargs):
@@ -399,3 +408,40 @@ def update_employee_photo(sender, instance, created, **kwargs):
                     instance.save(update_fields=['photo'])
         except Exception as e:
             logger.error(f"Ошибка при переименовании фото: {str(e)}")
+
+class ScheduleEvent(models.Model):
+    EVENT_TYPES = [
+        ('duty', 'Дежурство'),
+        ('vacation', 'Отпуск'),
+        ('sick', 'Больничный'),
+        ('hospital', 'Госпиталь'),
+        ('business_trip', 'Командировка'),
+        ('inspection', 'Проверка'),
+        ('day_off', 'Отгул'),
+        ('study_leave', 'Учебный отпуск'),
+    ]
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name='schedule_events',
+        verbose_name='Сотрудник'
+    )
+    date = models.DateField(verbose_name='Дата')
+    event_type = models.CharField(
+        max_length=20,
+        choices=EVENT_TYPES,
+        verbose_name='Тип события'
+    )
+    comment = models.TextField(verbose_name='Комментарий', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('employee', 'date')
+        verbose_name = 'Событие графика'
+        verbose_name_plural = 'События графика'
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.date} ({self.get_event_type_display()})"

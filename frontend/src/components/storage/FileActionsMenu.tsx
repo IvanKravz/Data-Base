@@ -12,10 +12,10 @@ interface FileActionsMenuProps {
     onClose: () => void;
     permissions: StoragePermissions;
     viewType: 'personal' | 'work';
-    // Изменено: onMove принимает только целевой ID
     onMove: (targetFolderId: number | null) => Promise<void>;
     onDelete?: (fileId: number) => void;
     onRefreshFavorites?: () => void;
+    onTogglePin?: (itemId: number, isFolder: boolean, currentPinned: boolean) => Promise<void>; // новый
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -35,6 +35,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
     onMove,
     onDelete,
     onRefreshFavorites,
+    onTogglePin,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(file.name);
@@ -136,7 +137,7 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ file_id: file.id });
             file.is_favorited = !file.is_favorited;
-            onRefreshFavorites?.(); // 👈 обновляем избранное
+            onRefreshFavorites?.();
             onClose();
         } catch (error) {
             console.error('Error toggling favorite:', error);
@@ -145,14 +146,20 @@ const FileActionsMenu: React.FC<FileActionsMenuProps> = ({
         }
     };
 
+    // Изменённый обработчик – используем onTogglePin из пропсов
     const handleTogglePin = async () => {
-        try {
-            await storageApi.pinFile(file.id);
-            file.is_pinned = !file.is_pinned;
-            onClose();
-        } catch (error) {
-            console.error('Error pinning file:', error);
+        if (onTogglePin) {
+            await onTogglePin(file.id, false, file.is_pinned);
+        } else {
+            // fallback – прямой вызов API (для обратной совместимости)
+            try {
+                await storageApi.pinFile(file.id);
+                file.is_pinned = !file.is_pinned;
+            } catch (error) {
+                console.error('Error pinning file:', error);
+            }
         }
+        onClose();
     };
 
     const handleMove = () => {

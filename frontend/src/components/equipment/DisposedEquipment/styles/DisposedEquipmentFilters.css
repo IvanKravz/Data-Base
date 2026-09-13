@@ -1,0 +1,96 @@
+/* DisposedEquipmentAdvancedFilters.css */
+.deaf-container {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.deaf-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.deaf-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.deaf-field label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.deaf-input {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.deaf-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.deaf-selected-filter {
+    margin-top: 4px;
+}
+
+.deaf-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #1e40af;
+}
+
+.deaf-filter-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1e40af;
+    font-size: 1rem;
+    padding: 0 2px;
+}
+
+.deaf-filter-tag button:hover {
+    color: #dc2626;
+}
+
+.deaf-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.deaf-clear-btn {
+    padding: 6px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.85rem;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.deaf-clear-btn:hover {
+    background: #f3f4f6;
+}
+
+/* Обёртка для позиционирования подсказок */
+.deaf-suggestion-wrapper {
+    position: relative;
+}

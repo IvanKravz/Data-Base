@@ -24,7 +24,7 @@
 .tasks-card {
     background: var(--bg-card);
     border-radius: var(--radius-card);
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 1rem;
     margin-bottom: 0.1rem;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-sm);
@@ -54,7 +54,7 @@
     border-left: 4px solid var(--accent-yellow);
 }
 
-/* Для завершённых задач — свой фон, но можно переопределить */
+/* Для завершённых задач — свой фон */
 .tasks-card-completed.tasks-card-expanded-urgent,
 .tasks-card-completed.tasks-card-expanded-planned,
 .tasks-card-completed.tasks-card-expanded-attention {
@@ -67,7 +67,7 @@
     border-left: 4px solid var(--accent-green);
 }
 
-/* Номер задачи — сверху */
+/* Номер задачи */
 .tasks-card-number {
     font-size: 0.875rem;
     color: var(--text-muted);
@@ -102,42 +102,54 @@
     flex-shrink: 0;
 }
 
+/* Контейнер для бейджей — теперь колонка */
+.tasks-badges-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
 /* Бейдж */
 .tasks-badge {
     padding: 0.2rem 0.7rem;
     border-radius: 2rem;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.3px;
     text-transform: uppercase;
-    background: #f1f5f9;
     color: var(--text-secondary);
-    border: 1px solid #e2e8f0;
     white-space: nowrap;
 }
 
 .tasks-badge-completed {
-    background: #e0f2e9;
+    /* background: #e0f2e9ab; */
     color: var(--accent-green);
-    border-color: #b9dfcc;
+    /* border-color: #b9dfcc; */
 }
 
 .tasks-badge-urgent {
-    background: #fee8e8;
+    background: #fee8e89f;
     color: var(--accent-red);
     border-color: #fcd0d0;
 }
 
 .tasks-badge-planned {
-    background: #e6f0fa;
+    /* background: #e6f0fa92; */
     color: var(--accent-blue);
-    border-color: #cbddee;
+    /* border-color: #cbddee; */
 }
 
 .tasks-badge-attention {
-    background: #fef4e6;
+    /* background: #fef4e68c; */
     color: var(--accent-yellow);
-    border-color: #fae6c9;
+    /* border-color: #fae6c9; */
+}
+
+/* Бейдж "Просрочено" */
+.tasks-badge-overdue {
+    font-size: 0.6rem;
+    color: #bababa;
+    font-weight: 700;
 }
 
 /* Кнопки действий */
@@ -194,7 +206,7 @@
     }
 }
 
-/* Блок прогресса — занимает всю ширину */
+/* Блок прогресса */
 .tasks-detail-progress-full {
     width: 100%;
     margin-bottom: 1rem;
@@ -281,7 +293,7 @@
     transition: width 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
-/* Кнопка "Показать этапы" */
+/* Кнопка "Показать этапы" (больше не используется, но стиль можно оставить) */
 .tasks-steps-toggle-btn {
     background: var(--accent-blue);
     border: none;
@@ -304,7 +316,7 @@
     box-shadow: var(--shadow-sm);
 }
 
-/* Список остальных деталей */
+/* Список деталей */
 .tasks-details-list {
     display: flex;
     flex-wrap: wrap;
@@ -327,7 +339,7 @@
     margin-left: 0.2rem;
 }
 
-/* ===== Встроенный список этапов (горизонтально) ===== */
+/* ===== Встроенный список этапов ===== */
 .tasks-inline-steps {
     margin-top: 0.75rem;
     padding-top: 0.75rem;

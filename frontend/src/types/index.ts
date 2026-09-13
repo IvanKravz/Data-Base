@@ -1,4 +1,4 @@
-
+// types/index.ts
 export interface User {
   id: string;
   username: string;
@@ -69,37 +69,66 @@ export interface Equipment {
   name: string;
   type: string;
   is_closed: boolean;
-  open_category?: 'tko' | 'radio' | 'computer' | 'battery' | 'antenna' | 'power' | 'materials' | null;
-  closed_category?: number | null;
+  is_network: boolean;
   status: 'in-operation' | 'in-storage' | 'defective' | 'for-disposal' | 'disposed';
   serial_number: string;
   inventory_number: string;
-  manufacturing_date: string;
-  exploitation_date: string;
-  division: number;
-  subdivision?: number | null;
-  facility?: number | null;
-  assigned_to?: number | null;
-  comments?: string | null;
-  disposal_act_number?: string | null;
-  disposal_act_date?: string | null;
-  disposal_cert_number?: string | null;
-  disposal_cert_date?: string | null;
-  disposal_comments?: string | null;
+  manufacturing_date: string | null;
+  exploitation_date: string | null;
+  division: {
+    id: number;
+    name: string;
+    order?: number;
+  } | null;
+  subdivision: {
+    id: number;
+    name: string;
+    order?: number;
+  } | null;
+  facility: {
+    id: number;
+    name: string;
+  } | null;
+  assigned_to: {
+    id: number;
+    full_name: string;
+    position?: string;
+  } | null;
+  comments: string | null;
+  disposal_act_number: string | null;
+  disposal_act_date: string | null;
+  disposal_cert_number: string | null;
+  disposal_cert_date: string | null;
+  disposal_comments: string | null;
   created_at: string;
   updated_at: string;
-  service_life?: string;
-  interest_organ?: {
+  service_life: string | null;
+  interest_organ: {
     id: number;
     name: string;
     created_at: string;
   } | null;
-  secret_level?: 'OV' | 'SS' | 'SECRET' | 'DSP' | null;
+  secret_level: 'OV' | 'SS' | 'SECRET' | 'DSP' | null;
   secret_level_display?: string;
   is_free_use: boolean;
-  free_use_act_number?: string | null;
-  is_network: boolean;
-}
+  free_use_act_number: string | null;
+  category: EquipmentCategory | null;
+  category_display?: string;
+  status_display?: string;
+  product_structures: ProductStructure[];
+  network_interfaces: NetworkInterface[];
+  vlans: VLAN[];
+  ip_addresses: IPAddress[];
+  routing_table: any[];
+  acls: any[];
+  network_interfaces_count: number;
+  ip_addresses_count: number;
+  disposal_info?: DisposalInfo | null;
+  division_id?: number;
+  subdivision_id?: number;
+  facility_id?: number;
+  assigned_to_id?: number;
+  interest_organ_id?: number;
 }
 
 export interface ClosedEquipmentCategory {
@@ -110,7 +139,7 @@ export interface ClosedEquipmentCategory {
 export interface Division {
   id: string;
   name: string;
-  subdivisions: { id: string; name: string }[];
+  subdivisions: { id: string; name: string; order?: number }[];
   facilities: {
     id: string;
     name: string;
@@ -127,7 +156,13 @@ export interface Division {
     facilities_count: number;
     tasks_count: number;
     networks_count: number;
-  }
+  }[];
+  // дополнительные поля для Overview
+  employees_count?: number;
+  equipment_count?: number;
+  facilities_count?: number;
+  networks_count?: number;
+  order?: number;
 }
 
 export interface Facility {
@@ -144,9 +179,9 @@ export interface Facility {
   subdivision_name: string;
   subdivision?: string;
   facility_class?: string | null;
-  comments?: string; // Added comment field
+  comments?: string;
   acceptance_act_number?: string | null;
-  rim_act_number?: string | null;;
+  rim_act_number?: string | null;
   commissioning_act_number?: string | null;
   opening_permission_number?: string | null;
   communication_posts: Array<{
@@ -156,8 +191,7 @@ export interface Facility {
   }>;
   communication_post_ids?: number;
   type_id?: number;
-
-  kz_size?: string | null;;
+  kz_size?: string | null;
   has_transformer_in_kz?: boolean;
   has_grounding_in_kz?: boolean;
   inn?: string;
@@ -185,7 +219,7 @@ export interface Network {
   network_class: string;
   security_level: 'public' | 'confidential' | 'secret' | 'top_secret';
   divisions: Division[];
-  subdivisions: Subdivisions[];
+  subdivisions: Subdivision[];
   facilities: Facility[];
   equipment: Equipment[];
   created_at: string;
@@ -194,7 +228,14 @@ export interface Network {
   bandwidth: string;
   throughput?: number;
   protocol: 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
-};
+}
+
+// Импорт Subdivision из другого места – будем считать, что он определён
+export interface Subdivision {
+  id: string;
+  name: string;
+  order?: number;
+}
 
 export interface VLAN {
   id: string;
@@ -314,11 +355,32 @@ export interface RegisterData {
   division: string;
 }
 
-// Добавляем интерфейс для прав доступа
 export interface ModulePermissions {
   employees: { can_view: boolean; can_edit: boolean };
   equipment: { can_view: boolean; can_edit: boolean };
   facilities: { can_view: boolean; can_edit: boolean };
   tasks: { can_view: boolean; can_edit: boolean };
   networks: { can_view: boolean; can_edit: boolean };
+}
+
+export interface EmployeeDictionaries {
+  categories: { value: string; label: string }[];
+  subcategories?: { value: string; label: string }[];
+  management_positions: { value: string; label: string }[];
+  officer_positions: { value: string; label: string }[];
+  warrant_officer_positions: { value: string; label: string }[];
+  civilian_positions: { value: string; label: string }[];
+  management_officer_ranks: { value: string; label: string }[];
+  officer_ranks: { value: string; label: string }[];
+  warrant_officer_ranks: { value: string; label: string }[];
+}
+
+export interface ScheduleEvent {
+  id?: number;
+  employee: number;
+  employee_id: number;
+  employee_name: string;
+  date: string;
+  event_type: string;
+  comment?: string;
 }

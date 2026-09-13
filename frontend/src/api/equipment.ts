@@ -9,6 +9,7 @@ export const equipmentApi = {
     type?: string;
     search?: string;
     facility?: string;
+    include_disposed?: boolean;
   }) => {
     const { data } = await api.get('/equipment/', {
       params,
@@ -49,6 +50,25 @@ export const equipmentApi = {
       },
     });
     return data || [];
+  },
+
+  disposeEquipment: async (token: string, id: string, disposalInfo: DisposalInfo) => {
+    const { data } = await api.post(`/equipment/${id}/dispose/`, disposalInfo, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return data;
+  },
+
+  restoreEquipment: async (token: string, id: string) => {
+    const { data } = await api.post(`/equipment/${id}/restore/`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data;
   },
 
   createEquipment: async (token: string, data: any) => {

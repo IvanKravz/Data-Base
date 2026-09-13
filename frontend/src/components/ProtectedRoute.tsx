@@ -115,3 +115,10 @@ export const CabinetRoute: React.FC<{ children: React.ReactNode; action?: Permis
             {children}
         </ProtectedRoute>
     );
+
+    export const ScheduleRoute: React.FC<{ children: React.ReactNode; action?: PermissionType }> =
+    ({ children, action = 'view' }) => (
+        <ProtectedRoute model="ScheduleEvent" action={action}>
+            {children}
+        </ProtectedRoute>
+    );

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp } from 'lucide-react';
-import { Division } from '../../../types';
+import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp, Phone, Smartphone } from 'lucide-react';
+import { Division, Employee } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { divisionsApi } from '../../../api/divisions';
+import { employeesApi } from '../../../api/employees';
 import './style.css';
+import '../DivisionDetails/sections/DivisionLeadership/DivisionLeadership.css';
 import { MapCountry } from '../../map/MapCountry/MapCountry';
 import { useAppPermissions } from '../../../api/utils/AppPermissionsContext';
+import '../DivisionDetails/sections/style.css';
 
 interface DivisionListProps {
   onSelectDivision: (division: Division) => void;
@@ -31,12 +34,29 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
+  const [chief, setChief] = useState<Employee | null>(null);
+  const [deputies, setDeputies] = useState<Employee[]>([]);
+  const [loadingLeadership, setLoadingLeadership] = useState(true);
+
   const {
     canAccessPersonnel, canAccessEquipment, canAccessFacilities,
     canAccessTasks,
     personnelFilters, equipmentFilters, facilitiesFilters, taskFilters
   } = useAppPermissions();
 
+  // Состояние видимости карты с сохранением в localStorage
+  const [showMap, setShowMap] = useState<boolean>(() => {
+    const stored = localStorage.getItem('map_visible_divisionlist');
+    return stored !== null ? JSON.parse(stored) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('map_visible_divisionlist', JSON.stringify(showMap));
+  }, [showMap]);
+
+  const toggleMap = () => setShowMap(prev => !prev);
+
+  // Загрузка подразделений
   useEffect(() => {
     const fetchDivisions = async () => {
       try {
@@ -50,6 +70,32 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
       }
     };
     fetchDivisions();
+  }, [token]);
+
+  // Загрузка руководителей (главный и заместители)
+  useEffect(() => {
+    const fetchLeadership = async () => {
+      if (!token) {
+        setLoadingLeadership(false);
+        return;
+      }
+      try {
+        // Загружаем всех сотрудников
+        const allEmployees = await employeesApi.getPersonnel(token);
+
+        // Фильтруем на клиенте по должности
+        const chiefData = allEmployees.find(emp => emp.position === 'Главный руководитель') || null;
+        const deputyData = allEmployees.filter(emp => emp.position === 'Заместитель главного руководителя');
+
+        setChief(chiefData);
+        setDeputies(deputyData);
+      } catch (err) {
+        console.error('Ошибка загрузки руководителей:', err);
+      } finally {
+        setLoadingLeadership(false);
+      }
+    };
+    fetchLeadership();
   }, [token]);
 
   const toggleExpand = (id: number) => {
@@ -73,6 +119,33 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     navigate(`/divisions/${division.id}`);
   };
 
+  const renderLeaderCard = (leader: Employee | null, title: string) => {
+    if (!leader) return null;
+    return (
+      <div className="division-leader-item">
+        <div className="division-leader-info">
+          <div className="division-leader-position">{title}</div>
+          <div className="division-leader-name">{leader.full_name}</div>
+          <div className="division-leader-contacts">
+            {leader.work_phone && (
+              <span>
+                <Phone size={14} /> Рабочий: {leader.work_phone}
+              </span>
+            )}
+            {leader.personal_phone && (
+              <span>
+                <Smartphone size={14} /> Личный: {leader.personal_phone}
+              </span>
+            )}
+            {!leader.work_phone && !leader.personal_phone && (
+              <span>—</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) return <div className="loading-divisions">Загрузка подразделений...</div>;
   if (error) return <div className="loading-divisions">{error}</div>;
 
@@ -82,8 +155,25 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     divisionChunks.push(divisions.slice(i, i + chunkSize));
   }
 
+  const hasLeadership = !!(chief || deputies.length > 0);
+
   return (
     <>
+      {/* Блок руководства над списком */}
+      {!loadingLeadership && hasLeadership && (
+        <div className="leadership-section">
+          <div className="division-subheader-hh">Руководство</div>
+          <div className="leadership-cards">
+            {chief && renderLeaderCard(chief, 'Главный руководитель')}
+            {deputies.map((deputy, index) => (
+              <React.Fragment key={deputy.id || index}>
+                {renderLeaderCard(deputy, 'Заместитель главного руководителя')}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="division-subheader">Подразделения</div>
 
       <div className="tables-wrapper">
@@ -99,6 +189,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
                     const showFacilities = isVisibleForDivision(canAccessFacilities(), facilitiesFilters, division.id);
                     const showTasks = isVisibleForDivision(canAccessTasks(), taskFilters, division.id);
                     const hasAnyVisible = showPersonnel || showEquipment || showFacilities || showTasks;
+                    const hasHead = !!division.head;
 
                     return (
                       <React.Fragment key={division.id}>
@@ -107,7 +198,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
                             {division.name}
                           </td>
                           <td className="toggle-cell">
-                            {hasAnyVisible && (
+                            {(hasAnyVisible || hasHead) && (
                               <button
                                 className="chevron-button"
                                 onClick={(e) => {
@@ -125,32 +216,62 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
                         <tr className={`expanded-row ${isExpanded ? 'expanded' : ''}`}>
                           <td colSpan={2}>
                             <div className="expanded-metrics-wrapper">
-                              <div className="expanded-metrics-row">
-                                {showPersonnel && (
-                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'personnel')}>
-                                    <Users className="metric-icon metric-icon--blue" />
-                                    <span>Сотрудники: {division.employees_count}</span>
+                              {hasHead && (
+                                <div className="expanded-leadership-text">
+                                  <span className="leader-label">Начальник отдела:</span>
+                                  <div className="expanded-leader-item">
+                                    <div className="leader-name-row">
+                                      <span className="leader-fullname">{division.head.full_name}</span>
+                                    </div>
+                                    <div className="leader-contacts-row">
+                                      {division.head.work_phone && (
+                                        <span className="leader-contact">
+                                          <Phone size={14} className="leader-contact-icon" />
+                                          {division.head.work_phone}
+                                        </span>
+                                      )}
+                                      {division.head.personal_phone && (
+                                        <span className="leader-contact">
+                                          <Smartphone size={14} className="leader-contact-icon" />
+                                          {division.head.personal_phone}
+                                        </span>
+                                      )}
+                                      {!division.head.work_phone && !division.head.personal_phone && (
+                                        <span className="leader-contact">—</span>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
-                                {showEquipment && (
-                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'equipment')}>
-                                    <Plug className="metric-icon metric-icon--green" />
-                                    <span>Техника: {division.equipment_count}</span>
-                                  </div>
-                                )}
-                                {showFacilities && (
-                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'facilities')}>
-                                    <Building2 className="metric-icon metric-icon--purple" />
-                                    <span>Объекты: {division.facilities_count}</span>
-                                  </div>
-                                )}
-                                {showTasks && (
-                                  <div className="metric-item" onClick={() => handleMetricClick(division.id, 'tasks')}>
-                                    <ListTodo className="metric-icon metric-icon--orange" />
-                                    <span>Задачи: {division.tasks_count}</span>
-                                  </div>
-                                )}
-                              </div>
+                                </div>
+                              )}
+
+                              {hasAnyVisible && (
+                                <div className="expanded-metrics-row">
+                                  {showPersonnel && (
+                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'personnel')}>
+                                      <Users className="metric-icon metric-icon--blue" />
+                                      <span>Сотрудники: {division.employees_count}</span>
+                                    </div>
+                                  )}
+                                  {showEquipment && (
+                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'equipment')}>
+                                      <Plug className="metric-icon metric-icon--green" />
+                                      <span>Техника: {division.equipment_count}</span>
+                                    </div>
+                                  )}
+                                  {showFacilities && (
+                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'facilities')}>
+                                      <Building2 className="metric-icon metric-icon--purple" />
+                                      <span>Объекты: {division.facilities_count}</span>
+                                    </div>
+                                  )}
+                                  {showTasks && (
+                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'tasks')}>
+                                      <ListTodo className="metric-icon metric-icon--orange" />
+                                      <span>Задачи: {division.tasks_count}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -164,8 +285,37 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         </div>
       </div>
 
+      {/* Блок карты с заголовком и шевроном */}
       <div className="map-country animate-fadeInUp">
-        <MapCountry />
+        <div className="map-section-header">
+          <div className={`map-header-left ${showMap ? 'expanded' : ''}`}>
+            <h3
+              className="map-title"
+              onClick={toggleMap}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && toggleMap()}
+            >
+              Территориальные органы ФСБ России
+            </h3>
+            <button
+              className="map-toggle"
+              onClick={toggleMap}
+              aria-expanded={showMap}
+              aria-label={showMap ? 'Скрыть карту' : 'Показать карту'}
+            >
+              <ChevronDown
+                size={20}
+                className={`map-toggle-icon ${showMap ? 'expanded' : ''}`}
+              />
+            </button>
+          </div>
+        </div>
+        {showMap && (
+          <div className="map-content-wrapper">
+            <MapCountry />
+          </div>
+        )}
       </div>
     </>
   );

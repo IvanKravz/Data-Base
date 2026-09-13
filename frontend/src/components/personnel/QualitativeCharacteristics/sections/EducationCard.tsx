@@ -19,10 +19,13 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
     const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateString.match(isoFormat);
     if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`;
+      return `${match[3]}.${match[2]}.${match[1]}`;
     }
     const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
-    if (displayFormat.test(dateString)) return dateString;
+    const matchDisplay = dateString.match(displayFormat);
+    if (matchDisplay) {
+      return `${matchDisplay[1]}.${matchDisplay[2]}.${matchDisplay[3]}`;
+    }
     return dateString;
   };
 
@@ -72,15 +75,14 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
     setActiveDateField(field);
   };
 
-  const handleDateChange = (field: keyof Employee, value: string) => {
-    onChange?.(field, value);
+  const handleDateClose = () => {
     setActiveDateField(null);
   };
 
-  const renderField = (label: string, value: string, icon: React.ElementType) => {
+  const renderField = (label: string, value: string, icon: React.ElementType, key: string) => {
     const Icon = icon;
     return (
-      <div className="qc-info-item">
+      <div className="qc-info-item" key={key}>
         <Icon className="qc-info-icon" size={20} />
         <div>
           <p className="qc-info-label">{label}</p>
@@ -90,10 +92,10 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
     );
   };
 
-  const renderInput = (label: string, value: string, field: keyof Employee, icon: React.ElementType) => {
+  const renderInput = (label: string, value: string, field: keyof Employee, icon: React.ElementType, key: string) => {
     const Icon = icon;
     return (
-      <div className="qc-input-group">
+      <div className="qc-input-group" key={key}>
         <label className="qc-input-label">
           <Icon size={16} className="qc-info-icon" />
           {label}
@@ -109,13 +111,13 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
     );
   };
 
-  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType) => {
+  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType, key: string) => {
     const Icon = icon;
-    const displayValue = value ? formatDisplayDate(value) : 'дд-мм-гггг';
+    const displayValue = value ? formatDisplayDate(value) : 'дд.мм.гггг';
     const inputValue = value ? formatDateForInput(value) : '';
 
     return (
-      <div className="qc-input-group">
+      <div className="qc-input-group" key={key}>
         <label className="qc-input-label">
           <Icon size={16} className="qc-info-icon" />
           {label}
@@ -124,8 +126,9 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
           <input
             type="date"
             value={inputValue}
-            onChange={(e) => handleDateChange(field, e.target.value)}
-            onBlur={() => setActiveDateField(null)}
+            onChange={(e) => onChange?.(field, e.target.value)}
+            onBlur={handleDateClose}
+            onKeyDown={(e) => e.key === 'Escape' && handleDateClose()}
             autoFocus
             className="qc-input"
             disabled={!canEdit}
@@ -153,13 +156,13 @@ export function EducationCard({ formData, onChange, employee, viewMode, canEdit 
       </div>
       <div className="qc-card-content">
         {viewMode ? (
-          filteredFields.map(f => renderField(f.label, f.value, f.icon))
+          filteredFields.map(f => renderField(f.label, f.value, f.icon, f.key))
         ) : (
           filteredFields.map(f => {
             if (f.key === 'year_graduation') {
-              return renderDateInput(f.label, formData?.year_graduation, 'year_graduation', Calendar);
+              return renderDateInput(f.label, formData?.year_graduation, 'year_graduation', Calendar, f.key);
             }
-            return renderInput(f.label, f.value, f.key as keyof Employee, f.icon);
+            return renderInput(f.label, f.value, f.key as keyof Employee, f.icon, f.key);
           })
         )}
       </div>

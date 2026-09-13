@@ -183,12 +183,10 @@ export function PersonnelSection() {
   }, [personnel, filterBySubdivision, filterPersonnel]);
 
   const handleBack = useCallback(() => {
-    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
     if (location.state?.fromDivisionList) {
       navigate('/');
       return;
     }
-    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
@@ -227,12 +225,14 @@ export function PersonnelSection() {
   if (error) return <div className="error-message">{error}</div>;
 
   return (
-    <>
+    <div className="page-fade-in">
       <div className="personnel-header-wrapper">
         <h3 className="personnel-header-division">
-          <button onClick={handleBack} className="back-button">
-            <ArrowLeft className="back-button-icon" />
-          </button>
+          {id && (
+            <button onClick={handleBack} className="back-button">
+              <ArrowLeft className="back-button-icon" />
+            </button>
+          )}
           {getHeaderTitle()}
         </h3>
         {canCreateEmployee && (
@@ -316,7 +316,7 @@ export function PersonnelSection() {
           selectedCategory="all"
           selectedAccessClass="all"
           searchTerm={searchTerm}
-          division={isExploitationUser ? { id: userDivisionId, name: user?.division_info?.name } : division}
+          division={division}
           personnel={displayedPersonnel}
           onDeleteSuccess={handlePersonnelDelete}
           loading={loading}
@@ -325,6 +325,6 @@ export function PersonnelSection() {
           advancedFilters={advancedFilters}
         />
       </div>
-    </>
+    </div>
   );
 }

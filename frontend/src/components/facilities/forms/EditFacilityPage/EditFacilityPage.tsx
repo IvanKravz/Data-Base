@@ -257,9 +257,6 @@ const EditFacilityPage = forwardRef<EditFacilityPageRef, EditFacilityPageProps>(
               <div className="ep-edit-facility-sidebar-card">
                 <div className="ep-edit-facility-sidebar-header">
                   <div className="ep-edit-facility-sidebar-header-top">
-                    <button type="button" onClick={onCancel} className="ep-edit-facility-btn--icon ep-edit-facility-sidebar-back">
-                      <ArrowLeft size={20} />
-                    </button>
                     <div className="ep-edit-facility-sidebar-name">
                       {formData.name || (isEditing ? 'Без названия' : 'Новый объект')}
                     </div>

@@ -22,6 +22,7 @@ interface FileItemProps {
     onDragStart?: (e: React.DragEvent, item: StorageFile) => void;
     onDragEnd?: (e: React.DragEvent) => void;
     onRefreshFavorites?: () => void;
+    onTogglePin?: (itemId: number, isFolder: boolean, currentPinned: boolean) => Promise<void>; // новый
 }
 
 const FileItem: React.FC<FileItemProps> = ({
@@ -38,6 +39,7 @@ const FileItem: React.FC<FileItemProps> = ({
     onDragStart,
     onDragEnd,
     onRefreshFavorites,
+    onTogglePin,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -114,6 +116,7 @@ const FileItem: React.FC<FileItemProps> = ({
                     onMove={(targetId) => onMoveItem(file.id, targetId, false)}
                     onDelete={onDeleteItem}
                     onRefreshFavorites={onRefreshFavorites}
+                    onTogglePin={onTogglePin} // передаём
                 />
             )}
         </>

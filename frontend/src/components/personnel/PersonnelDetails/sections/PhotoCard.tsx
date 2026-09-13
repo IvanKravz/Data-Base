@@ -2,15 +2,14 @@ import React, { useRef, useState } from 'react';
 import { Employee } from '../../../../types';
 import { Avatar, Button, message, Modal } from 'antd';
 import { CameraOutlined, UploadOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
-import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
-import '../PersonnelDetails.css';
+import '../styles/PhotoCard.css';
 
 interface PhotoCardProps {
     person: Employee;
-    onPhotoChange: (file: File) => void;
+    onPhotoChange: (file: File) => Promise<void>;
     onPhotoRemove: () => Promise<void>;
-    editable?: boolean;
     canEditEmployee: boolean;
+    editable?: boolean;
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = ({
@@ -18,12 +17,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     onPhotoChange,
     onPhotoRemove,
     canEditEmployee,
-    editable = false
+    editable = true,
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [loading, setLoading] = useState(false);
-    const { isEditorShaWorker } = useAppPermissions();
+
+    const canEditPhoto = canEditEmployee && editable;
 
     const getPhotoUrl = () => {
         if (!person.photo_url) return null;
@@ -33,26 +33,31 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     };
 
     const fullPhotoUrl = getPhotoUrl();
-    const canEditPhoto = canEditEmployee && !isEditorShaWorker && editable;
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.match('image.*')) {
-                message.error('Пожалуйста, выберите файл изображения');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                message.error('Файл слишком большой. Максимальный размер - 5MB');
-                return;
-            }
-            onPhotoChange(file);
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            message.error('Пожалуйста, выберите файл изображения');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            message.error('Файл слишком большой. Максимальный размер — 5MB');
+            return;
+        }
+        try {
+            setLoading(true);
+            await onPhotoChange(file);
+            message.success('Фото обновлено');
+        } catch (error) {
+            message.error('Ошибка загрузки фото');
+        } finally {
+            setLoading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
             setIsModalVisible(false);
         }
     };
 
-    const handleUploadClick = () => fileInputRef.current?.click();
     const handleRemovePhoto = async () => {
         try {
             setLoading(true);
@@ -66,34 +71,51 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         }
     };
 
-    const showModal = () => {
-        if (fullPhotoUrl) setIsModalVisible(true);
-        else if (canEditPhoto) handleUploadClick();
+    const handleUploadClick = () => fileInputRef.current?.click();
+
+    const handleAvatarClick = () => {
+        if (fullPhotoUrl) {
+            setIsModalVisible(true);
+        } else if (canEditPhoto) {
+            handleUploadClick();
+        }
     };
 
     return (
-        <div className="photo-card">
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+        <>
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+            />
+
             <div className="photo-avatar">
-                {fullPhotoUrl ? (
-                    <div className="photo-wrapper" onClick={showModal}>
+                <div className="photo-wrapper" onClick={handleAvatarClick}>
+                    {fullPhotoUrl ? (
                         <img src={fullPhotoUrl} alt={person.full_name} className="employee-photo" />
-                        {canEditPhoto && (
-                            <div className="photo-overlay">
-                                <CameraOutlined style={{ fontSize: '24px', color: 'white' }} />
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <Avatar size={100} icon={<UserOutlined />} onClick={showModal} style={{ cursor: 'pointer', backgroundColor: '#f0f0f0', color: '#a0a0a0' }} />
-                )}
+                    ) : (
+                        <Avatar
+                            size={120}
+                            icon={<UserOutlined />}
+                            style={{ backgroundColor: '#f0f0f0', color: '#a0a0a0' }}
+                        />
+                    )}
+                    {canEditPhoto && (
+                        <div className="photo-overlay">
+                            <CameraOutlined style={{ fontSize: 24, color: 'white' }} />
+                        </div>
+                    )}
+                </div>
             </div>
+
             <div className="photo-info">
                 <h2>{person.full_name}</h2>
                 <p>{person.position}</p>
                 {canEditPhoto && !fullPhotoUrl && (
                     <div className="photo-actions">
-                        <Button type="primary" icon={<UploadOutlined />} onClick={handleUploadClick}>
+                        <Button type="primary" size="small" icon={<UploadOutlined />} onClick={handleUploadClick}>
                             Загрузить фото
                         </Button>
                     </div>
@@ -111,17 +133,23 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
                         </Button>
                     ),
                     canEditPhoto && (
-                        <Button key="upload" type="primary" icon={<UploadOutlined />} onClick={handleUploadClick}>
+                        <Button key="upload" type="primary" icon={<UploadOutlined />} onClick={handleUploadClick} loading={loading}>
                             {fullPhotoUrl ? 'Заменить' : 'Загрузить'}
                         </Button>
                     ),
                     <Button key="back" onClick={() => setIsModalVisible(false)}>Закрыть</Button>,
                 ].filter(Boolean)}
             >
-                <div style={{ textAlign: 'center' }}>
-                    {fullPhotoUrl && <img src={fullPhotoUrl} alt={person.full_name} style={{ maxWidth: '100%', maxHeight: '70vh' }} />}
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                    {fullPhotoUrl && (
+                        <img
+                            src={fullPhotoUrl}
+                            alt={person.full_name}
+                            style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+                        />
+                    )}
                 </div>
             </Modal>
-        </div>
+        </>
     );
 };

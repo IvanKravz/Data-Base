@@ -1,6 +1,6 @@
 // EquipmentSection.tsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { ArrowLeft, Filter, Plus, List, FolderTree, Package } from 'lucide-react';
+import { ArrowLeft, Filter, Plus, List, FolderTree, Package, Box, KeyRound } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
@@ -9,32 +9,12 @@ import { divisionsApi, equipmentApi } from '../../../../../api';
 import { SearchBar } from '../../../../common/SearchBar';
 import { StatusButtons } from '../../../../equipment';
 import { AdvancedSearchModal } from '../../../../equipment/forms/AdvancedSearchModal/AdvancedSearchModal';
+import { CATEGORY_ICON_COMPONENTS } from '../../../../equipment/categoryIcons';
 import './EquipmentSection.css';
-import {
-  Server,
-  RadioTower,
-  Monitor,
-  BatteryCharging,
-  Antenna,
-  Zap,
-  Box,
-  KeyRound
-} from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { setEquipment, deleteEquipment } from '../../../../../store/slices/equipmentSlice';
 import { ExportButton } from '../../../../common/ExportButton';
 import { exportEquipmentToExcel } from '../../../../../utils/exportToExcel';
-
-const CATEGORY_ICONS = {
-  'tko': <Server className="equipment-tab-icon" size={16} />,
-  'radio': <RadioTower className="equipment-tab-icon" size={16} />,
-  'computer': <Monitor className="equipment-tab-icon" size={16} />,
-  'battery': <BatteryCharging className="equipment-tab-icon" size={16} />,
-  'antenna': <Antenna className="equipment-tab-icon" size={16} />,
-  'power': <Zap className="equipment-tab-icon" size={16} />,
-  'material': <Box className="equipment-tab-icon" size={16} />,
-  'closed': <KeyRound className="equipment-tab-icon" size={16} />
-};
 
 interface AdvancedSearchFilters {
   names: string[];
@@ -99,12 +79,12 @@ export function EquipmentSection() {
   const indicatorRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({});
 
-  const [division, setDivision] = useState(null);
+  const [division, setDivision] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'closed' | string>(location.state?.activeTab || 'all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [subdivisionName, setSubdivisionName] = useState('');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -176,7 +156,7 @@ export function EquipmentSection() {
         dispatch(setEquipment(equip));
         setCategories(cats);
         if (userSubdivisionId) {
-          const subdivision = div.subdivisions?.find(s => s.id.toString() === userSubdivisionId.toString());
+          const subdivision = div.subdivisions?.find((s: any) => s.id.toString() === userSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
@@ -198,7 +178,7 @@ export function EquipmentSection() {
         dispatch(setEquipment(equip));
         setCategories(cats);
         if (stableSubdivisionId) {
-          const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
+          const subdivision = div.subdivisions?.find((s: any) => s.id.toString() === stableSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
@@ -223,22 +203,31 @@ export function EquipmentSection() {
     return items.filter(item => item.subdivision?.id?.toString() === stableSubdivisionId.toString());
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  const openEquipment = useMemo(() => filterBySubdivision(equipment.filter(item => !item.is_closed)), [equipment, filterBySubdivision]);
-  const closedEquipment = useMemo(() => filterBySubdivision(equipment.filter(item => item.is_closed)), [equipment, filterBySubdivision]);
+  const openEquipment = useMemo(
+    () => filterBySubdivision(equipment.filter((item: any) => !item.is_closed)),
+    [equipment, filterBySubdivision]
+  );
+  const closedEquipment = useMemo(
+    () => filterBySubdivision(equipment.filter((item: any) => item.is_closed)),
+    [equipment, filterBySubdivision]
+  );
 
   const availableCategories = useMemo(() => {
-    const openCategories = categories.filter(cat => !cat.is_closed);
-    return openCategories.filter(cat => openEquipment.some(item => item.category?.value === cat.value));
+    const openCategories = categories.filter((cat: any) => !cat.is_closed);
+    return openCategories.filter((cat: any) => openEquipment.some((item: any) => item.category?.value === cat.value));
   }, [categories, openEquipment]);
 
   const statusButtonsEquipment = useMemo(() => {
     if (activeTab === 'closed') return closedEquipment;
     if (activeTab === 'all') return [...openEquipment, ...closedEquipment];
-    return openEquipment.filter(item => item.category?.value === activeTab);
+    return openEquipment.filter((item: any) => item.category?.value === activeTab);
   }, [activeTab, openEquipment, closedEquipment]);
 
   const filteredEquipment = useMemo(() => {
-    return statusButtonsEquipment.filter(item => {
+    return statusButtonsEquipment.filter((item: any) => {
+      // На общей странице техники списанные не показываем.
+      if (item.status === 'disposed') return false;
+
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
       const matchesBasicSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -322,22 +311,40 @@ export function EquipmentSection() {
     }
   };
 
-  const handleDeleteEquipment = async (id: string) => {
+  const handleDeleteEquipment = async (equipmentId: string) => {
     try {
-      await equipmentApi.deleteEquipment(id);
-      dispatch(deleteEquipment(id));
+      await equipmentApi.deleteEquipment(equipmentId);
+      dispatch(deleteEquipment(equipmentId));
     } catch (error) {
       console.error('Error deleting equipment:', error);
     }
   };
 
+  // === Обработчик списания техники ===
+  const handleDisposeEquipment = async (equipmentId: string, disposalInfo: any) => {
+    if (!stableToken) {
+      console.error('Нет токена для списания техники');
+      throw new Error('Не авторизован');
+    }
+    try {
+      const updated = await equipmentApi.disposeEquipment(stableToken, equipmentId, disposalInfo);
+
+      // Обновляем элемент в Redux — перекрываем поля обновлённой записью с бэкенда
+      const nextList = (equipment as any[]).map((item: any) =>
+        item.id === equipmentId ? { ...item, ...updated } : item,
+      );
+      dispatch(setEquipment(nextList as any));
+    } catch (error) {
+      console.error('Error disposing equipment:', error);
+      throw error;
+    }
+  };
+
   const handleBack = () => {
-    // Если перешли из списка подразделений (DivisionList) — возвращаемся на главную
     if (location.state?.fromDivisionList) {
       navigate('/');
       return;
     }
-    // Иначе стандартная логика
     if (isGlobalView) navigate('/');
     else if (stableSubdivisionId) navigate(`/divisions/${id}?subdivision=${stableSubdivisionId}`);
     else navigate(`/divisions/${id}`);
@@ -367,7 +374,7 @@ export function EquipmentSection() {
   if (error) return <div className="equipment-error-message">{error}</div>;
 
   return (
-    <>
+    <div className="page-fade-in">
       <div className="equipment-header">
         <div className="equipment-title-container">
           {id && (
@@ -393,15 +400,22 @@ export function EquipmentSection() {
               <div className="equipment-tab-icon"><Box size={16} /></div>
               Вся техника
             </button>
-            {availableCategories.map(category => (
-              <button key={category.value} className={`equipment-tab-button ${activeTab === category.value ? 'active' : ''}`} onClick={() => handleTabChange(category.value)}>
-                {CATEGORY_ICONS[category.value] || <Box className="equipment-tab-icon" size={16} />}
-                {category.name}
-              </button>
-            ))}
+            {availableCategories.map((category: any) => {
+              const Icon = CATEGORY_ICON_COMPONENTS[category.value] ?? Box;
+              return (
+                <button
+                  key={category.value}
+                  className={`equipment-tab-button ${activeTab === category.value ? 'active' : ''}`}
+                  onClick={() => handleTabChange(category.value)}
+                >
+                  <Icon className="equipment-tab-icon" size={16} />
+                  {category.name}
+                </button>
+              );
+            })}
             {closedEquipment.length > 0 && (
               <button className={`equipment-tab-button ${activeTab === 'closed' ? 'active' : ''}`} onClick={() => handleTabChange('closed')}>
-                {CATEGORY_ICONS.closed}
+                <KeyRound className="equipment-tab-icon" size={16} />
                 Закрытая техника
               </button>
             )}
@@ -474,15 +488,15 @@ export function EquipmentSection() {
               <span className="count-chip-label">{getEquipmentDeclension(filteredEquipment.length)}</span>
             </div>
 
-            {/* Пустой элемент для симметрии и центрирования */}
             <div className="equipment-count-right"></div>
           </div>
 
           <EquipmentList
             equipment={filteredEquipment}
             onDeleteEquipment={handleDeleteEquipment}
+            onDisposeEquipment={handleDisposeEquipment}
             divisionId={id}
-            subdivisionId={stableSubdivisionId}
+            subdivisionId={stableSubdivisionId ?? undefined}
             activeTab={activeTab}
             viewMode={viewMode}
             searchTerm={searchTerm}
@@ -490,6 +504,6 @@ export function EquipmentSection() {
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }

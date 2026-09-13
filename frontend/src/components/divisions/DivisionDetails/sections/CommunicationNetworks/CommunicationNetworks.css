@@ -10,7 +10,6 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    /* Для правильного сжатия flex-элементов */
 }
 
 .networks-content {
@@ -43,13 +42,28 @@
     text-align: center;
 }
 
-/* Планшеты и маленькие десктопы */
+/* Анимация появления страниц */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Остальные медиа-запросы сохранены без изменений */
 @media (max-width: 1200px) {
     .communication-networks-container {
         grid-template-columns: 1fr 320px;
         gap: 20px;
     }
-
     .network-details-sidebar {
         width: 320px;
         padding: 16px;

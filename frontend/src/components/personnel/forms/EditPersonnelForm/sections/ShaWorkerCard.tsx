@@ -1,6 +1,8 @@
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Employee } from '../../../../../types';
 import '../style.css';
+import { formatDateForInput, formatDisplayDate } from '../../../../../api/utils/dateFormatters';
 
 interface ShaWorkerCardProps {
   shaWorker: Employee['sha_details'];
@@ -19,21 +21,24 @@ export function ShaWorkerCard({
   onEquipmentChange,
   readOnly = false
 }: ShaWorkerCardProps) {
+  const [activeDateField, setActiveDateField] = useState<'start_date' | null>(null);
+
   if (!shaWorker) return null;
 
-  const formatDateForInput = (dateString: string): string => {
-    if (!dateString) return '';
-    const parts = dateString.split('-');
-    if (parts.length === 3) {
-      if (parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      }
-    }
-    return dateString;
+  const handleDateClick = () => {
+    if (readOnly) return;
+    setActiveDateField('start_date');
   };
 
-  const formatDateForServer = (dateString: string): string => {
-    return dateString;
+  const handleDateClose = () => {
+    setActiveDateField(null);
+  };
+
+  const handleDateChange = (value: string) => {
+    onChange({
+      ...shaWorker,
+      start_date: value
+    });
   };
 
   return (
@@ -46,17 +51,27 @@ export function ShaWorkerCard({
         <div className="ep-sha-grid">
           <div className="ep-form-group">
             <label className="ep-form-label">Дата начала</label>
-            <input
-              type="date"
-              required
-              value={formatDateForInput(shaWorker.start_date)}
-              onChange={(e) => !readOnly && onChange({
-                ...shaWorker,
-                start_date: formatDateForServer(e.target.value)
-              })}
-              className="ep-form-input"
-              disabled={readOnly}
-            />
+            {activeDateField === 'start_date' ? (
+              <input
+                type="date"
+                required
+                value={formatDateForInput(shaWorker.start_date)}
+                onChange={(e) => handleDateChange(e.target.value)}
+                onBlur={handleDateClose}
+                onKeyDown={(e) => e.key === 'Escape' && handleDateClose()}
+                autoFocus
+                className="ep-form-input"
+                disabled={readOnly}
+              />
+            ) : (
+              <div
+                className={`ep-form-input ${!readOnly ? 'editable' : ''}`}
+                onClick={handleDateClick}
+                style={{ cursor: readOnly ? 'default' : 'pointer' }}
+              >
+                {formatDisplayDate(shaWorker.start_date)}
+              </div>
+            )}
           </div>
 
           <div className="ep-form-group">
@@ -96,7 +111,6 @@ export function ShaWorkerCard({
             {shaWorker.equipment_conclusions.map((item, index) => {
               const type = item.equipment_type.trim();
               const number = item.conclusion_number.trim();
-              // Красный только для пустого поля, если парное заполнено
               const typeError = type === '' && number !== '';
               const numberError = number === '' && type !== '';
 

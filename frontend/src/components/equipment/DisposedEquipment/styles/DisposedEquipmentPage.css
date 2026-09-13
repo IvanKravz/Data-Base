@@ -1,0 +1,242 @@
+/* DisposedEquipmentPage.css — оптимизирован без дублирования */
+
+.dep-container {
+    margin: 0 auto;
+  }
+  
+  .dep-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .dep-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+  
+  .dep-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    font-size: 1.2rem;
+    color: #6b7280;
+  }
+  
+  .dep-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 2px 12px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  /* Обёртка поиска и кнопки фильтра */
+  .dep-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .dep-search {
+    flex: 1;
+    position: relative;
+  }
+  
+  .dep-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+  
+  .dep-search-input {
+    width: 100%;
+    padding: 6px 12px 6px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .dep-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+  
+  .dep-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: white;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .dep-filter-toggle:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+  
+  .dep-filter-toggle.active {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+  
+  /* Информация о результатах */
+  .dep-results-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #4b5563;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+  }
+  
+  .dep-reset-filters {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .dep-reset-filters:hover {
+    text-decoration: underline;
+  }
+  
+  /* ===== Вкладки категорий (аналогично EquipmentSection) ===== */
+  .dep-tabs-container {
+    background: white;
+    border-radius: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1px;
+  }
+  
+  .dep-tabs {
+    display: flex;
+    position: relative;
+    z-index: 3;
+    overflow-x: auto;
+    padding-bottom: 1px;
+    scrollbar-width: thin;
+  }
+  
+  .dep-tabs::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent 0%, #e5e7eb 10%, #e5e7eb 90%, transparent 100%);
+  }
+  
+  .dep-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+  .dep-tabs::-webkit-scrollbar-thumb {
+    background-color: #c5c7d0;
+    border-radius: 2px;
+  }
+  .dep-tabs::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+  }
+  
+  .dep-tab-button {
+    position: relative;
+    padding: 0.875rem 1.25rem;
+    border: none;
+    background-color: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .dep-tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: transparent;
+    transform: scaleX(0);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .dep-tab-button:hover {
+    color: #2563eb;
+    background-color: rgba(241, 245, 249, 0.5);
+  }
+  .dep-tab-button:hover::after {
+    background-color: #cbd5e1;
+    transform: scaleX(1);
+  }
+  
+  .dep-tab-button.active {
+    color: #2563eb;
+    font-weight: 600;
+    background-color: rgba(241, 245, 249, 0.3);
+  }
+  .dep-tab-button.active::after {
+    transform: scaleX(1);
+  }
+  
+  .dep-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 2px;
+    background-color: #2563eb;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 4;
+    animation: depFadeInSlide 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  
+  @keyframes depFadeInSlide {
+    0% {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .dep-tab-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }

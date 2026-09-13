@@ -1,6 +1,6 @@
 // components/UserDropdownMenu.tsx
 import React from 'react';
-import { Settings, LogOut, Users, User as UserIcon } from 'lucide-react';
+import { Settings, LogOut, Users, User as UserIcon, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/DropdownMenu.css';
 import { authApi } from '../../../api';
@@ -31,7 +31,12 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
 
     const handleUsersManagement = () => {
         onClose();
-        navigate('/manage/users'); 
+        navigate('/manage/users');
+    };
+
+    const handleDivisionsManagement = () => {
+        onClose();
+        navigate('/admin/divisions-management');
     };
 
     return (
@@ -58,6 +63,13 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
                     >
                         <Users className="dropdown-icon" size={18} />
                         <span>Управление пользователями</span>
+                    </button>
+                    <button
+                        onClick={handleDivisionsManagement}
+                        className="dropdown-item"
+                    >
+                        <Building2 className="dropdown-icon" size={18} />
+                        <span>Управление подразделениями</span>
                     </button>
                 </>
             )}

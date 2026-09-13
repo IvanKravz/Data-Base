@@ -1,15 +1,13 @@
-# mixins.py
+# users/mixins.py
 from django.db.models import Q
-from .permissions_config import ROLE_PERMISSIONS
+from .permissions_config import ROLE_PERMISSIONS, USER_DIVISION_MARKER, USER_SUBDIVISION_MARKER
 
 class RoleBasedFilterMixin:
     """
-    Миксин для фильтрации данных на основе ролей
-    """
-
-class RoleBasedFilterMixin:
-    """
-    Миксин для фильтрации данных на основе ролей
+    Миксин для фильтрации данных на основе ролей пользователя.
+    Фильтрация применяется только для списков (list).
+    Для операций с конкретным объектом (retrieve, update, delete) фильтрация не применяется,
+    чтобы объект был найден, а затем проверялись права через permission.
     """
 
     def get_queryset(self):
@@ -18,125 +16,125 @@ class RoleBasedFilterMixin:
         if not hasattr(self, 'request') or not self.request.user.is_authenticated:
             return queryset.none()
             
-        # Суперпользователи и администраторы видят все данные без фильтров
+        # Для retrieve, update, partial_update, destroy – не применяем фильтрацию
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+            return queryset
+            
+        # Суперпользователи и администраторы видят все данные
         if self.request.user.is_superuser or self._user_has_role('admin'):
             return queryset
             
         model_name = self.queryset.model.__name__
-        
-        # Получаем роли пользователя
         user_roles = self._get_user_roles()
         
         # Проверяем, может ли пользователь видеть все подразделения
-        can_see_all_divisions = any(
-            ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
-            for role in user_roles
-        )
+        can_see_all = self._can_see_all_divisions()
         
-        # Если пользователь может видеть все подразделения, не применяем фильтры по подразделению
-        if can_see_all_divisions:
-            # Применяем только фильтры из ролей (если есть)
+        # Если может видеть все – применяем только фильтры из ролей (если есть)
+        if can_see_all:
             role_filters = self._get_role_filters(model_name)
             if role_filters:
                 queryset = queryset.filter(**role_filters)
             return queryset
         
-        # ПРИОРИТЕТ 1: Если есть роли - используем фильтры ролей
+        # Если есть роли с явными фильтрами – применяем их (приоритет)
         if self._user_has_roles():
             role_filters = self._get_role_filters(model_name)
             if role_filters:
                 queryset = queryset.filter(**role_filters)
                 return queryset
-            
-        # ПРИОРИТЕТ 2: Если нет ролей или нет фильтров в ролях - применяем фильтры по подразделению
-        queryset = self._apply_division_filters(queryset, model_name)
+        
+        # Иначе – фильтруем по подразделению пользователя
+        user_division = self.request.user.division
+        
+        # Если модель имеет поле 'division' – фильтруем по нему
+        if user_division and hasattr(queryset.model, 'division'):
+            queryset = queryset.filter(division=user_division)
+        # Для модели Division (нет поля division) – фильтруем по id
+        elif user_division and model_name == 'Division':
+            queryset = queryset.filter(id=user_division.id)
+        else:
+            # Если у пользователя нет подразделения и он не видит все – возвращаем пустой queryset
+            return queryset.none()
         
         return queryset
+
+    def _can_see_all_divisions(self):
+        """Возвращает True, если пользователь может видеть все подразделения."""
+        user_roles = self._get_user_roles()
+        return any(
+            ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
+            for role in user_roles
+        )
     
     def _user_has_roles(self):
-        """Проверяет, имеет ли пользователь системные роли"""
+        """Проверяет, имеет ли пользователь системные роли (группы)"""
         return self.request.user.groups.filter(name__startswith='role_').exists()
 
     def _user_has_role(self, role_name):
-        """Проверяет, имеет ли пользователь конкретную роль"""
+        """Проверяет наличие конкретной роли у пользователя"""
         from .permissions import RoleBasedPermission
         perm_checker = RoleBasedPermission()
         return perm_checker._user_has_role(self.request.user, role_name)
 
     def _get_user_roles(self):
-        """Получает роли пользователя"""
+        """Возвращает список ролей пользователя"""
         from .permissions import RoleBasedPermission
         perm_checker = RoleBasedPermission()
         return perm_checker._get_user_roles(self.request.user)
 
     def _get_role_filters(self, model_name):
-        """Получает фильтры из конфигурации ролей"""
+        """
+        Собирает фильтры из всех ролей пользователя для указанной модели.
+        Подставляет динамические маркеры (USER_DIVISION_MARKER, USER_SUBDIVISION_MARKER)
+        реальными ID из профиля пользователя.
+        Если у пользователя нет соответствующего подразделения, фильтр с маркером не применяется.
+        """
         from .permissions import RoleBasedPermission
-        
         perm_checker = RoleBasedPermission()
         user_roles = perm_checker._get_user_roles(self.request.user)
         
+        # Получаем ID подразделений пользователя (могут быть None)
+        user = self.request.user
+        user_division_id = user.division.id if user.division else None
+        user_subdivision_id = user.subdivision.id if user.subdivision else None
+
         filters = {}
         for role in user_roles:
             if role in ROLE_PERMISSIONS and 'filters' in ROLE_PERMISSIONS[role]:
                 role_filters = ROLE_PERMISSIONS[role]['filters']
                 if model_name in role_filters:
-                    filters.update(role_filters[model_name])
-                    
+                    for key, value in role_filters[model_name].items():
+                        if value == USER_DIVISION_MARKER:
+                            if user_division_id is not None:
+                                filters[key] = user_division_id
+                            # Если None – пропускаем
+                        elif value == USER_SUBDIVISION_MARKER:
+                            if user_subdivision_id is not None:
+                                filters[key] = user_subdivision_id
+                            # Если None – пропускаем
+                        else:
+                            # Статическое значение – просто копируем
+                            filters[key] = value
         return filters
-    
-    def _apply_division_filters(self, queryset, model_name):
-        """Применяет фильтры по подразделению"""
-        user = self.request.user
-        
-        # Получаем подразделение пользователя
-        user_division = user.division
-        
-        # Если у модели есть связь с подразделением и пользователь имеет подразделение
-        if hasattr(queryset.model, 'division') and user_division:
-            queryset = queryset.filter(division=user_division)
-                
-        return queryset
 
 
 class UserAccessMixin:
     """
-    Упрощенный миксин для доступа пользователей
+    Упрощённый миксин для доступа к пользователям (только свои данные для не-админов)
     """
-
     def get_queryset(self):
         queryset = super().get_queryset()
-        
         if not hasattr(self, 'request') or not self.request.user.is_authenticated:
             return queryset.none()
-            
         if self.request.user.is_superuser or self._user_has_role('admin'):
             return queryset
-
+        
         user = self.request.user
-        
-        # Используем свойство division
-        user_division = user.division
-        
-        # ПРИОРИТЕТ 1: Если у пользователя есть роли - используем их
-        if user.groups.filter(name__startswith='role_').exists():
-            return queryset  # Фильтрация будет в RoleBasedFilterMixin
-            
-        # ПРИОРИТЕТ 2: Если нет ролей - фильтруем по подразделению
-        if user_division and hasattr(queryset.model, 'division'):
-            return queryset.filter(division=user_division)
-            
-        # ПРИОРИТЕТ 3: Если нет подразделения - только свои данные
-        if hasattr(queryset.model, 'user'):
-            return queryset.filter(user=user)
-        elif hasattr(queryset.model, 'employee'):
-            if hasattr(user, 'employee') and user.employee:
-                return queryset.filter(employee=user.employee)
-                    
-        return queryset.none()
+        # Ограничиваем только текущим пользователем
+        return queryset.filter(id=user.id)
     
     def _user_has_role(self, role_name):
-        """Проверяет, имеет ли пользователь конкретную роль"""
         from .permissions import RoleBasedPermission
         perm_checker = RoleBasedPermission()
         return perm_checker._user_has_role(self.request.user, role_name)

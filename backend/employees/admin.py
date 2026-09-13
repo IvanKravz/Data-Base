@@ -5,7 +5,8 @@ from .models import Employee, ShaWorkerDetails, ShaEquipmentConclusion
 
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'full_name', 'division', 'subdivision', 'rank', 'position', 'category', 'priority', 'photo_preview')
+    list_display = ('id', 'full_name', 'division', 'subdivision', 'rank', 'position', 
+                    'category', 'priority', 'photo_preview')  # subcategory удалён
     list_filter = ('category', 'division', 'subdivision', 'is_sha_worker', 'is_material_responsible')
     search_fields = ('full_name', 'position', 'rank')
     ordering = ('priority', 'full_name')
@@ -14,7 +15,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Основная информация', {
-            'fields': ('photo', 'full_name', 'position', 'rank', 'category', 'subcategory', 'priority')
+            'fields': ('photo', 'full_name', 'position', 'rank', 'category', 'priority')  # subcategory удалён
         }),
         ('Контактные данные', {
             'fields': ('personal_number', 'personal_phone', 'work_phone', 'birth_date')

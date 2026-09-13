@@ -1,0 +1,157 @@
+/* ScheduleControls.css */
+.schedule-header-right {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+    position: relative;
+}
+
+/* Блок с выбором даты (слева) */
+.schedule-date-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #c0dcee37;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+}
+
+.schedule-date-picker:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.schedule-date-picker label {
+    font-weight: 500;
+    color: #475569;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.schedule-date-picker input[type="date"] {
+    border: none;
+    background: transparent;
+    padding: 4px 4px;
+    font-size: 1rem;
+    color: #1e293b;
+    outline: none;
+    cursor: pointer;
+}
+
+.schedule-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.schedule-date-picker input[type="date"]:focus {
+    outline: none;
+}
+
+.clear-date-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.clear-date-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Навигация по месяцам (строго по центру) */
+.schedule-nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.nav-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.month-label {
+    font-size: 1rem;
+    font-weight: 500;
+    min-width: 140px;
+    text-align: center;
+    color: #1e293b;
+}
+
+/* Подсказка (справа) */
+.shift-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Адаптивность: на мобильных отключаем absolute и центрируем навигацию */
+@media (max-width: 768px) {
+    .schedule-header-right {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        position: static;
+    }
+
+    .schedule-date-picker {
+        justify-content: center;
+        flex-shrink: 1;
+    }
+
+    .schedule-nav {
+        position: static;
+        left: auto;
+        transform: none;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .shift-hint {
+        justify-content: center;
+        flex-shrink: 1;
+    }
+}

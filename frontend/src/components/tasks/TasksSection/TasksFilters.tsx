@@ -3,6 +3,9 @@ import { List, Calendar as CalendarIcon } from 'lucide-react';
 import { SearchBar } from '../../common/SearchBar';
 import { TaskCategoryFilter } from './TaskCategoryFilter';
 import { Task } from '../../../types/tasks';
+import DatePicker from 'react-datepicker';
+import ru from 'date-fns/locale/ru';
+import 'react-datepicker/dist/react-datepicker.css';
 import './style.css';
 
 type TaskCategory = 'all' | 'completed' | 'urgent' | 'planned' | 'attention';
@@ -15,7 +18,6 @@ interface TasksFiltersProps {
   activeView: 'list' | 'calendar';
   onViewChange: (view: 'list' | 'calendar') => void;
   tasks: Task[];
-  // Добавляем новые пропсы для фильтрации по датам
   startDate: string | null;
   endDate: string | null;
   onStartDateChange: (date: string | null) => void;
@@ -32,7 +34,6 @@ export function TasksFilters({
   activeView,
   onViewChange,
   tasks,
-  // Добавляем новые пропсы
   startDate,
   endDate,
   onStartDateChange,
@@ -40,6 +41,28 @@ export function TasksFilters({
   showOnlyMine,
   onToggleMine,
 }: TasksFiltersProps) {
+  const startDateObj = startDate ? new Date(startDate) : undefined;
+  const endDateObj = endDate ? new Date(endDate) : undefined;
+
+  const handleDateRangeChange = (update: [Date | null, Date | null]) => {
+    const [start, end] = update;
+    onStartDateChange(start ? start.toISOString().split('T')[0] : null);
+    onEndDateChange(end ? end.toISOString().split('T')[0] : null);
+  };
+
+  const clearDates = () => {
+    onStartDateChange(null);
+    onEndDateChange(null);
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const displayRange = startDate || endDate ? `${formatDate(startDate)} — ${formatDate(endDate)}` : 'Период не выбран';
+  const hasRange = !!(startDate || endDate);
 
   return (
     <div className="tasks-filters">
@@ -52,32 +75,38 @@ export function TasksFilters({
             placeholder="Поиск задач"
           />
         </div>
+
         <div className="tasks-date-filter">
           <label className="tasks-filter-label">Период выполнения</label>
-          <div className="tasks-date-range">
-            <div className="tasks-date-input-group">
-              <label className="tasks-date-label">С:</label>
-              <input
-                type="date"
-                value={startDate || ''}
-                onChange={(e) => onStartDateChange(e.target.value || null)}
-                className="tasks-date-input"
-              />
-            </div>
-            <div className="tasks-date-input-group">
-              <label className="tasks-date-label">По:</label>
-              <input
-                type="date"
-                value={endDate || ''}
-                onChange={(e) => onEndDateChange(e.target.value || null)}
-                className="tasks-date-input"
-              />
-            </div>
+          
+          <div className="tasks-date-display">
+            <span className="tasks-date-range-text">{displayRange}</span>
+            {hasRange && (
+              <button onClick={clearDates} className="tasks-date-clear">
+                Очистить
+              </button>
+            )}
+          </div>
+
+          <div className="tasks-date-calendar">
+            <DatePicker
+              inline
+              selectsRange
+              startDate={startDateObj}
+              endDate={endDateObj}
+              onChange={handleDateRangeChange}
+              monthsShown={1}
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              className="tasks-date-picker"
+              locale={ru}
+            />
           </div>
         </div>
 
         <div className="tasks-category-filter">
-        <label className="tasks-filter-label">Категория</label>
+          <label className="tasks-filter-label">Категория</label>
           <TaskCategoryFilter
             tasks={tasks}
             selectedCategory={selectedCategory}

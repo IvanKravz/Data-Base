@@ -1,4 +1,3 @@
-// UserInfoCard.tsx
 import React from 'react';
 import { User, Edit, Trash2, Key, Shield } from 'lucide-react';
 
@@ -15,7 +14,7 @@ interface UserInfoCardProps {
     twoFAEnabled?: boolean;
 }
 
-export const UserInfoCard: React.FC<UserInfoCardProps> = ({
+export const UserInfoCard = React.memo<UserInfoCardProps>(({
     username,
     rolesDisplay,
     avatar,
@@ -67,4 +66,4 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({
             </div>
         </div>
     );
-};
+});

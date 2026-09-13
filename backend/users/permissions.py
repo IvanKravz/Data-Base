@@ -1,3 +1,4 @@
+# users/permissions.py
 from rest_framework import permissions
 from django.contrib.auth.models import Group
 
@@ -58,21 +59,21 @@ class RoleBasedPermission(permissions.BasePermission):
         if request.user.is_superuser or self._user_has_role(request.user, 'admin'):
             return True
             
-        # Дополнительные проверки на уровне объекта
         model_name = obj.__class__.__name__
         action = self._get_action(view)
         
+        # Проверяем наличие прав на модель
         has_perm = self._check_permission(request.user, model_name, action)
+        if not has_perm:
+            return False
         
         # Для ролей только с просмотром - всегда разрешаем доступ к объекту
-        if has_perm and self.is_view_only_user(request.user):
+        if self.is_view_only_user(request.user):
             return True
             
-        # Применяем специфичные проверки для объектов
-        if has_perm and hasattr(obj, 'division'):
-            return self._check_division_access(request.user, obj)
-            
-        return has_perm
+        # Проверяем доступ на основе подразделения для всех моделей,
+        # которые имеют отношение к подразделению (включая саму Division)
+        return self._check_division_access(request.user, obj)
     
     def _check_permission(self, user, model_name, action):
         """Проверяет разрешение для модели и действия"""
@@ -94,7 +95,10 @@ class RoleBasedPermission(permissions.BasePermission):
         return False
 
     def _check_division_access(self, user, obj):
-        """Проверяет доступ к объекту на основе подразделения"""
+        """
+        Проверяет доступ к объекту на основе подразделения.
+        Для модели Division сравнивает id, для остальных - поле division.
+        """
         from .permissions_config import ROLE_PERMISSIONS
         
         user_roles = self._get_user_roles(user)
@@ -114,12 +118,19 @@ class RoleBasedPermission(permissions.BasePermission):
         # Если у пользователя нет подразделения - запрещаем доступ
         if not user_division:
             return False
-            
-        # Проверяем подразделение объекта
+        
+        # Если объект является подразделением (Division), сравниваем по id
+        if obj.__class__.__name__ == 'Division':
+            return user_division.id == obj.id
+        
+        # Для остальных моделей проверяем поле division
         obj_division = getattr(obj, 'division', None)
         if not obj_division:
-            return False
-            
+            # Если у объекта нет поля division, но он не Division - разрешаем доступ?
+            # По умолчанию считаем, что если нет поля division, то доступ разрешен
+            # (например, для моделей, которые не привязаны к подразделению)
+            return True
+        
         return user_division.id == obj_division.id
         
     def _get_user_roles(self, user):
@@ -147,13 +158,24 @@ class RoleBasedPermission(permissions.BasePermission):
         return None
     
     def _get_action(self, view):
-        """Получает действие из view"""
         if hasattr(view, 'action'):
-            # Для кастомных действий определяем тип операции на основе методов
-            if view.action in ['equipment_categories', 'list_by_employee', 'stats', 'network_config', 'shd_equipment']:
-                return 'view'  # Все эти действия - GET запросы для просмотра
-            return view.action
-        
+            action = view.action
+            # Стандартные действия DRF
+            if action in ['list', 'retrieve', 'create', 'update', 'partial_update', 'destroy']:
+                return action
+            # Для кастомных действий определяем по методу запроса
+            if hasattr(view, 'request'):
+                method = view.request.method.lower()
+                if method == 'get':
+                    return 'view'
+                elif method == 'post':
+                    return 'add'          # или 'change' – зависит от логики
+                elif method in ['put', 'patch']:
+                    return 'change'
+                elif method == 'delete':
+                    return 'delete'
+            # fallback
+            return action
         # Для APIView без action
         if hasattr(view, 'request'):
             return view.request.method.lower()

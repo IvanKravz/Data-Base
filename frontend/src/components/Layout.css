@@ -13,40 +13,42 @@
 .hero-banner {
     width: 100%;
     position: relative;
-    animation: bannerReveal 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    will-change: height, opacity;
+    transform: translateZ(0);
+    /* Плавное появление/исчезновение самого контейнера (опционально) */
+    transition: opacity 0.3s ease;
+    opacity: 1;
+}
+
+/* Скрытое состояние баннера: мгновенное исчезновение */
+.hero-banner--hidden {
+    opacity: 0;
+    /* Не меняем высоту здесь, чтобы не влиять на layout, 
+       высота управляется внутренним wrapper'ом */
 }
 
 .hero-banner__image-wrapper {
     width: 100%;
     height: 280px;
-    /* аккуратная высота, не на весь экран */
     overflow: hidden;
     position: relative;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     border-bottom-left-radius: 1rem;
     border-bottom-right-radius: 1rem;
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+    /* Плавные переходы для появления */
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease;
 }
 
+/* Когда баннер скрыт – мгновенно убираем высоту и прозрачность */
 .hero-banner--hidden .hero-banner__image-wrapper {
     height: 0 !important;
-    margin: 0;
-    padding: 0;
+    opacity: 0 !important;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-}
-
-@media (max-width: 1024px) {
-    .hero-banner--hidden .hero-banner__image-wrapper {
-        height: 0 !important;
-    }
-}
-
-@media (max-width: 640px) {
-    .hero-banner--hidden .hero-banner__image-wrapper {
-        height: 0 !important;
-    }
+    /* Отключаем переходы, чтобы изменения происходили мгновенно */
+    transition-duration: 0s !important;
 }
 
 .hero-banner__image {
@@ -71,19 +73,6 @@
     pointer-events: none;
     border-bottom-left-radius: 1.5rem;
     border-bottom-right-radius: 1.5rem;
-}
-
-/* Анимация появления баннера */
-@keyframes bannerReveal {
-    0% {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* ----- Хедер (современный, под баннером, sticky) ----- */
@@ -208,7 +197,7 @@
 }
 
 .layout-content__container {
-    padding: 1.1rem 1.1rem;
+    padding: 1rem 1rem;
     animation: contentFadeIn 0.4s ease-out;
 }
 

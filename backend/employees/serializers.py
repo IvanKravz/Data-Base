@@ -2,9 +2,9 @@
 import os
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-# from backend.users.permissions import RoleBasedPermission
 from facilities.models import Division, Subdivision
-from .models import Employee, ShaWorkerDetails, ShaEquipmentConclusion
+from facilities.serializers import EmployeeBriefSerializer
+from .models import Employee, ScheduleEvent, ShaWorkerDetails, ShaEquipmentConclusion
 import logging
 from django.conf import settings
 
@@ -15,7 +15,7 @@ class ShaEquipmentConclusionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShaEquipmentConclusion
         fields = ['id', 'equipment_type', 'conclusion_number']
-        read_only_fields = ['id']   
+        read_only_fields = ['id']
 
 
 class ShaWorkerDetailsSerializer(serializers.ModelSerializer):
@@ -29,15 +29,21 @@ class ShaWorkerDetailsSerializer(serializers.ModelSerializer):
 
 
 class DivisionSerializer(serializers.ModelSerializer):
+    head = EmployeeBriefSerializer(read_only=True)
+    deputy_head = EmployeeBriefSerializer(read_only=True)
+
     class Meta:
         model = Division
-        fields = ['id', 'name']        
+        fields = ['id', 'name', 'head', 'deputy_head']
 
 
 class SubdivisionSerializer(serializers.ModelSerializer):
+    head = EmployeeBriefSerializer(read_only=True)
+    deputy_head = EmployeeBriefSerializer(read_only=True)
+
     class Meta:
         model = Subdivision
-        fields = ['id', 'name']    
+        fields = ['id', 'name', 'head', 'deputy_head']
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
@@ -95,25 +101,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     def get_photo_url(self, obj):
         if obj.photo and obj.photo.name:
-            # Возвращаем только относительный путь: /media/employee_photos/...
             return f"{settings.MEDIA_URL}{obj.photo.name}"
         return None
-    
-    # def validate(self, data):
-    #     request = self.context.get('request')
-    #     if request and request.user.is_authenticated:
-    #         # Убедитесь, что RoleBasedPermission импортирован в начале файла
-    #         if RoleBasedPermission.is_view_only_user(request.user):
-    #             if self.instance:
-    #                 raise serializers.ValidationError({
-    #                     'detail': 'Ваши роли позволяют только просматривать данные без возможности изменений'
-    #                 })
-    #             else:
-    #                 raise serializers.ValidationError({
-    #                     'detail': 'Ваши роли не позволяют создавать новые записи'
-    #                 })
-                    
-    #     return data
 
     def to_internal_value(self, data):
         if 'division' in data:
@@ -219,12 +208,12 @@ class EmployeeDictionariesSerializer(serializers.Serializer):
             child=serializers.CharField()
         )
     )
-    officer_positions = serializers.ListField(
+    management_positions = serializers.ListField(
         child=serializers.DictField(
             child=serializers.CharField()
         )
     )
-    management_officer_ranks = serializers.ListField(
+    officer_positions = serializers.ListField(
         child=serializers.DictField(
             child=serializers.CharField()
         )
@@ -235,6 +224,11 @@ class EmployeeDictionariesSerializer(serializers.Serializer):
         )
     )
     civilian_positions = serializers.ListField(
+        child=serializers.DictField(
+            child=serializers.CharField()
+        )
+    )
+    management_officer_ranks = serializers.ListField(
         child=serializers.DictField(
             child=serializers.CharField()
         )
@@ -262,3 +256,17 @@ class EmployeePhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = ['id', 'photo_url']
+
+
+class ScheduleEventSerializer(serializers.ModelSerializer):
+    employee_name = serializers.CharField(source='employee.full_name', read_only=True)
+    employee_id = serializers.PrimaryKeyRelatedField(source='employee', read_only=True)
+
+    class Meta:
+        model = ScheduleEvent
+        fields = ['id', 'employee', 'employee_id', 'employee_name', 'date', 'event_type', 'comment']
+        read_only_fields = ['id', 'employee_name', 'employee_id']
+
+    def create(self, validated_data):
+        # Проверка уникальности выполняется на уровне модели, но можно добавить валидацию
+        return super().create(validated_data)

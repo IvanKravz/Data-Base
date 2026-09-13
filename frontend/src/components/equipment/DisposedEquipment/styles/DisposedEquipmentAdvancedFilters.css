@@ -1,0 +1,191 @@
+/* DisposedEquipmentAdvancedFilters.css */
+.deaf-container {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  /* ===== Группы фильтров ===== */
+  .deaf-groups-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .deaf-group {
+    flex: 1 1 220px;
+    min-width: 220px;
+    max-width: 320px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px 12px 12px;
+    position: relative;
+    box-sizing: border-box;
+  }
+  
+  .deaf-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .deaf-group-icon {
+    color: #4d5edb;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+  }
+  
+  .deaf-group-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1e293b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  
+  /* Внутри группы поля идут вертикально (одна колонка) */
+  .deaf-fields-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .deaf-field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .deaf-field label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 2px;
+  }
+  
+  .deaf-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    background: white;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  
+  .deaf-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  }
+  
+  .deaf-selected-filter {
+    margin-top: 3px;
+  }
+  
+  .deaf-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    color: #1e40af;
+  }
+  
+  .deaf-filter-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1e40af;
+    font-size: 0.9rem;
+    padding: 0 2px;
+    line-height: 1;
+  }
+  
+  .deaf-filter-tag button:hover {
+    color: #dc2626;
+  }
+  
+  .deaf-actions {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #f1f5f9;
+  }
+  
+  .deaf-clear-btn {
+    padding: 6px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.8rem;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  
+  .deaf-clear-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+  
+  /* Обёртка для позиционирования подсказок */
+  .deaf-suggestion-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
+  /* Стили для выпадающих подсказок */
+  .deaf-container .suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 0.25rem;
+    box-sizing: border-box;
+  }
+  
+  .deaf-container .suggestion-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .deaf-container .suggestion-item:last-child {
+    border-bottom: none;
+  }
+  
+  .deaf-container .suggestion-item:hover {
+    background-color: #f7fafc;
+  }
+  
+  /* Адаптив: на узких экранах карточки переносятся */
+  @media (max-width: 1200px) {
+    .deaf-group {
+      flex: 1 1 200px;
+      max-width: 100%;
+    }
+  }

@@ -3,6 +3,7 @@ import { User, Building2, Calendar, Tag, ShieldCheck, KeyRound } from 'lucide-re
 import { Employee } from '../../../../types';
 import { InfoCard } from './InfoCard';
 import { InfoItem } from './InfoItem';
+import { formatDisplayDate } from '../../../../api/utils/dateFormatters';
 
 interface BasicInfoProps {
   person: Employee;
@@ -16,15 +17,13 @@ export function BasicInfo({ person, searchTerm = '' }: BasicInfoProps) {
       { label: 'Звание', value: person.rank, icon: Tag, key: 'rank' },
       { label: 'Подразделение', value: person.division?.name || null, icon: Building2, key: 'division' },
       { label: 'Отделение', value: person.subdivision?.name || null, icon: Building2, key: 'subdivision' },
-      { label: 'Дата рождения', value: person.birth_date ? person.birth_date : null, icon: Calendar, key: 'birth_date' },
+      { label: 'Дата рождения', value: person.birth_date ? formatDisplayDate(person.birth_date) : null, icon: Calendar, key: 'birth_date' },
     ];
     return items;
   }, [person]);
 
-  // Убираем поля, у которых нет значения (null или undefined)
   const visibleFields = useMemo(() => fields.filter(f => f.value != null), [fields]);
 
-  // Применяем поиск только к видимым полям
   const filteredFields = useMemo(() => {
     if (!searchTerm.trim()) return visibleFields;
     const lower = searchTerm.toLowerCase().trim();
@@ -45,7 +44,7 @@ export function BasicInfo({ person, searchTerm = '' }: BasicInfoProps) {
     !searchTerm.trim() ||
     'шаработник'.includes(searchTerm.toLowerCase().trim()) ||
     (person.sha_details?.access_level === '1' ? '1 класс' : '2 класс').includes(searchTerm.toLowerCase().trim()) ||
-    (person.sha_details?.start_date ? new Date(person.sha_details.start_date).toLocaleDateString() : '').includes(searchTerm.toLowerCase().trim())
+    (person.sha_details?.start_date ? formatDisplayDate(person.sha_details.start_date) : '').includes(searchTerm.toLowerCase().trim())
   );
 
   if (filteredFields.length === 0 && !materialMatches && !shaMatches) {
@@ -75,7 +74,7 @@ export function BasicInfo({ person, searchTerm = '' }: BasicInfoProps) {
             <p className="info-item-label info-item-label-primary">ШАРАБОТНИК</p>
             <p className="info-item-value info-item-value-small">
               {person.sha_details?.access_level === '1' ? '1 класс' : '2 класс'}
-              {person.sha_details?.start_date && `, с ${new Date(person.sha_details.start_date).toLocaleDateString()}`}
+              {person.sha_details?.start_date && `, с ${formatDisplayDate(person.sha_details.start_date)}`}
             </p>
           </div>
         </div>

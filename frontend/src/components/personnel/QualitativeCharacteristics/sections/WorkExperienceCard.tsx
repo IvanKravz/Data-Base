@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Briefcase, Calendar, CalendarClock } from 'lucide-react';
 import { Employee } from '../../../../types';
+import { formatDisplayDate, formatDateForInput } from '../../../../api/utils/dateFormatters';
+
 
 interface WorkExperienceCardProps {
   formData?: Partial<Employee>;
@@ -13,30 +15,6 @@ interface WorkExperienceCardProps {
 
 export function WorkExperienceCard({ formData, onChange, employee, viewMode, canEdit = true, searchTerm = '' }: WorkExperienceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
-
-  const formatDisplayDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return '—';
-    const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
-    const match = dateString.match(isoFormat);
-    if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`;
-    }
-    const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
-    if (displayFormat.test(dateString)) return dateString;
-    return dateString;
-  };
-
-  const formatDateForInput = (dateString: string | null | undefined): string => {
-    if (!dateString) return '';
-    const displayFormat = /^(\d{2})-(\d{2})-(\d{4})$/;
-    const match = dateString.match(displayFormat);
-    if (match) {
-      return `${match[3]}-${match[2]}-${match[1]}`;
-    }
-    const isoFormat = /^(\d{4})-(\d{2})-(\d{2})$/;
-    if (isoFormat.test(dateString)) return dateString;
-    return '';
-  };
 
   const fields = useMemo(() => {
     if (viewMode) {
@@ -72,15 +50,14 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
     setActiveDateField(field);
   };
 
-  const handleDateChange = (field: keyof Employee, value: string) => {
-    onChange?.(field, value);
+  const handleDateClose = () => {
     setActiveDateField(null);
   };
 
-  const renderField = (label: string, value: string, icon: React.ElementType) => {
+  const renderField = (label: string, value: string, icon: React.ElementType, key: string) => {
     const Icon = icon;
     return (
-      <div className="qc-info-item">
+      <div className="qc-info-item" key={key}>
         <Icon className="qc-info-icon" size={20} />
         <div>
           <p className="qc-info-label">{label}</p>
@@ -90,13 +67,13 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
     );
   };
 
-  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType) => {
+  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType, key: string) => {
     const Icon = icon;
-    const displayValue = value ? formatDisplayDate(value) : 'дд-мм-гггг';
+    const displayValue = value ? formatDisplayDate(value) : 'дд.мм.гггг';
     const inputValue = value ? formatDateForInput(value) : '';
 
     return (
-      <div className="qc-input-group">
+      <div className="qc-input-group" key={key}>
         <label className="qc-input-label">
           <Icon size={16} className="qc-info-icon" />
           {label}
@@ -105,8 +82,9 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
           <input
             type="date"
             value={inputValue}
-            onChange={(e) => handleDateChange(field, e.target.value)}
-            onBlur={() => setActiveDateField(null)}
+            onChange={(e) => onChange?.(field, e.target.value)}
+            onBlur={handleDateClose}
+            onKeyDown={(e) => e.key === 'Escape' && handleDateClose()}
             autoFocus
             className="qc-input"
             disabled={!canEdit}
@@ -134,9 +112,9 @@ export function WorkExperienceCard({ formData, onChange, employee, viewMode, can
       </div>
       <div className="qc-card-content">
         {viewMode ? (
-          filteredFields.map(f => renderField(f.label, f.value, f.icon))
+          filteredFields.map(f => renderField(f.label, f.value, f.icon, f.key))
         ) : (
-          filteredFields.map(f => renderDateInput(f.label, formData?.[f.key as keyof Employee] as string, f.key as keyof Employee, f.icon))
+          filteredFields.map(f => renderDateInput(f.label, formData?.[f.key as keyof Employee] as string, f.key as keyof Employee, f.icon, f.key))
         )}
       </div>
     </div>

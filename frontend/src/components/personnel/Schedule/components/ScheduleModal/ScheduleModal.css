@@ -1,0 +1,142 @@
+/* components/ScheduleModal/ScheduleModal.css */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    min-width: 300px;
+    max-width: 520px;
+    width: 90%;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #0f172a;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.title-line {
+    display: block;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-body label {
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #334155;
+}
+
+.modal-body select,
+.modal-body textarea {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.modal-body select:focus,
+.modal-body textarea:focus {
+    outline: none;
+    border-color: #4d5edb;
+    box-shadow: 0 0 0 2px rgba(77, 94, 219, 0.2);
+}
+
+.modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.modal-actions button {
+    padding: 4px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    background: #f9fafb;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.modal-actions button:hover:not(:disabled) {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.modal-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.clear-btn {
+    margin-right: auto;
+}
+
+.modal-actions .primary-btn {
+    background: #4b5563;
+    color: white;
+    border-color: #4b5563;
+}
+
+.modal-actions .primary-btn:hover:not(:disabled) {
+    background: #374151;
+    border-color: #374151;
+}
+
+.modal-actions .delete-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.modal-actions .delete-btn:hover:not(:disabled) {
+    background: #fecaca;
+    border-color: #fca5a5;
+}
+
+.modal-actions .cancel-btn {
+    background: #f3f4f6;
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+
+.modal-actions .cancel-btn:hover:not(:disabled) {
+    background: #e5e7eb;
+}

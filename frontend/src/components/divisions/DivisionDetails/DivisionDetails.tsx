@@ -1,5 +1,4 @@
 // DivisionDetails.tsx
-// DivisionDetails.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Overview } from './sections/Overview';
@@ -8,6 +7,8 @@ import { Header } from './sections/Header';
 import { Skeleton } from '@mui/material';
 import './sections/style.css';
 import { isExploitationChief, isExploitationEmployee } from '../../../api/utils/permissions';
+import AccessDenied from '../../../components/errors/AccessDenied/AccessDenied';
+import { MapCountry } from '../../map/MapCountry/MapCountry';
 
 export function DivisionDetails() {
   const { id } = useParams<{ id: string }>();
@@ -16,18 +17,23 @@ export function DivisionDetails() {
   const [division, setDivision] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isForbidden, setIsForbidden] = useState(false);
 
-  // Проверяем роли
   const isExploitationEmp = isExploitationEmployee();
   const isChief = isExploitationChief();
+  const isExploitation = isChief || isExploitationEmp;
 
   useEffect(() => {
     const fetchFacility = async () => {
       try {
         const div = await divisionsApi.getDivisionById(id, token);
         setDivision(div);
-      } catch (err) {
-        setError('Failed to load division data');
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          setIsForbidden(true);
+        } else {
+          setError('Failed to load division data');
+        }
         console.error(err);
       } finally {
         setLoading(false);
@@ -35,7 +41,7 @@ export function DivisionDetails() {
     };
 
     fetchFacility();
-  }, [id]);
+  }, [id, token]);
 
   const handleBack = () => {
     navigate('/');
@@ -59,6 +65,10 @@ export function DivisionDetails() {
     );
   }
 
+  if (isForbidden) {
+    return <AccessDenied />;
+  }
+
   if (error) {
     return <div className="division-error">{error}</div>;
   }
@@ -68,23 +78,13 @@ export function DivisionDetails() {
   }
 
   return (
-    <div className="division-details-container">
-      <Header 
-        division={division} 
-        onBack={handleBack} 
-        // Показывать кнопку назад только если не начальник эксплуатации и не сотрудник эксплуатации
+    <div className="division-details-container page-fade-in">
+      <Header
+        division={division}
+        onBack={handleBack}
         showBackButton={!isChief && !isExploitationEmp}
       />
-      
       <Overview division={division} />
-      
-      <div className="division-background-wrapper">
-        <img
-          src="/division-image.png"
-          alt="Division background"
-          className="division-background-image"
-        />
-      </div>
     </div>
   );
 }

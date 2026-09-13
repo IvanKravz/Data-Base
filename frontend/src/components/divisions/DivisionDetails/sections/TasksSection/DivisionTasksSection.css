@@ -21,14 +21,12 @@
     width: 18rem;
     position: sticky;
     top: 2rem;
-    /* height: fit-content; */
 }
 
 .tasks-main-section {
     background-color: white;
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    /* min-height: 400px; */
 }
 
 .tasks-empty-state {
@@ -72,7 +70,6 @@
     min-width: 0;
 }
 
-/* Loading styles */
 .tasks-loading {
     display: flex;
     justify-content: center;
@@ -96,7 +93,6 @@
     }
 }
 
-/* Toggle switch styles */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -142,16 +138,30 @@ input:checked + .toggle-slider:before {
     transform: translateX(1.25rem);
 }
 
-/* Responsive styles */
+/* Анимация появления страниц */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
     .tasks-layout {
         grid-template-columns: 1fr;
     }
-
     .tasks-filters-section {
         position: static;
     }
-
     .calendar-view-container {
         grid-template-columns: 1fr;
     }
@@ -161,15 +171,12 @@ input:checked + .toggle-slider:before {
     .tasks-container {
         padding: 1rem;
     }
-    
     .tasks-empty-state {
         padding: 2rem 1rem;
     }
-    
     .tasks-empty-state h3 {
         font-size: 1.25rem;
     }
-    
     .tasks-empty-state p {
         font-size: 0.9rem;
     }

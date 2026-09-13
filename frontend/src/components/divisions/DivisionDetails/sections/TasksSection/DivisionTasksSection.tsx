@@ -40,7 +40,6 @@ export function DivisionTasksSection() {
   const [subdivisionName, setSubdivisionName] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Состояние для выделенного диапазона в календаре
   const [highlightedRange, setHighlightedRange] = useState<{
     start: Date;
     end: Date;
@@ -112,42 +111,80 @@ export function DivisionTasksSection() {
     if (!stableToken) return;
     try {
       setLoading(true);
-      if (isExploitationUser && !id) {
+      if (isExploitationUser) {
         const userDivisionId = user?.division_info?.id;
         if (userDivisionId) {
-          const params = isChief
-            ? { division: userDivisionId, show_completed: "true", show_only_mine: showOnlyMine }
-            : { division: userDivisionId, subdivision: user?.division_info?.subdivision?.id, show_completed: "true", show_only_mine: showOnlyMine };
+          let targetSubdivisionId: number | null = null;
+          if (stableSubdivisionId) {
+            targetSubdivisionId = parseInt(stableSubdivisionId, 10);
+          } else if (!isChief) {
+            targetSubdivisionId = user?.division_info?.subdivision?.id ?? null;
+          }
+          const params: any = {
+            division: userDivisionId,
+            show_completed: "true",
+            show_only_mine: showOnlyMine,
+          };
+          if (targetSubdivisionId) {
+            params.subdivision = targetSubdivisionId;
+          }
           const [tasksData, divisionData] = await Promise.all([
             tasksApi.getTasks(params, stableToken),
-            divisionsApi.getDivisionById(userDivisionId, stableToken)
+            divisionsApi.getDivisionById(userDivisionId, stableToken),
           ]);
-          const tasksWithCompletion = tasksData.map(task => ({ ...task, is_completed: calculateTaskCompletion(task) }));
+          const tasksWithCompletion = tasksData.map(task => ({
+            ...task,
+            is_completed: calculateTaskCompletion(task),
+          }));
           setTasks(tasksWithCompletion);
           setDivision(divisionData);
-          if (!isChief && user?.division_info?.subdivision?.id) {
-            const userSubdivision = divisionData.subdivisions?.find(s => s.id.toString() === user.division_info.subdivision.id.toString());
-            setSubdivisionName(userSubdivision?.name || '');
+          if (targetSubdivisionId) {
+            const foundSub = divisionData.subdivisions?.find(
+              s => s.id.toString() === targetSubdivisionId.toString()
+            );
+            setSubdivisionName(foundSub?.name || '');
+          } else {
+            setSubdivisionName('');
           }
         } else {
-          const tasksData = await tasksApi.getTasks({ show_completed: "true", show_only_mine: showOnlyMine }, stableToken);
+          const tasksData = await tasksApi.getTasks(
+            { show_completed: "true", show_only_mine: showOnlyMine },
+            stableToken
+          );
           setTasks(tasksData.map(task => ({ ...task, is_completed: calculateTaskCompletion(task) })));
         }
       } else if (isGlobalView) {
-        const tasksData = await tasksApi.getTasks({ show_completed: "true", show_only_mine: showOnlyMine }, stableToken);
+        const tasksData = await tasksApi.getTasks(
+          { show_completed: "true", show_only_mine: showOnlyMine },
+          stableToken
+        );
         setTasks(tasksData.map(task => ({ ...task, is_completed: calculateTaskCompletion(task) })));
       } else {
-        const params = { division: id!, subdivision: stableSubdivisionId || undefined, show_completed: "true", show_only_mine: showOnlyMine };
+        const params: any = {
+          division: id!,
+          show_completed: "true",
+          show_only_mine: showOnlyMine,
+        };
+        if (stableSubdivisionId) {
+          params.subdivision = stableSubdivisionId;
+        }
         const [tasksData, divisionData] = await Promise.all([
           tasksApi.getTasks(params, stableToken),
-          divisionsApi.getDivisionById(id!, stableToken)
+          divisionsApi.getDivisionById(id!, stableToken),
         ]);
-        const tasksWithCompletion = tasksData.map(task => ({ ...task, is_completed: calculateTaskCompletion(task) }));
+        const tasksWithCompletion = tasksData.map(task => ({
+          ...task,
+          is_completed: calculateTaskCompletion(task),
+        }));
         setTasks(tasksWithCompletion);
         setDivision(divisionData);
         if (stableSubdivisionId) {
-          const subdivision = divisionData.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
+          const subdivision = divisionData.subdivisions?.find(
+            s => s.id.toString() === stableSubdivisionId.toString()
+          );
           setSubdivisionName(subdivision?.name || '');
+        } else {
+          setSubdivisionName('');
         }
       }
     } catch (error) {
@@ -155,7 +192,17 @@ export function DivisionTasksSection() {
     } finally {
       setLoading(false);
     }
-  }, [stableToken, id, isExploitationUser, isGlobalView, isChief, user, showOnlyMine, stableSubdivisionId, calculateTaskCompletion]);
+  }, [
+    stableToken,
+    id,
+    isExploitationUser,
+    isGlobalView,
+    isChief,
+    user,
+    showOnlyMine,
+    stableSubdivisionId,
+    calculateTaskCompletion,
+  ]);
 
   useEffect(() => {
     loadTasksData();
@@ -326,10 +373,17 @@ export function DivisionTasksSection() {
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
       const divisionName = user?.division_info?.name || 'Ваше подразделение';
+      if (subdivisionName) {
+        return `Задачи: ${divisionName} / ${subdivisionName}`;
+      }
       return `Задачи: ${divisionName}`;
     }
     if (isGlobalView) return 'Все задачи';
-    return `Задачи: ${division?.name || ''} ${subdivisionName ? ` / ${subdivisionName}` : ''}`;
+    const title = `Задачи: ${division?.name || ''}`;
+    if (subdivisionName) {
+      return `${title} / ${subdivisionName}`;
+    }
+    return title;
   };
 
   const restrictedDivisionId = useMemo(() => {
@@ -342,7 +396,7 @@ export function DivisionTasksSection() {
   }, [isExploitationUser, isChief, user]);
 
   return (
-    <div className="tasks-container">
+    <div className="tasks-container page-fade-in">
       <div className="tasks-content-wrapper">
         <TasksHeader
           subdivisionName={subdivisionName}

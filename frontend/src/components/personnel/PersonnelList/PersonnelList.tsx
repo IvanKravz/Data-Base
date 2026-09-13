@@ -6,7 +6,7 @@ import { List, FolderTree, Users, UserCog, Shield, Briefcase, User, Package, Key
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Division, Employee } from '../../../types';
 import { TableView } from './views/TableView';
-import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
+import { ConfirmationModal } from '../../modals/ConfirmationModal';
 import { ExportButton } from '../../common/ExportButton';
 import { SearchBar } from '../../common/SearchBar';
 import { exportPersonnelToExcel } from '../../../utils/exportToExcel';
@@ -591,7 +591,8 @@ export function PersonnelList({
       </div>
 
       {showDeleteModal && (
-        <DeleteConfirmationModal
+        <ConfirmationModal
+          type="delete"
           title="Удаление сотрудника"
           message="Вы уверены, что хотите удалить этого сотрудника? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}

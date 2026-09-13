@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { equipmentApi, authApi, divisionsApi, employeesApi } from '../../../api';
+import { DisposalModal } from '../DisposalModal/DisposalModal';
 import { Equipment, Division } from '../../../types';
 import {
     Pencil,
@@ -20,8 +21,9 @@ import {
     User,
     ClipboardList,
     Hash,
+    RefreshCw,
 } from 'lucide-react';
-import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
+import { ConfirmationModal } from '../../modals/ConfirmationModal';
 import { EquipmentSidebar } from './sections/EquipmentSidebar';
 import { SearchBar } from '../../common/SearchBar';
 import { useEquipmentFieldPermissions } from '../../../api/utils/useEquipmentFieldPermissions';
@@ -84,6 +86,42 @@ const viewToEditMap: Record<ViewTabId, EditTabId> = {
     disposal: 'disposal',
 };
 
+/**
+ * Состояние, которое передаётся со страницы архива списанной техники
+ * в карточку техники. `fromState` — это исходный state самой страницы архива,
+ * чтобы после возврата восстановить контекст (divisionId и т. п.).
+ */
+interface DetailsNavigationState {
+    from?: 'equipment-section' | 'equipment-disposed' | 'global-equipment' | string;
+    divisionId?: number | string;
+    divisionName?: string;
+    subdivisionId?: string;
+    activeTab?: string;
+    fromState?: {
+        from?: string;
+        divisionId?: number | string;
+        divisionName?: string;
+        subdivisionId?: string;
+        activeTab?: string;
+    };
+}
+
+/**
+ * Проверяет, есть ли у техники непустые данные о списании.
+ * Сериализатор отдаёт данные ТОЛЬКО через вложенный объект disposal_info.
+ */
+function hasDisposalData(equipment: Equipment | null): boolean {
+    const d = equipment?.disposal_info;
+    if (!d) return false;
+    return Boolean(
+        d.actNumber ||
+        d.actDate ||
+        d.disposalCertNumber ||
+        d.disposalCertDate ||
+        d.comments,
+    );
+}
+
 export function EquipmentDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const token = localStorage.getItem('accessToken') || '';
@@ -95,6 +133,8 @@ export function EquipmentDetailsPage() {
     const [error, setError] = useState('');
     const [activeViewTab, setActiveViewTab] = useState<ViewTabId>('assignment');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
 
     // === РЕДАКТИРОВАНИЕ НА МЕСТЕ ===
     const [isEditing, setIsEditing] = useState(false);
@@ -102,6 +142,7 @@ export function EquipmentDetailsPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [activeEditTab, setActiveEditTab] = useState<EditTabId>('basic');
     const [previousViewTab, setPreviousViewTab] = useState<ViewTabId>('assignment');
+    const [showDisposalModal, setShowDisposalModal] = useState(false);
 
     // === ПОИСК ===
     const [searchTerm, setSearchTerm] = useState('');
@@ -126,6 +167,19 @@ export function EquipmentDetailsPage() {
     );
     const isGlobalView = authApi.getGlobalView();
 
+    // Функция обработки списания
+    const handleDispose = async (disposalInfo: any) => {
+        try {
+            await equipmentApi.disposeEquipment(token, equipment!.id, disposalInfo);
+            const updated = await equipmentApi.getEquipmentById(token, id!);
+            setEquipment(updated);
+            setShowDisposalModal(false);
+        } catch (error) {
+            console.error('Ошибка списания:', error);
+            setError('Не удалось списать технику');
+        }
+    };
+
     // Загрузка техники
     useEffect(() => {
         const fetchEquipment = async () => {
@@ -143,12 +197,11 @@ export function EquipmentDetailsPage() {
         fetchEquipment();
     }, [id, token]);
 
-    // Загрузка справочников (только необходимых для просмотра)
+    // Загрузка справочников
     useEffect(() => {
         const fetchDictionaries = async () => {
             if (!token) return;
             try {
-                // Основные справочники – доступны всем
                 const [divisionsData, categoriesData] = await Promise.all([
                     divisionsApi.getDivisions(token),
                     equipmentApi.getEquipmentCategories(token),
@@ -156,13 +209,11 @@ export function EquipmentDetailsPage() {
                 setDivisions(divisionsData);
                 setCategories(categoriesData);
 
-                // Справочник органов нужен только при редактировании
                 if (canEditEquipment) {
                     try {
                         const organsData = await equipmentApi.getInterestOrgans(token);
                         setInterestOrgans(organsData);
                     } catch (orgErr: any) {
-                        // Если 403 – просто игнорируем, пользователь не сможет редактировать это поле
                         if (orgErr?.response?.status === 403) {
                             console.warn('Доступ к списку органов ограничен');
                         } else {
@@ -175,7 +226,6 @@ export function EquipmentDetailsPage() {
                 }
             } catch (err) {
                 console.error('Ошибка загрузки справочников:', err);
-                // Не показываем ошибку пользователю, т.к. это не критично
             }
         };
         fetchDictionaries();
@@ -211,7 +261,6 @@ export function EquipmentDetailsPage() {
     const handleSave = async () => {
         if (!editFormData || !token || !id) return;
 
-        // Валидация: при безвозмездном пользовании номер акта обязателен
         if (editFormData.is_free_use && !editFormData.free_use_act_number?.trim()) {
             setError('При выдаче в безвозмездное пользование необходимо указать номер акта');
             return;
@@ -265,7 +314,19 @@ export function EquipmentDetailsPage() {
             handleCancelEdit();
             return;
         }
-        const state = location.state;
+
+        const state = location.state as DetailsNavigationState | undefined;
+
+        // 1) Пришли из архива списанной техники — возвращаемся туда,
+        //    восстанавливая исходный state архива (divisionId, фильтры и т. п.).
+        if (state?.from === 'equipment-disposed') {
+            navigate('/equipment-disposed', {
+                state: state.fromState ?? undefined,
+            });
+            return;
+        }
+
+        // 2) Пришли со страницы техники (общий/по подразделению список)
         if (state?.from === 'equipment-section') {
             let backUrl = state.divisionId
                 ? `/divisions/${state.divisionId}/equipment`
@@ -274,21 +335,36 @@ export function EquipmentDetailsPage() {
             if (state.subdivisionId) params.append('subdivision', state.subdivisionId);
             const queryString = params.toString();
             if (queryString) backUrl += `?${queryString}`;
-            navigate(backUrl, { state: { activeTab: state.activeTab } });
-        } else if (isGlobalView) {
-            navigate(`/equipment`, {
-                state: { activeTab: location.state?.activeTab || 'all' },
-            });
-        } else if (equipment?.division?.id) {
-            let backUrl = `/divisions/${equipment.division.id}/equipment`;
-            if (equipment.subdivision?.id)
-                backUrl += `?subdivision=${equipment.subdivision.id}`;
-            navigate(backUrl, {
-                state: { activeTab: location.state?.activeTab || 'all' },
-            });
-        } else {
-            navigate(-1);
+            navigate(backUrl, { state: { activeTab: state.activeTab || 'all' } });
+            return;
         }
+
+        // 3) Пришли с глобальной страницы техники
+        if (state?.from === 'global-equipment') {
+            navigate('/equipment', { state: { activeTab: state.activeTab || 'all' } });
+            return;
+        }
+
+        // 4) Фолбэки: глобальный просмотр / известное подразделение / браузерный back
+        if (isGlobalView) {
+            navigate(`/equipment`, {
+                state: { activeTab: state?.activeTab || 'all' },
+            });
+            return;
+        }
+
+        if (equipment?.division?.id) {
+            let backUrl = `/divisions/${equipment.division.id}/equipment`;
+            if (equipment.subdivision?.id) {
+                backUrl += `?subdivision=${equipment.subdivision.id}`;
+            }
+            navigate(backUrl, {
+                state: { activeTab: state?.activeTab || 'all' },
+            });
+            return;
+        }
+
+        navigate(-1);
     };
 
     // === УДАЛЕНИЕ ===
@@ -301,6 +377,28 @@ export function EquipmentDetailsPage() {
             setError('Не удалось удалить технику');
         } finally {
             setShowDeleteModal(false);
+        }
+    };
+
+    // === ВОССТАНОВЛЕНИЕ ===
+    const handleRestoreConfirm = async () => {
+        if (!equipment || !token) return;
+        setIsRestoring(true);
+        setError('');
+        try {
+            await equipmentApi.restoreEquipment(token, equipment.id);
+            setShowRestoreModal(false);
+            // Возвращаемся в архив — там запись уже не будет отображаться,
+            // т.к. статус сменился с 'disposed' на 'in-operation'.
+            handleBack();
+        } catch (error: any) {
+            console.error('Ошибка восстановления техники:', error);
+            setError(
+                error?.response?.data?.error ||
+                'Не удалось восстановить технику. Попробуйте ещё раз.',
+            );
+        } finally {
+            setIsRestoring(false);
         }
     };
 
@@ -385,8 +483,7 @@ export function EquipmentDetailsPage() {
                 return <ProductStructureTable equipment={equipment} searchTerm={searchTerm} />;
             }
             case 'disposal': {
-                const hasDisposalData = equipment.disposal_act_number || equipment.disposal_cert_number;
-                if (!hasDisposalData) return renderEmpty('Нет данных о списании');
+                if (!hasDisposalData(equipment)) return renderEmpty('Нет данных о списании');
                 return <DisposalInfo equipment={equipment} searchTerm={searchTerm} />;
             }
             default:
@@ -534,14 +631,43 @@ export function EquipmentDetailsPage() {
                                             Редактировать
                                         </button>
                                     )}
-                                    {canDeleteEquipment && (
+
+                                    {canDeleteEquipment && equipment.status === 'disposed' && (
+                                        <>
+                                            <button
+                                                onClick={() => setShowRestoreModal(true)}
+                                                className="equipment-btn equipment-btn--success"
+                                                title="Восстановить технику"
+                                            >
+                                                <RefreshCw size={14} />
+                                                Восстановить
+                                            </button>
+                                            <button
+                                                onClick={() => setShowDeleteModal(true)}
+                                                className="equipment-btn equipment-btn--danger"
+                                                title="Удалить технику"
+                                            >
+                                                <Trash2 size={14} />
+                                                Удалить
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {canDeleteEquipment && equipment.status !== 'disposed' && (
                                         <button
-                                            onClick={() => setShowDeleteModal(true)}
-                                            className="equipment-btn equipment-btn--danger"
+                                            onClick={() => setShowDisposalModal(true)}
+                                            className="equipment-btn equipment-btn--warning"
                                         >
                                             <Trash2 size={14} />
-                                            Удалить
+                                            Списать
                                         </button>
+                                    )}
+
+                                    {showDisposalModal && (
+                                        <DisposalModal
+                                            onConfirm={handleDispose}
+                                            onCancel={() => setShowDisposalModal(false)}
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -599,11 +725,22 @@ export function EquipmentDetailsPage() {
             </div>
 
             {showDeleteModal && (
-                <DeleteConfirmationModal
-                    onConfirm={handleDeleteConfirm}
-                    onCancel={() => setShowDeleteModal(false)}
+                <ConfirmationModal
+                    type="delete"
                     title="Удаление техники"
                     message="Вы уверены, что хотите удалить эту технику? Это действие нельзя отменить."
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setShowDeleteModal(false)}
+                />
+            )}
+
+            {showRestoreModal && (
+                <ConfirmationModal
+                    type="restore"
+                    title="Восстановление техники"
+                    message='Вы уверены, что хотите восстановить эту технику? Она вернётся в статус "В эксплуатации".'
+                    onConfirm={handleRestoreConfirm}
+                    onCancel={() => setShowRestoreModal(false)}
                 />
             )}
         </div>

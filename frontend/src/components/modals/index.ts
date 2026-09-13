@@ -1,2 +1,2 @@
 export * from './CreateModal';
-export * from './DeleteConfirmationModal';
+export * from './ConfirmationModal';

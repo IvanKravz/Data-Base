@@ -10,7 +10,7 @@ import { TaskCategory } from '../../../../types/taskCategories';
 interface TaskFormProps {
   initialTask?: Task | null;
   divisionId?: string;
-  restrictedDivisionId?: string | null; // сохраняем для совместимости, но не используем
+  restrictedDivisionId?: string | null;
   restrictedSubdivisionId?: string | null;
   onSuccess: () => void;
   onError: (error: string) => void;
@@ -51,7 +51,8 @@ export function TaskForm({
   const [selectedSubdivisionId, setSelectedSubdivisionId] = useState<string | null>(
     initialTask?.subdivision?.id || null
   );
-  const [availableSubdivisions, setAvailableSubdivisions] = useState<any[]>([]);
+  const [allSubdivisions, setAllSubdivisions] = useState<any[]>([]);
+  const [displayedSubdivisions, setDisplayedSubdivisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,7 +62,7 @@ export function TaskForm({
       try {
         const data = await tasksApi.getAvailableDivisions();
         setDivisions(data.divisions);
-        setAvailableSubdivisions(data.subdivisions);
+        setAllSubdivisions(data.subdivisions);
 
         // Если есть начальное значение (при редактировании), проверяем, что оно в списке
         if (initialTask?.division?.id) {
@@ -71,15 +72,15 @@ export function TaskForm({
             const filteredSubdivisions = data.subdivisions.filter(
               s => s.division_id == initialTask.division.id
             );
-            setAvailableSubdivisions(filteredSubdivisions);
+            setDisplayedSubdivisions(filteredSubdivisions);
             if (initialTask.subdivision?.id) {
               setSelectedSubdivisionId(initialTask.subdivision.id);
             } else if (filteredSubdivisions.length === 1) {
-              // Если у задачи нет отделения, но в списке одно, выбираем его
               setSelectedSubdivisionId(filteredSubdivisions[0].id);
             }
           } else {
             setSelectedDivisionId('');
+            setDisplayedSubdivisions([]);
           }
         } else if (data.divisions.length === 1 && !initialTask) {
           // Если только одно подразделение доступно, выбираем его автоматически
@@ -88,11 +89,12 @@ export function TaskForm({
           const filteredSubdivisions = data.subdivisions.filter(
             s => s.division_id == firstDivision.id
           );
-          setAvailableSubdivisions(filteredSubdivisions);
-          // Если есть только одно отделение, выбираем его автоматически
+          setDisplayedSubdivisions(filteredSubdivisions);
           if (filteredSubdivisions.length === 1) {
             setSelectedSubdivisionId(filteredSubdivisions[0].id);
           }
+        } else {
+          setDisplayedSubdivisions([]);
         }
       } catch (error) {
         onError('Не удалось загрузить доступные подразделения');
@@ -105,8 +107,9 @@ export function TaskForm({
 
   const handleDivisionChange = (divisionId: string) => {
     setSelectedDivisionId(divisionId);
-    const filtered = availableSubdivisions.filter(s => s.division_id == divisionId);
-    setAvailableSubdivisions(filtered);
+    // Фильтруем отделения по выбранному подразделению из полного списка
+    const filtered = allSubdivisions.filter(s => s.division_id == divisionId);
+    setDisplayedSubdivisions(filtered);
     if (filtered.length === 1) {
       setSelectedSubdivisionId(filtered[0].id);
     } else {
@@ -229,7 +232,7 @@ export function TaskForm({
           />
 
           <SubdivisionSelector
-            subdivisions={availableSubdivisions}
+            subdivisions={displayedSubdivisions}
             selectedSubdivisionId={selectedSubdivisionId}
             onChange={(id) => setSelectedSubdivisionId(id)}
             isLoading={isLoading}

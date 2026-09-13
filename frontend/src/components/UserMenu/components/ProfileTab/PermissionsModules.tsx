@@ -9,7 +9,7 @@ interface PermissionsModulesProps {
     getModuleIcon: (module: string) => React.ReactNode;
 }
 
-export const PermissionsModules: React.FC<PermissionsModulesProps> = ({
+export const PermissionsModules = React.memo<PermissionsModulesProps>(({
     modules,
     selectedModule,
     onModuleClick,
@@ -25,7 +25,7 @@ export const PermissionsModules: React.FC<PermissionsModulesProps> = ({
                 </h4>
                 {selectedModule && (
                     <button
-                        onClick={() => onModuleClick(selectedModule)} // при клике на "Показать все" сбрасываем
+                        onClick={() => onModuleClick(selectedModule)}
                         className="text-sm text-blue-600 hover:text-blue-800"
                     >
                         Показать все
@@ -48,4 +48,4 @@ export const PermissionsModules: React.FC<PermissionsModulesProps> = ({
             </div>
         </div>
     );
-};
+});

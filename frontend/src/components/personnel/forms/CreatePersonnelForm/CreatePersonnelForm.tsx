@@ -4,10 +4,10 @@ import { Employee, Division } from '../../../../types';
 import { employeesApi } from '../../../../api';
 import { divisionsApi } from '../../../../api/divisions';
 import { message, Modal, Button } from 'antd';
-import { ArrowLeft, Camera, User, X, Save, Smartphone, Phone, Mail, AlertCircle, Upload, Trash2 } from 'lucide-react';
+import { ArrowLeft, Camera, X, Save, Smartphone, Phone, Mail, AlertCircle, Upload, Trash2 } from 'lucide-react';
 import { Avatar } from 'antd';
 
-// Импорты редактируемых карточек
+// Импорты карточек (те же, что в EditPersonnelForm)
 import { BasicInformationCard } from '../EditPersonnelForm/sections/BasicInformationCard';
 import { ContactInformationCard } from '../EditPersonnelForm/sections/ContactInformationCard';
 import { DatesCard } from '../EditPersonnelForm/sections/DatesCard';
@@ -15,8 +15,12 @@ import { ShaWorkerCard } from '../EditPersonnelForm/sections/ShaWorkerCard';
 import { CommentsCard } from '../EditPersonnelForm/sections/CommentsCard';
 import { AffiliationCard } from '../EditPersonnelForm/sections/AffiliationCard';
 
-// Стили
+// Общие стили для форм редактирования
+import '../EditPersonnelForm/style.css';
+// Стили страницы деталей (содержат все нужные классы)
 import '../../PersonnelDetails/PersonnelDetails.css';
+// Специфические стили для создания (только :disabled и т.п.)
+import './CreatePersonnelForm.css';
 
 export function CreatePersonnelForm() {
   const { id: paramDivisionId } = useParams<{ id: string }>();
@@ -168,7 +172,6 @@ export function CreatePersonnelForm() {
     }));
   };
 
-  // === Логика работы с фото (как в PersonnelDetails) ===
   const handlePhotoSelect = (file: File) => {
     if (!file.type.match('image.*')) {
       message.error('Пожалуйста, выберите файл изображения');
@@ -204,7 +207,6 @@ export function CreatePersonnelForm() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // === Валидация ===
   const validateForm = (): Record<string, string> => {
     const errors: Record<string, string> = {};
 
@@ -397,7 +399,7 @@ export function CreatePersonnelForm() {
       </div>
 
       <div className="personnel-details-layout">
-        {/* Левая колонка */}
+        {/* Левая колонка (аватар и контакты) */}
         <div className="personnel-sidebar">
           <div className="personnel-profile-card">
             <div className="personnel-profile-avatar">
@@ -464,7 +466,7 @@ export function CreatePersonnelForm() {
 
         {/* Правая колонка */}
         <div className="personnel-main">
-          {/* Блок ошибок валидации */}
+          {/* Ошибки валидации */}
           {Object.keys(validationErrors).length > 0 && (
             <div className="validation-errors">
               {Object.entries(validationErrors).map(([field, message]) => (
@@ -476,107 +478,116 @@ export function CreatePersonnelForm() {
             </div>
           )}
 
+          {/* Контейнер с формой (используем те же классы, что и в PersonDetails) */}
           <div className="personnel-tabs-container editing">
             <div className="personnel-tabs-header">
-              <button className="personnel-tab-button active">
-                <User size={16} className="personnel-tab-icon" />
-                Основное
-              </button>
-
-              {/* Кнопки действий */}
+              {/* Кнопки действий – унифицированные классы */}
               <div className="personnel-tabs-actions">
-                <button onClick={handleCancel} className="personnel-tabs-action-btn personnel-tabs-action-btn-gray">
+                <button
+                  onClick={handleCancel}
+                  className="personnel-tabs-action-btn personnel-tabs-action-btn-gray"
+                >
                   <X size={14} />
                   <span>Отмена</span>
                 </button>
-                <button onClick={handleCreate} className="personnel-tabs-action-btn personnel-tabs-action-btn-green" disabled={isLoading}>
+                <button
+                  onClick={handleCreate}
+                  className="personnel-tabs-action-btn personnel-tabs-action-btn-green"
+                  disabled={isLoading}
+                >
                   <Save size={14} />
                   <span>{isLoading ? 'Сохранение...' : 'Создать'}</span>
                 </button>
               </div>
             </div>
 
-            <div className="personnel-tab-content">
-              <div className="personnel-edit-grid">
-                <BasicInformationCard
-                  formData={formData}
-                  onChange={handleChange}
-                  token={token}
-                  readOnly={false}
-                  errors={{
-                    full_name: getFieldError('full_name'),
-                    category: getFieldError('category'),
-                    position: getFieldError('position'),
-                    rank: getFieldError('rank'),
-                  }}
-                />
-                {showDivisionField && (
-                  <AffiliationCard
-                    formData={formData}
-                    divisions={divisions}
-                    onChange={handleChange}
-                    isTopManagement={isTopManagement}
-                    showDivisionField={showDivisionField}
-                    fixedDivision={!!fixedDivision}
-                    fixedSubdivision={!!fixedSubdivision}
-                    readOnly={false}
-                  />
-                )}
-                <ContactInformationCard
-                  formData={formData}
-                  onChange={handleChange}
-                  readOnly={false}
-                  errors={{
-                    personal_phone: getFieldError('personal_phone'),
-                    work_phone: getFieldError('work_phone'),
-                  }}
-                />
-                <DatesCard
-                  formData={formData}
-                  onChange={handleChange}
-                  readOnly={false}
-                  errors={{
-                    birth_date: getFieldError('birth_date'),
-                    contract_date: getFieldError('contract_date'),
-                  }}
-                />
-              </div>
+            {/* Тело формы – полностью как в EditPersonnelForm */}
+            <div className="epf-edit-form">
+              <div className="ep-form-container">
+                <form className="ep-form">
+                  <div className="ep-form-content">
+                    <div className="ep-grid">
+                      <BasicInformationCard
+                        formData={formData}
+                        onChange={handleChange}
+                        token={token}
+                        readOnly={false}
+                        errors={{
+                          full_name: getFieldError('full_name'),
+                          category: getFieldError('category'),
+                          position: getFieldError('position'),
+                          rank: getFieldError('rank'),
+                        }}
+                      />
+                      {showDivisionField && (
+                        <AffiliationCard
+                          formData={formData}
+                          divisions={divisions}
+                          onChange={handleChange}
+                          isTopManagement={isTopManagement}
+                          showDivisionField={showDivisionField}
+                          fixedDivision={!!fixedDivision}
+                          fixedSubdivision={!!fixedSubdivision}
+                          readOnly={false}
+                        />
+                      )}
+                      <ContactInformationCard
+                        formData={formData}
+                        onChange={handleChange}
+                        readOnly={false}
+                        errors={{
+                          personal_phone: getFieldError('personal_phone'),
+                          work_phone: getFieldError('work_phone'),
+                        }}
+                      />
+                      <DatesCard
+                        formData={formData}
+                        onChange={handleChange}
+                        readOnly={false}
+                        errors={{
+                          birth_date: getFieldError('birth_date'),
+                          contract_date: getFieldError('contract_date'),
+                        }}
+                      />
+                    </div>
 
-              {/* Блок ШР и комментарии */}
-              <div className="create-personnel-sha-grid">
-                {formData.is_sha_worker && (
-                  <ShaWorkerCard
-                    shaWorker={
-                      formData.sha_details || {
-                        start_date: '',
-                        access_level: '1',
-                        equipment_conclusions: [],
-                      }
-                    }
-                    onChange={handleShaWorkerChange}
-                    onAddEquipment={handleAddEquipment}
-                    onRemoveEquipment={handleRemoveEquipment}
-                    onEquipmentChange={handleEquipmentChange}
-                    readOnly={false}
-                    errors={{
-                      start_date: getFieldError('sha_start_date'),
-                      access_level: getFieldError('sha_access_level'),
-                      equipment: getFieldError('sha_equipment'),
-                    }}
-                  />
-                )}
-                <CommentsCard
-                  description={formData.description || ''}
-                  onChange={(description) => handleChange({ description })}
-                  readOnly={false}
-                />
+                    <div className="ep-sha-comment-row">
+                      {formData.is_sha_worker && (
+                        <ShaWorkerCard
+                          shaWorker={
+                            formData.sha_details || {
+                              start_date: '',
+                              access_level: '1',
+                              equipment_conclusions: [],
+                            }
+                          }
+                          onChange={handleShaWorkerChange}
+                          onAddEquipment={handleAddEquipment}
+                          onRemoveEquipment={handleRemoveEquipment}
+                          onEquipmentChange={handleEquipmentChange}
+                          readOnly={false}
+                          errors={{
+                            start_date: getFieldError('sha_start_date'),
+                            access_level: getFieldError('sha_access_level'),
+                            equipment: getFieldError('sha_equipment'),
+                          }}
+                        />
+                      )}
+                      <CommentsCard
+                        description={formData.description || ''}
+                        onChange={(description) => handleChange({ description })}
+                        readOnly={false}
+                      />
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Модалка для фото (как в PersonnelDetails) */}
+      {/* Модалка для фото */}
       <Modal
         title="Фото сотрудника"
         open={photoModalVisible}

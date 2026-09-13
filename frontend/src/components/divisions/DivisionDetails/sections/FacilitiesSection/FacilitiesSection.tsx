@@ -24,7 +24,7 @@ import { ExportButton } from '../../../../common/ExportButton';
 import { SearchBar } from '../../../../common/SearchBar';
 import { exportFacilitiesToExcel } from '../../../../../utils/exportToExcel';
 import './FacilitiesSection.css';
-import { DeleteConfirmationModal } from '../../../../modals/DeleteConfirmationModal';
+import { ConfirmationModal } from '../../../../modals/ConfirmationModal';
 import { isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
 const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
@@ -45,12 +45,10 @@ export function FacilitiesSection() {
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // Состояния фильтрации и вкладок
   const [filterType, setFilterType] = useState<'all' | number>('all');
   const [facilityClassFilter, setFacilityClassFilter] = useState<'all' | '1' | '2'>('all');
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>('all');
 
-  // Данные
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [communicationPosts, setCommunicationPosts] = useState([]);
   const [division, setDivision] = useState(null);
@@ -61,20 +59,15 @@ export function FacilitiesSection() {
   const [mapSearchTerm, setMapSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
-
-  // Состояние для модалки создания поста связи
   const [showAddPostModal, setShowAddPostModal] = useState(false);
 
-  // Управление видом отображения (список / группировка)
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
     const saved = localStorage.getItem('facility_view_mode');
     return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
   });
 
-  // Поиск
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Вспомогательные вычисления
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
 
@@ -103,7 +96,6 @@ export function FacilitiesSection() {
   const canDeleteCommunicationPosts = useMemo(() =>
     permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
 
-  // Функции обновления URL
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
@@ -115,7 +107,6 @@ export function FacilitiesSection() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // Синхронизация состояния с URL
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     let newActiveTab: typeof activeTab = 'all';
@@ -139,7 +130,6 @@ export function FacilitiesSection() {
     if (newClass !== facilityClassFilter) setFacilityClassFilter(newClass);
   }, [searchParams]);
 
-  // Обработчики изменений
   const handleTabChange = useCallback((tab: typeof activeTab) => {
     if (tab === 'posts') {
       updateUrlParams({ tab, type: null, class: null });
@@ -169,7 +159,6 @@ export function FacilitiesSection() {
     localStorage.setItem('facility_view_mode', mode);
   }, []);
 
-  // Загрузка данных
   const fetchData = useCallback(async () => {
     if (!stableToken) return;
     try {
@@ -249,7 +238,6 @@ export function FacilitiesSection() {
     fetchData();
   }, [fetchData]);
 
-  // Фильтрация по подразделению
   const filterBySubdivision = useCallback((items: any[]) => {
     if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
@@ -260,7 +248,6 @@ export function FacilitiesSection() {
   const filteredBySubdivisionFacilities = useMemo(() => filterBySubdivision(facilities), [facilities, filterBySubdivision]);
   const filteredBySubdivisionPosts = useMemo(() => filterBySubdivision(communicationPosts), [communicationPosts, filterBySubdivision]);
 
-  // Получаем уникальные типы объектов для определения названия выбранного типа
   const facilityTypes = useMemo(() => {
     const uniqueTypeIds = Array.from(new Set(filteredBySubdivisionFacilities.map(f => f.type.id)));
     return uniqueTypeIds.map(id => {
@@ -269,7 +256,6 @@ export function FacilitiesSection() {
     }).filter(Boolean);
   }, [filteredBySubdivisionFacilities]);
 
-  // Формируем название для счётчика в зависимости от выбранного типа и класса
   const selectedTypeName = useMemo(() => {
     if (filterType === 'all') return null;
     const type = facilityTypes.find(t => t.id === filterType);
@@ -285,7 +271,6 @@ export function FacilitiesSection() {
   const hasOpenFacilities = filteredBySubdivisionFacilities.some(f => !f.is_closed);
   const hasClosedFacilities = filteredBySubdivisionFacilities.some(f => f.is_closed);
 
-  // Фильтрация по статусу, типу и классу (без поиска)
   const displayFacilities = useMemo(() => {
     let result = filteredBySubdivisionFacilities;
     if (activeTab === 'open') result = result.filter(f => !f.is_closed);
@@ -295,7 +280,6 @@ export function FacilitiesSection() {
     return result;
   }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
 
-  // Фильтрация по поисковому запросу
   const filteredBySearch = useMemo(() => {
     if (!searchTerm.trim()) return displayFacilities;
     const searchLower = searchTerm.toLowerCase().trim();
@@ -309,7 +293,6 @@ export function FacilitiesSection() {
     );
   }, [displayFacilities, searchTerm]);
 
-  // Объекты для карты (с учётом текущих фильтров)
   const mapFacilities = useMemo(() =>
     filteredBySubdivisionFacilities.filter(facility => {
       const matchesType = filterType === 'all' || facility.type.id === filterType;
@@ -322,7 +305,6 @@ export function FacilitiesSection() {
     [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
   );
 
-  // Склонение для счётчика
   const getDeclension = (count: number): string => {
     const lastDigit = count % 10;
     const lastTwoDigits = count % 100;
@@ -332,7 +314,6 @@ export function FacilitiesSection() {
     return 'объектов';
   };
 
-  // Обработчики действий
   const handleFacilityDeleted = useCallback((deletedId: string) => {
     setFacilities(prev => prev.filter(f => f.id !== deletedId));
   }, []);
@@ -363,12 +344,10 @@ export function FacilitiesSection() {
     else navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
   }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
-  // Новая обработка добавления поста связи (модалка)
   const handleAddPost = useCallback(() => {
     setShowAddPostModal(true);
   }, []);
 
-  // Обновление после сохранения поста
   const handleAddPostSaved = useCallback(() => {
     fetchData();
   }, [fetchData]);
@@ -430,172 +409,171 @@ export function FacilitiesSection() {
   if (error) return <div className="facilities-error-message">{error}</div>;
 
   return (
-    <>
-      <div className="facilities-container">
-        <div className="facilities-header">
-          <div className="facilities-title-container">
-            {id && (
-              <button type="button" onClick={handleBack} className="back-button">
-                <ArrowLeft className="back-button-icon" />
+    <div className="facilities-container page-fade-in">
+      <div className="facilities-header">
+        <div className="facilities-title-container">
+          {id && (
+            <button type="button" onClick={handleBack} className="back-button">
+              <ArrowLeft className="back-button-icon" />
+            </button>
+          )}
+          <h2 className="facilities-title">{getHeaderTitle()}</h2>
+        </div>
+
+        <div className="facilities-add-buttons">
+          {activeTab === 'posts' ? (
+            canCreateCommunicationPosts && (
+              <button onClick={handleAddPost} className="facilities-add-button">
+                <Plus size={18} />
+                <span>Добавить пост связи</span>
+              </button>
+            )
+          ) : (
+            canCreateFacilities && (
+              <button onClick={handleAddFacility} className="facilities-add-button">
+                <Plus size={18} />
+                <span>Добавить объект</span>
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
+      <div className="facilities-content-wrapper">
+        <div className="facilities-tabs-container">
+          <div className="facilities-tabs">
+            {hasAllFacilities && (
+              <button
+                className={`facilities-tab-button ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => handleTabChange('all')}
+              >
+                {TAB_ICONS.all}
+                Все объекты
               </button>
             )}
-            <h2 className="facilities-title">{getHeaderTitle()}</h2>
-          </div>
-
-          <div className="facilities-add-buttons">
-            {activeTab === 'posts' ? (
-              canCreateCommunicationPosts && (
-                <button onClick={handleAddPost} className="facilities-add-button">
-                  <Plus size={18} />
-                  <span>Добавить пост связи</span>
-                </button>
-              )
-            ) : (
-              canCreateFacilities && (
-                <button onClick={handleAddFacility} className="facilities-add-button">
-                  <Plus size={18} />
-                  <span>Добавить объект</span>
-                </button>
-              )
+            {hasOpenFacilities && (
+              <button
+                className={`facilities-tab-button ${activeTab === 'open' ? 'active' : ''}`}
+                onClick={() => handleTabChange('open')}
+              >
+                {TAB_ICONS.open}
+                Открытые объекты
+              </button>
+            )}
+            {hasClosedFacilities && (
+              <button
+                className={`facilities-tab-button ${activeTab === 'closed' ? 'active' : ''}`}
+                onClick={() => handleTabChange('closed')}
+              >
+                {TAB_ICONS.closed}
+                Закрытые объекты
+              </button>
+            )}
+            {canViewCommunicationPosts && (
+              <button
+                className={`facilities-tab-button ${activeTab === 'posts' ? 'active' : ''}`}
+                onClick={() => handleTabChange('posts')}
+              >
+                {TAB_ICONS.posts}
+                Посты связи
+              </button>
             )}
           </div>
         </div>
 
-        <div className="facilities-content-wrapper">
-          <div className="facilities-tabs-container">
-            <div className="facilities-tabs">
-              {hasAllFacilities && (
-                <button
-                  className={`facilities-tab-button ${activeTab === 'all' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('all')}
-                >
-                  {TAB_ICONS.all}
-                  Все объекты
-                </button>
-              )}
-              {hasOpenFacilities && (
-                <button
-                  className={`facilities-tab-button ${activeTab === 'open' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('open')}
-                >
-                  {TAB_ICONS.open}
-                  Открытые объекты
-                </button>
-              )}
-              {hasClosedFacilities && (
-                <button
-                  className={`facilities-tab-button ${activeTab === 'closed' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('closed')}
-                >
-                  {TAB_ICONS.closed}
-                  Закрытые объекты
-                </button>
-              )}
-              {canViewCommunicationPosts && (
-                <button
-                  className={`facilities-tab-button ${activeTab === 'posts' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('posts')}
-                >
-                  {TAB_ICONS.posts}
-                  Посты связи
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="facilities-content">
+          {activeTab === 'posts' ? (
+            <CommunicationPostsList
+              posts={filteredBySubdivisionPosts}
+              onPostDeleted={handlePostDeleted}
+              onPostUpdated={fetchData}
+              isGlobalView={isGlobalView}
+            />
+          ) : (
+            <>
+              <div className="facilities-actions-row1">
+                <FacilityTypeFilter
+                  facilities={filteredBySubdivisionFacilities}
+                  selectedType={filterType}
+                  onTypeChange={handleTypeChange}
+                  selectedClass={facilityClassFilter}
+                  onClassChange={handleClassChange}
+                  activeTab={activeTab}
+                  compact={true}
+                />
+              </div>
 
-          <div className="facilities-content">
-            {activeTab === 'posts' ? (
-              <CommunicationPostsList
-                posts={filteredBySubdivisionPosts}
-                onPostDeleted={handlePostDeleted}
-                onPostUpdated={fetchData}
-                isGlobalView={isGlobalView}
-              />
-            ) : (
-              <>
-                <div className="facilities-actions-row1">
-                  <FacilityTypeFilter
-                    facilities={filteredBySubdivisionFacilities}
-                    selectedType={filterType}
-                    onTypeChange={handleTypeChange}
-                    selectedClass={facilityClassFilter}
-                    onClassChange={handleClassChange}
+              <div className="facilities-search-container">
+                <SearchBar
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  placeholder="Поиск по названию, адресу, типу, классу, подразделению..."
+                />
+                <div className="export-button-wrapper">
+                  <ExportButton onClick={handleExport} label="Экспорт объектов" />
+                </div>
+              </div>
+
+              <div className="facilities-count-chip">
+                <div className="facilities-view-mode-toggle">
+                  <button
+                    className={`facilities-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`}
+                    onClick={() => handleViewModeChange('flat')}
+                  >
+                    <List size={16} /> Список
+                  </button>
+                  <button
+                    className={`facilities-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`}
+                    onClick={() => handleViewModeChange('grouped')}
+                  >
+                    <FolderTree size={16} /> По подразделениям
+                  </button>
+                </div>
+
+                <div className="facilities-count-center">
+                  <Building2 size={16} className="count-chip-icon" />
+                  <span>{selectedTypeName ? selectedTypeName : 'Показано'}:</span>
+                  <span>{filteredBySearch.length}</span>
+                  <span className="count-chip-label">{getDeclension(filteredBySearch.length)}</span>
+                </div>
+
+                <div className="facilities-count-right"></div>
+              </div>
+
+              <div className="facilities-two-columns">
+                <div className="facilities-left-column">
+                  <FacilityList
+                    facilities={filteredBySearch}
+                    viewMode={viewMode}
+                    onDelete={handleDeleteInitiated}
+                    onLocate={handleLocateFacility}
+                    divisionId={id}
+                    subdivisionId={stableSubdivisionId}
                     activeTab={activeTab}
-                    compact={true}
-                  />
-                </div>
-
-                <div className="facilities-search-container">
-                  <SearchBar
+                    filterType={filterType?.toString() || null}
+                    facilityClassFilter={facilityClassFilter !== 'all' ? facilityClassFilter : null}
                     searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    placeholder="Поиск по названию, адресу, типу, классу, подразделению..."
+                    storageKey={storageKey}
                   />
-                  <div className="export-button-wrapper">
-                    <ExportButton onClick={handleExport} label="Экспорт объектов" />
-                  </div>
                 </div>
-
-                <div className="facilities-count-chip">
-                  <div className="facilities-view-mode-toggle">
-                    <button
-                      className={`facilities-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`}
-                      onClick={() => handleViewModeChange('flat')}
-                    >
-                      <List size={16} /> Список
-                    </button>
-                    <button
-                      className={`facilities-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`}
-                      onClick={() => handleViewModeChange('grouped')}
-                    >
-                      <FolderTree size={16} /> По подразделениям
-                    </button>
-                  </div>
-
-                  <div className="facilities-count-center">
-                    <Building2 size={16} className="count-chip-icon" />
-                    <span>{selectedTypeName ? selectedTypeName : 'Показано'}:</span>
-                    <span>{filteredBySearch.length}</span>
-                    <span className="count-chip-label">{getDeclension(filteredBySearch.length)}</span>
-                  </div>
-
-                  <div className="facilities-count-right"></div>
+                <div className="facilities-right-column">
+                  {showMap && filteredBySearch.length > 0 && (
+                    <div className="facilities-map-overlay">
+                      <Suspense fallback={<div className="loading-spinner"></div>}>
+                        <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
+                      </Suspense>
+                    </div>
+                  )}
                 </div>
-
-                <div className="facilities-two-columns">
-                  <div className="facilities-left-column">
-                    <FacilityList
-                      facilities={filteredBySearch}
-                      viewMode={viewMode}
-                      onDelete={handleDeleteInitiated}
-                      onLocate={handleLocateFacility}
-                      divisionId={id}
-                      subdivisionId={stableSubdivisionId}
-                      activeTab={activeTab}
-                      filterType={filterType?.toString() || null}
-                      facilityClassFilter={facilityClassFilter !== 'all' ? facilityClassFilter : null}
-                      searchTerm={searchTerm}
-                      storageKey={storageKey}
-                    />
-                  </div>
-                  <div className="facilities-right-column">
-                    {showMap && filteredBySearch.length > 0 && (
-                      <div className="facilities-map-overlay">
-                        <Suspense fallback={<div className="loading-spinner"></div>}>
-                          <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
-                        </Suspense>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {showDeleteModal && (
-        <DeleteConfirmationModal
+        <ConfirmationModal
+          type="delete"
           title="Удаление объекта"
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}
@@ -611,6 +589,6 @@ export function FacilitiesSection() {
           subdivisionId={stableSubdivisionId || undefined}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-/* ===== ROOT VARIABLES ===== */
+/* ===== ROOT VARIABLES (оставляем глобальными) ===== */
 :root {
   /* Primary Colors */
   --ep-blue-100: #dbeafe;
@@ -35,8 +35,7 @@
   --ep-space-xs: 0.25rem;
   --ep-space-sm: 0.375rem;
   --ep-space-md: 0.75rem;
-  --ep-space-lg: 1.25rem;
-  /* увеличен для лучшего расстояния между карточками */
+  --ep-space-lg: 1rem;
   --ep-space-xl: 1.5rem;
 
   /* Radius */
@@ -52,7 +51,7 @@
   /* Transition */
   --ep-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Typography – улучшена читаемость */
+  /* Typography */
   --ep-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --ep-text-sm: 0.9rem;
   --ep-text-base: 0.9375rem;
@@ -60,16 +59,15 @@
   --ep-text-xl: 1.25rem;
 }
 
-/* ===== BASE ===== */
-* {
+/* ===== БАЗОВЫЕ СТИЛИ (обёрнуты в .epf-edit-form) ===== */
+.epf-edit-form * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-body {
+.epf-edit-form {
   font-family: var(--ep-font-family);
-  background-color: #f5f7f9;
   color: var(--ep-gray-900);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -77,13 +75,13 @@ body {
 }
 
 /* ===== КОНТЕЙНЕРЫ ===== */
-.ep-tab-content {
+.epf-edit-form .ep-tab-content {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-.ep-form {
+.epf-edit-form .ep-form {
   background-color: transparent;
   display: flex;
   flex-direction: column;
@@ -92,41 +90,32 @@ body {
   border-radius: var(--ep-radius-lg);
 }
 
-.ep-form-container {
+.epf-edit-form .ep-form-container {
   margin: 0 auto;
   padding-bottom: 80px;
   width: 100%;
 }
 
 /* ===== СЕТКА КАРТОЧЕК ===== */
-.ep-grid {
+.epf-edit-form .ep-grid {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--ep-space-lg);
-  /* увеличенный gap */
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 /* ===== КАРТОЧКА ===== */
-.ep-card {
+.epf-edit-form .ep-card {
   background-color: #ffffff;
-  border-radius: var(--ep-radius-lg);
-  box-shadow: var(--ep-shadow-sm);
-  border: 1px solid var(--ep-gray-200);
-  padding: 0.875rem 1rem;
+  padding: 0 1rem;
   transition: var(--ep-transition);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.ep-card:hover {
-  box-shadow: var(--ep-shadow-md);
-  border-color: var(--ep-gray-300);
-}
-
-.ep-card-header {
+.epf-edit-form .ep-card-header {
   padding: 0.25rem 0 0.5rem 0;
   margin: 0;
   color: var(--ep-blue-600);
@@ -139,14 +128,14 @@ body {
   margin-bottom: 0.3rem;
 }
 
-.ep-card-title {
+.epf-edit-form .ep-card-title {
   font-size: var(--ep-text-base);
   font-weight: 600;
   color: var(--ep-gray-800);
   margin: 0;
 }
 
-.ep-card-content {
+.epf-edit-form .ep-card-content {
   padding: var(--ep-space-sm) 0 0 0;
   display: flex;
   flex-direction: column;
@@ -154,13 +143,13 @@ body {
 }
 
 /* ===== ГРУППЫ ПОЛЕЙ ===== */
-.ep-form-group {
+.epf-edit-form .ep-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.ep-form-label {
+.epf-edit-form .ep-form-label {
   font-size: var(--ep-text-sm);
   font-weight: 500;
   color: var(--ep-gray-700);
@@ -168,8 +157,8 @@ body {
   margin-bottom: 0.3rem;
 }
 
-.ep-form-input,
-.ep-form-select {
+.epf-edit-form .ep-form-input,
+.epf-edit-form .ep-form-select {
   width: 100%;
   padding: 0.45rem 0.7rem;
   border: 1px solid var(--ep-gray-300);
@@ -181,22 +170,22 @@ body {
   font-family: var(--ep-font-family);
 }
 
-.ep-form-input:focus,
-.ep-form-select:focus {
+.epf-edit-form .ep-form-input:focus,
+.epf-edit-form .ep-form-select:focus {
   outline: none;
   border-color: var(--ep-primary);
   box-shadow: 0 0 0 3px var(--ep-primary-light);
 }
 
-.ep-form-input:disabled,
-.ep-form-select:disabled {
+.epf-edit-form .ep-form-input:disabled,
+.epf-edit-form .ep-form-select:disabled {
   background-color: var(--ep-gray-50);
   color: var(--ep-gray-500);
   cursor: not-allowed;
   opacity: 0.8;
 }
 
-.ep-form-textarea {
+.epf-edit-form .ep-form-textarea {
   height: 2.4rem;
   min-height: 2.4rem;
   max-height: 5rem;
@@ -204,8 +193,8 @@ body {
   padding: 0.45rem 0.7rem;
 }
 
-/* ===== ЧЕКБОКСЫ (улучшены) ===== */
-.ep-checkbox-group {
+/* ===== ЧЕКБОКСЫ ===== */
+.epf-edit-form .ep-checkbox-group {
   display: flex;
   align-items: center;
   gap: var(--ep-space-sm);
@@ -213,7 +202,7 @@ body {
   transition: var(--ep-transition);
 }
 
-.ep-checkbox {
+.epf-edit-form .ep-checkbox {
   width: 1rem;
   height: 1rem;
   border: 1.5px solid var(--ep-gray-300);
@@ -225,7 +214,7 @@ body {
   position: relative;
 }
 
-.ep-checkbox:checked {
+.epf-edit-form .ep-checkbox:checked {
   background-color: var(--ep-primary);
   border-color: var(--ep-primary);
   background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
@@ -234,8 +223,8 @@ body {
   background-size: 0.75rem;
 }
 
-.ep-checkbox-label {
-  font-size: var(--ep-text-sm);
+.epf-edit-form .ep-checkbox-label {
+  font-size: 0.8rem;
   color: var(--ep-gray-700);
   cursor: pointer;
   user-select: none;
@@ -244,8 +233,8 @@ body {
   gap: var(--ep-space-xs);
 }
 
-/* Метки статусов (МОЛ, ША) */
-.ep-status-badge {
+/* Метки статусов */
+.epf-edit-form .ep-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -260,18 +249,18 @@ body {
   letter-spacing: 0.03em;
 }
 
-.ep-status-badge--mol {
+.epf-edit-form .ep-status-badge--mol {
   background-color: #fef3c7;
   color: #b45309;
 }
 
-.ep-status-badge--sha {
+.epf-edit-form .ep-status-badge--sha {
   background-color: #dbeafe;
   color: #1e40af;
 }
 
-/* Анимация появления полей */
-.ep-fade-in {
+/* Анимация */
+.epf-edit-form .ep-fade-in {
   animation: epFadeIn 0.3s ease forwards;
 }
 
@@ -280,15 +269,28 @@ body {
     opacity: 0;
     transform: translateY(-6px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* Разделитель */
+.epf-edit-form .ep-divider {
+  margin: 0.5rem 0;
+  border: none;
+  border-top: 1px solid var(--ep-gray-200);
+}
+
+/* Контейнер для чекбоксов */
+.epf-edit-form .ep-checkbox-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 /* ===== КНОПКИ ===== */
-.ep-btn {
+.epf-edit-form .ep-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -304,54 +306,51 @@ body {
   font-family: var(--ep-font-family);
 }
 
-.ep-btn-sm {
+.epf-edit-form .ep-btn-sm {
   padding: 0.2rem 0.6rem;
   font-size: 0.75rem;
 }
 
-.ep-btn-primary {
+.epf-edit-form .ep-btn-primary {
   background-color: var(--ep-primary);
   color: white;
 }
-
-.ep-btn-primary:hover {
+.epf-edit-form .ep-btn-primary:hover {
   background-color: var(--ep-primary-hover);
 }
 
-.ep-btn-secondary {
+.epf-edit-form .ep-btn-secondary {
   background-color: white;
   color: var(--ep-gray-700);
   border-color: var(--ep-gray-300);
 }
-
-.ep-btn-secondary:hover {
+.epf-edit-form .ep-btn-secondary:hover {
   background-color: var(--ep-gray-50);
   border-color: var(--ep-gray-400);
 }
 
-.ep-btn-danger {
+.epf-edit-form .ep-btn-danger {
   background-color: var(--ep-red-100);
   color: var(--ep-red-600);
 }
-
-.ep-btn-danger:hover {
+.epf-edit-form .ep-btn-danger:hover {
   background-color: var(--ep-red-200);
 }
 
-.ep-btn-icon {
+.epf-edit-form .ep-btn-icon {
   padding: 0.2rem 0.4rem;
   border-radius: var(--ep-radius-sm);
 }
 
 /* ===== ДАТЫ ===== */
-.ep-dates-grid {
+.epf-edit-form .ep-dates-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ep-space-sm);
 }
 
-/* ===== БЛОК SHA + КОММЕНТАРИИ ===== */
-.ep-sha-comment-row {
+/* ===== БЛОК SHA + КОММЕНТАРИИ (устаревший, но оставим для совместимости) ===== */
+.epf-edit-form .ep-sha-comment-row {
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -359,49 +358,49 @@ body {
 }
 
 /* ===== SHA-КАРТОЧКА ===== */
-.ep-sha-card {
+.epf-edit-form .ep-sha-card {
   width: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.ep-sha-grid {
+.epf-edit-form .ep-sha-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ep-space-sm);
 }
 
-.ep-sha-equipment-section {
+.epf-edit-form .ep-sha-equipment-section {
   margin-top: var(--ep-space-sm);
 }
 
-.ep-sha-equipment-header {
+.epf-edit-form .ep-sha-equipment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--ep-space-xs);
 }
 
-.ep-sha-equipment-list {
+.epf-edit-form .ep-sha-equipment-list {
   display: flex;
   flex-direction: column;
   gap: var(--ep-space-sm);
 }
 
-.ep-sha-equipment-item {
+.epf-edit-form .ep-sha-equipment-item {
   display: flex;
   align-items: center;
   gap: var(--ep-space-sm);
 }
 
-.ep-sha-equipment-fields {
+.epf-edit-form .ep-sha-equipment-fields {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--ep-space-sm);
 }
 
-.ep-sha-equipment-empty {
+.epf-edit-form .ep-sha-equipment-empty {
   padding: var(--ep-space-md);
   text-align: center;
   color: var(--ep-gray-500);
@@ -412,18 +411,18 @@ body {
 }
 
 /* ===== КОММЕНТАРИИ ===== */
-.ep-comment-group {
+.epf-edit-form .ep-comment-group {
   display: flex;
   align-items: flex-start;
   gap: var(--ep-space-sm);
 }
 
-.ep-comments-card {
+.epf-edit-form .ep-comments-card {
   width: 100%;
 }
 
 /* ===== ФУТЕР С КНОПКАМИ ===== */
-.ep-form-actions {
+.epf-edit-form .ep-form-actions {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -438,7 +437,7 @@ body {
   border-top: 1px solid var(--ep-gray-200);
 }
 
-.ep-form-actions-btn {
+.epf-edit-form .ep-form-actions-btn {
   padding: 0.5rem 1.4rem;
   font-size: var(--ep-text-base);
   font-weight: 500;
@@ -453,37 +452,35 @@ body {
   font-family: var(--ep-font-family);
 }
 
-.ep-form-actions-cancel {
+.epf-edit-form .ep-form-actions-cancel {
   background-color: white;
   color: var(--ep-gray-700);
   border-color: var(--ep-gray-300);
 }
-
-.ep-form-actions-cancel:hover {
+.epf-edit-form .ep-form-actions-cancel:hover {
   background-color: var(--ep-gray-50);
   border-color: var(--ep-gray-400);
 }
 
-.ep-form-actions-submit,
-.ep-form-actions-create {
+.epf-edit-form .ep-form-actions-submit,
+.epf-edit-form .ep-form-actions-create {
   background-color: var(--ep-green-500);
   color: white;
   border-color: var(--ep-green-500);
 }
-
-.ep-form-actions-submit:hover,
-.ep-form-actions-create:hover {
+.epf-edit-form .ep-form-actions-submit:hover,
+.epf-edit-form .ep-form-actions-create:hover {
   background-color: var(--ep-green-600);
   border-color: var(--ep-green-600);
 }
 
-.ep-form-actions-btn:disabled {
+.epf-edit-form .ep-form-actions-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* ===== ОШИБКИ ===== */
-.ep-error {
+.epf-edit-form .ep-error {
   background-color: var(--ep-red-100);
   color: var(--ep-red-600);
   padding: var(--ep-space-sm) var(--ep-space-md);
@@ -493,36 +490,30 @@ body {
   font-size: var(--ep-text-sm);
 }
 
-/* Для ошибок с переносом строк */
-.ep-error-preline {
+.epf-edit-form .ep-error-preline {
   white-space: pre-line;
 }
 
 /* ===== УТИЛИТЫ ===== */
-.ep-mr-2 {
+.epf-edit-form .ep-mr-2 {
   margin-right: 0.4rem;
 }
 
-.ep-animate-spin {
+.epf-edit-form .ep-animate-spin {
   animation: ep-spin 1s linear infinite;
 }
 
 @keyframes ep-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* ===== СТРАНИЦА СОЗДАНИЯ ===== */
-.ep-page {
+/* ===== СТРАНИЦА СОЗДАНИЯ (общие стили для страницы) ===== */
+.epf-edit-form .ep-page {
   padding: 0 1rem;
 }
 
-.ep-page-title {
+.epf-edit-form .ep-page-title {
   font-size: var(--ep-text-xl);
   font-weight: 600;
   color: var(--ep-gray-900);
@@ -537,7 +528,7 @@ body {
   gap: 1rem;
 }
 
-.ep-back-btn {
+.epf-edit-form .ep-back-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -547,62 +538,128 @@ body {
   align-items: center;
   transition: var(--ep-transition);
 }
-
-.ep-back-btn:hover {
+.epf-edit-form .ep-back-btn:hover {
   color: var(--ep-gray-700);
 }
 
-.ep-back-btn-icon {
+.epf-edit-form .ep-back-btn-icon {
   width: 1.5rem;
   height: 1.5rem;
 }
 
 /* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 992px) {
-  .ep-grid {
+  .epf-edit-form .ep-grid {
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-
-  .ep-dates-grid,
-  .ep-sha-grid,
-  .ep-sha-equipment-fields,
-  .ep-sha-comment-row {
+  .epf-edit-form .ep-dates-grid,
+  .epf-edit-form .ep-sha-grid,
+  .epf-edit-form .ep-sha-equipment-fields,
+  .epf-edit-form .ep-sha-comment-row {
     grid-template-columns: 1fr;
   }
 
-  .ep-grid {
+  .epf-edit-form .ep-grid {
     grid-template-columns: 1fr;
     gap: var(--ep-space-md);
   }
 
-  .ep-sha-comment-row {
+  .epf-edit-form .ep-sha-comment-row {
     gap: var(--ep-space-md);
   }
 
-  .ep-form-actions {
+  .epf-edit-form .ep-form-actions {
     flex-direction: column-reverse;
     align-items: stretch;
     padding: 0.5rem;
   }
 
-  .ep-form-actions-btn {
+  .epf-edit-form .ep-form-actions-btn {
     width: 100%;
     min-width: unset;
   }
 
-  .ep-form {
+  .epf-edit-form .ep-form {
     padding: 0;
   }
 
-  .ep-card {
+  .epf-edit-form .ep-card {
     padding: 0.7rem;
   }
 }
 
-.ep-form-input-error {
+.epf-edit-form .ep-form-input-error {
   border-color: #dc2626 !important;
   background-color: #fef2f2;
+}
+
+/* ===== ВКЛАДКИ ===== */
+.epf-edit-form .ep-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ep-space-lg);
+  background: transparent;
+}
+
+.epf-edit-form .ep-tabs-header {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--ep-gray-200);
+  background: transparent;
+}
+
+.epf-edit-form .ep-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: var(--ep-text-base);
+  font-weight: 500;
+  color: var(--ep-gray-500);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: var(--ep-transition);
+  border-radius: var(--ep-radius-sm) var(--ep-radius-sm) 0 0;
+  font-family: var(--ep-font-family);
+}
+
+.epf-edit-form .ep-tab-btn:hover {
+  color: var(--ep-gray-700);
+  background-color: var(--ep-gray-50);
+}
+
+.epf-edit-form .ep-tab-btn.active {
+  color: var(--ep-primary);
+  border-bottom-color: var(--ep-primary);
+  background-color: transparent;
+  font-weight: 600;
+}
+
+.epf-edit-form .ep-tabs-content {
+  background: transparent;
+  padding: 0;
+}
+
+.epf-edit-form .ep-tab-panel {
+  display: none;
+  animation: epFadeIn 0.25s ease forwards;
+}
+
+.epf-edit-form .ep-tab-panel.active {
+  display: block;
+}
+
+/* Адаптив для вкладок */
+@media (max-width: 768px) {
+  .epf-edit-form .ep-tabs-header {
+    gap: 0.125rem;
+  }
+  .epf-edit-form .ep-tab-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: var(--ep-text-sm);
+    flex: 1 0 auto;
+  }
 }

@@ -1,6 +1,6 @@
-/* DeleteConfirmationModal.css — уникальные имена классов */
+/* ConfirmationModal.css — универсальные стили для подтверждения */
 
-.delete-modal-overlay {
+.confirmation-modal-overlay {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.6);
@@ -10,10 +10,10 @@
   justify-content: center;
   z-index: 10000;
   padding: 1rem;
-  animation: delete-modal-fade-in 0.2s ease-out;
+  animation: confirmation-modal-fade-in 0.2s ease-out;
 }
 
-.delete-modal-content {
+.confirmation-modal-content {
   background: #ffffff;
   border-radius: 1.5rem;
   width: 100%;
@@ -21,10 +21,10 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
   transform: scale(0.96);
-  animation: delete-modal-scale-in 0.2s ease-out forwards;
+  animation: confirmation-modal-scale-in 0.2s ease-out forwards;
 }
 
-.delete-modal-header {
+.confirmation-modal-header {
   padding: 1rem 1rem 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
@@ -32,21 +32,29 @@
   border-bottom: none;
 }
 
-.delete-modal-header-content {
+.confirmation-modal-header-content {
   display: flex;
   align-items: center;
   margin: 0 auto;
   gap: 0.75rem;
 }
 
-.delete-modal-warning-icon {
+.confirmation-modal-icon {
   height: 1.75rem;
   width: 1.75rem;
-  color: #dc2626;
   stroke-width: 1.75;
 }
 
-.delete-modal-title {
+/* Цвет иконки зависит от типа – задаётся через класс в компоненте, но можно через атрибуты */
+.confirmation-modal-icon {
+  color: #dc2626; /* по умолчанию для удаления */
+}
+
+.confirmation-modal-header-content .confirmation-modal-icon {
+  /* для восстановления цвет будет зелёным, но мы управляем через компонент */
+}
+
+.confirmation-modal-title {
   font-size: 1.35rem;
   font-weight: 600;
   color: #111827;
@@ -54,7 +62,7 @@
   margin: 0;
 }
 
-.delete-modal-close-button {
+.confirmation-modal-close-button {
   background: transparent;
   border: none;
   padding: 0.5rem;
@@ -67,22 +75,22 @@
   color: #6b7280;
 }
 
-.delete-modal-close-button:hover {
+.confirmation-modal-close-button:hover {
   background-color: #f3f4f6;
   color: #1f2937;
   transform: rotate(90deg);
 }
 
-.delete-modal-close-icon {
+.confirmation-modal-close-icon {
   height: 1.25rem;
   width: 1.25rem;
 }
 
-.delete-modal-body {
+.confirmation-modal-body {
   padding: 0.5rem 1rem 1rem 1rem;
 }
 
-.delete-modal-message {
+.confirmation-modal-message {
   font-size: 1rem;
   line-height: 1.5;
   color: #4b5563;
@@ -90,14 +98,14 @@
   text-align: center;
 }
 
-.delete-modal-actions {
+.confirmation-modal-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin-top: 0.5rem;
 }
 
-.delete-modal-cancel-button {
+.confirmation-modal-cancel-button {
   padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -110,13 +118,13 @@
   letter-spacing: 0.01em;
 }
 
-.delete-modal-cancel-button:hover {
+.confirmation-modal-cancel-button:hover {
   background-color: #f3f4f6;
   border-color: #d1d5db;
   transform: translateY(-1px);
 }
 
-.delete-modal-confirm-button {
+.confirmation-modal-confirm-button-danger {
   padding: 0.625rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -130,58 +138,64 @@
   letter-spacing: 0.01em;
 }
 
-.delete-modal-confirm-button:hover {
+.confirmation-modal-confirm-button-danger:hover {
   background: linear-gradient(135deg, #dc2626, #b91c1c);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
 }
 
-.delete-modal-confirm-button:active {
+.confirmation-modal-confirm-button-success {
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  letter-spacing: 0.01em;
+}
+
+.confirmation-modal-confirm-button-success:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.25);
+}
+
+.confirmation-modal-confirm-button-danger:active,
+.confirmation-modal-confirm-button-success:active {
   transform: translateY(1px);
 }
 
-@keyframes delete-modal-fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+@keyframes confirmation-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes delete-modal-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes confirmation-modal-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @media (max-width: 640px) {
-  .delete-modal-content {
+  .confirmation-modal-content {
     max-width: 90%;
     border-radius: 1.25rem;
   }
-
-  .delete-modal-header {
+  .confirmation-modal-header {
     padding: 1.25rem 1.25rem 0.5rem 1.25rem;
   }
-
-  .delete-modal-title {
+  .confirmation-modal-title {
     font-size: 1.2rem;
   }
-
-  .delete-modal-body {
+  .confirmation-modal-body {
     padding: 0.25rem 1.25rem 1.25rem 1.25rem;
   }
-
-  .delete-modal-cancel-button,
-  .delete-modal-confirm-button {
+  .confirmation-modal-cancel-button,
+  .confirmation-modal-confirm-button-danger,
+  .confirmation-modal-confirm-button-success {
     padding: 0.5rem 1.25rem;
   }
 }

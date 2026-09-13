@@ -5,6 +5,7 @@ import { AppPermissionsProvider } from './api/utils/AppPermissionsContext';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { checkAuth } from './store/thunks/authThunks';
+import { ScrollToTop } from './ScrollToTop';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -12,8 +13,10 @@ const App = () => {
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
-   return (
+
+  return (
     <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+      <ScrollToTop /> 
       <AppPermissionsProvider>
         <AppRouter />
       </AppPermissionsProvider>

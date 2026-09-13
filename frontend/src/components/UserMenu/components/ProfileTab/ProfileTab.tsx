@@ -1,5 +1,5 @@
-// components/ProfileTab.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+// components/ProfileTab/ProfileTab.tsx
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     User, Mail, Globe, Calendar, Edit, Check, Shield,
     Eye, PlusCircle, Edit2, Trash2, Users, Building,
@@ -15,6 +15,7 @@ import { PermissionsDetails } from './PermissionsDetails';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import '../../styles/ProfileTab.css';
 
+// --- Интерфейсы ---
 interface ProfileTabProps {
     userData?: any;
     userId?: number;
@@ -39,14 +40,13 @@ interface ModuleSubsection {
     models: string[];
 }
 
-// ... (конфигурация MODULE_SECTIONS, MAIN_MODULES, buildModelToModuleMap, ROLE_ORDER без изменений) ...
+// --- Конфигурация модулей (объединены подсекции) ---
 const MODULE_SECTIONS: Record<string, ModuleSubsection[]> = {
     employees: [
-        { id: 'common', name: 'Обычные сотрудники', models: ['Employee'] },
-        { id: 'sha', name: 'Шаработники', models: ['ShaWorkerDetails', 'ShaEquipmentConclusion'] },
+        { id: 'employees', name: 'Сотрудники', models: ['Employee', 'ShaWorkerDetails', 'ShaEquipmentConclusion'] },
     ],
     equipment: [
-        { id: 'common', name: 'Обычное оборудование', models: ['Equipment', 'EquipmentCategory'] },
+        { id: 'common', name: 'Оборудование', models: ['Equipment', 'EquipmentCategory'] },
     ],
     divisions: [
         { id: 'structure', name: 'Структура подразделений', models: ['Division', 'Subdivision', 'Facility', 'FacilityType', 'CommunicationPost'] },
@@ -60,11 +60,10 @@ const MODULE_SECTIONS: Record<string, ModuleSubsection[]> = {
         { id: 'steps', name: 'Этапы задач', models: ['TaskStep'] },
     ],
     users: [
-        { id: 'users', name: 'Учётные записи', models: ['User'] },
+        { id: 'users', name: 'Пользователи', models: ['User'] },
     ],
     storage: [
-        { id: 'folders', name: 'Папки', models: ['StorageFolder'] },
-        { id: 'files', name: 'Файлы', models: ['StorageFile'] },
+        { id: 'storage', name: 'Хранилище', models: ['StorageFolder', 'StorageFile'] },
     ],
     maps: [
         { id: 'offices', name: 'Территориальные органы ФСБ', models: ['FSBOffice'] },
@@ -103,7 +102,98 @@ const ROLE_ORDER = [
     'exploitation_employee'
 ];
 
-export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }: ProfileTabProps) {
+// --- Вспомогательные функции (вынесены из компонента) ---
+const getModuleDisplayName = (module: string) => {
+    const moduleNames: Record<string, string> = {
+        'equipment': 'Оборудование',
+        'networks': 'Сети',
+        'divisions': 'Подразделения',
+        'tasks': 'Задачи',
+        'employees': 'Сотрудники',
+        'users': 'Пользователи',
+        'storage': 'Хранилище',
+        'maps': 'Карты',
+        'organs': 'Органы',
+    };
+    return moduleNames[module] || module;
+};
+
+const getModuleIcon = (module: string) => {
+    switch (module) {
+        case 'equipment': return <Server className="module-icon" />;
+        case 'networks': return <Network className="module-icon" />;
+        case 'divisions': return <Building className="module-icon" />;
+        case 'tasks': return <Target className="module-icon" />;
+        case 'employees':
+        case 'users': return <Users className="module-icon" />;
+        case 'storage': return <Folder className="module-icon" />;
+        case 'maps': return <MapPin className="module-icon" />;
+        case 'organs': return <Briefcase className="module-icon" />;
+        default: return <Settings className="module-icon" />;
+    }
+};
+
+const getModelDisplayName = (model: string) => {
+    const modelNames: Record<string, string> = {
+        'CommunicationNetwork': 'Коммуникационные сети',
+        'CommunicationPost': 'Посты связи',
+        'Division': 'Подразделения',
+        'Subdivision': 'Отделения',
+        'Employee': 'Сотрудники',
+        'Equipment': 'Оборудование',
+        'EquipmentCategory': 'Категории оборудования',
+        'Facility': 'Объекты',
+        'FacilityType': 'Типы объектов',
+        'InterestOrgan': 'Заинтересованные органы',
+        'Map': 'Карты',
+        'StorageFile': 'Файлы хранилища',
+        'StorageFolder': 'Папки хранилища',
+        'Task': 'Задачи',
+        'User': 'Пользователи',
+        'ShaWorkerDetails': 'Детали Шаработников',
+        'ShaEquipmentConclusion': 'Заключения на технику',
+        'NetworkMembership': 'Принадлежность к сетям',
+        'NetworkDirection': 'Направления сетей',
+        'VLAN': 'VLAN',
+        'NetworkInterface': 'Сетевые интерфейсы',
+        'VLANConfiguration': 'Конфигурация VLAN',
+        'IPAddress': 'IP-адреса',
+        'RoutingTable': 'Таблицы маршрутизации',
+        'ACL': 'ACL',
+        'IPRange': 'Диапазоны IP',
+        'TaskStep': 'Этапы задач',
+        'FSBOffice': 'Территориальные органы ФСБ',
+    };
+    return modelNames[model] || model;
+};
+
+const getActionDisplayName = (action: string) => {
+    const actionNames: Record<string, string> = {
+        'view': 'Просмотр',
+        'add': 'Добавление',
+        'change': 'Редактирование',
+        'delete': 'Удаление',
+    };
+    return actionNames[action] || action;
+};
+
+const getActionIcon = (action: string) => {
+    switch (action) {
+        case 'view': return <Eye className="permission-icon" />;
+        case 'add': return <PlusCircle className="permission-icon" />;
+        case 'change': return <Edit2 className="permission-icon" />;
+        case 'delete': return <Trash2 className="permission-icon" />;
+        default: return <Eye className="permission-icon" />;
+    }
+};
+
+// --- Компонент (обёрнут в React.memo) ---
+const ProfileTab = React.memo(function ProfileTab({
+    userData: propUserData,
+    userId,
+    onEdit,
+    onDelete
+}: ProfileTabProps) {
     const [userData, setUserData] = useState(propUserData || null);
     const [loading, setLoading] = useState(!!userId);
     const [isEditing, setIsEditing] = useState(false);
@@ -116,7 +206,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         user_division_id: null as number | null,
         user_subdivision_id: null as number | null,
     });
-    // 2FA состояние
     const [twoFAEnabled, setTwoFAEnabled] = useState(false);
     const [twoFACode, setTwoFACode] = useState('');
     const [originalTwoFAEnabled, setOriginalTwoFAEnabled] = useState(false);
@@ -126,6 +215,9 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
     const [loadingRoles, setLoadingRoles] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+    // Флаг, что первоначальная инициализация модуля выполнена
+    const [initialized, setInitialized] = useState(false);
 
     // Загрузка данных пользователя
     useEffect(() => {
@@ -138,13 +230,12 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                         user_division_id: res.data.division_info?.id ? Number(res.data.division_info.id) : null,
                         user_subdivision_id: res.data.division_info?.subdivision?.id ? Number(res.data.division_info.subdivision.id) : null,
                     });
-                    // Загружаем текущее состояние 2FA (если бэкенд возвращает)
                     const enabled = res.data.two_factor_enabled || false;
                     setTwoFAEnabled(enabled);
                     setOriginalTwoFAEnabled(enabled);
-                    // Код не возвращается по соображениям безопасности, оставляем пустым
                     setTwoFACode('');
                     setOriginalTwoFACode('');
+                    setInitialized(false); // разрешаем установку модуля при первой загрузке
                 })
                 .catch(err => console.error('Error loading user:', err))
                 .finally(() => setLoading(false));
@@ -160,8 +251,20 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
             setTwoFACode('');
             setOriginalTwoFACode('');
             setLoading(false);
+            setInitialized(false);
         }
     }, [userId, propUserData]);
+
+    // Установка первого модуля по умолчанию только при первой загрузке (initialized === false)
+    useEffect(() => {
+        if (userData?.permissions?.modules && !initialized) {
+            const modules = userData.permissions.modules.filter((m: string) => MAIN_MODULES.includes(m));
+            if (modules.length > 0) {
+                setSelectedModule(modules[0]);
+            }
+            setInitialized(true);
+        }
+    }, [userData, initialized]);
 
     // Загрузка доступных ролей
     useEffect(() => {
@@ -186,7 +289,7 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         }
     }, [isEditing, userId]);
 
-    // Загрузка подразделений при входе в режим редактирования
+    // Загрузка подразделений
     useEffect(() => {
         if (isEditing && userId) {
             setLoadingDivisions(true);
@@ -197,7 +300,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         }
     }, [isEditing, userId]);
 
-    // Загрузка отделений при выборе подразделения
     useEffect(() => {
         if (editForm.user_division_id) {
             divisionsApi.getSubdivisions(editForm.user_division_id)
@@ -208,7 +310,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         }
     }, [editForm.user_division_id]);
 
-    // Инициализация выбранных ролей из userData.roles
     useEffect(() => {
         if (availableRoles.length > 0 && userData?.roles) {
             const roleIds = availableRoles
@@ -217,6 +318,24 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
             setSelectedRoleIds(roleIds);
         }
     }, [availableRoles, userData]);
+
+    // Мемоизация вычислений разрешений
+    const groupedByModule = useMemo(() => {
+        if (!userData?.permissions?.models) return {};
+        const models = userData.permissions.models;
+        const grouped: Record<string, Record<string, any>> = {};
+        Object.entries(models).forEach(([model, actions]) => {
+            const module = MODEL_TO_MODULE[model] || 'other';
+            if (!grouped[module]) grouped[module] = {};
+            grouped[module][model] = actions;
+        });
+        return grouped;
+    }, [userData]);
+
+    const filteredModules = useMemo(() => {
+        return (userData?.permissions?.modules || [])
+            .filter((module: string) => MAIN_MODULES.includes(module));
+    }, [userData]);
 
     const handleSaveChanges = async () => {
         try {
@@ -230,13 +349,11 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
             }
             if (userId) {
                 await usersApi.updateUser(userId, updateData);
-                // Сохраняем 2FA настройки
                 if (twoFAEnabled && twoFACode && twoFACode.length === 4 && /^\d+$/.test(twoFACode)) {
                     await usersApi.set2FA(userId, twoFACode);
                 } else if (!twoFAEnabled && originalTwoFAEnabled) {
                     await usersApi.disable2FA(userId);
                 } else if (twoFAEnabled && twoFACode !== originalTwoFACode && twoFACode.length === 4) {
-                    // Если код изменился, сначала отключаем, потом включаем с новым кодом
                     await usersApi.disable2FA(userId);
                     await usersApi.set2FA(userId, twoFACode);
                 }
@@ -289,129 +406,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
         };
         return roleNames[role] || role;
     };
-
-    const getModelDisplayName = (model: string) => {
-        const modelNames: Record<string, string> = {
-            'CommunicationNetwork': 'Коммуникационные сети',
-            'CommunicationPost': 'Посты связи',
-            'Division': 'Подразделения',
-            'Subdivision': 'Отделения',
-            'Employee': 'Сотрудники',
-            'Equipment': 'Оборудование',
-            'EquipmentCategory': 'Категории оборудования',
-            'Facility': 'Объекты',
-            'FacilityType': 'Типы объектов',
-            'InterestOrgan': 'Заинтересованные органы',
-            'Map': 'Карты',
-            'StorageFile': 'Файлы хранилища',
-            'StorageFolder': 'Папки хранилища',
-            'Task': 'Задачи',
-            'User': 'Пользователи',
-            'ShaWorkerDetails': 'Детали Шаработников',
-            'ShaEquipmentConclusion': 'Заключения на технику',
-            'NetworkMembership': 'Принадлежность к сетям',
-            'NetworkDirection': 'Направления сетей',
-            'VLAN': 'VLAN',
-            'NetworkInterface': 'Сетевые интерфейсы',
-            'VLANConfiguration': 'Конфигурация VLAN',
-            'IPAddress': 'IP-адреса',
-            'RoutingTable': 'Таблицы маршрутизации',
-            'ACL': 'ACL',
-            'IPRange': 'Диапазоны IP',
-            'TaskStep': 'Этапы задач',
-            'FSBOffice': 'Территориальные органы ФСБ',
-        };
-        return modelNames[model] || model;
-    };
-
-    const getActionDisplayName = (action: string) => {
-        const actionNames: Record<string, string> = {
-            'view': 'Просмотр',
-            'add': 'Добавление',
-            'change': 'Редактирование',
-            'delete': 'Удаление',
-        };
-        return actionNames[action] || action;
-    };
-
-    const getActionIcon = (action: string) => {
-        switch (action) {
-            case 'view': return <Eye className="permission-icon" />;
-            case 'add': return <PlusCircle className="permission-icon" />;
-            case 'change': return <Edit2 className="permission-icon" />;
-            case 'delete': return <Trash2 className="permission-icon" />;
-            default: return <Eye className="permission-icon" />;
-        }
-    };
-
-    const getModuleDisplayName = (module: string) => {
-        const moduleNames: Record<string, string> = {
-            'equipment': 'Оборудование',
-            'networks': 'Сети',
-            'divisions': 'Подразделения',
-            'tasks': 'Задачи',
-            'employees': 'Сотрудники',
-            'users': 'Пользователи',
-            'storage': 'Хранилище',
-            'maps': 'Карты',
-            'organs': 'Органы',
-        };
-        return moduleNames[module] || module;
-    };
-
-    const getModuleIcon = (module: string) => {
-        switch (module) {
-            case 'equipment': return <Server className="module-icon" />;
-            case 'networks': return <Network className="module-icon" />;
-            case 'divisions': return <Building className="module-icon" />;
-            case 'tasks': return <Target className="module-icon" />;
-            case 'employees':
-            case 'users': return <Users className="module-icon" />;
-            case 'storage': return <Folder className="module-icon" />;
-            case 'maps': return <MapPin className="module-icon" />;
-            case 'organs': return <Briefcase className="module-icon" />;
-            default: return <Settings className="module-icon" />;
-        }
-    };
-
-    const filteredModules = (userData?.permissions?.modules || [])
-        .filter((module: string) => MAIN_MODULES.includes(module));
-
-    const getModelsForModule = (moduleKey: string): string[] => {
-        const sections = MODULE_SECTIONS[moduleKey] || [];
-        return sections.flatMap(section => section.models);
-    };
-
-    const getFilteredModels = () => {
-        if (!selectedModule || !userData?.permissions?.models) {
-            return userData?.permissions?.models || {};
-        }
-        const allowedModels = getModelsForModule(selectedModule);
-        const filtered: Record<string, any> = {};
-        Object.entries(userData.permissions.models).forEach(([model, actions]) => {
-            if (allowedModels.includes(model)) {
-                filtered[model] = actions;
-            }
-        });
-        return filtered;
-    };
-
-    const groupedByModule = useMemo(() => {
-        if (!userData?.permissions?.models) return {};
-        const models = userData.permissions.models;
-        const grouped: Record<string, Record<string, any>> = {};
-        Object.entries(models).forEach(([model, actions]) => {
-            const module = MODEL_TO_MODULE[model];
-            if (module) {
-                if (!grouped[module]) grouped[module] = {};
-                grouped[module][model] = actions;
-            } else {
-                if (!grouped['other']) grouped['other'] = {};
-                grouped['other'][model] = actions;
-            }
-        });
-        return grouped;
-    }, [userData]);
 
     const handleModuleClick = (module: string) => {
         setSelectedModule(selectedModule === module ? null : module);
@@ -480,7 +474,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
 
             <div className="profile-grid-container">
                 <div className="profile-grid">
-                    {/* Левая колонка – вертикальный стек */}
                     <div className="profile-left">
                         {/* Блок основной информации */}
                         <div className="cabinet-form-section">
@@ -649,7 +642,7 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                             getModuleIcon={getModuleIcon}
                         />
 
-                        {/* Блок редактирования ролей – только в режиме редактирования */}
+                        {/* Блок редактирования ролей */}
                         {isEditing && userId && (
                             <RoleEditor
                                 availableRoles={availableRoles}
@@ -665,7 +658,6 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
                         <PermissionsDetails
                             groupedModels={groupedByModule}
                             selectedModule={selectedModule}
-                            filteredModels={getFilteredModels()}
                             moduleSections={MODULE_SECTIONS}
                             getModuleDisplayName={getModuleDisplayName}
                             getModelDisplayName={getModelDisplayName}
@@ -677,4 +669,7 @@ export function ProfileTab({ userData: propUserData, userId, onEdit, onDelete }:
             </div>
         </>
     );
-}
+});
+
+// Экспорт по умолчанию (React.memo-обёрнутый компонент)
+export default ProfileTab;

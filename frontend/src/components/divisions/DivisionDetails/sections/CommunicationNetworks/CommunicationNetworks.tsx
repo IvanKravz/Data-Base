@@ -11,7 +11,6 @@ import { networksApi } from '../../../../../api/networksApi';
 import { Header } from '../../../../networks/Header/Header';
 import { divisionsApi } from '../../../../../api/divisions';
 import NetworkVisualizationWithTabs from '../../../../networks/NetworkVisualization/components/NetworkVisualizationWithTabs';
-// import NetworkVisualizationWithTabs from '../../../../networks/NetworkVisualization/NetworkVisualization';
 
 const CommunicationNetworks: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +31,6 @@ const CommunicationNetworks: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // Проверка прав
   const canEditNetworks = useMemo(() =>
     permissions?.models?.CommunicationNetwork?.includes('change') ?? false, [permissions]);
   const canCreateNetworks = useMemo(() =>
@@ -46,7 +44,6 @@ const CommunicationNetworks: React.FC = () => {
 
   const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
 
-  // Функция загрузки данных
   const fetchData = useCallback(async () => {
     if (!token) return;
 
@@ -85,7 +82,6 @@ const CommunicationNetworks: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  // Загрузка членств и направлений при выборе сети
   useEffect(() => {
     const fetchNetworkData = async () => {
       if (!selectedNetwork || !token) return;
@@ -180,7 +176,7 @@ const CommunicationNetworks: React.FC = () => {
   if (loading) return <div className="loading">Загрузка сетей связи...</div>;
 
   return (
-    <div className="communication-networks-container">
+    <div className="communication-networks-container page-fade-in">
       <div className="communication-networks-main">
         <Header
           onNavigateToManagement={handleNavigateToManagement}

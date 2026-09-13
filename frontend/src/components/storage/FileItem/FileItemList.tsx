@@ -52,6 +52,7 @@ const FileItemList: React.FC<FileItemListProps> = ({
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
         >
+            {/* Чекбокс */}
             <div className="storage-file-list-select">
                 <button
                     className="storage-file-checkbox-button"
@@ -60,13 +61,14 @@ const FileItemList: React.FC<FileItemListProps> = ({
                     type="button"
                 >
                     {isSelected ? (
-                        <CheckSquare size={20} className="checked" />
+                        <CheckSquare size={16} className="checked" />
                     ) : (
-                        <Square size={20} />
+                        <Square size={16} />
                     )}
                 </button>
             </div>
 
+            {/* Иконка файла */}
             <div className="storage-file-list-icon-wrapper" onClick={handleFileClick}>
                 <FileIcon
                     file={file}
@@ -76,6 +78,7 @@ const FileItemList: React.FC<FileItemListProps> = ({
                 />
             </div>
 
+            {/* Основная информация – только название и бейджи */}
             <div className="storage-file-list-content" onClick={handleFileClick}>
                 <div className="storage-file-list-header">
                     <h4 className="storage-file-list-name" title={file.name}>
@@ -85,47 +88,29 @@ const FileItemList: React.FC<FileItemListProps> = ({
                         <div className="storage-file-list-badges">
                             {file.is_pinned && (
                                 <span className="storage-file-list-pin-badge" title="Закреплен">
-                                    <FaThumbtack size={16} />
+                                    <FaThumbtack size={12} />
                                 </span>
                             )}
                             {file.is_favorited && (
                                 <span className="storage-file-list-favorite-badge" title="В избранном">
-                                    <Star size={16} />
+                                    <Star size={12} />
                                 </span>
                             )}
                         </div>
                     )}
                 </div>
-
-                <div className="storage-file-list-meta">
-                    <span className="storage-file-list-extension">
-                        {file.extension?.toUpperCase() || 'Файл'}
-                    </span>
-                    <span className="storage-file-list-separator">•</span>
-                    <span className="storage-file-list-size">
-                        {formatBytes(file.size || 0)}
-                    </span>
-                    <span className="storage-file-list-separator">•</span>
-                    <span className="storage-file-list-date">
-                        <i className="fas fa-calendar-alt"></i>
-                        {formatDate(file.created_at || file.uploaded_at || file.updated_at)}
-                    </span>
-                </div>
+                {/* Метаданные удалены */}
             </div>
 
-            <div className="storage-file-list-stats">
-                <div className="storage-file-list-modified">
-                    <i className="fas fa-clock"></i>
-                    <span>{formatDate(file.updated_at, 'time')}</span>
+            {/* Правый блок – только кнопка скачивания */}
+            <div className="storage-file-list-info">
+                <div className="storage-file-list-actions">
+                    <FileActions
+                        viewMode="list"
+                        onDownload={handleDownload}
+                        isVisible={permissions.canDownloadFiles}
+                    />
                 </div>
-            </div>
-
-            <div className="storage-file-list-actions">
-                <FileActions
-                    viewMode="list"
-                    onDownload={handleDownload}
-                    isVisible={permissions.canDownloadFiles}
-                />
             </div>
         </div>
     );

@@ -1,5 +1,18 @@
 // components/storage/FileExplorer.tsx
 import React, { useState, useMemo } from 'react';
+import {
+    Pin,
+    Folder,
+    File,
+    CheckSquare,
+    XCircle,
+    Download,
+    Trash2,
+    HardDrive,
+    FolderOpen,
+    Upload,
+    FolderPlus,
+    } from 'lucide-react';
 import FolderItem from './FolderItem';
 import FileItem from './FileItem/FileItem';
 import './styles/FileExplorer.css';
@@ -25,6 +38,7 @@ interface FileExplorerProps {
     onDownloadSelected?: () => void;
     onFilesDrop?: (files: File[]) => Promise<void>;
     onRefreshFavorites?: () => void;
+    onTogglePin?: (itemId: number, isFolder: boolean, currentPinned: boolean) => Promise<void>;
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -46,6 +60,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     onDownloadSelected,
     onFilesDrop,
     onRefreshFavorites,
+    onTogglePin,
 }) => {
     const [dragOver, setDragOver] = useState(false);
     const [draggedItem, setDraggedItem] = useState<any>(null);
@@ -132,7 +147,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            {/* Панель управления */}
             <div className="controls">
                 <div className="control-buttons">
                     <button
@@ -141,7 +155,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         disabled={folders.length + files.length === 0}
                         title="Выбрать все элементы"
                     >
-                        <i className="fas fa-check-square"></i>
+                        <CheckSquare size={16} style={{ marginRight: '6px' }} />
                         Выбрать все
                     </button>
                     <button
@@ -150,7 +164,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         disabled={selectedItems.length === 0}
                         title="Снять выделение"
                     >
-                        <i className="fas fa-times-circle"></i>
+                        <XCircle size={16} style={{ marginRight: '6px' }} />
                         Снять выделение
                     </button>
 
@@ -160,7 +174,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                             className="control-button"
                             title="Скачать выбранные"
                         >
-                            <i className="fas fa-download"></i>
+                            <Download size={16} style={{ marginRight: '6px' }} />
                             Скачать
                         </button>
                     )}
@@ -172,7 +186,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                             style={{ color: 'var(--file-explorer-error)' }}
                             title="Удалить выбранные"
                         >
-                            <i className="fas fa-trash"></i>
+                            <Trash2 size={16} style={{ marginRight: '6px' }} />
                             Удалить
                         </button>
                     )}
@@ -184,7 +198,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                             Выбрано: <strong>{selectedItems.length}</strong> элементов
                         </span>
                         <span className="selection-size">
-                            <i className="fas fa-hdd"></i> {formatTotalSize(totalSize)}
+                            <HardDrive size={14} style={{ marginRight: '4px' }} />
+                            {formatTotalSize(totalSize)}
                         </span>
                     </div>
                 )}
@@ -194,10 +209,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {pinnedFolders.length > 0 && (
                 <div className="section">
                     <h3 className="section-title">
-                        <i className="fas fa-thumbtack"></i> Закрепленные папки
+                        <Pin size={18} style={{ color: 'var(--file-explorer-primary)' }} />
+                        Закрепленные папки
                         <span className="counter-badge">{pinnedFolders.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'folders-grid-view' : 'list-view'}>
+                    <div className="list-view">
                         {pinnedFolders.map(folder => (
                             <FolderItem
                                 key={folder.id}
@@ -213,6 +229,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
                                 onRefreshFavorites={onRefreshFavorites}
+                                onTogglePin={onTogglePin}
                             />
                         ))}
                     </div>
@@ -223,10 +240,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {regularFolders.length > 0 && (
                 <div className="section">
                     <h3 className="section-title">
-                        <i className="fas fa-folder"></i> Папки
+                        <Folder size={18} style={{ color: 'var(--file-explorer-primary)' }} />
+                        Папки
                         <span className="counter-badge">{regularFolders.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'folders-grid-view' : 'list-view'}>
+                    <div className="list-view">
                         {regularFolders.map(folder => (
                             <FolderItem
                                 key={folder.id}
@@ -242,6 +260,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(folderId) => onDeleteItem?.(folderId, true)}
                                 onRefreshFavorites={onRefreshFavorites}
+                                onTogglePin={onTogglePin}
                             />
                         ))}
                     </div>
@@ -252,10 +271,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {pinnedFiles.length > 0 && (
                 <div className="section">
                     <h3 className="section-title">
-                        <i className="fas fa-thumbtack"></i> Закрепленные файлы
+                        <Pin size={18} style={{ color: 'var(--file-explorer-primary)' }} />
+                        Закрепленные файлы
                         <span className="counter-badge">{pinnedFiles.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'files-grid-view' : 'list-view'}>
+                    <div className="list-view">
                         {pinnedFiles.map(file => (
                             <FileItem
                                 key={file.id}
@@ -271,6 +291,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
                                 onRefreshFavorites={onRefreshFavorites}
+                                onTogglePin={onTogglePin}
                             />
                         ))}
                     </div>
@@ -281,10 +302,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {regularFiles.length > 0 && (
                 <div className="section">
                     <h3 className="section-title">
-                        <i className="fas fa-file"></i> Файлы
+                        <File size={18} style={{ color: 'var(--file-explorer-primary)' }} />
+                        Файлы
                         <span className="counter-badge">{regularFiles.length}</span>
                     </h3>
-                    <div className={viewMode === 'grid' ? 'files-grid-view' : 'list-view'}>
+                    <div className="list-view">
                         {regularFiles.map(file => (
                             <FileItem
                                 key={file.id}
@@ -300,6 +322,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 onMoveItem={onMoveItem}
                                 onDeleteItem={(fileId) => onDeleteItem?.(fileId, false)}
                                 onRefreshFavorites={onRefreshFavorites}
+                                onTogglePin={onTogglePin}
                             />
                         ))}
                     </div>
@@ -310,7 +333,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {folders.length === 0 && files.length === 0 && (
                 <div className="empty-state">
                     <div className="empty-state-icon">
-                        <i className="fas fa-folder-open"></i>
+                        <FolderOpen size={64} color="var(--file-explorer-border)" />
                     </div>
                     <h3>{currentFolder ? 'Папка пуста' : 'Хранилище пусто'}</h3>
                     <p>
@@ -325,14 +348,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                                 className="upload-button"
                                 onClick={onUploadClick}
                             >
-                                <i className="fas fa-upload"></i> Загрузить файлы
+                                <Upload size={16} style={{ marginRight: '6px' }} />
+                                Загрузить файлы
                             </button>
                             {permissions.canCreateFolders && (
                                 <button
                                     className="create-folder-button"
                                     onClick={onCreateFolderClick}
                                 >
-                                    <i className="fas fa-folder-plus"></i> Создать папку
+                                    <FolderPlus size={16} style={{ marginRight: '6px' }} />
+                                    Создать папку
                                 </button>
                             )}
                         </div>
@@ -343,7 +368,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {/* Зона перетаскивания */}
             {dragOver && (
                 <div className="drop-zone">
-                    <i className="fas fa-cloud-upload-alt"></i>
+                    <CloudUpload size={48} />
                     <p>Отпустите файлы для загрузки</p>
                     <p className="subtext">Файлы будут загружены в текущую папку</p>
                 </div>

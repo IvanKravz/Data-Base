@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { X, Filter } from 'lucide-react'; // Добавляем иконку Filter
+import { X, Filter, Cpu, User, CalendarDays } from 'lucide-react';
 import { SearchField } from './sections/SearchField';
 import { DateField } from './sections/DateField';
 import './AdvancedSearchModal.css';
@@ -19,7 +19,7 @@ interface AdvancedSearchFilters {
   exploitationDateFrom: string;
   exploitationDateTo: string;
   assignedTo: string[];
-  interestOrgans: InterestOrgan[]; // Изменено на массив объектов
+  interestOrgans: InterestOrgan[];
 }
 
 interface AdvancedSearchModalProps {
@@ -46,7 +46,7 @@ export function AdvancedSearchModal({
     assignedTo: '',
     interestOrgans: ''
   });
-  
+
   const [dateFilters, setDateFilters] = useState({
     manufacturingDateFrom: filters.manufacturingDateFrom || '',
     manufacturingDateTo: filters.manufacturingDateTo || '',
@@ -74,7 +74,7 @@ export function AdvancedSearchModal({
       if (item.serial_number) serialNumbers.add(item.serial_number);
       if (item.inventory_number) inventoryNumbers.add(item.inventory_number);
       if (item.assigned_to?.full_name) assignedTo.add(item.assigned_to.full_name);
-      if (item.interest_organ?.name) interestOrgans.add(item.interest_organ.name); // Берем name из объекта
+      if (item.interest_organ?.name) interestOrgans.add(item.interest_organ.name);
     });
 
     return {
@@ -86,7 +86,6 @@ export function AdvancedSearchModal({
     };
   }, [equipment]);
 
-  // Функция для получения объекта interest_organ по имени
   const getInterestOrganByName = (name: string): InterestOrgan | undefined => {
     for (const item of equipment) {
       if (item.interest_organ?.name === name) {
@@ -105,7 +104,7 @@ export function AdvancedSearchModal({
     onFilterChange(filterType as keyof AdvancedSearchFilters, value);
   };
 
-  const handleFocus = (filterType: string) => {
+  const handleFocus = (_filterType: string) => {
     // Фокус обрабатывается внутри SearchField
   };
 
@@ -116,27 +115,27 @@ export function AdvancedSearchModal({
   const handleKeyPress = (e: React.KeyboardEvent, filterType: string) => {
     if (e.key === 'Enter' && currentInputs[filterType as keyof typeof currentInputs].trim()) {
       const value = currentInputs[filterType as keyof typeof currentInputs].trim();
-      
+
       if (filterType === 'interestOrgans') {
-        // Для interestOrgans ищем объект по имени
         const organ = getInterestOrganByName(value);
         if (organ) {
           const newValues = [...filters.interestOrgans, organ];
           onFilterChange('interestOrgans', newValues);
         }
       } else {
-        // Для остальных полей работаем со строками
         const newValues = [...filters[filterType as keyof AdvancedSearchFilters] as string[], value];
         onFilterChange(filterType as keyof AdvancedSearchFilters, newValues);
       }
-      
+
       setCurrentInputs(prev => ({ ...prev, [filterType]: '' }));
     }
   };
 
   const removeFilter = (filterType: string, index: number) => {
-    if (filterType === 'manufacturingDateFrom' || filterType === 'manufacturingDateTo' || 
-        filterType === 'exploitationDateFrom' || filterType === 'exploitationDateTo') {
+    if (
+      filterType === 'manufacturingDateFrom' || filterType === 'manufacturingDateTo' ||
+      filterType === 'exploitationDateFrom' || filterType === 'exploitationDateTo'
+    ) {
       onFilterChange(filterType as keyof AdvancedSearchFilters, '');
       setDateFilters(prev => ({ ...prev, [filterType]: '' }));
     } else {
@@ -161,7 +160,7 @@ export function AdvancedSearchModal({
         }
       }
     });
-    
+
     setCurrentInputs({
       names: '',
       serialNumbers: '',
@@ -169,7 +168,7 @@ export function AdvancedSearchModal({
       assignedTo: '',
       interestOrgans: ''
     });
-    
+
     onClose();
   };
 
@@ -203,7 +202,7 @@ export function AdvancedSearchModal({
   return (
     <div className="advanced-search-modal-container">
       <div className="advanced-search-modal">
-        {/* Обновленный заголовок с иконкой Filter */}
+        {/* Заголовок */}
         <div className="advanced-search-header">
           <div className="advanced-search-title">
             <Filter size={16} />
@@ -213,144 +212,166 @@ export function AdvancedSearchModal({
             <X size={16} />
           </button>
         </div>
-        
-        <div className="advanced-search-fields">
-          <SearchField
-            type="names"
-            label="Названия"
-            placeholder="Введите название"
-            currentInputs={currentInputs}
-            filters={filters}
-            suggestions={suggestions}
-            onInputChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onRemoveFilter={removeFilter}
-            onSuggestionSelect={(suggestion) => {
-              const newValues = [...filters.names, suggestion];
-              onFilterChange('names', newValues);
-              setCurrentInputs(prev => ({ ...prev, names: '' }));
-            }}
-            inputRef={inputRefs.names}
-          />
-          
-          <SearchField
-            type="serialNumbers"
-            label="Серийные номера"
-            placeholder="Введите серийный номер"
-            currentInputs={currentInputs}
-            filters={filters}
-            suggestions={suggestions}
-            onInputChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onRemoveFilter={removeFilter}
-            onSuggestionSelect={(suggestion) => {
-              const newValues = [...filters.serialNumbers, suggestion];
-              onFilterChange('serialNumbers', newValues);
-              setCurrentInputs(prev => ({ ...prev, serialNumbers: '' }));
-            }}
-            inputRef={inputRefs.serialNumbers}
-          />
-          
-          <SearchField
-            type="inventoryNumbers"
-            label="Инвентарные номера"
-            placeholder="Введите инвентарный номер"
-            currentInputs={currentInputs}
-            filters={filters}
-            suggestions={suggestions}
-            onInputChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onRemoveFilter={removeFilter}
-            onSuggestionSelect={(suggestion) => {
-              const newValues = [...filters.inventoryNumbers, suggestion];
-              onFilterChange('inventoryNumbers', newValues);
-              setCurrentInputs(prev => ({ ...prev, inventoryNumbers: '' }));
-            }}
-            inputRef={inputRefs.inventoryNumbers}
-          />
 
-          <DateField
-            label="Дата производства (от)"
-            value={dateFilters.manufacturingDateFrom}
-            onChange={(value) => handleDateChange('manufacturingDateFrom', value)}
-            onRemove={() => removeFilter('manufacturingDateFrom', 0)}
-          />
+        {/* Группы фильтров */}
+        <div className="advanced-search-groups-row">
+          {/* Блок 1: Идентификация */}
+          <div className="as-group">
+            <div className="as-group-header">
+              <Cpu size={14} className="as-group-icon" />
+              <span className="as-group-title">Идентификация</span>
+            </div>
+            <div className="as-fields-grid">
+              <SearchField
+                type="names"
+                label="Название"
+                placeholder="Введите название"
+                currentInputs={currentInputs}
+                filters={filters}
+                suggestions={suggestions}
+                onInputChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyPress={handleKeyPress}
+                onRemoveFilter={removeFilter}
+                onSuggestionSelect={(suggestion) => {
+                  const newValues = [...filters.names, suggestion];
+                  onFilterChange('names', newValues);
+                  setCurrentInputs(prev => ({ ...prev, names: '' }));
+                }}
+                inputRef={inputRefs.names}
+              />
+              <SearchField
+                type="serialNumbers"
+                label="Серийный номер"
+                placeholder="Введите серийный номер"
+                currentInputs={currentInputs}
+                filters={filters}
+                suggestions={suggestions}
+                onInputChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyPress={handleKeyPress}
+                onRemoveFilter={removeFilter}
+                onSuggestionSelect={(suggestion) => {
+                  const newValues = [...filters.serialNumbers, suggestion];
+                  onFilterChange('serialNumbers', newValues);
+                  setCurrentInputs(prev => ({ ...prev, serialNumbers: '' }));
+                }}
+                inputRef={inputRefs.serialNumbers}
+              />
+              <SearchField
+                type="inventoryNumbers"
+                label="Инвентарный номер"
+                placeholder="Введите инвентарный номер"
+                currentInputs={currentInputs}
+                filters={filters}
+                suggestions={suggestions}
+                onInputChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyPress={handleKeyPress}
+                onRemoveFilter={removeFilter}
+                onSuggestionSelect={(suggestion) => {
+                  const newValues = [...filters.inventoryNumbers, suggestion];
+                  onFilterChange('inventoryNumbers', newValues);
+                  setCurrentInputs(prev => ({ ...prev, inventoryNumbers: '' }));
+                }}
+                inputRef={inputRefs.inventoryNumbers}
+              />
+            </div>
+          </div>
 
-          <DateField
-            label="Дата производства (до)"
-            value={dateFilters.manufacturingDateTo}
-            onChange={(value) => handleDateChange('manufacturingDateTo', value)}
-            onRemove={() => removeFilter('manufacturingDateTo', 0)}
-          />
+          {/* Блок 2: Принадлежность */}
+          <div className="as-group">
+            <div className="as-group-header">
+              <User size={14} className="as-group-icon" />
+              <span className="as-group-title">Принадлежность</span>
+            </div>
+            <div className="as-fields-grid">
+              <SearchField
+                type="assignedTo"
+                label="Закреплено за"
+                placeholder="Введите ФИО сотрудника"
+                currentInputs={currentInputs}
+                filters={filters}
+                suggestions={suggestions}
+                onInputChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyPress={handleKeyPress}
+                onRemoveFilter={removeFilter}
+                onSuggestionSelect={(suggestion) => {
+                  const newValues = [...filters.assignedTo, suggestion];
+                  onFilterChange('assignedTo', newValues);
+                  setCurrentInputs(prev => ({ ...prev, assignedTo: '' }));
+                }}
+                inputRef={inputRefs.assignedTo}
+              />
+              <SearchField
+                type="interestOrgans"
+                label="В чьих интересах"
+                placeholder="Введите организацию или отдел"
+                currentInputs={currentInputs}
+                filters={{
+                  ...filters,
+                  interestOrgans: filters.interestOrgans.map(organ => organ.name)
+                }}
+                suggestions={suggestions}
+                onInputChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyPress={handleKeyPress}
+                onRemoveFilter={removeFilter}
+                onSuggestionSelect={(suggestion) => {
+                  const organ = getInterestOrganByName(suggestion);
+                  if (organ) {
+                    const newValues = [...filters.interestOrgans, organ];
+                    onFilterChange('interestOrgans', newValues);
+                    setCurrentInputs(prev => ({ ...prev, interestOrgans: '' }));
+                  }
+                }}
+                inputRef={inputRefs.interestOrgans}
+              />
+            </div>
+          </div>
 
-          <DateField
-            label="Дата ввода в эксплуатацию (от)"
-            value={dateFilters.exploitationDateFrom}
-            onChange={(value) => handleDateChange('exploitationDateFrom', value)}
-            onRemove={() => removeFilter('exploitationDateFrom', 0)}
-          />
-
-          <DateField
-            label="Дата ввода в эксплуатацию (до)"
-            value={dateFilters.exploitationDateTo}
-            onChange={(value) => handleDateChange('exploitationDateTo', value)}
-            onRemove={() => removeFilter('exploitationDateTo', 0)}
-          />
-          
-          <SearchField
-            type="assignedTo"
-            label="Закреплено за"
-            placeholder="Введите ФИО сотрудника"
-            currentInputs={currentInputs}
-            filters={filters}
-            suggestions={suggestions}
-            onInputChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onRemoveFilter={removeFilter}
-            onSuggestionSelect={(suggestion) => {
-              const newValues = [...filters.assignedTo, suggestion];
-              onFilterChange('assignedTo', newValues);
-              setCurrentInputs(prev => ({ ...prev, assignedTo: '' }));
-            }}
-            inputRef={inputRefs.assignedTo}
-          />
-
-          {/* Поле для фильтрации по interest_organ */}
-          <SearchField
-            type="interestOrgans"
-            label="В чьих интересах"
-            placeholder="Введите организацию или отдел"
-            currentInputs={currentInputs}
-            filters={{ 
-              ...filters, 
-              interestOrgans: filters.interestOrgans.map(organ => organ.name) // Преобразуем объекты в строки для отображения
-            }}
-            suggestions={suggestions}
-            onInputChange={handleInputChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyPress={handleKeyPress}
-            onRemoveFilter={removeFilter}
-            onSuggestionSelect={(suggestion) => {
-              const organ = getInterestOrganByName(suggestion);
-              if (organ) {
-                const newValues = [...filters.interestOrgans, organ];
-                onFilterChange('interestOrgans', newValues);
-                setCurrentInputs(prev => ({ ...prev, interestOrgans: '' }));
-              }
-            }}
-            inputRef={inputRefs.interestOrgans}
-          />
+          {/* Блок 3: Даты */}
+          <div className="as-group">
+            <div className="as-group-header">
+              <CalendarDays size={14} className="as-group-icon" />
+              <span className="as-group-title">Даты</span>
+            </div>
+            <div className="as-fields-grid">
+              <DateField
+                label="Производство (от)"
+                value={dateFilters.manufacturingDateFrom}
+                onChange={(value) => handleDateChange('manufacturingDateFrom', value)}
+                onRemove={() => removeFilter('manufacturingDateFrom', 0)}
+              />
+              <DateField
+                label="Производство (до)"
+                value={dateFilters.manufacturingDateTo}
+                onChange={(value) => handleDateChange('manufacturingDateTo', value)}
+                onRemove={() => removeFilter('manufacturingDateTo', 0)}
+              />
+              <DateField
+                label="Ввод в экспл. (от)"
+                value={dateFilters.exploitationDateFrom}
+                onChange={(value) => handleDateChange('exploitationDateFrom', value)}
+                onRemove={() => removeFilter('exploitationDateFrom', 0)}
+              />
+              <DateField
+                label="Ввод в экспл. (до)"
+                value={dateFilters.exploitationDateTo}
+                onChange={(value) => handleDateChange('exploitationDateTo', value)}
+                onRemove={() => removeFilter('exploitationDateTo', 0)}
+              />
+            </div>
+          </div>
         </div>
-        
+
+        {/* Кнопки */}
         <div className="advanced-search-actions">
           <button onClick={handleClearFilters} className="clear-filters-button">
             Очистить все фильтры

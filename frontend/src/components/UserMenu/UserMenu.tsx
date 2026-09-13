@@ -1,6 +1,6 @@
 // UserMenu.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { User, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { CabinetModal } from './components/CabinetModal';
 import { UserDropdownMenu } from './components';
 import './UserMenu.css';
@@ -31,13 +31,17 @@ export function UserMenu() {
     const [isCabinetOpen, setIsCabinetOpen] = useState(false);
     const [userData, setUserData] = useState<UserCabinetData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState<string>('');
+    const [currentDate, setCurrentDate] = useState<string>('');
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadUserData();
+        updateDateTime();
+        const interval = setInterval(updateDateTime, 1000);
+        return () => clearInterval(interval);
     }, []);
 
-    // Закрытие при клике вне меню
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -62,7 +66,14 @@ export function UserMenu() {
         }
     };
 
-    // Получение инициалов пользователя для аватара
+    const updateDateTime = () => {
+        const now = new Date();
+        const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const date = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        setCurrentTime(time);
+        setCurrentDate(date);
+    };
+
     const getUserInitials = () => {
         if (!userData?.username) return '?';
         return userData.username.charAt(0).toUpperCase();
@@ -70,6 +81,12 @@ export function UserMenu() {
 
     return (
         <div className="user-menu-container" ref={menuRef}>
+            {/* Блок с датой и временем (вертикальное расположение) */}
+            <div className="user-datetime">
+                <div className="datetime-time">{currentTime}</div>
+                <div className="datetime-date">{currentDate}</div>
+            </div>
+
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`user-menu-button ${isOpen ? 'active' : ''}`}

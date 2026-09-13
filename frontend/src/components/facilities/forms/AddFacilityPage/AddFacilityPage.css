@@ -42,10 +42,11 @@
 }
 
 .ep-add-facility-content {
-    padding: 0; /* отступы задаются внутри ep-edit-facility-tab-content */
+    padding: 0; 
 }
 
 /* Отступы для контента вкладок при создании объекта */
 .ep-add-facility-page .ep-edit-facility-tab-content {
     padding: 1rem;
+
 }

@@ -279,7 +279,7 @@ button.tv-collapse-button:hover {
 }
 
 /* Сообщение о пустом списке */
-.tv-equipment-list-empty-message {
+.equipment-list-empty-message {
   text-align: center;
   padding: 20px;
   color: #666;
@@ -316,3 +316,4 @@ button.tv-collapse-button:hover {
     max-width: 250px;
   }
 }
+

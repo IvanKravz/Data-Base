@@ -125,6 +125,13 @@ class InterestOrganViewSet(viewsets.ModelViewSet):
 
 
 class EquipmentViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
+    # Действия, которым нужно иметь доступ к списанной технике по ID.
+    # Для них фильтр «скрыть disposed» не применяем.
+    DISPOSED_ACCESSIBLE_ACTIONS = {
+        'retrieve', 'restore', 'destroy', 'update', 'partial_update',
+        'comments', 'network_config',
+    }
+
     queryset = Equipment.objects.select_related(
         'division', 'subdivision', 'facility', 'assigned_to', 'category'
     ).prefetch_related(
@@ -142,32 +149,50 @@ class EquipmentViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        # Получаем отфильтрованный по правам queryset из миксина
+        # Сначала применяем фильтрацию по правам (миксин)
         queryset = super().get_queryset()
 
-        # Применяем фильтры по параметрам запроса (без фильтрации по подразделению пользователя)
-        division = self.request.query_params.get('division')
-        category = self.request.query_params.get('category')
-        status_filter = self.request.query_params.get('status')
-        type_filter = self.request.query_params.get('type')
-        search = self.request.query_params.get('search')
-        facility = self.request.query_params.get('facility')
-        is_network = self.request.query_params.get('is_network')
+        # Фильтры из запроса – применяем только если пользователь может видеть все подразделения
+        if self._can_see_all_divisions():
+            division = self.request.query_params.get('division')
+            if division:
+                queryset = queryset.filter(division=division)
 
-        if division:
-            queryset = queryset.filter(division=division)
+        # Остальные фильтры (безопасны, не расширяют доступ)
+        category = self.request.query_params.get('category')
         if category:
             queryset = queryset.filter(category__value=category)
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
+
+        facility = self.request.query_params.get('facility')
+        if facility:
+            queryset = queryset.filter(facility=facility)
+
+        is_network = self.request.query_params.get('is_network')
+        if is_network:
+            queryset = queryset.filter(is_network=is_network.lower() == 'true')
+
+        type_filter = self.request.query_params.get('type')
         if type_filter == 'open':
             queryset = queryset.filter(is_closed=False)
         elif type_filter == 'closed':
             queryset = queryset.filter(is_closed=True)
-        if facility:
-            queryset = queryset.filter(facility=facility)
-        if is_network:
-            queryset = queryset.filter(is_network=is_network.lower() == 'true')
+
+        # === ЛОГИКА СПИСАННОЙ ТЕХНИКИ ===
+        status_filter = self.request.query_params.get('status')
+        include_disposed = self.request.query_params.get('include_disposed', 'false').lower() == 'true'
+
+        if status_filter:
+            # Явно запросили конкретный статус (в т.ч. 'disposed')
+            queryset = queryset.filter(status=status_filter)
+        elif self.action in self.DISPOSED_ACCESSIBLE_ACTIONS:
+            # Detail-действие: не скрываем disposed, иначе get_object() упадёт с 404
+            pass
+        elif not include_disposed:
+            # Списочные действия по умолчанию списанное не показывают
+            queryset = queryset.exclude(status='disposed')
+
+        # Поиск
+        search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
@@ -596,3 +621,35 @@ class EquipmentViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         
         stats = get_equipment_statistics(request.user, days)
         return Response(stats)
+    
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """Восстановление списанной техники"""
+        equipment = self.get_object()
+        if equipment.status != 'disposed':
+            return Response({'error': 'Техника не находится в статусе "Списано"'}, status=400)
+        
+        equipment.status = 'in-operation'  # или 'in-storage' — по вашему усмотрению
+        equipment.disposal_act_number = None
+        equipment.disposal_act_date = None
+        equipment.disposal_cert_number = None
+        equipment.disposal_cert_date = None
+        equipment.disposal_comments = None
+        equipment.save()
+        
+        # Логируем восстановление
+        log_equipment_action(
+            user=request.user,
+            action='restore',
+            equipment=equipment,
+            request=request,
+            details={
+                'restored_from_disposed': True,
+                'previous_status': 'disposed',
+                'new_status': equipment.status,
+                'category_name': equipment.category.name if equipment.category else None,
+            }
+        )
+        
+        serializer = self.get_serializer(equipment)
+        return Response(serializer.data)

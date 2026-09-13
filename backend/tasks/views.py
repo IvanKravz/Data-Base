@@ -25,7 +25,6 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Применяем фильтры из миксина (ролевые фильтры)
         queryset = super().get_queryset()
 
         # Если действие — получение конкретного объекта, не применяем дополнительные фильтры
@@ -33,22 +32,25 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
             return queryset.prefetch_related('steps')
 
         # Дополнительные фильтры из query параметров
-        division_id = self.request.query_params.get('division')
-        subdivision_id = self.request.query_params.get('subdivision')
+        # Применяем division/subdivision только если пользователь может видеть все подразделения
+        if self._can_see_all_divisions():
+            division_id = self.request.query_params.get('division')
+            if division_id:
+                queryset = queryset.filter(division_id=division_id)
+
+            subdivision_id = self.request.query_params.get('subdivision')
+            if subdivision_id:
+                queryset = queryset.filter(subdivision_id=subdivision_id)
+
+        # Остальные фильтры (безопасны)
         show_completed = self.request.query_params.get('show_completed')
         show_only_mine = self.request.query_params.get('show_only_mine', '').lower() == 'true'
         user = self.request.user
 
-        # Логика приватности (оставляем как есть)
         if show_only_mine:
             queryset = queryset.filter(is_private=True, created_by=user)
         else:
             queryset = queryset.filter(is_private=False)
-
-        if division_id:
-            queryset = queryset.filter(division_id=division_id)
-        if subdivision_id:
-            queryset = queryset.filter(subdivision_id=subdivision_id)
 
         if show_completed is not None:
             show_completed = show_completed.lower() == 'true'

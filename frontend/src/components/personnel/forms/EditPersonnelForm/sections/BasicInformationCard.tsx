@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Employee } from '../../../../../types';
 import { employeesApi } from '../../../../../api';
 import { User, ShieldCheck, KeyRound } from 'lucide-react';
+import { formatDateForInput, formatDisplayDate } from '../../../../../api/utils/dateFormatters';
 import '../style.css';
 
 interface BasicInformationCardProps {
@@ -10,7 +11,7 @@ interface BasicInformationCardProps {
   onChange: (data: Partial<Employee>) => void;
   token: string;
   readOnly?: boolean;
-  readOnlySha?: boolean; // для чекбокса ШаРаботник
+  readOnlySha?: boolean;
 }
 
 interface EmployeeDictionaries {
@@ -18,6 +19,7 @@ interface EmployeeDictionaries {
   officer_positions: { value: string; label: string }[];
   warrant_officer_positions: { value: string; label: string }[];
   civilian_positions: { value: string; label: string }[];
+  management_positions: { value: string; label: string }[];
   management_officer_ranks: { value: string; label: string }[];
   officer_ranks: { value: string; label: string }[];
   warrant_officer_ranks: { value: string; label: string }[];
@@ -35,12 +37,14 @@ export function BasicInformationCard({
     officer_positions: [],
     warrant_officer_positions: [],
     civilian_positions: [],
+    management_positions: [],
+    management_officer_ranks: [],
     officer_ranks: [],
     warrant_officer_ranks: [],
-    management_officer_ranks: [],
   });
 
   const [loading, setLoading] = useState(true);
+  const [activeDateField, setActiveDateField] = useState<'birth_date' | null>(null);
 
   useEffect(() => {
     const loadDictionaries = async () => {
@@ -65,13 +69,7 @@ export function BasicInformationCard({
   const getPositionsForCategory = () => {
     switch (formData.category) {
       case 'management':
-        return [
-          { value: 'Главный руководитель', label: 'Главный руководитель' },
-          { value: 'Заместитель главного руководителя', label: 'Заместитель главного руководителя' },
-          { value: 'Начальник отдела', label: 'Начальник отдела' },
-          { value: 'Заместитель начальника отдела', label: 'Заместитель начальника отдела' },
-          { value: 'Начальник отделения', label: 'Начальник отделения' },
-        ];
+        return dictionaries.management_positions;
       case 'officer':
         return dictionaries.officer_positions;
       case 'warrant_officer':
@@ -117,7 +115,6 @@ export function BasicInformationCard({
     onChange({ rank: e.target.value, order_rank: '' });
   };
 
-  // Обработчики для чекбоксов (ответственность)
   const handleMaterialResponsibleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (readOnly) return;
     onChange({ is_material_responsible: e.target.checked });
@@ -130,12 +127,25 @@ export function BasicInformationCard({
       is_sha_worker: isShaWorker,
       sha_details: isShaWorker
         ? formData.sha_details || {
-            start_date: new Date().toISOString().split('T')[0], // сегодня YYYY-MM-DD
+            start_date: new Date().toISOString().split('T')[0],
             access_level: '1',
             equipment_conclusions: [],
           }
         : null,
     });
+  };
+
+  const handleDateClick = () => {
+    if (readOnly) return;
+    setActiveDateField('birth_date');
+  };
+
+  const handleDateClose = () => {
+    setActiveDateField(null);
+  };
+
+  const handleDateChange = (value: string) => {
+    onChange({ birth_date: value });
   };
 
   return (
@@ -156,6 +166,31 @@ export function BasicInformationCard({
             className="ep-form-input"
             disabled={readOnly}
           />
+        </div>
+
+        {/* Дата рождения */}
+        <div className="ep-form-group">
+          <label className="ep-form-label">Дата рождения</label>
+          {activeDateField === 'birth_date' ? (
+            <input
+              type="date"
+              value={formatDateForInput(formData.birth_date)}
+              onChange={(e) => handleDateChange(e.target.value)}
+              onBlur={handleDateClose}
+              onKeyDown={(e) => e.key === 'Escape' && handleDateClose()}
+              autoFocus
+              className="ep-form-input"
+              disabled={readOnly}
+            />
+          ) : (
+            <div
+              className={`ep-form-input ${!readOnly ? 'editable' : ''}`}
+              onClick={handleDateClick}
+              style={{ cursor: readOnly ? 'default' : 'pointer' }}
+            >
+              {formatDisplayDate(formData.birth_date)}
+            </div>
+          )}
         </div>
 
         {/* Категория */}
@@ -218,10 +253,9 @@ export function BasicInformationCard({
           </div>
         )}
 
-        {/* === БЛОК ОТВЕТСТВЕННОСТИ (интегрирован) === */}
-        <hr className="ep-divider" style={{ margin: '0.5rem 0', border: 'none', borderTop: '1px solid var(--ep-gray-200)' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-          {/* МОЛ */}
+        <hr className="ep-divider" />
+
+        <div className="ep-checkbox-group-wrapper">
           <div className="ep-checkbox-group ep-fade-in">
             <input
               type="checkbox"
@@ -240,7 +274,6 @@ export function BasicInformationCard({
             </label>
           </div>
 
-          {/* ШаРаботник */}
           <div className="ep-checkbox-group ep-fade-in">
             <input
               type="checkbox"
@@ -254,7 +287,7 @@ export function BasicInformationCard({
               <KeyRound size={16} />
               ШаРаботник
               {formData.is_sha_worker && (
-                <span className="ep-status-badge ep-status-badge--sha">ША</span>
+                <span className="ep-status-badge ep-status-badge--sha">ШР</span>
               )}
             </label>
           </div>

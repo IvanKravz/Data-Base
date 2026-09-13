@@ -39,10 +39,10 @@ export function BasicInfoCard({ formData, onChange, employee, viewMode, canEdit 
     return null;
   }
 
-  const renderField = (label: string, value: string, icon: React.ElementType) => {
+  const renderField = (label: string, value: string, icon: React.ElementType, key: string) => {
     const Icon = icon;
     return (
-      <div className="qc-info-item">
+      <div className="qc-info-item" key={key}>
         <Icon className="qc-info-icon" size={20} />
         <div>
           <p className="qc-info-label">{label}</p>
@@ -52,10 +52,10 @@ export function BasicInfoCard({ formData, onChange, employee, viewMode, canEdit 
     );
   };
 
-  const renderInput = (label: string, value: string, field: keyof Employee, icon: React.ElementType) => {
+  const renderInput = (label: string, value: string, field: keyof Employee, icon: React.ElementType, key: string) => {
     const Icon = icon;
     return (
-      <div className="qc-input-group">
+      <div className="qc-input-group" key={key}>
         <label className="qc-input-label">
           <Icon size={16} className="qc-info-icon" />
           {label}
@@ -81,9 +81,9 @@ export function BasicInfoCard({ formData, onChange, employee, viewMode, canEdit 
       </div>
       <div className="qc-card-content">
         {viewMode ? (
-          filteredFields.map(f => renderField(f.label, f.value, f.icon))
+          filteredFields.map(f => renderField(f.label, f.value, f.icon, f.key))
         ) : (
-          filteredFields.map(f => renderInput(f.label, f.value, f.key as keyof Employee, f.icon))
+          filteredFields.map(f => renderInput(f.label, f.value, f.key as keyof Employee, f.icon, f.key))
         )}
       </div>
     </div>

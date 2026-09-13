@@ -17,6 +17,23 @@ class Division(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    head = models.ForeignKey(
+        'employees.Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='headed_divisions',
+        verbose_name='Начальник отдела'
+    )
+    deputy_head = models.ForeignKey(
+        'employees.Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='deputy_headed_divisions',
+        verbose_name='Заместитель начальника отдела'
+    )
+
     def __str__(self):
         return self.name
     
@@ -52,6 +69,7 @@ class Division(models.Model):
         verbose_name = 'Подразделение'
         verbose_name_plural = 'Подразделения'
 
+
 class Subdivision(models.Model):
     name = models.CharField(max_length=100)
     division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name='subdivisions', null=True)
@@ -67,6 +85,23 @@ class Subdivision(models.Model):
     staff_planned_civilian = models.PositiveIntegerField(default=0, verbose_name='Штат гражданского персонала (план)')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    head = models.ForeignKey(
+        'employees.Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='headed_subdivisions',
+        verbose_name='Начальник отделения'
+    )
+    deputy_head = models.ForeignKey(
+        'employees.Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='deputy_headed_subdivisions',
+        verbose_name='Заместитель начальника отделения'
+    )
 
     def get_employees_count(self):
         return self.employees.count()
@@ -92,7 +127,6 @@ class Subdivision(models.Model):
     def get_tasks_count(self):
         return self.tasks.count()
 
-    
     def __str__(self):
         return f"{self.division.name} - {self.name}"
 
@@ -101,13 +135,13 @@ class Subdivision(models.Model):
         verbose_name = 'Отделение'
         verbose_name_plural = 'Отделения'
 
+
 class FacilityType(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование типа объекта')
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
     is_closed_type = models.BooleanField(default=False, verbose_name='Закрытый тип')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    
 
     def __str__(self):
         return f"{self.name}"
@@ -148,7 +182,6 @@ class CommunicationPost(models.Model):
 
 
 class Facility(models.Model):
-   
     FACILITY_CLASSES = [
         ('1', '1 класс'),
         ('2', '2 класс')
@@ -184,13 +217,11 @@ class Facility(models.Model):
     comments = models.TextField(blank=True, null=True, verbose_name='Комментарии')
     is_closed = models.BooleanField(default=False, verbose_name='Закрытый объект')
 
-    # Документация
     acceptance_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер акта приемки помещения')
     rim_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер акта РИМ')
     commissioning_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер акта ввода')
     opening_permission_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер разрешения на открытие')
     
-    # Информация о КЗ
     kz_size = models.CharField(max_length=255, blank=True, null=True, verbose_name='Размер КЗ')
     has_transformer_in_kz = models.BooleanField(default=False, verbose_name='ТП в пределах КЗ')
     has_grounding_in_kz = models.BooleanField(default=False, verbose_name='Контур заземления в пределах КЗ')
@@ -202,7 +233,6 @@ class Facility(models.Model):
         blank=True,
         verbose_name='Широта'
     )
-
     longitude = models.DecimalField(
         max_digits=10,
         decimal_places=7,
@@ -215,18 +245,14 @@ class Facility(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        # Форматирование города
         if self.city:
             city_raw = self.city.strip()
-            # Удаляем возможный префикс "г. " (без учёта регистра)
             if city_raw.lower().startswith('г. '):
                 city_raw = city_raw[3:].strip()
-            # Приводим первую букву к заглавной, остальные к строчным
             if city_raw:
                 city_raw = city_raw[0].upper() + city_raw[1:].lower()
             self.city = 'г. ' + city_raw if city_raw else ''
 
-        # Форматирование улицы
         if self.street:
             street_raw = self.street.strip()
             if street_raw.lower().startswith('ул. '):
@@ -235,7 +261,6 @@ class Facility(models.Model):
                 street_raw = street_raw[0].upper() + street_raw[1:].lower()
             self.street = 'ул. ' + street_raw if street_raw else ''
 
-        # Автоматически формируем полный адрес при сохранении
         address_parts = []
         if self.city:
             address_parts.append(self.city)
@@ -245,7 +270,6 @@ class Facility(models.Model):
             address_parts.append(self.house_number)
         self.address = ', '.join(address_parts) if address_parts else None
 
-        # Определяем, изменились ли поля, влияющие на адрес
         address_changed = False
         if self.pk:
             try:
@@ -256,27 +280,22 @@ class Facility(models.Model):
             except Facility.DoesNotExist:
                 address_changed = True
         else:
-            # Новый объект
             address_changed = True
 
-        # Сохраняем объект первый раз (без геокодирования)
         super().save(*args, **kwargs)
 
-        # Геокодируем только если адрес изменился, а координаты отсутствуют или устарели
         need_geocode = address_changed and self.address
         if not need_geocode and (self.latitude is None or self.longitude is None):
-            need_geocode = True  # координаты отсутствуют, но адрес не менялся — всё равно попробуем
+            need_geocode = True
 
         if need_geocode:
             from .geocoder import AddressGeocoder
             geocoder = AddressGeocoder()
             coords = geocoder.geocode(self.address)
             if coords:
-                # Обновляем координаты, если они отличаются
                 if self.latitude != coords[0] or self.longitude != coords[1]:
                     self.latitude = coords[0]
                     self.longitude = coords[1]
-                    # Второй save только для полей координат
                     super().save(update_fields=['latitude', 'longitude'])
 
     class Meta:

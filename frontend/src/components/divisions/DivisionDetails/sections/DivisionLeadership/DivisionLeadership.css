@@ -1,0 +1,104 @@
+/* DivisionLeadership.css */
+.division-leadership-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .division-leader-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  
+  .division-leader-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .division-leader-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    flex-shrink: 0;
+  }
+  
+  .division-leader-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .division-leader-position {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  
+  .division-leader-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .division-leader-contacts {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #4b5563;
+    flex-wrap: wrap;
+  }
+  
+  .division-leader-contacts span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .division-leader-contacts svg {
+    width: 14px;
+    height: 14px;
+    color: #9ca3af;
+  }
+  
+  /* Адаптив для маленьких экранов */
+  @media (max-width: 768px) {
+    .division-leadership-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .division-leader-item {
+      flex-wrap: wrap;
+      justify-content: center;
+      text-align: center;
+    }
+    .division-leader-avatar {
+      width: 48px;
+      height: 48px;
+    }
+    .division-leader-contacts {
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+  }

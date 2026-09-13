@@ -15,8 +15,7 @@ from users.mixins import RoleBasedFilterMixin
 
 class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
-        'subdivisions',
-        'facilities'
+        'subdivisions', 'facilities'
     ).annotate(
         networks_count=Count('networkmembership__network', distinct=True)
     )
@@ -24,7 +23,7 @@ class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        return super().get_queryset()
+        return super().get_queryset()  # миксин уже фильтрует по правам
 
     @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
@@ -88,20 +87,17 @@ class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
         log_facility_view(request.user, instance, request=request)
         return response
 
-class SubdivisionViewSet(BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
+class SubdivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
     queryset = Subdivision.objects.all().prefetch_related(
-        'employees',
-        'equipment',
-        'facilities',
-        'tasks'
+        'employees', 'equipment', 'facilities', 'tasks'
     )
     serializer_class = SubdivisionSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset() 
         division_id = self.request.query_params.get('division')
-        if division_id:
+        if division_id and self._can_see_all_divisions():
             queryset = queryset.filter(division_id=division_id)
         return queryset
     
@@ -142,27 +138,29 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset()  # применяет фильтрацию по правам
 
-        # Фильтры по параметрам запроса
-        division = self.request.query_params.get('division')
-        subdivision = self.request.query_params.get('subdivision')
+        # Фильтры из запроса – применяем только если пользователь может видеть все подразделения
+        if self._can_see_all_divisions():
+            division = self.request.query_params.get('division')
+            if division:
+                division_ids = division.split(',')
+                queryset = queryset.filter(division__id__in=division_ids)
+
+            subdivision = self.request.query_params.get('subdivision')
+            if subdivision:
+                queryset = queryset.filter(subdivision=subdivision)
+
+        # Остальные фильтры (безопасны)
         facility_type = self.request.query_params.get('type')
-        facility_class = self.request.query_params.get('class')
-        search = self.request.query_params.get('search')
-        is_closed = self.request.query_params.get('is_closed')
-
-        if division:
-            # Разделяем строку по запятой, если есть несколько ID
-            division_ids = division.split(',')
-            queryset = queryset.filter(division__id__in=division_ids)
-
-        if subdivision:
-            queryset = queryset.filter(subdivision=subdivision)
         if facility_type:
             queryset = queryset.filter(type=facility_type)
+
+        facility_class = self.request.query_params.get('class')
         if facility_class:
             queryset = queryset.filter(facility_class=facility_class)
+
+        search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
                 Q(name__icontains=search) |
@@ -171,6 +169,8 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
                 Q(house_number__icontains=search) |
                 Q(address__icontains=search)
             )
+
+        is_closed = self.request.query_params.get('is_closed')
         if is_closed in ['true', 'false']:
             queryset = queryset.filter(is_closed=is_closed == 'true')
 
@@ -329,18 +329,17 @@ class CommunicationPostViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('name')
-        division = self.request.query_params.get('division')
-        facility_id = self.request.query_params.get('facility')
 
-        if division:
-            queryset = queryset.filter(division_id=division)
-        if facility_id:
-            try:
-                facility = Facility.objects.get(id=facility_id)
-                # Проверка доступа к facility не нужна, т.к. миксин уже отфильтрует
-                queryset = queryset.filter(division=facility.division)
-            except Facility.DoesNotExist:
+        if self._can_see_all_divisions():
+            division = self.request.query_params.get('division')
+            if division:
+                queryset = queryset.filter(division_id=division)
+
+            facility_id = self.request.query_params.get('facility')
+            if facility_id:
+                # Дополнительная логика при необходимости
                 pass
+
         return queryset
 
     def get_object(self):

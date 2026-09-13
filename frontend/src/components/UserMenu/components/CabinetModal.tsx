@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { User, X, Clock, Database } from 'lucide-react';
-import { ProfileTab } from './ProfileTab/ProfileTab';
+import ProfileTab from './ProfileTab/ProfileTab';
 import { ActivityTab } from './ActivityTab';
 import { AdminPanel } from '../UserManagementPage/components/AdminPanel';
 import '../styles/CabinetModal.css';
+
 
 interface CabinetModalProps {
     isOpen: boolean;

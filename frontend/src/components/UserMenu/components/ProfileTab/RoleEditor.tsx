@@ -1,15 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Users } from 'lucide-react';
 import { AvailableRole } from '../../../../api/users';
 
 interface RoleEditorProps {
     availableRoles: AvailableRole[];
-    selectedRoleIds: number[]; // массив с 0 или 1 элементом (радио-кнопка)
+    selectedRoleIds: number[];
     loading: boolean;
     onChange: (roleId: number) => void;
 }
 
-// Категории ролей
 const ROLE_CATEGORIES: Record<string, { name: string; roles: string[] }> = {
     admin: {
         name: 'Администратор',
@@ -36,19 +35,18 @@ const ROLE_CATEGORIES: Record<string, { name: string; roles: string[] }> = {
     },
 };
 
-export const RoleEditor: React.FC<RoleEditorProps> = ({
+export const RoleEditor = React.memo<RoleEditorProps>(({
     availableRoles,
     selectedRoleIds,
     loading,
     onChange,
 }) => {
-    // Группируем доступные роли по категориям
-    const groupedRoles = React.useMemo(() => {
+    const groupedRoles = useMemo(() => {
         const groups: Record<string, AvailableRole[]> = {};
         Object.keys(ROLE_CATEGORIES).forEach(cat => {
             groups[cat] = [];
         });
-        groups['other'] = []; // для ролей, не попавших в категории
+        groups['other'] = [];
 
         availableRoles.forEach(role => {
             let assigned = false;
@@ -69,7 +67,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
     const renderCategory = (title: string, roles: AvailableRole[]) => {
         if (roles.length === 0) return null;
         return (
-            <div className="role-category">
+            <div className="role-category" key={title}>
                 <h5 className="role-category-title">{title}</h5>
                 <div className="role-category-items">
                     {roles.map(role => (
@@ -112,4 +110,4 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
             )}
         </div>
     );
-};
+});

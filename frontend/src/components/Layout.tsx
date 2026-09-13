@@ -28,7 +28,6 @@ export function Layout({ children, activeTab, onSetActiveTab, userMenu, showBann
 
   return (
     <div className="page-container">
-      {/* Hero-баннер — показываем только если showBanner === true */}
       <div className={`hero-banner ${!showBanner ? 'hero-banner--hidden' : ''}`}>
         <div className="hero-banner__image-wrapper">
           <img 

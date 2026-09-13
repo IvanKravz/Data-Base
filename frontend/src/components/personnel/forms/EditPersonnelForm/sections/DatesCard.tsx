@@ -1,6 +1,8 @@
+import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { Employee } from '../../../../../types';
 import '../style.css';
+import { formatDateForInput, formatDisplayDate } from '../../../../../api/utils/dateFormatters';
 
 interface DatesCardProps {
   formData: Employee;
@@ -9,16 +11,19 @@ interface DatesCardProps {
 }
 
 export function DatesCard({ formData, onChange, readOnly = false }: DatesCardProps) {
-  const formatDateForInput = (dateString: string): string => {
-    if (!dateString) return '';
-    const [day, month, year] = dateString.split('-');
-    return `${year}-${month}-${day}`;
+  const [activeDateField, setActiveDateField] = useState<'contract_date' | null>(null);
+
+  const handleDateClick = (field: 'contract_date') => {
+    if (readOnly) return;
+    setActiveDateField(field);
   };
 
-  const formatDateForServer = (dateString: string): string => {
-    if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${day}-${month}-${year}`;
+  const handleDateClose = () => {
+    setActiveDateField(null);
+  };
+
+  const handleDateChange = (field: 'contract_date', value: string) => {
+    onChange({ [field]: value });
   };
 
   return (
@@ -29,27 +34,28 @@ export function DatesCard({ formData, onChange, readOnly = false }: DatesCardPro
       </div>
       <div className="ep-card-content ep-dates-grid">
         <div className="ep-form-group">
-          <label className="ep-form-label">Дата рождения</label>
-          <input
-            type="date"
-            required
-            value={formatDateForInput(formData.birth_date)}
-            onChange={(e) => !readOnly && onChange({ birth_date: formatDateForServer(e.target.value) })}
-            className="ep-form-input"
-            disabled={readOnly}
-          />
-        </div>
-
-        <div className="ep-form-group">
           <label className="ep-form-label">Дата контракта</label>
-          <input
-            type="date"
-            value={formatDateForInput(formData.contract_date)}
-            onChange={(e) => !readOnly && onChange({ contract_date: formatDateForServer(e.target.value) })}
-            className="ep-form-input"
-            disabled={readOnly}
-            required
-          />
+          {activeDateField === 'contract_date' ? (
+            <input
+              type="date"
+              required
+              value={formatDateForInput(formData.contract_date)}
+              onChange={(e) => handleDateChange('contract_date', e.target.value)}
+              onBlur={handleDateClose}
+              onKeyDown={(e) => e.key === 'Escape' && handleDateClose()}
+              autoFocus
+              className="ep-form-input"
+              disabled={readOnly}
+            />
+          ) : (
+            <div
+              className={`ep-form-input ${!readOnly ? 'editable' : ''}`}
+              onClick={() => handleDateClick('contract_date')}
+              style={{ cursor: readOnly ? 'default' : 'pointer' }}
+            >
+              {formatDisplayDate(formData.contract_date)}
+            </div>
+          )}
         </div>
       </div>
     </div>

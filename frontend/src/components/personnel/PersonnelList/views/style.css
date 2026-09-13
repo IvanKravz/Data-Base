@@ -98,6 +98,11 @@
   background-color: #fef9e768;
 }
 
+/* Строки без права редактирования – убираем курсор pointer */
+.personnel-table-row-no-click {
+  cursor: default !important;
+}
+
 /* Основные стили ячеек — центрирование по умолчанию */
 .personnel-table-cell {
   padding: 5px 16px;

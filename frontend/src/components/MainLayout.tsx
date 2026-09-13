@@ -37,10 +37,13 @@ import {
   StorageRoute,
   MapRoute,
   UsersRoute,
+  ScheduleRoute,
+  ProtectedRoute,
 } from './ProtectedRoute';
 import { UserManagementPage } from './UserMenu/UserManagementPage/UserManagementPage';
 import { useAppPermissions } from '../api/utils/AppPermissionsContext';
-
+import { AdminDivisionsManagementPage } from './UserMenu/AdminDivisionsManagement/AdminDivisionsManagementPage';
+import { EmployeeSchedulePage } from './personnel/Schedule/EmployeeSchedulePage';
 
 export function MainLayout() {
   const navigate = useNavigate();
@@ -49,6 +52,8 @@ export function MainLayout() {
   // Функция для определения активной вкладки по пути
   const getActiveTabFromPath = (pathname: string): string => {
     if (pathname.startsWith('/divisions')) return 'divisions';
+    // «График работы» — дочерний пункт «Сотрудников»
+    if (pathname.startsWith('/employee-schedule')) return 'personnel';
     if (pathname.startsWith('/personnel')) return 'personnel';
     if (pathname.startsWith('/equipment')) return 'equipment';
     if (pathname.startsWith('/facilities')) return 'facilities';
@@ -83,7 +88,21 @@ export function MainLayout() {
     personnelFilters
   } = useAppPermissions();
 
-  const shouldShowBanner = location.pathname === '/' || location.pathname === '/divisions';
+  // ============= ИЗМЕНЕНИЯ ЗДЕСЬ =============
+  // Логика показа баннера:
+  // - всегда показываем на '/' и '/divisions'
+  // - для эксплуатационников показываем также на '/divisions/:id' (только сам профиль подразделения)
+  const shouldShowBanner = (() => {
+    const path = location.pathname;
+    if (path === '/' || path === '/divisions') return true;
+    // Проверяем, является ли путь точным совпадением с /divisions/{id}
+    const match = path.match(/^\/divisions\/(\d+)$/);
+    if (match && (isExploitationChief() || isExploitationEmployee())) {
+      return true;
+    }
+    return false;
+  })();
+  // ===========================================
 
   // Синхронизация активной вкладки при изменении пути
   useEffect(() => {
@@ -96,11 +115,24 @@ export function MainLayout() {
   // Редирект для эксплуатационников
   useEffect(() => {
     const divisionId = user?.division_info?.id;
-    if ((isExploitationChief() || isExploitationEmployee()) && divisionId && window.location.pathname === '/') {
-      navigate(`/divisions/${divisionId}`, { replace: true });
-      setActiveTab('divisions');
+    const isExploitation = isExploitationChief() || isExploitationEmployee();
+
+    if (isExploitation && divisionId) {
+      // Проверяем, находимся ли мы на странице подразделения
+      const match = location.pathname.match(/^\/divisions\/(\d+)/);
+      if (match) {
+        const requestedId = parseInt(match[1], 10);
+        if (requestedId !== parseInt(divisionId, 10)) {
+          navigate(`/divisions/${divisionId}`, { replace: true });
+          return;
+        }
+      }
+      // Если мы на корневом пути, также редиректим
+      if (location.pathname === '/' || location.pathname === '/divisions') {
+        navigate(`/divisions/${divisionId}`, { replace: true });
+      }
     }
-  }, [navigate, user]);
+  }, [navigate, user, location.pathname]);
 
   const checkQualitativeAccess = useMemo(() => {
     const hasFilters = personnelFilters && Object.keys(personnelFilters).length > 0;
@@ -116,7 +148,7 @@ export function MainLayout() {
           viewTypes={viewTypes}
           onSetActiveTab={setActiveTab}
           onSetViewType={(type) => setViewTypes({ ...viewTypes, [activeTab]: type })}
-          onSelectDivision={() => {}}
+          onSelectDivision={() => { }}
         />
       );
     }
@@ -156,6 +188,7 @@ export function MainLayout() {
         <Route path="/networks/communication-networks/edit/:id" element={<NetworksRoute action="change"><EditNetwork /></NetworksRoute>} />
         <Route path="/divisions/:id" element={<DivisionsRoute><DivisionDetails /></DivisionsRoute>} />
         <Route path="/divisions/:id/personnel" element={<PersonnelRoute><PersonnelSection /></PersonnelRoute>} />
+        <Route path="/employee-schedule" element={<ScheduleRoute><EmployeeSchedulePage /></ScheduleRoute>} />
         <Route path="/divisions/:id/equipment" element={<EquipmentRoute><EquipmentSection /></EquipmentRoute>} />
         <Route path="/divisions/:id/facilities" element={<FacilitiesRoute><FacilitiesSection /></FacilitiesRoute>} />
         <Route path="/divisions/:id/facilities/new" element={<FacilitiesRoute action="add"><AddFacilityPage /></FacilitiesRoute>} />
@@ -178,6 +211,14 @@ export function MainLayout() {
         <Route path="/storage/:folderId/:subfolderId" element={<StorageRoute><Storage /></StorageRoute>} />
         <Route path="/map" element={<MapRoute><MapCountry /></MapRoute>} />
         <Route path="/manage/users" element={<UsersRoute><UserManagementPage /></UsersRoute>} />
+        <Route
+          path="/admin/divisions-management"
+          element={
+            <ProtectedRoute model="Division" action="change">
+              <AdminDivisionsManagementPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

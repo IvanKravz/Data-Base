@@ -1,0 +1,210 @@
+/* DisposedEquipmentList.css — стили для таблицы списанной техники */
+.det-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  margin: 0.5rem 0;
+}
+
+.det-equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  min-width: 1400px;
+}
+
+.det-table-header {
+  background-color: #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* Шапка: все ячейки по центру */
+.det-table-header-cell {
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #374151;
+  border-bottom: 2px solid #d1d5db;
+  white-space: nowrap;
+  background-color: #f1f5f9;
+}
+
+.det-table-header-cell:not(:last-child) {
+  border-right: 1px solid #e2e8f0;
+}
+
+.det-actions-header {
+  text-align: center;
+  min-width: 90px;
+}
+
+.det-table-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.det-table-row:hover {
+  background-color: #f8fafc;
+}
+
+/* Тело таблицы: все ячейки по центру по умолчанию */
+.det-table-cell {
+  padding: 0.2rem 0.5rem;
+  vertical-align: middle;
+  text-align: center;
+  border-right: 1px solid #f1f5f9;
+  word-wrap: break-word;
+  max-width: 200px;
+}
+
+.det-cell-index {
+  text-align: center;
+  width: 40px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* Исключение: наименование — слева */
+.det-cell-name {
+  text-align: left;
+  font-weight: 500;
+  color: #111827;
+  min-width: 150px;
+}
+
+.det-cell-comments {
+  max-width: 150px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.det-division-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.det-subdivision-name {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.det-cell-actions {
+  text-align: center;
+  width: 90px;
+}
+
+/* Кнопки действий — в строку, по центру */
+.det-actions-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.det-restore-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #10b981;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.det-restore-btn:hover {
+  color: #059669;
+  background-color: #ecfdf5;
+}
+
+.det-delete-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.det-delete-btn:hover {
+  color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.det-empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #d1d5db;
+}
+
+.det-empty-text {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* ==== Категория: иконка ==== */
+.det-category-header {
+  text-align: center;
+  width: 60px;
+}
+
+.det-category-cell {
+  text-align: center;
+  width: 60px;
+}
+
+.det-category-icon {
+  color: #2563eb;
+  display: inline-block;
+  vertical-align: middle;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.det-table-row:hover .det-category-icon {
+  color: #1d4ed8;
+  transform: scale(1.08);
+}
+
+.det-category-fallback {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .det-table-header-cell,
+  .det-table-cell {
+    padding: 0.4rem 0.4rem;
+    font-size: 0.75rem;
+  }
+
+  .det-cell-name {
+    min-width: 120px;
+  }
+
+  .det-cell-comments {
+    max-width: 100px;
+  }
+}

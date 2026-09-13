@@ -89,13 +89,25 @@ api.interceptors.response.use(
       }
     }
 
-    // Обработка других ошибок (без генерации событий, чтобы избежать ошибок с слушателями)
+    // Обработка других ошибок
     if (error.response) {
       const { status, data } = error.response;
       const message = data?.message || data?.detail || 'Произошла ошибка';
 
-      // Логируем в консоль, но не генерируем событие
       console.error(`API Error ${status}:`, message, originalRequest?.url);
+
+      // Генерируем событие apiError для глобального перехвата
+      const event = new CustomEvent('apiError', {
+        detail: {
+          status,
+          message,
+          url: originalRequest?.url,
+          method: originalRequest?.method,
+          timestamp: Date.now(),
+          originalStatus: status,
+        },
+      });
+      window.dispatchEvent(event);
 
       // Специфичные коды
       if (status === 403) {

@@ -22,6 +22,7 @@ interface FolderItemProps {
     onMoveItem: (itemId: number, targetFolderId: number | null, isFolder: boolean) => Promise<void>;
     onDeleteItem?: (folderId: number) => void;
     onRefreshFavorites?: () => void;
+    onTogglePin?: (itemId: number, isFolder: boolean, currentPinned: boolean) => Promise<void>; // новый
 }
 
 const FolderItem: React.FC<FolderItemProps> = ({
@@ -37,6 +38,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
     onMoveItem,
     onDeleteItem,
     onRefreshFavorites,
+    onTogglePin,
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -72,7 +74,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
     };
 
     const getFolderIcon = () => {
-        const iconSize = viewMode === 'grid' ? 64 : 24;
+        const iconSize = viewMode === 'grid' ? 44 : 24;
 
         if (folder.color && folder.color.startsWith('#')) {
             return (
@@ -163,20 +165,20 @@ const FolderItem: React.FC<FolderItemProps> = ({
                             type="button"
                         >
                             {isSelected ? (
-                                <CheckSquare size={16} className="checked" />
+                                <CheckSquare size={14} className="checked" />
                             ) : (
-                                <Square size={16} />
+                                <Square size={14} />
                             )}
                         </button>
 
                         {folder.is_pinned && (
                             <div className="storage-folder-pin-indicator" title="Закреплено">
-                                <FaThumbtack size={12} />
+                                <FaThumbtack size={10} />
                             </div>
                         )}
                         {folder.is_favorited && (
                             <div className="storage-folder-favorite-indicator" title="В избранном">
-                                <Star size={12} />
+                                <Star size={10} />
                             </div>
                         )}
                     </div>
@@ -208,13 +210,14 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         onMove={(targetId) => onMoveItem(folder.id, targetId, true)}
                         onDelete={onDeleteItem}
                         onRefreshFavorites={onRefreshFavorites}
+                        onTogglePin={onTogglePin}
                     />
                 )}
             </>
         );
     }
 
-    // Режим списка
+    // ========== РЕЖИМ СПИСКА ==========
     return (
         <>
             <div
@@ -234,9 +237,9 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         type="button"
                     >
                         {isSelected ? (
-                            <CheckSquare size={20} className="checked" />
+                            <CheckSquare size={16} className="checked" />
                         ) : (
-                            <Square size={20} />
+                            <Square size={16} />
                         )}
                     </button>
                 </div>
@@ -250,16 +253,6 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         <h4 className="storage-folder-row-title" title={folder.name}>
                             {folder.name}
                         </h4>
-                        {folder.is_pinned && (
-                            <span className="storage-folder-row-pin">
-                                <FaThumbtack size={14} />
-                            </span>
-                        )}
-                        {folder.is_favorited && (
-                            <span className="storage-folder-row-favorite" title="В избранном">
-                                <Star size={16} />
-                            </span>
-                        )}
                     </div>
 
                     <div className="storage-folder-row-meta">
@@ -279,11 +272,21 @@ const FolderItem: React.FC<FolderItemProps> = ({
 
                 <div className="storage-folder-row-info">
                     <div className="storage-folder-row-size">
-                        <HiOutlineDatabase size={14} />
+                        <HiOutlineDatabase size={12} />
                         <span>{formatBytes(folder.total_size || 0)}</span>
                     </div>
-                    <div className="storage-folder-row-date">
-                        {formatDate(folder.updated_at)}
+
+                    <div className="storage-folder-row-indicators">
+                        {folder.is_pinned && (
+                            <span className="storage-folder-row-pin" title="Закреплено">
+                                <FaThumbtack size={12} />
+                            </span>
+                        )}
+                        {folder.is_favorited && (
+                            <span className="storage-folder-row-favorite" title="В избранном">
+                                <Star size={12} />
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -298,6 +301,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     onMove={(targetId) => onMoveItem(folder.id, targetId, true)}
                     onDelete={onDeleteItem}
                     onRefreshFavorites={onRefreshFavorites}
+                    onTogglePin={onTogglePin}
                 />
             )}
         </>

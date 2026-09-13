@@ -17,20 +17,48 @@
   margin-bottom: 0.7rem;
 }
 
+.division-subheader-hh {
+  /* padding: 0 1rem 0.5rem 1rem; */
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #050505;
+  margin-bottom: 0.7rem;
+}
+
+/* === Блок руководства над списком === */
+.leadership-section {
+  margin-bottom: 1rem;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 1rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f2f5;
+}
+
+.leadership-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+/* Адаптив для блока руководства */
+@media (max-width: 768px) {
+  .leadership-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* === Обёртка всей таблицы (без заголовка, только сетка) === */
 .tables-wrapper {
   margin: 0 1rem 1rem 1rem;
   background: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f2f5;
   overflow: hidden;
 }
 
 /* Три колонки */
 .tables-grid {
   display: flex;
-  gap: 0;
+  gap: 0.5rem;
 }
 
 .table-column {
@@ -69,6 +97,7 @@
 /* Строки таблицы */
 .table-row {
   transition: background-color 0.15s;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .table-row.expanded {
@@ -98,7 +127,6 @@
 }
 
 /* ===== Раскрывающаяся строка с метриками ===== */
-/* Свёрнутое состояние */
 .expanded-row td {
   padding: 0 0.75rem;
   border-bottom: none;
@@ -106,25 +134,21 @@
   transition: padding 0.4s ease;
 }
 
-/* Раскрытое состояние */
 .expanded-row.expanded td {
   padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #e2e8f0;
 }
 
-/* Контейнер-обёртка для анимации высоты */
 .expanded-metrics-wrapper {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
 
-/* Раскрытое состояние обёртки */
 .expanded-row.expanded .expanded-metrics-wrapper {
   max-height: 200px;
 }
 
-/* Сетка метрик */
 .expanded-metrics-row {
   display: flex;
   flex-wrap: wrap;
@@ -132,7 +156,6 @@
   font-size: 0.875rem;
 }
 
-/* Элемент метрики */
 .metric-item {
   display: flex;
   align-items: center;
@@ -149,17 +172,27 @@
   transform: translateX(1px);
 }
 
-/* Иконки метрик */
 .metric-icon {
   width: 0.875rem;
   height: 0.875rem;
   stroke-width: 1.5;
 }
 
-.metric-icon--blue { color: #3b82f6; }
-.metric-icon--green { color: #10b981; }
-.metric-icon--purple { color: #888686; }
-.metric-icon--orange { color: #f59e0b; }
+.metric-icon--blue {
+  color: #3b82f6;
+}
+
+.metric-icon--green {
+  color: #10b981;
+}
+
+.metric-icon--purple {
+  color: #888686;
+}
+
+.metric-icon--orange {
+  color: #f59e0b;
+}
 
 /* === Карта === */
 .map-country {
@@ -176,6 +209,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -199,8 +233,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content-division {
@@ -219,6 +258,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -265,7 +305,7 @@
   z-index: 10;
   pointer-events: none;
   padding: 1rem;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), transparent);
 }
 
 .map-region-text {
@@ -274,32 +314,36 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.8rem 0 0 0;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   font-size: 1.4rem;
   font-weight: 500;
   color: #090909;
 }
 
 .hovered-region-name {
-  padding: 1rem;
-  font-size: 1.2rem;
+  height: 2.2rem;               /* фиксированная высота */
+  line-height: 2.2rem;          /* центрирование текста по вертикали */
+  font-size: 1.1rem;
   font-weight: 500;
   color: #4b5563;
-  height: 24px;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;      /* длинные названия обрезаются с многоточием */
 }
 
+/* ===== Поиск региона ===== */
 .search-container {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  pointer-events: auto;
   gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-.search-input {
+.search-input-region {
   padding: 0.6rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -309,15 +353,16 @@
   background-color: #ffffff;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  flex: 0 1 auto;
 }
 
-.search-input:focus {
+.search-input-region:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.search-input::placeholder {
+.search-input-region::placeholder {
   color: #94a3b8;
 }
 
@@ -335,6 +380,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .search-button:hover {
@@ -347,4 +393,83 @@
   background-color: #1d4ed8;
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== Адаптивность поиска ===== */
+@media (max-width: 768px) {
+  .search-container {
+    justify-content: stretch;
+    flex-wrap: nowrap;
+  }
+  .search-input-region {
+    width: 100%;
+    flex: 1;
+  }
+  .search-button {
+    flex: 0 0 auto;
+  }
+}
+
+/* ===== Компактное отображение руководства внутри раскрытой строки ===== */
+.expanded-leadership-text {
+  font-size: 0.9rem;
+  padding: 0.2rem 0 0.5rem 0;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.leader-label {
+  font-weight: 600;
+  color: #767d86;
+  white-space: nowrap;
+}
+
+.expanded-leader-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.leader-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 500;
+  color: #0839a9;
+}
+
+.leader-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.leader-fullname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leader-contacts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.leader-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.leader-contact-icon {
+  color: #94a3b8;
+  width: 14px;
+  height: 14px;
 }

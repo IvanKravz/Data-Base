@@ -11,23 +11,42 @@ interface DisposalInfoProps {
   searchTerm?: string;
 }
 
+const safeFormatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '—';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '—';
+    return format(date, 'dd.MM.yyyy');
+  } catch {
+    return '—';
+  }
+};
+
 export function DisposalInfo({ equipment, searchTerm = '' }: DisposalInfoProps) {
-  if (!equipment.disposal_act_number && !equipment.disposal_cert_number) {
+  const disposal = equipment.disposal_info;
+
+  if (!disposal) return null;
+  if (!disposal.actNumber && !disposal.disposalCertNumber && !disposal.actDate && !disposal.disposalCertDate) {
     return null;
   }
 
   const items = useMemo(() => {
     const list: { label: string; value: string }[] = [];
-    list.push({ label: '№ акта списания', value: equipment.disposal_act_number || '—' });
-    if (equipment.disposal_act_date) {
-      list.push({ label: 'Дата акта', value: format(new Date(equipment.disposal_act_date), 'dd.MM.yyyy') });
+
+    if (disposal.actNumber) {
+      list.push({ label: '№ акта списания', value: disposal.actNumber });
     }
-    list.push({ label: '№ справки о ликвидации', value: equipment.disposal_cert_number || '—' });
-    if (equipment.disposal_cert_date) {
-      list.push({ label: 'Дата справки', value: format(new Date(equipment.disposal_cert_date), 'dd.MM.yyyy') });
+    if (disposal.actDate) {
+      list.push({ label: 'Дата акта', value: safeFormatDate(disposal.actDate) });
+    }
+    if (disposal.disposalCertNumber) {
+      list.push({ label: '№ справки о ликвидации', value: disposal.disposalCertNumber });
+    }
+    if (disposal.disposalCertDate) {
+      list.push({ label: 'Дата справки', value: safeFormatDate(disposal.disposalCertDate) });
     }
     return list;
-  }, [equipment]);
+  }, [disposal]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm.trim()) return items;
@@ -38,7 +57,7 @@ export function DisposalInfo({ equipment, searchTerm = '' }: DisposalInfoProps) 
     );
   }, [items, searchTerm]);
 
-  if (filteredItems.length === 0) return null;
+  if (filteredItems.length === 0 && !disposal.comments) return null;
 
   return (
     <Section title="Информация о списании">
@@ -46,11 +65,11 @@ export function DisposalInfo({ equipment, searchTerm = '' }: DisposalInfoProps) 
         const Icon = item.label.includes('Дата') ? Calendar : FileText;
         return <EquipmentInfoItem key={idx} icon={Icon} label={item.label} value={item.value} />;
       })}
-      {equipment.disposal_comments && (
+      {disposal.comments && (
         <div>
           <span className="equipment-info-item__label">Комментарии к списанию</span>
           <p className="equipment-info-item__value equipment-info-item__value--multiline">
-            {equipment.disposal_comments}
+            {disposal.comments}
           </p>
         </div>
       )}

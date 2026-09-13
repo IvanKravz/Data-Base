@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Pencil, Trash2, Lock, ChevronDown, ChevronUp, Crown, ListTodo, Calendar, Users, Info } from 'lucide-react';
+import { Pencil, Trash2, Lock, Crown, Calendar, Users, Info } from 'lucide-react';
 import { Task } from '../../../../types/tasks';
 import './TaskItem.css';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
@@ -14,7 +14,6 @@ interface TaskItemProps {
 
 export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleStep, index }: TaskItemProps) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
-  const [stepsExpanded, setStepsExpanded] = useState(false);
   const [progressHovered, setProgressHovered] = useState(false);
   const [localSteps, setLocalSteps] = useState(task.steps);
   const { canEditTask, canDeleteTask, getCurrentUser } = useAppPermissions();
@@ -49,19 +48,47 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
     [localSteps]
   );
 
-  const { badgeClass, badgeText } = useMemo(() => {
+  // Количество просроченных этапов (незавершённые и end_date < текущая дата)
+  const overdueStepsCount = useMemo(() => {
+    if (isCompleted) return 0;
+    const now = new Date();
+    return localSteps.filter(step => !step.is_completed && new Date(step.end_date) < now).length;
+  }, [localSteps, isCompleted]);
+
+  // Бейдж категории (или завершено)
+  const { categoryBadgeClass, categoryBadgeText } = useMemo(() => {
     if (isCompleted) {
-      return { badgeClass: 'tasks-badge-completed', badgeText: 'Завершено' };
+      return { categoryBadgeClass: 'tasks-badge-completed', categoryBadgeText: 'Завершено' };
     }
     switch (task.category) {
       case 'urgent':
-        return { badgeClass: 'tasks-badge-urgent', badgeText: 'Срочно' };
+        return { categoryBadgeClass: 'tasks-badge-urgent', categoryBadgeText: 'Срочно' };
       case 'planned':
-        return { badgeClass: 'tasks-badge-planned', badgeText: 'Запланировано' };
+        return { categoryBadgeClass: 'tasks-badge-planned', categoryBadgeText: 'Запланировано' };
       default:
-        return { badgeClass: 'tasks-badge-attention', badgeText: 'Требует внимания' };
+        return { categoryBadgeClass: 'tasks-badge-attention', categoryBadgeText: 'Требует внимания' };
     }
   }, [isCompleted, task.category]);
+
+  // Текст для бейджа "Просрочено" с правильным склонением
+  const overdueBadgeText = useMemo(() => {
+    if (overdueStepsCount === 0) return '';
+    if (overdueStepsCount === 1) return 'Просрочено';
+    // Склонение для 2-4 и 5+
+    const lastDigit = overdueStepsCount % 10;
+    const lastTwoDigits = overdueStepsCount % 100;
+    let word = 'этапов';
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+      word = 'этапов';
+    } else if (lastDigit === 1) {
+      word = 'этап';
+    } else if (lastDigit >= 2 && lastDigit <= 4) {
+      word = 'этапа';
+    } else {
+      word = 'этапов';
+    }
+    return `Просрочено ${overdueStepsCount} ${word}`;
+  }, [overdueStepsCount]);
 
   const canEdit = canEditTask(task, currentUser);
   const canDelete = canDeleteTask(task, currentUser);
@@ -95,23 +122,12 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
 
   const toggleDetails = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('.tasks-icon-btn') || target.closest('.tasks-steps-toggle-btn') || target.closest('.tasks-step-checkbox')) {
+    if (target.closest('.tasks-icon-btn') || target.closest('.tasks-step-checkbox')) {
       return;
     }
     setDetailsExpanded(!detailsExpanded);
   };
 
-  const toggleSteps = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!detailsExpanded) {
-      setDetailsExpanded(true);
-      setTimeout(() => setStepsExpanded(true), 50);
-    } else {
-      setStepsExpanded(!stepsExpanded);
-    }
-  };
-
-  // Обработчик клика по этапу – предотвращает закрытие карточки
   const handleStepItemClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -133,7 +149,12 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
           )}
           <h3 className="tasks-card-title">{task.title}</h3>
           <div className="tasks-card-right-group">
-            <span className={`tasks-badge ${badgeClass}`}>{badgeText}</span>
+            <div className="tasks-badges-wrapper">
+              <span className={`tasks-badge ${categoryBadgeClass}`}>{categoryBadgeText}</span>
+              {overdueStepsCount > 0 && (
+                <span className="tasks-badge tasks-badge-overdue">{overdueBadgeText}</span>
+              )}
+            </div>
             <div className="tasks-card-actions">
               {canEdit && (
                 <button
@@ -167,7 +188,7 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
       {/* Панель деталей */}
       {detailsExpanded && (
         <div className="tasks-details-panel">
-          {/* Прогресс-бар и кнопка этапов */}
+          {/* Прогресс-бар */}
           <div className="tasks-detail-progress-full">
             <div className="tasks-detail-progress">
               <span className="tasks-detail-label">Прогресс:</span>
@@ -186,14 +207,6 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
                   <div className="tasks-progress-fill" style={{ width: `${progressPercentage}%` }} />
                 </div>
               </div>
-              <button
-                className="tasks-steps-toggle-btn"
-                onClick={toggleSteps}
-              >
-                <ListTodo size={16} />
-                <span>{stepsExpanded ? 'Скрыть этапы' : 'Показать этапы'}</span>
-                {stepsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </button>
             </div>
           </div>
 
@@ -265,14 +278,15 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
             )}
           </div>
 
-          {/* Список этапов (раскрывается по кнопке) */}
-          {stepsExpanded && (
-            <div className="tasks-inline-steps">
-              <div className="tasks-inline-steps-header">
-                <h5>Этапы выполнения</h5>
-              </div>
-              <div className="tasks-inline-steps-list">
-                {localSteps.map((step, idx) => (
+          {/* Список этапов */}
+          <div className="tasks-inline-steps">
+            <div className="tasks-inline-steps-header">
+              <h5>Этапы выполнения</h5>
+            </div>
+            <div className="tasks-inline-steps-list">
+              {localSteps.map((step, idx) => {
+                const isStepOverdue = !step.is_completed && new Date(step.end_date) < new Date();
+                return (
                   <div
                     key={step.id || `step-${idx}`}
                     className="tasks-inline-step-item"
@@ -302,11 +316,16 @@ export const TaskItem = React.memo(({ task, onEditTask, onDeleteTask, onToggleSt
                         ✓ {step.completed_by.username}
                       </span>
                     )}
+                    {isStepOverdue && (
+                      <span className="tasks-badge tasks-badge-overdue" style={{ marginLeft: 'auto' }}>
+                        Просрочено
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

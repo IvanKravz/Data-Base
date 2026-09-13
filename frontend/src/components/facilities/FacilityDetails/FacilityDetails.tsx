@@ -4,7 +4,7 @@ import { Pencil, Trash2, Info, FileText, Ruler, MessageSquare, Package, Save, X,
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Facility } from '../../../types';
-import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
+import { ConfirmationModal } from '../../modals/ConfirmationModal';
 import { updateFacility, deleteFacility } from '../../../store/slices/facilitiesSlice';
 import { facilitiesApi, authApi, equipmentApi, divisionsApi, communicationPostsApi } from '../../../api';
 import { canEdit } from '../../../api/utils/permissions';
@@ -414,7 +414,8 @@ export function FacilityDetails() {
       </div>
 
       {showDeleteModal && (
-        <DeleteConfirmationModal
+        <ConfirmationModal
+          type="delete"
           title="Удаление объекта"
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}

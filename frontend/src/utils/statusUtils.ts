@@ -10,6 +10,8 @@ export const getStatusLabel = (status: string): string => {
       return 'Неисправно';
     case 'for-disposal':
       return 'На списание';
+    case 'disposed':
+      return 'Cписано';
     default:
       return status;
   }
@@ -26,7 +28,7 @@ export const getStatusColor = (status: string): string => {
     case 'for-disposal':
       return 'text-red-500';
     default:
-      return 'text-gray-500';
+      return 'text-red-500';
   }
 };
 

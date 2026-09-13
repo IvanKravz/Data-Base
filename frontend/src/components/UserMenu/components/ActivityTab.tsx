@@ -1,5 +1,5 @@
 // components/ActivityTab.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ActivityStats } from './ActivityStats';
 import { ActivityFilters } from './ActivityFilters';
 import { ActivityLogsTable } from './ActivityLogsTable';
@@ -19,15 +19,19 @@ interface ActionChoice {
 }
 
 interface ActivityTabProps {
-    userId?: number; // если передан – показываем логи этого пользователя
+    userId?: number;
 }
 
 export function ActivityTab({ userId }: ActivityTabProps) {
-    const [logs, setLogs] = useState<ActionLog[]>([]); 
+    const [logs, setLogs] = useState<ActionLog[]>([]);
     const [stats, setStats] = useState<LogStats | null>(null);
     const [isLoadingLogs, setIsLoadingLogs] = useState(false);
     const [actionChoices, setActionChoices] = useState<ActionChoice[]>([]);
     const [moduleChoices, setModuleChoices] = useState<ActionChoice[]>([]);
+
+    // Кэш ВСЕХ логов, если бэкенд возвращает непагинированный массив.
+    // null = серверная пагинация (или кэш ещё не получен).
+    const allLogsRef = useRef<ActionLog[] | null>(null);
 
     const [filters, setFilters] = useState({
         action: '',
@@ -49,6 +53,7 @@ export function ActivityTab({ userId }: ActivityTabProps) {
     }, []);
 
     useEffect(() => {
+        allLogsRef.current = null; // при смене пользователя кэш невалиден
         loadLogStats();
     }, [userId]);
 
@@ -77,52 +82,74 @@ export function ActivityTab({ userId }: ActivityTabProps) {
         }
     };
 
+    const applyClientPagination = (allLogs: ActionLog[], page: number, pageSize: number) => {
+        const start = (page - 1) * pageSize;
+        setLogs(allLogs.slice(start, start + pageSize));
+        setPagination(prev => ({
+            ...prev,
+            total: allLogs.length,
+            total_pages: Math.max(1, Math.ceil(allLogs.length / pageSize)),
+        }));
+    };
+
     const loadLogs = async () => {
+        // Fast-path: если есть кэш всего массива — просто режем локально
+        if (allLogsRef.current) {
+            applyClientPagination(allLogsRef.current, pagination.page, pagination.page_size);
+            return;
+        }
+
         setIsLoadingLogs(true);
         try {
             const params = {
                 page: pagination.page,
                 page_size: pagination.page_size,
                 ...filters,
-                user_id: userId, // передаём userId в API
+                user_id: userId,
             };
-    
+
             const response = await logsApi.getLogs(params);
-    
+
+            // API вернул просто массив — все логи сразу
             if (Array.isArray(response)) {
-                setLogs(response);
-                setPagination(prev => ({
-                    ...prev,
-                    total: response.length,
-                    total_pages: Math.ceil(response.length / pagination.page_size),
-                }));
+                allLogsRef.current = response;
+                applyClientPagination(response, pagination.page, pagination.page_size);
                 return;
             }
-    
+
             const data = response?.data || response;
-            
+
             let results: ActionLog[] = [];
             let count = 0;
-            
+            let isNonPaginatedArray = false;
+
             if (data?.results && Array.isArray(data.results)) {
                 results = data.results;
                 count = data.count || data.total || 0;
             } else if (Array.isArray(data)) {
                 results = data;
                 count = data.length;
+                isNonPaginatedArray = true;
             } else if (data?.items && Array.isArray(data.items)) {
                 results = data.items;
                 count = data.count || data.total || 0;
             } else if (data?.data && Array.isArray(data.data)) {
                 results = data.data;
                 count = data.count || data.total || data.data.length || 0;
+                isNonPaginatedArray = true;
             }
-       
+
+            if (isNonPaginatedArray) {
+                allLogsRef.current = results;
+                applyClientPagination(results, pagination.page, pagination.page_size);
+                return;
+            }
+
             setLogs(results);
             setPagination(prev => ({
                 ...prev,
                 total: count,
-                total_pages: Math.ceil(count / pagination.page_size),
+                total_pages: Math.max(1, Math.ceil(count / prev.page_size)),
             }));
         } catch (error) {
             console.error('Error loading logs:', error);
@@ -133,11 +160,14 @@ export function ActivityTab({ userId }: ActivityTabProps) {
     };
 
     const handleFilterChange = (key: keyof typeof filters, value: string) => {
+        // любые изменения фильтров инвалидируют кэш «всех логов»
+        allLogsRef.current = null;
         setFilters(prev => ({ ...prev, [key]: value }));
         setPagination(prev => ({ ...prev, page: 1 }));
     };
 
     const handleResetFilters = () => {
+        allLogsRef.current = null;
         setFilters({
             action: '',
             module: '',
@@ -155,10 +185,14 @@ export function ActivityTab({ userId }: ActivityTabProps) {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `user_actions_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute(
+                'download',
+                `user_actions_${new Date().toISOString().split('T')[0]}.csv`,
+            );
             document.body.appendChild(link);
             link.click();
             link.remove();
+            window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Error exporting logs:', error);
         }

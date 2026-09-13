@@ -35,35 +35,20 @@ export function TableView({
     collapsedGlobalManagement: boolean;
     collapsedDepartmentManagement: Set<string>;
   } | null>(null);
-
   const fullStorageKey = useMemo(
     () => `personnel_table_collapsed_${storageKey}_${viewMode}`,
     [storageKey, viewMode]
   );
 
-  const subcategoryOrder: Record<string, number> = {
-    chief: 1,
-    deputy_chief: 2,
-    department_head: 3,
-    deputy_department_head: 4,
-    section_head: 5,
-  };
-
   const sortEmployeesInGroup = (employees: Employee[]): Employee[] => {
     return [...employees].sort((a, b) => {
       if (a.category === 'management' && b.category !== 'management') return -1;
       if (a.category !== 'management' && b.category === 'management') return 1;
-      if (a.category === 'management' && b.category === 'management') {
-        const orderA = a.subcategory ? subcategoryOrder[a.subcategory] : 99;
-        const orderB = b.subcategory ? subcategoryOrder[b.subcategory] : 99;
-        if (orderA !== orderB) return orderA - orderB;
-      }
       if (a.priority !== b.priority) return a.priority - b.priority;
       return a.full_name.localeCompare(b.full_name);
     });
   };
 
-  // Фильтруем сотрудников по поисковому запросу
   const filteredPersonnel = useMemo(() => {
     if (!searchTerm.trim()) return personnel;
     const lowerSearch = searchTerm.toLowerCase();
@@ -117,7 +102,6 @@ export function TableView({
       }
     );
 
-    // Сортировка внутри групп
     if (result.globalManagement) {
       result.globalManagement.employees = sortEmployeesInGroup(result.globalManagement.employees);
     }
@@ -142,7 +126,6 @@ export function TableView({
 
   const flatSortedData = useMemo(() => {
     if (viewMode !== 'flat') return [];
-    // Для плоского режима тоже применяем фильтрацию
     const dataToUse = searchTerm.trim()
       ? personnel.filter(p => p.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
       : personnel;
@@ -192,7 +175,6 @@ export function TableView({
     return result;
   }, [personnel, viewMode, searchTerm]);
 
-  // Инициализация состояний свёрнутости (только для grouped режима)
   useLayoutEffect(() => {
     if (viewMode !== 'grouped') return;
     if (isInitialized) return;
@@ -215,7 +197,6 @@ export function TableView({
       } catch (e) { }
     }
 
-    // Если нет сохранённых данных – закрываем всё
     const allDivisionIds = Object.keys(groupedData.divisions);
     const allSubdivisionKeys = new Set<string>();
     Object.entries(groupedData.divisions).forEach(([divId, div]: [string, any]) => {
@@ -232,10 +213,9 @@ export function TableView({
     setIsInitialized(true);
   }, [groupedData, fullStorageKey, viewMode, isInitialized]);
 
-  // Сохранение состояния свёрнутости в sessionStorage
   useEffect(() => {
     if (viewMode !== 'grouped' || !isInitialized) return;
-    if (searchTerm.trim() !== '') return; // не сохраняем во время поиска
+    if (searchTerm.trim() !== '') return;
     const toSave = {
       collapsedGlobalManagement,
       collapsedDepartmentManagement: Array.from(collapsedDepartmentManagement),
@@ -254,14 +234,12 @@ export function TableView({
     searchTerm,
   ]);
 
-  // Автоматическое раскрытие всех групп при поиске и восстановление при очистке
   useEffect(() => {
     if (viewMode !== 'grouped' || !groupedData || !isInitialized) return;
 
     const isSearchActive = searchTerm.trim() !== '';
 
     if (isSearchActive) {
-      // Сохраняем текущее состояние только один раз при начале поиска
       if (savedCollapsed === null) {
         setSavedCollapsed({
           collapsedDivisions: new Set(collapsedDivisions),
@@ -270,13 +248,11 @@ export function TableView({
           collapsedDepartmentManagement: new Set(collapsedDepartmentManagement),
         });
       }
-      // Раскрываем всё
       setCollapsedGlobalManagement(false);
       setCollapsedDivisions(new Set());
       setCollapsedSubdivisions(new Set());
       setCollapsedDepartmentManagement(new Set());
     } else {
-      // Восстанавливаем состояние, если оно было сохранено
       if (savedCollapsed !== null) {
         setCollapsedDivisions(savedCollapsed.collapsedDivisions);
         setCollapsedSubdivisions(savedCollapsed.collapsedSubdivisions);
@@ -287,7 +263,6 @@ export function TableView({
     }
   }, [searchTerm, viewMode, groupedData, isInitialized]);
 
-  // Вспомогательные функции рендеринга
   const renderPersonCell = (person: Employee) => (
     <div className="personnel-person-name">{truncate(person.full_name, 30)}</div>
   );
@@ -341,15 +316,27 @@ export function TableView({
     </button>
   );
 
+  const renderDivisionSubdivision = (person: Employee) => {
+    const divisionName = person.division?.name || '—';
+    const subdivisionName = person.subdivision?.name || null;
+    if (!subdivisionName) {
+      return <span>{divisionName}</span>;
+    }
+    return (
+      <div>
+        <div>{divisionName}</div>
+        <div className="text-xs text-gray-500">{subdivisionName}</div>
+      </div>
+    );
+  };
+
   function truncate(str: string, maxLen: number) {
     if (!str) return '';
     return str.length > maxLen ? `${str.substring(0, maxLen)}...` : str;
   }
 
-  // Обновлённый colSpan: добавляем 1 для колонки "№ п/п"
   const colSpan = hasEditPermission ? 9 : 8;
 
-  // Обработчики сворачивания/разворачивания (блокируются при активном поиске)
   const toggleDivision = (divisionId: string) => {
     if (searchTerm.trim() !== '') return;
     setCollapsedDivisions(prev => {
@@ -425,14 +412,14 @@ export function TableView({
             {flatSortedData.map((person, idx) => (
               <tr
                 key={person.id}
-                onClick={() => onPersonClick(person)}
-                className={`personnel-table-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''}`}
+                onClick={() => hasEditPermission && onPersonClick(person)}
+                className={`personnel-table-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
               >
                 <td className="personnel-table-cell personnel-table-cell-index">{idx + 1}</td>
                 <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
                 <td className="personnel-table-cell">{person.rank || '—'}</td>
                 <td className="personnel-table-cell">{truncate(person.position, 30)}</td>
-                <td className="personnel-table-cell">{person.division?.name || '—'}</td>
+                <td className="personnel-table-cell">{renderDivisionSubdivision(person)}</td>
                 <td className="personnel-table-cell">{renderPhones(person)}</td>
                 <td className="personnel-table-cell">{renderShaInfo(person)}</td>
                 <td className="personnel-table-cell personnel-table-cell-category">
@@ -451,11 +438,10 @@ export function TableView({
     );
   }
 
-  // Для grouped режима: если данные ещё не готовы, ничего не рендерим
+  // Для grouped режима
   if (!isInitialized || !groupedData) return null;
 
-  // Рендеринг сгруппированного режима со сквозной нумерацией
-  let rowIndex = 0; // сквозной счётчик для отображаемых строк сотрудников
+  let rowIndex = 0;
 
   return (
     <div className="personnel-table-container">
@@ -505,14 +491,14 @@ export function TableView({
                   return (
                     <tr
                       key={person.id}
-                      onClick={() => onPersonClick(person)}
-                      className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''}`}
+                      onClick={() => hasEditPermission && onPersonClick(person)}
+                      className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
                     >
                       <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                       <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
                       <td className="personnel-table-cell">{person.rank || '—'}</td>
                       <td className="personnel-table-cell">{truncate(person.position, 30)}</td>
-                      <td className="personnel-table-cell">{person.division?.name || '—'}</td>
+                      <td className="personnel-table-cell">{renderDivisionSubdivision(person)}</td>
                       <td className="personnel-table-cell">{renderPhones(person)}</td>
                       <td className="personnel-table-cell">{renderShaInfo(person)}</td>
                       <td className="personnel-table-cell personnel-table-cell-category">
@@ -539,7 +525,6 @@ export function TableView({
 
             return (
               <React.Fragment key={divisionId}>
-                {/* Заголовок подразделения */}
                 <tr
                   className="personnel-division-header-row"
                   onClick={() => toggleDivision(divisionId)}
@@ -563,7 +548,6 @@ export function TableView({
                 </tr>
                 {!isDivisionCollapsed && (
                   <>
-                    {/* Руководство отдела */}
                     {hasManagers && (
                       <>
                         <tr
@@ -592,14 +576,14 @@ export function TableView({
                             return (
                               <tr
                                 key={person.id}
-                                onClick={() => onPersonClick(person)}
-                                className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''}`}
+                                onClick={() => hasEditPermission && onPersonClick(person)}
+                                className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
                               >
                                 <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                                 <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
                                 <td className="personnel-table-cell">{person.rank || '—'}</td>
                                 <td className="personnel-table-cell">{truncate(person.position, 30)}</td>
-                                <td className="personnel-table-cell">{person.division?.name || '—'}</td>
+                                <td className="personnel-table-cell">{renderDivisionSubdivision(person)}</td>
                                 <td className="personnel-table-cell">{renderPhones(person)}</td>
                                 <td className="personnel-table-cell">{renderShaInfo(person)}</td>
                                 <td className="personnel-table-cell personnel-table-cell-category">
@@ -616,7 +600,6 @@ export function TableView({
                       </>
                     )}
 
-                    {/* Отделения */}
                     {division.sortedSubdivisionIds?.map(subdivisionId => {
                       const subdivision = division.subdivisions[subdivisionId];
                       const subKey = `${divisionId}-${subdivisionId}`;
@@ -651,14 +634,14 @@ export function TableView({
                               return (
                                 <tr
                                   key={person.id}
-                                  onClick={() => onPersonClick(person)}
-                                  className={`personnel-table-row ${person.category === 'management' ? 'personnel-management-row' : ''} ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''}`}
+                                  onClick={() => hasEditPermission && onPersonClick(person)}
+                                  className={`personnel-table-row ${person.category === 'management' ? 'personnel-management-row' : ''} ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
                                 >
                                   <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                                   <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
                                   <td className="personnel-table-cell">{person.rank || '—'}</td>
                                   <td className="personnel-table-cell">{truncate(person.position, 30)}</td>
-                                  <td className="personnel-table-cell">{person.division?.name || '—'}</td>
+                                  <td className="personnel-table-cell">{renderDivisionSubdivision(person)}</td>
                                   <td className="personnel-table-cell">{renderPhones(person)}</td>
                                   <td className="personnel-table-cell">{renderShaInfo(person)}</td>
                                   <td className="personnel-table-cell personnel-table-cell-category">

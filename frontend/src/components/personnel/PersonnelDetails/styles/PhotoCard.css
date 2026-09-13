@@ -1,0 +1,71 @@
+/* PhotoCard.css */
+
+.photo-avatar {
+    margin-bottom: 1rem;
+}
+
+.photo-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.employee-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.photo-wrapper:hover .photo-overlay {
+    opacity: 1;
+}
+
+.photo-info {
+    text-align: center;
+}
+
+.photo-info h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.photo-info p {
+    font-size: 0.875rem;
+    color: #334155;
+    margin-bottom: 1rem;
+}
+
+.photo-actions {
+    margin-top: 0.5rem;
+}
+
+/* Адаптив для маленьких экранов (опционально) */
+@media (max-width: 640px) {
+    .photo-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+
+    .photo-info h2 {
+        font-size: 1.1rem;
+    }
+}

@@ -2,6 +2,10 @@
 Конфигурация системы прав доступа для различных ролей
 """
 
+# Маркеры для динамической подстановки
+USER_DIVISION_MARKER = '__user_division_id__'
+USER_SUBDIVISION_MARKER = '__user_subdivision_id__'
+
 ROLE_PERMISSIONS = {
     'admin': {
         'name': 'Администратор',
@@ -21,6 +25,8 @@ ROLE_PERMISSIONS = {
             'EquipmentCategory': ['view', 'add', 'change', 'delete'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
+            'InterestOrgan': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
         },
         'filters': {},
         'can_see_all_divisions': True,
@@ -102,9 +108,10 @@ ROLE_PERMISSIONS = {
             'EquipmentCategory': ['view'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 16},
+            'Task': {'division_id': USER_DIVISION_MARKER}, 
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,
@@ -132,13 +139,15 @@ ROLE_PERMISSIONS = {
             'EquipmentCategory': ['view'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 1, 'subdivision_id': 1},
-            # 'Equipment': {'is_closed': True},
-            # 'Facility': {'is_closed': True},
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
         },
-        'can_see_all_divisions': True,      # Только свое подразделение
+        'can_see_all_divisions': True,
         'can_access_storage': True,
         'can_see_all_storage': False,
         'storage_quota': 5 * 1024 * 1024 * 1024,
@@ -156,11 +165,15 @@ ROLE_PERMISSIONS = {
             'ShaWorkerDetails': ['view'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 1, 'subdivision_id': 1}
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
         },
-        'can_see_all_divisions': True,      # Видит все подразделения
+        'can_see_all_divisions': True,
         'can_access_storage': True,
         'can_see_all_storage': False,
         'storage_quota': 5 * 1024 * 1024 * 1024,
@@ -190,7 +203,10 @@ ROLE_PERMISSIONS = {
             'ACL': ['view', 'change'],
         },
         'filters': {
-            'Task': {'division_id': 1, 'subdivision_id': 1},
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,
@@ -219,7 +235,10 @@ ROLE_PERMISSIONS = {
         'filters': {
             'Equipment': {'category__value__in': ['tko', 'shd', 'shdTelephone']},
             'Facility': {'is_closed': True},
-            'Task': {'division_id': 16, 'subdivision_id': 2}
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
         },
         'can_see_all_divisions': True,
         'is_editor_sha_worker': True,              
@@ -242,7 +261,10 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
-            'Task': {'division_id': 1, 'subdivision_id': 3}
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
         },
         'can_see_all_divisions': True,
         'can_access_storage': True,
@@ -257,7 +279,7 @@ ROLE_PERMISSIONS = {
         'models': {
             'Division': ['view'],
             'Subdivision': ['view'],
-            'Employee': ['view'],
+            'Employee': ['view', 'change'],
             'Equipment': ['view'],
             'Facility': ['view'],
             'CommunicationNetwork': ['view'],
@@ -269,9 +291,13 @@ ROLE_PERMISSIONS = {
             'InterestOrgan': ['view'],
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
         },
-        'filters': {},
-        'can_see_all_divisions': False,      # Только свое подразделение
+        'filters': {
+            'Task': {'division_id': USER_DIVISION_MARKER},
+            'Employee': {'division_id': USER_DIVISION_MARKER},
+        },
+        'can_see_all_divisions': False,
         'can_access_storage': True,
         'can_see_all_storage': True,
         'storage_quota': 5 * 1024 * 1024 * 1024,
@@ -297,8 +323,13 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
         },
-        'filters': {},
-        'can_see_all_divisions': False,      # Только свое подразделение
+        'filters': {
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
+        },
+        'can_see_all_divisions': False,
         'can_access_storage': True,
         'can_see_all_storage': True,
         'storage_quota': 5 * 1024 * 1024 * 1024,

@@ -11,7 +11,7 @@ import './style.css';
 
 interface TableViewProps {
   equipment: Equipment[];
-  onDelete: (id: string) => void;
+  onDelete: (equipment: Equipment) => void;
   divisionId?: string;
   subdivisionId?: string;
   activeTab?: string;
@@ -358,7 +358,13 @@ export function TableView({
                   {shouldShowActions && (
                     <td className="tv-table-cell-actions">
                       <div className="tv-actions-container">
-                        <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="tv-delete-button">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(item);
+                          }}
+                          className="tv-delete-button"
+                        >
                           <Trash2 className="tv-action-icon" />
                         </button>
                       </div>

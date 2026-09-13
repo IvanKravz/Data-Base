@@ -54,9 +54,10 @@ class CommunicationNetworkViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        division_id = self.request.query_params.get('division')
-        if division_id:
-            queryset = queryset.filter(memberships__division_id=division_id)
+        if self._can_see_all_divisions():
+            division_id = self.request.query_params.get('division')
+            if division_id:
+                queryset = queryset.filter(memberships__division_id=division_id)
         return queryset.distinct()
 
     @action(detail=True, methods=['get'])

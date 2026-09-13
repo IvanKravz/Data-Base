@@ -14,8 +14,6 @@
 
 .storage-header {
     display: flex;
-    /* justify-content: space-between; */
-    /* align-items: center; */
     padding: 16px 14px;
     background-color: white;
     border: 1px solid var(--file-explorer-border);
@@ -49,7 +47,6 @@
     flex-shrink: 0;
 }
 
-/* Адаптивность для мобильных */
 @media (max-width: 768px) {
     .storage-breadcrumbs-row {
         margin-bottom: 12px;
@@ -111,35 +108,6 @@
     background-color: #f5f5f5;
 }
 
-/* Кнопка переключения вида отображения */
-.storage-view-toggle-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #666;
-}
-
-.storage-view-toggle-button:hover {
-    background-color: #f5f5f5;
-    border-color: #1976d2;
-    color: #1976d2;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.1);
-}
-
-.storage-view-toggle-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1);
-}
-
-/* Обновленные стили для кнопок */
 .storage-create-folder-button {
     display: flex;
     align-items: center;
@@ -245,7 +213,6 @@
 .storage-content-area {
     flex: 1;
     overflow-y: auto;
-    /* padding: 24px; */
     background-color: #fafafa;
 }
 
@@ -271,7 +238,6 @@
     0% {
         transform: rotate(0deg);
     }
-
     100% {
         transform: rotate(360deg);
     }
@@ -357,7 +323,6 @@
     white-space: nowrap;
 }
 
-/* Стили для контейнера с sidebar */
 .storage-sidebar {
     flex-shrink: 0;
 }
@@ -399,7 +364,6 @@
     margin-left: 8px;
 }
 
-/* Адаптивные стили */
 @media (max-width: 768px) {
     .storage-view-header {
         flex-direction: column;
@@ -413,7 +377,6 @@
     }
 }
 
-/* Адаптивность */
 @media (max-width: 1200px) {
     .storage-header {
         flex-direction: column;
@@ -491,4 +454,20 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+}
+
+/* Анимация появления страниц */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
 }

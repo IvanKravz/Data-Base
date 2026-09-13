@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Facility } from '../../../types';
 import { TableView } from './views/TableView';
-import { DeleteConfirmationModal } from '../../modals/DeleteConfirmationModal';
+import { ConfirmationModal } from '../../modals/ConfirmationModal';
 import './style.css';
 
 interface FacilityListProps {
@@ -88,7 +88,8 @@ export function FacilityList({
       )}
 
       {showDeleteModal && (
-        <DeleteConfirmationModal
+        <ConfirmationModal
+          type="delete"
           title="Удаление объекта"
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}

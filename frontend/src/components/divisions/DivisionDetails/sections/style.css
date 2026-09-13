@@ -2,8 +2,8 @@
 .division-details-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px;
+  gap: 16px;
+  padding: 12px;
   max-width: 1700px;
   margin: 0 auto;
 }
@@ -20,7 +20,7 @@
   padding: 24px;
   text-align: center;
   font-size: 16px;
-  color: var(--error-color);
+  color: var(--error-color, #dc2626);
 }
 
 .division-map-section {
@@ -56,6 +56,7 @@
   align-items: center;
   gap: 0.75rem;
   flex: 1;
+  margin-bottom: 1rem;
 }
 
 .divisions-title {
@@ -67,10 +68,9 @@
   gap: 0.75rem;
   margin-bottom: 0;
   flex-shrink: 0;
-  margin-left: 1rem;
 }
 
-/* ===== Overview.css (контейнер и сетка) ===== */
+/* ===== Overview.css ===== */
 .division-overview-container {
   display: flex;
   flex-direction: column;
@@ -81,7 +81,6 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #1f2937;
-  padding-left: 24px;
   margin-bottom: 20px;
 }
 
@@ -89,183 +88,189 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
-  margin-top: 2rem;
+  margin-bottom: 1rem;
+  align-items: start;
 }
 
-/* ===== SubdivisionsList.css — Glassmorphism обновление ===== */
-.division-subdivisions-section {
-  margin-top: 20px;
+/* ===== SubdivisionsList — горизонтальные карточки ===== */
+.division-subdivisions-cards {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.division-subdivisions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+.subdivision-card {
+  flex: 1 1 280px;
+  max-width: 430px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 18px;
+  border: 1px solid rgba(228, 227, 227, 0.6);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  user-select: none;
 }
 
-/* Карточка отделения – стекло */
-.division-subdivision-card {
-  background: rgba(238, 237, 237, 0.189);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 20px;
-  padding: 24px;
-  border: 1px solid rgba(228, 227, 227, 0.595);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeInUp 0.3s ease-out forwards;
+.subdivision-card:hover {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 28px -8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
 }
 
-/* Тёмная тема */
-@media (prefers-color-scheme: dark) {
-  .division-subdivision-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
+.subdivision-card:active {
+  transform: translateY(-2px) scale(0.98);
 }
 
-.division-subdivision-card:hover {
-  box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(228, 227, 227, 0.595);
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.45); /* стала менее прозрачной, не исчезает */
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.division-subdivision-header {
+.subdivision-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.division-subdivision-name {
-  font-size: 18px;
+.subdivision-leaders {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 30px;
+}
+
+.subdivision-leader {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.8rem;
+}
+
+.subdivision-leader-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.subdivision-leader-name {
   font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+  color: #182941c9;
+  line-height: 1.3;
+  margin-bottom: 0.2rem;
 }
 
-.division-chevron-icon {
-  width: 20px;
-  height: 20px;
+.subdivision-leader-position {
+  font-size: 0.7rem;
+  color: #6b7280;
+  letter-spacing: 0.3px;
+}
+
+.subdivision-leader-phones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: #3b3b3c;
+  margin-top: 1px;
+}
+
+.subdivision-leader-phones span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.subdivision-leader-phones svg {
   color: #9ca3af;
 }
 
-/* Сетка метрик внутри карточки */
-.division-subdivision-metrics {
+.subdivision-card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.2px;
+  flex-shrink: 0;
+  text-align: right;
+  margin-left: auto;
+  padding-top: 2px;
+}
+
+.subdivision-card-metrics {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-/* Элемент метрики – стекло */
-.division-metric-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(36, 98, 149, 0.028);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.division-metric-item:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-/* Контейнер иконки */
-.division-metric-icon-container {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.division-metric-icon {
-  width: 22px;
-  height: 22px;
-  color: #193ec6;
-}
-
-.division-metric-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.division-metric-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1.2;
-}
-
-.division-metric-label {
-  font-size: 0.75rem;
-  color: #4b5563;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 16px;
   margin-top: 4px;
 }
 
-/* Disabled состояние */
-.division-metric-item.disabled,
-.division-metric-item.disabled:hover {
-  opacity: 0.65 !important;
-  background: rgba(200, 200, 200, 0.2) !important;
-  filter: grayscale(0.15);
-  transform: none !important;
-  box-shadow: none !important;
-  cursor: not-allowed;
+.subdivision-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.division-metric-item.disabled:hover::after {
-  content: "🚫";
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  font-size: 14px;
-  opacity: 0.8;
+.subdivision-metric:hover {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.subdivision-metric-icon {
+  color: #193ec6;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.subdivision-metric:hover .subdivision-metric-icon {
+  transform: scale(1.15);
+  color: #0f2b8c;
+}
+
+.subdivision-metric-value {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1f2937;
+  min-width: 24px;
+  text-align: right;
+}
+
+.subdivision-metric-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 2px;
+}
+
+.subdivision-metric.disabled {
+  opacity: 0.5;
+  filter: grayscale(0.4);
+  cursor: not-allowed;
   pointer-events: none;
 }
 
-/* ===== Responsive Design (оригинал с доработками под новые стили) ===== */
-@media (min-width: 1700px) {
+.subdivision-metric.disabled:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.subdivision-metric.disabled .subdivision-metric-icon {
+  transform: none;
+  color: #9ca3af;
+}
+
+/* ===== Responsive ===== */
+@media (min-width: 1800px) {
   .division-stats-grid {
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  }
-
-  .division-subdivisions-grid {
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
 }
 
@@ -282,19 +287,31 @@
   }
 
   .division-stats-grid {
-    grid-template-columns: repeat(1, 1fr);
-  }
-
-  .division-subdivisions-grid {
     grid-template-columns: 1fr;
   }
 
-  .division-metric-value {
-    font-size: 1.1rem;
+  .division-subdivisions-cards {
+    flex-direction: column;
   }
 
-  .division-metric-label {
-    font-size: 0.75rem;
+  .subdivision-card {
+    max-width: 100%;
+  }
+
+  .subdivision-card-metrics {
+    gap: 8px;
+  }
+
+  .subdivision-metric-value {
+    font-size: 1rem;
+  }
+
+  .subdivision-metric-label {
+    font-size: 0.65rem;
+  }
+
+  .subdivision-card-top {
+    gap: 8px;
   }
 }
 
@@ -303,7 +320,181 @@
     grid-template-columns: 1fr;
   }
 
-  .division-metric-label {
-    font-size: 0.7rem;
+  .subdivision-card-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
+}
+
+/* ===== Toggle (Subdivisions & Map) – унифицированные стили ===== */
+.subdivisions-section-header,
+.map-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+  margin-top: 8px;
+}
+
+.subdivisions-header-left,
+.map-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.division-subdivisions-title,
+.map-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937d4;
+  margin: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Общая декоративная линия – всегда видна */
+.division-subdivisions-title::after,
+.map-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 1px;
+  background-color: #4d5edb;
+  border-radius: 2px;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+/* Расширение линии при наведении или в развёрнутом состоянии */
+.subdivisions-header-left:hover .division-subdivisions-title::after,
+.subdivisions-header-left.expanded .division-subdivisions-title::after,
+.map-header-left:hover .map-title::after,
+.map-header-left.expanded .map-title::after {
+  width: 120%;
+  height: 2px;
+}
+
+.subdivisions-toggle,
+.map-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.5s ease, transform 0.5s ease;
+}
+
+.subdivisions-toggle:hover,
+.map-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.subdivisions-toggle:active,
+.map-toggle:active {
+  transform: scale(0.92);
+}
+
+.subdivisions-toggle-icon,
+.map-toggle-icon {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
+}
+
+.subdivisions-toggle-icon.expanded,
+.map-toggle-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* Анимация появления контента */
+.division-subdivisions-section,
+.map-content-wrapper {
+  animation: fadeSlideIn 0.5s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.schedule-link-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 16px 24px;
+  border: 1px solid rgba(228, 227, 227, 0.6);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  cursor: pointer;
+  user-select: none;
+  color: #4e4e4e;
+}
+
+.schedule-link-card:hover {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 28px -8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+}
+
+.schedule-link-card:active {
+  transform: scale(0.98);
+}
+
+.schedule-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(77, 94, 219, 0.15);
+  color: #4d5edb;
+}
+
+.schedule-link-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-link-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.schedule-link-sub {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* ===== Анимация появления страниц ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }

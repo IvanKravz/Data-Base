@@ -1,0 +1,190 @@
+/* Основной контейнер */
+.facility-types-tab {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.facility-types-tab:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Хедер панели */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.panel-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+/* Контейнер таблицы с горизонтальным скроллом */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #eef2f6;
+}
+
+/* Сама таблица */
+.types-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    min-width: 500px;
+}
+
+/* Заголовки — все по центру */
+.types-table thead tr {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.types-table th {
+    padding: 0.6rem 0.75rem;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Ячейки — центрируем все, кроме первого */
+.types-table td {
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* Первый столбец (Название) — жирный, крупный, влево */
+.types-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Остальные ячейки явно центрируем (можно опустить, т.к. уже задано выше) */
+.types-table td:not(:first-child) {
+    text-align: center;
+}
+
+/* Убираем специальное правило для последней ячейки */
+.types-table td:last-child {
+    white-space: nowrap;
+}
+
+/* Зебра — чётные строки */
+.types-table tbody tr:nth-child(even) {
+    background-color: #fafcfd;
+}
+
+/* Hover — подсветка строки */
+.types-table tbody tr:hover {
+    background-color: #f1f5f9;
+    transition: background-color 0.15s ease;
+}
+
+/* ----- Значки для статуса "Закрытый тип" ----- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 28px;
+    /* border-radius: 50%; */
+    /* background: #f1f5f9; */
+    /* transition: background 0.2s; */
+}
+
+.status-badge.open {
+    /* background: #dcfce7; */
+    color: #16a34a;
+}
+
+.status-badge.closed {
+    /* background: #fee2e2; */
+    color: #dc2626;
+}
+
+/* ----- Колонка действий ----- */
+.actions-cell {
+    display: flex;
+    justify-content: center;     /* ← центрируем кнопки */
+    gap: 0.3rem;
+}
+
+/* Кнопки действий — круглая форма, иконки */
+.types-table .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.types-table .btn-action:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.types-table .btn-action.danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.types-table .btn-action:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Индикатор загрузки */
+.loading {
+    color: #64748b;
+    padding: 2rem 0;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 640px) {
+    .facility-types-tab {
+        padding: 1rem;
+    }
+
+    .panel-header h2 {
+        font-size: 1rem;
+    }
+
+    .types-table th,
+    .types-table td {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .status-badge {
+        width: 22px;
+        height: 22px;
+        font-size: 0.75rem;
+    }
+}

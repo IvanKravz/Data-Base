@@ -1,0 +1,119 @@
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem; /* увеличен отступ для воздуха */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+}
+
+/* Текстовое поле */
+.form-textarea {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #ffffff;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Двухколоночная сетка (если используется) */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-row .form-group:last-child {
+    grid-column: span 1;
+}
+
+/* ===== Профессиональная группа для чекбокса ===== */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.checkbox-group:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.checkbox-group:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Стили для label внутри чекбокса */
+.checkbox-group label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #0f172a;
+    cursor: pointer;
+    margin-bottom: 0;
+    user-select: none;
+}
+
+/* Стили для самого чекбокса (если используется нативный input или кастомный) */
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* Если чекбокс кастомный (например, обёрнут в span) – можно адаптировать,
+   но для общности оставляем базовые стили */
+
+/* Кнопки формы */
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #eef2f6;
+    justify-content: flex-end;
+}
+
+/* Адаптив для маленьких экранов */
+@media (max-width: 480px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .form-row .form-group:last-child {
+        grid-column: 1;
+    }
+
+    .checkbox-group {
+        padding: 0.6rem 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}

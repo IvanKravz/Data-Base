@@ -201,9 +201,15 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.personnel-edit-form-wrapper {
+  background: var(--color-card-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+}
+
 .personnel-tabs-header {
   display: flex;
-  gap: 0.25rem;
   padding: 0.5rem 0.5rem 0;
   background: var(--color-card-white);
   border: 1px solid #e5e7eb65;
@@ -247,9 +253,15 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.personnel-tab-content-editing {
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* Индикация режима редактирования */
 .personnel-tabs-container.editing {
-  border: 2px solid var(--color-accent);
+  border: 1px solid var(--color-accent);
   box-shadow: 0 0 0 4px var(--color-accent-light);
   transition: var(--transition);
 }

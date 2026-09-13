@@ -244,6 +244,15 @@ body {
 }
 
 /* ===== Кнопки ===== */
+.equipment-btn--warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.equipment-btn--warning:hover {
+    background: #d97706;
+}
+
 .equipment-btn {
     display: inline-flex;
     align-items: center;

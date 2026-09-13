@@ -1,6 +1,6 @@
 // components/storage/Storage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import FileExplorer from './FileExplorer';
 import StorageSidebar from './StorageSidebar';
 import Breadcrumbs from './Breadcrumbs';
@@ -12,15 +12,13 @@ import TrashView from './TrashView';
 import './styles/Storage.css';
 import { StorageFile, StorageFolder, storageApi } from '../../api/storage';
 import { useStoragePermissions } from '../../api/utils/useStoragePermissions';
-import { Grid, List } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { authApi } from '../../api/auth'; // <-- добавить импорт
+import { authApi } from '../../api/auth';
 
 const Storage: React.FC = () => {
     const { folderId, subfolderId } = useParams<{ folderId?: string; subfolderId?: string }>();
     const navigate = useNavigate();
-    const location = useLocation();
     const currentFolderId = subfolderId || folderId || null;
 
     const [currentFolder, setCurrentFolder] = useState<StorageFolder | null>(null);
@@ -36,17 +34,13 @@ const Storage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-    const [viewModeRecent, setViewModeRecent] = useState<'grid' | 'list'>('list');
-    const currentUser = useSelector((state: RootState) => state.auth.user);
 
-    // Получаем userId из localStorage синхронно (для корзины)
+    const currentUser = useSelector((state: RootState) => state.auth.user);
     const [localUserId, setLocalUserId] = useState<number | null>(() => {
         const user = authApi.getCurrentUser();
         return user?.id ? Number(user.id) : null;
     });
 
-    // Обновляем localUserId, когда Redux загрузит пользователя
     useEffect(() => {
         if (currentUser?.id && currentUser.id !== localUserId) {
             setLocalUserId(currentUser.id);
@@ -112,13 +106,11 @@ const Storage: React.FC = () => {
     const handleDownloadSelected = async () => {
         if (selectedItems.length === 0) return;
         const file = selectedItems.find(item => 'file_type' in item) as StorageFile;
-
         try {
             await storageApi.downloadFile(file.id);
         } catch (err: any) {
             setError(err.message || 'Ошибка при скачивании');
         }
-
     };
 
     const sortItems = (items: Array<StorageFolder | StorageFile>) => {
@@ -283,7 +275,6 @@ const Storage: React.FC = () => {
         }
     };
 
-    // НОВЫЙ ОБРАБОТЧИК ДЛЯ УДАЛЕНИЯ ОДНОГО ЭЛЕМЕНТА (ИЗ МЕНЮ)
     const handleDeleteSingleItem = async (itemId: number, isFolder: boolean) => {
         try {
             if (isFolder) {
@@ -300,7 +291,6 @@ const Storage: React.FC = () => {
     };
 
     const handleHardDeleteItems = async (items: Array<StorageFolder | StorageFile>) => {
-        // Убираем confirm, так как он уже есть в TrashView
         try {
             const folderIds = items.filter(i => 'folder_type' in i).map(i => i.id);
             const fileIds = items.filter(i => 'file_type' in i).map(i => i.id);
@@ -353,8 +343,6 @@ const Storage: React.FC = () => {
             } else {
                 await storageApi.moveMultipleFiles([itemId], targetFolderId);
             }
-
-            // Если переместили текущую открытую папку – перенаправляем
             if (isFolder && currentFolder && itemId === currentFolder.id) {
                 const parentId = currentFolder.parent_id;
                 if (parentId) navigate(`/storage/${parentId}`);
@@ -391,21 +379,14 @@ const Storage: React.FC = () => {
         }
     };
 
-    const toggleViewMode = () => setViewMode(prev => (prev === 'grid' ? 'list' : 'grid'));
-    const toggleViewModeRecent = () => setViewModeRecent(prev => (prev === 'grid' ? 'list' : 'grid'));
-
     const handleViewChange = (view: 'explorer' | 'recent' | 'favorites' | 'trash') => {
-        // Если кликнули на уже активную вкладку — просто обновляем содержимое
         if (view === activeView) {
-            loadData();  // перезагрузить текущий вид
+            loadData();
             return;
         }
-
-        // Иначе переключаем вкладку
         setActiveView(view);
         setSelectedItems([]);
         if (searchQuery) setSearchQuery('');
-        // Сбрасываем данные предыдущей вкладки и показываем загрузку
         setFolders([]);
         setFiles([]);
         setLoading(true);
@@ -417,9 +398,30 @@ const Storage: React.FC = () => {
         }
     };
 
+    const handleTogglePin = async (itemId: number, isFolder: boolean, currentPinned: boolean) => {
+        try {
+            if (isFolder) {
+                await storageApi.pinFolder(itemId);
+                setFolders(prev =>
+                    prev.map(f => f.id === itemId ? { ...f, is_pinned: !currentPinned } : f)
+                );
+            } else {
+                await storageApi.pinFile(itemId);
+                setFiles(prev =>
+                    prev.map(f => f.id === itemId ? { ...f, is_pinned: !currentPinned } : f)
+                );
+            }
+            if (activeView === 'favorites') {
+                loadData();
+            }
+        } catch (err: any) {
+            setError(err.message || 'Ошибка при изменении закрепления');
+        }
+    };
+
     if (!permissions.canViewStorage) {
         return (
-            <div className="storage-container">
+            <div className="storage-container page-fade-in">
                 <div className="storage-access-denied">
                     <h2>Доступ запрещен</h2>
                     <p>У вас нет прав для просмотра хранилища файлов.</p>
@@ -429,7 +431,7 @@ const Storage: React.FC = () => {
     }
 
     return (
-        <div className="storage-container">
+        <div className="storage-container page-fade-in">
             <div className="storage-main-content">
                 <div className="storage-header">
                     <div className="storage-header-left">
@@ -463,24 +465,6 @@ const Storage: React.FC = () => {
                                     {sortOrder === 'asc' ? '↑' : '↓'}
                                 </button>
                             </div>
-                        )}
-                        {activeView === 'explorer' && files.length > 0 && (
-                            <button
-                                className="storage-view-toggle-button"
-                                onClick={toggleViewMode}
-                                title={viewMode === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
-                            >
-                                {viewMode === 'grid' ? <List size={20} /> : <Grid size={20} />}
-                            </button>
-                        )}
-                        {activeView === 'recent' && files.length > 0 && (
-                            <button
-                                className="storage-view-toggle-button"
-                                onClick={toggleViewModeRecent}
-                                title={viewModeRecent === 'grid' ? 'Переключить на список' : 'Переключить на плитку'}
-                            >
-                                {viewModeRecent === 'grid' ? <List size={20} /> : <Grid size={20} />}
-                            </button>
                         )}
                     </div>
                     <div className="storage-header-right">
@@ -540,7 +524,7 @@ const Storage: React.FC = () => {
                                     files={files}
                                     currentFolder={currentFolder}
                                     onFolderClick={handleFolderClick}
-                                    viewMode={viewMode}
+                                    viewMode={'list'}
                                     selectedItems={selectedItems}
                                     onSelectItems={setSelectedItems}
                                     permissions={permissions}
@@ -549,18 +533,17 @@ const Storage: React.FC = () => {
                                     onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
                                     onDeleteSelected={handleDeleteSelected}
                                     onDownloadSelected={handleDownloadSelected}
-                                    onMoveItem={(itemId, targetId, isFolder) =>
-                                        handleMoveItem(itemId, targetId, isFolder)
-                                    }
+                                    onMoveItem={handleMoveItem}
                                     onDeleteItem={handleDeleteSingleItem}
                                     onFilesDrop={handleFilesDrop}
                                     onRefreshFavorites={refreshFavorites}
+                                    onTogglePin={handleTogglePin}
                                 />
                             )}
                             {activeView === 'recent' && (
                                 <RecentFilesView
                                     files={files}
-                                    viewMode={viewModeRecent}
+                                    viewMode={'list'}
                                     sortBy={sortBy}
                                     sortOrder={sortOrder}
                                     permissions={permissions}

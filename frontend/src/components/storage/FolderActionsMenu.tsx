@@ -12,10 +12,10 @@ interface FolderActionsMenuProps {
     onClose: () => void;
     permissions: StoragePermissions;
     viewType: 'personal' | 'work';
-    // Изменено: onMove принимает только целевой ID, ID папки уже известен
     onMove: (targetParentId: number | null) => Promise<void>;
     onDelete?: (folderId: number) => void;
     onRefreshFavorites?: () => void;
+    onTogglePin?: (itemId: number, isFolder: boolean, currentPinned: boolean) => Promise<void>; // новый
 }
 
 const INITIAL_MENU_STYLE: React.CSSProperties = {
@@ -35,6 +35,7 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     onMove,
     onDelete,
     onRefreshFavorites,
+    onTogglePin,
 }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [newName, setNewName] = useState(folder.name);
@@ -62,7 +63,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            // Если открыто модальное окно перемещения, игнорируем клики внутри него
             if (showMoveModal) {
                 const modalElement = document.querySelector('.mm-overlay');
                 if (modalElement && modalElement.contains(event.target as Node)) {
@@ -136,8 +136,7 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
         try {
             setIsFavoriting(true);
             await storageApi.toggleFavorite({ folder_id: folder.id });
-            // Обновляем локальное состояние (если нужно)
-            folder.is_favorited = !folder.is_favorited; // если добавить поле в модель, но пока просто обновим список
+            folder.is_favorited = !folder.is_favorited;
             onRefreshFavorites?.();
             onClose();
         } catch (error) {
@@ -148,13 +147,18 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
     };
 
     const handleTogglePin = async () => {
-        try {
-            await storageApi.pinFolder(folder.id);
-            folder.is_pinned = !folder.is_pinned;
-            onClose();
-        } catch (error) {
-            console.error('Error pinning folder:', error);
+        if (onTogglePin) {
+            await onTogglePin(folder.id, true, folder.is_pinned);
+        } else {
+            // fallback
+            try {
+                await storageApi.pinFolder(folder.id);
+                folder.is_pinned = !folder.is_pinned;
+            } catch (error) {
+                console.error('Error pinning folder:', error);
+            }
         }
+        onClose();
     };
 
     const handleChangeColor = async (color: string | null) => {
@@ -360,7 +364,6 @@ const FolderActionsMenu: React.FC<FolderActionsMenuProps> = ({
                     viewType={viewType}
                     permissions={permissions}
                     onMove={(targetFolderId) => {
-                        // Родительский onMove ожидает только целевую папку
                         return onMove(targetFolderId);
                     }}
                     onClose={() => setShowMoveModal(false)}
