@@ -18,7 +18,7 @@ class RoleBasedPermission(permissions.BasePermission):
             if role:
                 user_roles.append(role)
                 
-        view_only_roles = ['leader', 'head_of_section_1_1']
+        view_only_roles = ['leader']
         
         # Если пользователь является админом или суперпользователем, то он не view_only
         if 'admin' in user_roles or user.is_superuser:
@@ -96,42 +96,91 @@ class RoleBasedPermission(permissions.BasePermission):
 
     def _check_division_access(self, user, obj):
         """
-        Проверяет доступ к объекту на основе подразделения.
-        Для модели Division сравнивает id, для остальных - поле division.
+        Проверяет доступ к объекту на основе подразделения и фильтров роли.
         """
-        from .permissions_config import ROLE_PERMISSIONS
-        
+        from .permissions_config import (
+            ROLE_PERMISSIONS,
+            USER_DIVISION_MARKER,
+            USER_SUBDIVISION_MARKER,
+        )
+
         user_roles = self._get_user_roles(user)
-        
-        # Проверяем, есть ли у пользователя роль, которая может видеть все подразделения
+        model_name = obj.__class__.__name__
+
+        # Если хотя бы одна роль без ограничений по подразделениям
+        # и без фильтров — доступ разрешён.
         for role in user_roles:
-            if role in ROLE_PERMISSIONS and ROLE_PERMISSIONS[role].get('can_see_all_divisions', False):
+            cfg = ROLE_PERMISSIONS.get(role)
+            if not cfg:
+                continue
+            if model_name not in cfg.get('models', {}):
+                continue
+            if 'view' not in cfg['models'][model_name]:
+                continue
+
+            role_filters = cfg.get('filters', {}).get(model_name)
+
+            if not role_filters:
+                if cfg.get('can_see_all_divisions', False):
+                    return True
+                # Фолбэк: только своё подразделение
+                if not user.division:
+                    continue
+                if model_name == 'Division':
+                    if obj.id == user.division.id:
+                        return True
+                else:
+                    obj_div = getattr(obj, 'division', None)
+                    if obj_div is None or obj_div.id == user.division.id:
+                        return True
+                continue
+
+            # У роли есть фильтры — проверяем их вручную
+            match = True
+            for key, value in role_filters.items():
+                if value == USER_DIVISION_MARKER:
+                    value = user.division.id if user.division else None
+                elif value == USER_SUBDIVISION_MARKER:
+                    value = user.subdivision.id if user.subdivision else None
+
+                # Разбираем lookup (например, "category__value__in")
+                parts = key.split('__')
+                attr = obj
+                for p in parts[:-1]:
+                    attr = getattr(attr, p, None)
+                    if attr is None:
+                        break
+                last = parts[-1]
+
+                if attr is None:
+                    match = False
+                    break
+
+                # Обрабатываем __in, __contains и т.п.
+                if last == 'in':
+                    if not isinstance(value, (list, tuple, set)):
+                        match = False
+                        break
+                    if getattr(obj, parts[-2], None) not in value:
+                        match = False
+                        break
+                elif last == 'icontains':
+                    if value.lower() not in str(attr).lower():
+                        match = False
+                        break
+                else:
+                    if getattr(attr, last, None) != value:
+                        match = False
+                        break
+
+            if match:
                 return True
-        
-        # Для пользователей с правами только на просмотр - разрешаем доступ ко всем подразделениям
+
+        # Дополнительная защита для ролей только-просмотр
         if self.is_view_only_user(user):
             return True
-        
-        # Получаем подразделение пользователя
-        user_division = user.division
-        
-        # Если у пользователя нет подразделения - запрещаем доступ
-        if not user_division:
-            return False
-        
-        # Если объект является подразделением (Division), сравниваем по id
-        if obj.__class__.__name__ == 'Division':
-            return user_division.id == obj.id
-        
-        # Для остальных моделей проверяем поле division
-        obj_division = getattr(obj, 'division', None)
-        if not obj_division:
-            # Если у объекта нет поля division, но он не Division - разрешаем доступ?
-            # По умолчанию считаем, что если нет поля division, то доступ разрешен
-            # (например, для моделей, которые не привязаны к подразделению)
-            return True
-        
-        return user_division.id == obj_division.id
+
+        return False
         
     def _get_user_roles(self, user):
         """Получает роли пользователя"""

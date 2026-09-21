@@ -62,7 +62,7 @@ export function PersonnelDetails() {
   const person = personnel.find(p => p.id == id);
   const token = localStorage.getItem('accessToken');
 
-  const { canEdit } = useAppPermissions();
+  // Права на уровне моделей
   const canEditEmployee = useMemo(() =>
     permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
   const canDeleteEmployee = useMemo(() =>
@@ -76,7 +76,11 @@ export function PersonnelDetails() {
   const canEditBasic = canEditEmployee && !isRestricted;
   const canEditShaComments = canEditEmployee;
 
-  const { personnelFilters } = useAppPermissions();
+  // Права на график — из контекста, чтобы поддерживать маркеры фильтров роли
+  const { canAccessPage, personnelFilters } = useAppPermissions();
+  const canViewSchedule = canAccessPage('ScheduleEvent', 'view');
+  const canEditSchedule = canAccessPage('ScheduleEvent', 'change');
+
   const canEditQualitative = useMemo(() => {
     const hasFilters = personnelFilters && Object.keys(personnelFilters).length > 0;
     return canEditEmployee && !hasFilters;
@@ -262,8 +266,9 @@ export function PersonnelDetails() {
   const showEquipmentTab = canViewEquipment && equipmentList.length > 0 && !isEditing;
   const showNotesTab = person.description && person.description.trim().length > 0;
   const showQualitativeTab = canViewEmployee;
-  // График показываем всегда, если есть доступ к просмотру сотрудника
-  const showSchedule = canViewEmployee;
+
+  // Блок графика показываем только если есть право на просмотр ScheduleEvent
+  const showSchedule = canViewEmployee && canViewSchedule;
 
   const showSearch = !isEditing && !isEditingQualitative;
   const isAnyEditing = isEditing || isEditingQualitative;
@@ -505,7 +510,7 @@ export function PersonnelDetails() {
                 eventColors={EVENT_COLORS}
                 eventLabels={EVENT_LABELS}
                 eventShortLabels={EVENT_SHORT_LABELS}
-                canEdit={canEditEmployee}
+                canEdit={canEditSchedule}
               />
             </div>
           )}

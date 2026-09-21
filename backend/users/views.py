@@ -81,13 +81,9 @@ class UserViewSet(UserAccessMixin, BaseViewSet):
     search_fields = ['username', 'email']
     
     def get_queryset(self):
-        queryset = super().get_queryset()
-        
-        # Админы и суперпользователи видят всех
+        queryset = super().get_queryset()  
         if self.request.user.is_superuser or self.request.user.has_role('admin'):
             return queryset
-        
-        # Остальные - только себя
         return queryset.filter(id=self.request.user.id)
     
     # Логирование создания пользователя

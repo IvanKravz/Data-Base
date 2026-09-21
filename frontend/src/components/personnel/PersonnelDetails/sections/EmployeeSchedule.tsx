@@ -73,7 +73,10 @@ const EmployeeSchedule: React.FC<EmployeeScheduleProps> = ({
             if (!token) return;
             setLoading(true);
             try {
-                const data = await employeesApi.getScheduleEvents(token, currentYear, currentMonth);
+                const data = await employeesApi.getScheduleEvents(token, {
+                    year: currentYear,
+                    month: currentMonth,
+                });
                 const employeeEvents = data.filter(e => e.employee === employee.id);
                 setEvents(employeeEvents);
             } catch (err) {

@@ -1,6 +1,7 @@
 // TaskCalendar.tsx
 import React from 'react';
 import { format, isValid, isWithinInterval, startOfDay } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import Calendar from 'react-calendar';
 import { Task } from '../../../types/tasks';
 import 'react-calendar/dist/Calendar.css';
@@ -14,6 +15,8 @@ interface TaskCalendarProps {
     view: 'month' | 'year';
   };
   onCalendarStateChange: (state: { date?: Date; view?: 'month' | 'year' }) => void;
+  /** Вызывается ТОЛЬКО когда пользователь выбрал конкретный день (не при навигации) */
+  onDateSelect?: (date: Date) => void;
   highlightedRange?: {
     start: Date;
     end: Date;
@@ -21,6 +24,8 @@ interface TaskCalendarProps {
     taskId: string;
     stepId?: string;
   } | null;
+  /** Диапазон из панели фильтров — визуальная подсветка выбранного периода */
+  filterRange?: { start: Date; end: Date } | null;
 }
 
 export function TaskCalendar({
@@ -28,13 +33,15 @@ export function TaskCalendar({
   onTaskClick,
   calendarState,
   onCalendarStateChange,
+  onDateSelect,
   highlightedRange,
+  filterRange,
 }: TaskCalendarProps) {
-  // Защита от undefined
   const { date: selectedDate, view } = calendarState ?? { date: new Date(), view: 'month' };
 
   const handleDateChange = (date: Date) => {
     onCalendarStateChange({ date });
+    onDateSelect?.(date);
   };
 
   const handleViewChange = (newView: 'month' | 'year') => {
@@ -100,21 +107,13 @@ export function TaskCalendar({
     const firstDay = startOfDay(new Date(year, month, 1));
     const lastDay = startOfDay(new Date(year, month + 1, 0));
     return isWithinInterval(firstDay, { start: rangeStart, end: rangeEnd }) ||
-           isWithinInterval(lastDay, { start: rangeStart, end: rangeEnd }) ||
-           (firstDay <= rangeStart && lastDay >= rangeEnd);
+      isWithinInterval(lastDay, { start: rangeStart, end: rangeEnd }) ||
+      (firstDay <= rangeStart && lastDay >= rangeEnd);
   };
 
   return (
     <div className="tasks-calendar-container">
       <div className="tasks-calendar-main">
-        <div className="tasks-calendar-controls">
-          <button
-            onClick={() => handleViewChange(view === 'month' ? 'year' : 'month')}
-            className="tasks-calendar-view-button"
-          >
-            {view === 'month' ? 'Показать год' : 'Показать месяц'}
-          </button>
-        </div>
         <div className="tasks-calendar-wrapper">
           <Calendar
             key={`${view}-${selectedDate.toISOString()}`}
@@ -124,12 +123,40 @@ export function TaskCalendar({
             onViewChange={({ view }) => handleViewChange(view as 'month' | 'year')}
             className="tasks-calendar"
             onActiveStartDateChange={handleActiveStartDateChange}
-            tileClassName={({ date, view: tileView }) => {
+            tileClassName={({ date, view: tileView, activeStartDate }) => {
               const classes = [];
-              const tasksOnDate = tileView === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
+
+              // День соседнего месяца
+              const isOutsideMonth =
+                tileView === 'month' &&
+                !!activeStartDate &&
+                date.getMonth() !== activeStartDate.getMonth();
+
+              if (isOutsideMonth) {
+                classes.push('tasks-calendar-outside-month');
+              }
+
+              // Есть ли задачи
+              const tasksOnDate = tileView === 'year'
+                ? getTasksForMonth(date)
+                : getTasksForDate(date);
+
               if (tasksOnDate.length > 0) {
                 classes.push('tasks-calendar-has-events');
               }
+
+              // Подсветка диапазона фильтра (нейтральный синий)
+              if (filterRange) {
+                const { start, end } = filterRange;
+                const isInFilterRange = tileView === 'year'
+                  ? isMonthInRange(date, start, end)
+                  : isDateInRange(date, start, end);
+                if (isInFilterRange) {
+                  classes.push('tasks-calendar-in-filter-range');
+                }
+              }
+
+              // Подсветка диапазона конкретного этапа задачи (по категории)
               if (highlightedRange) {
                 const { start, end, category } = highlightedRange;
                 const isInRange = tileView === 'year'
@@ -139,24 +166,52 @@ export function TaskCalendar({
                   classes.push(`tasks-calendar-in-range tasks-calendar-in-range-${category}`);
                 }
               }
+
               return classes.join(' ');
             }}
-            tileContent={({ date }) => {
-              const tasksOnDate = view === 'year' ? getTasksForMonth(date) : getTasksForDate(date);
-              if (tasksOnDate.length === 0) return null;
-              const counts = getCountsByCategory(tasksOnDate);
+            tileContent={({ date, view: tileView, activeStartDate }) => {
+              const isOutsideMonth =
+                tileView === 'month' &&
+                !!activeStartDate &&
+                date.getMonth() !== activeStartDate.getMonth();
+
+              const tasksOnDate = tileView === 'year'
+                ? getTasksForMonth(date)
+                : getTasksForDate(date);
+
+              const hasTasks = tasksOnDate.length > 0;
+              const counts = hasTasks ? getCountsByCategory(tasksOnDate) : null;
+
+              if (!isOutsideMonth && !hasTasks) return null;
+
               return (
-                <div className="tasks-calendar-indicator">
-                  {counts.urgent > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-urgent">{counts.urgent}</span>
+                <>
+                  {isOutsideMonth && (
+                    <span className="tasks-calendar-tile-month-label">
+                      {format(date, 'LLL', { locale: ru })}
+                    </span>
                   )}
-                  {counts.planned > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-planned">{counts.planned}</span>
+
+                  {counts && (
+                    <div className="tasks-calendar-indicator">
+                      {counts.urgent > 0 && (
+                        <span className="tasks-calendar-count tasks-calendar-count-urgent">
+                          {counts.urgent}
+                        </span>
+                      )}
+                      {counts.planned > 0 && (
+                        <span className="tasks-calendar-count tasks-calendar-count-planned">
+                          {counts.planned}
+                        </span>
+                      )}
+                      {counts.attention > 0 && (
+                        <span className="tasks-calendar-count tasks-calendar-count-attention">
+                          {counts.attention}
+                        </span>
+                      )}
+                    </div>
                   )}
-                  {counts.attention > 0 && (
-                    <span className="tasks-calendar-count tasks-calendar-count-attention">{counts.attention}</span>
-                  )}
-                </div>
+                </>
               );
             }}
           />

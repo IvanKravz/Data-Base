@@ -19,16 +19,13 @@ export const employeesApi = {
   deletePhoto: async (token: string, id: string): Promise<Employee> => {
     try {
       const { data } = await api.delete<Employee>(`/employees/${id}/photo/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        timeout: 15000
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 15000,
       });
 
       if (data.photo_url) {
         throw new Error('Фото не было удалено на сервере');
       }
-
       return data;
     } catch (error) {
       throw new Error('Ошибка удаления фото: ' + error.message);
@@ -37,18 +34,13 @@ export const employeesApi = {
 
   getDictionaries: async (token: string): Promise<EmployeeDictionaries> => {
     const { data } = await api.get('/employees/dictionaries/', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     return data;
   },
 
   getPersonnel: async (token: string, params?: any): Promise<Employee[]> => {
-    const requestParams = {
-      ordering: 'priority,full_name',
-      ...params
-    };
+    const requestParams = { ordering: 'priority,full_name', ...params };
 
     let allEmployees: Employee[] = [];
     let nextUrl: string | null = '/employees/';
@@ -56,9 +48,7 @@ export const employeesApi = {
     while (nextUrl) {
       const response = await api.get<{ results: Employee[], next: string | null }>(nextUrl, {
         params: nextUrl.includes('/employees/') ? requestParams : undefined,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       let employees: Employee[];
@@ -77,18 +67,14 @@ export const employeesApi = {
     }
 
     return allEmployees.sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      }
+      if (a.priority !== b.priority) return a.priority - b.priority;
       return a.full_name.localeCompare(b.full_name);
     });
   },
 
   getPersonById: async (token: string, id: string): Promise<Employee> => {
     const { data } = await api.get(`/employees/${id}/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     return data;
   },
@@ -116,9 +102,7 @@ export const employeesApi = {
 
   deletePerson: async (token: string, id: string) => {
     await api.delete(`/employees/${id}/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
   },
 
@@ -127,17 +111,8 @@ export const employeesApi = {
     rank?: string;
     rankDate?: string;
     rankOrderNumber?: string;
-    secretClearance?: {
-      form?: string;
-      number?: string;
-      date?: string;
-    };
-    education?: {
-      level?: string;
-      institution?: string;
-      graduationYear?: string;
-      additionalInfo?: string;
-    };
+    secretClearance?: { form?: string; number?: string; date?: string };
+    education?: { level?: string; institution?: string; graduationYear?: string; additionalInfo?: string };
     workStartYear?: string;
   }) => {
     const response = await api.put(`/employees/${id}/qualitative/`, data);
@@ -160,9 +135,7 @@ export const employeesApi = {
   },
 
   updateComments: async (personId: string, comments: string) => {
-    const { data } = await api.patch(`/employees/${personId}/comments/`, {
-      comments
-    });
+    const { data } = await api.patch(`/employees/${personId}/comments/`, { comments });
     return data;
   },
 
@@ -192,7 +165,11 @@ export const employeesApi = {
     });
     return data;
   },
-  createScheduleEvent: async (token: string, event: Omit<ScheduleEvent, 'id' | 'employee_name' | 'employee_id'>) => {
+
+  createScheduleEvent: async (
+    token: string,
+    event: Omit<ScheduleEvent, 'id' | 'employee_name' | 'employee_id'>,
+  ) => {
     const { data } = await api.post('/employees/schedule-events/', event, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -220,6 +197,22 @@ export const employeesApi = {
     comment?: string;
   }) => {
     const { data } = await api.post('/employees/schedule-events/bulk_update/', payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data;
+  },
+
+  /**
+   * Список сотрудников для страницы графика.
+   * Бэкенд применяет фильтры ролей по ScheduleEvent — этот список
+   * может отличаться от общего /employees/.
+   */
+  getScheduleEmployees: async (
+    token: string,
+    params?: { division?: number; subdivision?: number },
+  ): Promise<Employee[]> => {
+    const { data } = await api.get('/employees/schedule-events/available_employees/', {
+      params,
       headers: { Authorization: `Bearer ${token}` },
     });
     return data;

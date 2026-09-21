@@ -40,6 +40,11 @@ interface ContextMenuState {
   date: Date;
 }
 
+interface ScheduleLocationState {
+  divisionName?: string;
+  fromDivisionPage?: boolean;
+}
+
 export function EmployeeSchedulePage() {
   const token = localStorage.getItem('accessToken');
   const { canAccessPage } = useAppPermissions();
@@ -48,15 +53,15 @@ export function EmployeeSchedulePage() {
   const [searchParams] = useSearchParams();
   const canEdit = canAccessPage('ScheduleEvent', 'change');
 
-  // === Параметры URL: график конкретного подразделения/отделения ===
+  const locationState = (location.state as ScheduleLocationState | null) ?? null;
+  const fromDivisionPage = locationState?.fromDivisionPage === true;
+
   const divisionIdFromUrl = searchParams.get('division');
   const subdivisionIdFromUrl = searchParams.get('subdivision');
   const divisionIdNum = divisionIdFromUrl ? Number(divisionIdFromUrl) : undefined;
   const subdivisionIdNum = subdivisionIdFromUrl ? Number(subdivisionIdFromUrl) : undefined;
 
-  const [divisionName, setDivisionName] = useState<string | null>(
-    (location.state as { divisionName?: string } | null)?.divisionName ?? null,
-  );
+  const [divisionName, setDivisionName] = useState<string | null>(null);
 
   const now = new Date();
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
@@ -83,21 +88,36 @@ export function EmployeeSchedulePage() {
   const [selectedReportDate, setSelectedReportDate] = useState<Date | null>(new Date());
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  // === Загрузка названия подразделения (если открыли по ссылке без state) ===
+  // === Режим отображения таблицы (Список / По подразделениям) ===
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
+    const saved = localStorage.getItem('schedule_view_mode');
+    return saved === 'flat' || saved === 'grouped' ? saved : 'flat';
+  });
+
+  const handleViewModeChange = (mode: 'flat' | 'grouped') => {
+    setViewMode(mode);
+    localStorage.setItem('schedule_view_mode', mode);
+  };
+
+  // === Название подразделения ===
   useEffect(() => {
     if (!divisionIdFromUrl) {
       setDivisionName(null);
       return;
     }
-    if (divisionName) return; // уже есть из location.state
+
+    const stateDivName = locationState?.divisionName ?? null;
+    if (stateDivName) {
+      setDivisionName(stateDivName);
+      return;
+    }
 
     let cancelled = false;
+    setDivisionName(null);
     (async () => {
       try {
         const div = await divisionsApi.getDivisionById(divisionIdFromUrl, token);
-        if (!cancelled) {
-          setDivisionName(div?.name ?? null);
-        }
+        if (!cancelled) setDivisionName(div?.name ?? null);
       } catch (err) {
         console.error('Не удалось получить название подразделения', err);
         if (!cancelled) setDivisionName(null);
@@ -106,28 +126,33 @@ export function EmployeeSchedulePage() {
     return () => {
       cancelled = true;
     };
-  }, [divisionIdFromUrl, divisionName, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [divisionIdFromUrl, token]);
 
-  // === Сотрудники, отфильтрованные по division из URL (страховка на фронте) ===
   const employeesFilteredByDivision = useMemo(() => {
-    if (!divisionIdNum) return employees;
-    return employees.filter((emp) => Number(emp.division?.id) === divisionIdNum);
-  }, [employees, divisionIdNum]);
+    let base = employees;
+    if (divisionIdNum) base = base.filter((e) => Number(e.division?.id) === divisionIdNum);
+    if (subdivisionIdNum) base = base.filter((e) => Number(e.subdivision?.id) === subdivisionIdNum);
+    return base;
+  }, [employees, divisionIdNum, subdivisionIdNum]);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       setLoadingEmployees(true);
       try {
-        const data = await employeesApi.getPersonnel(token);
+        const data = await employeesApi.getScheduleEmployees(token, {
+          division: divisionIdNum,
+          subdivision: subdivisionIdNum,
+        });
         setEmployees(data);
       } catch (error) {
-        console.error('Failed to load employees', error);
+        console.error('Failed to load employees for schedule', error);
       } finally {
         setLoadingEmployees(false);
       }
     };
     fetchEmployees();
-  }, [token]);
+  }, [token, divisionIdNum, subdivisionIdNum]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -194,14 +219,10 @@ export function EmployeeSchedulePage() {
     return base.filter((emp) => {
       if (selectedReportDate) {
         const event = getEventFor(emp.id, selectedReportDate);
-        if (filterStatus === 'available') {
-          return !event;
-        }
+        if (filterStatus === 'available') return !event;
         return event?.event_type === filterStatus;
       } else {
-        if (filterStatus === 'available') {
-          return !events.some((e) => e.employee === emp.id);
-        }
+        if (filterStatus === 'available') return !events.some((e) => e.employee === emp.id);
         return events.some((e) => e.employee === emp.id && e.event_type === filterStatus);
       }
     });
@@ -226,7 +247,6 @@ export function EmployeeSchedulePage() {
 
   const handleCellClick = (employee: Employee, date: Date, e: React.MouseEvent) => {
     if (!canEdit) return;
-
     if (contextMenu) setContextMenu(null);
 
     if (e.detail === 2) {
@@ -301,11 +321,6 @@ export function EmployeeSchedulePage() {
       console.error('Ошибка при очистке диапазона:', error);
       alert('Не удалось удалить события.');
     }
-  };
-
-  const handleCellClickForReport = (employee: Employee, date: Date, e: React.MouseEvent) => {
-    handleCellClick(employee, date, e);
-    setSelectedReportDate(date);
   };
 
   const openSingleModal = (employee: Employee, date: Date) => {
@@ -480,17 +495,16 @@ export function EmployeeSchedulePage() {
 
   const refreshEvents = async () => {
     try {
-      const data = await employeesApi.getScheduleEvents(token, {
-        year: currentYear,
-        month: currentMonth,
-        division: divisionIdNum,
-        subdivision: subdivisionIdNum,
-      });
-      setEvents(data);
+        const data = await employeesApi.getScheduleEvents(token, {
+            year: currentYear,
+            month: currentMonth,
+        });
+        const employeeEvents = data.filter(e => e.employee === employee.id);
+        setEvents(employeeEvents);
     } catch (error) {
-      console.error('Failed to refresh events', error);
+        console.error('Failed to refresh events', error);
     }
-  };
+};
 
   const handleDeleteEvent = async () => {
     if (!existingEvent) return;
@@ -547,7 +561,6 @@ export function EmployeeSchedulePage() {
   const bulkCount = getBulkCount();
 
   const handleBack = () => {
-    // Если открыт график конкретного подразделения — возвращаемся на его страницу
     if (divisionIdFromUrl) {
       navigate(`/divisions/${divisionIdFromUrl}`);
       return;
@@ -555,14 +568,43 @@ export function EmployeeSchedulePage() {
     navigate(-1);
   };
 
-  // Subtitle для шапки: подразделение (если задано) или "Все подразделения"
-  const headerSubtitle = divisionIdFromUrl
-    ? (divisionName ?? 'Загрузка...')
-    : 'Все подразделения';
+  const headerSubtitle = useMemo(() => {
+    if (divisionIdFromUrl) {
+      return divisionName ?? 'Загрузка...';
+    }
+
+    if (loadingEmployees) {
+      return 'Загрузка...';
+    }
+
+    const divisionIds = new Set<number>();
+    for (const emp of employees) {
+      if (emp.division?.id != null) {
+        divisionIds.add(Number(emp.division.id));
+      }
+    }
+
+    if (divisionIds.size === 1) {
+      const onlyEmp = employees.find((e) => e.division?.id != null);
+      return onlyEmp?.division?.name ?? 'Все подразделения';
+    }
+
+    return 'Все подразделения';
+  }, [divisionIdFromUrl, divisionName, employees, loadingEmployees]);
+
+  // Уникальный ключ для хранения свёрнутости в разрезе подразделения/отделения
+  const storageKey = useMemo(
+    () => `${divisionIdFromUrl || 'all'}_${subdivisionIdFromUrl || 'none'}`,
+    [divisionIdFromUrl, subdivisionIdFromUrl],
+  );
 
   return (
     <div className="schedule-container page-fade-in" onClick={closeContextMenu}>
-      <ScheduleHeader onBack={handleBack} subtitle={headerSubtitle} />
+      <ScheduleHeader
+        onBack={handleBack}
+        subtitle={headerSubtitle}
+        showBack={fromDivisionPage}
+      />
 
       <ScheduleControls
         currentYear={currentYear}
@@ -584,6 +626,8 @@ export function EmployeeSchedulePage() {
         eventColors={EVENT_COLORS}
         currentYear={currentYear}
         currentMonth={currentMonth}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
       />
 
       {loadingEmployees || loadingEvents ? (
@@ -605,6 +649,8 @@ export function EmployeeSchedulePage() {
           eventColors={EVENT_COLORS}
           eventLabels={EVENT_LABELS}
           eventShortLabels={EVENT_SHORT_LABELS}
+          viewMode={viewMode}
+          storageKey={storageKey}
         />
       )}
 

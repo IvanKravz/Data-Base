@@ -1,5 +1,5 @@
 // TasksCalendarSidebar.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Task, Step } from '../../../types/tasks';
 import { format } from 'date-fns';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
@@ -68,11 +68,19 @@ export function TasksCalendarSidebar({
     return Object.entries(groups).map(([id, { name, tasks }]) => ({ id, name, tasks }));
   }, [tasksOnDate]);
 
-  useState(() => {
-    if (groupedTasks.length > 0 && activeDivisionId === null) {
+  // При смене выбранной даты автоматически открываем первую вкладку подразделения
+  // и сворачиваем все ранее раскрытые задачи.
+  useEffect(() => {
+    if (groupedTasks.length > 0) {
       setActiveDivisionId(groupedTasks[0].id);
+    } else {
+      setActiveDivisionId(null);
     }
-  });
+    setExpandedTaskIds([]);
+    // Следим только за сменой даты; пересчёт groupedTasks не должен сбрасывать
+    // пользовательский выбор вкладки.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   const toggleTaskExpanded = (taskId: string) => {
     setExpandedTaskIds(prev =>
@@ -185,7 +193,8 @@ export function TasksCalendarSidebar({
           {groupedTasks.map(group => (
             <button
               key={group.id}
-              className={`tasks-sidebar-tab ${activeDivisionId === group.id ? 'tasks-sidebar-tab-active' : ''}`}
+              className={`tasks-sidebar-tab ${activeDivisionId === group.id ? 'tasks-sidebar-tab-active' : ''
+                }`}
               onClick={() => setActiveDivisionId(group.id)}
             >
               <span>{group.name}</span>
@@ -200,7 +209,8 @@ export function TasksCalendarSidebar({
               const isExpanded = expandedTaskIds.includes(task.id);
               const completedSteps = task.steps.filter(s => s.is_completed).length;
               const totalSteps = task.steps.length;
-              const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+              const progressPercent =
+                totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
               const divisionName = task.division?.name || '—';
               const subdivisionName = task.subdivision?.name || '—';
               const creatorName =
@@ -212,8 +222,12 @@ export function TasksCalendarSidebar({
               const itemClass = [
                 'tasks-sidebar-item',
                 `tasks-sidebar-item-${task.category}`,
-                isExpanded ? `tasks-sidebar-item-expanded-bg tasks-sidebar-item-expanded-bg-${task.category}` : '',
-              ].filter(Boolean).join(' ');
+                isExpanded
+                  ? `tasks-sidebar-item-expanded-bg tasks-sidebar-item-expanded-bg-${task.category}`
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
 
               return (
                 <div key={task.id} className={itemClass}>
@@ -227,7 +241,7 @@ export function TasksCalendarSidebar({
                     </div>
                     <button
                       className="tasks-sidebar-toggle"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         toggleTaskExpanded(task.id);
                       }}
@@ -235,6 +249,7 @@ export function TasksCalendarSidebar({
                       {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </button>
                   </div>
+
                   {isExpanded && (
                     <div className="tasks-sidebar-item-expanded">
                       <div className="tasks-sidebar-item-meta">
@@ -244,48 +259,58 @@ export function TasksCalendarSidebar({
                         <span className="tasks-sidebar-item-division">
                           {divisionName} {subdivisionName !== '—' && ` / ${subdivisionName}`}
                         </span>
-                        <span className="tasks-sidebar-item-dates">Сроки: {getTaskDateRange(task)}</span>
+                        <span className="tasks-sidebar-item-dates">
+                          Сроки: {getTaskDateRange(task)}
+                        </span>
                       </div>
 
                       <p className="tasks-sidebar-item-details">
                         Этапов: {totalSteps} • Завершено: {completedSteps}
                       </p>
+
                       <div className="tasks-sidebar-progress">
                         <div className="tasks-sidebar-progress-header">
                           <span>Прогресс</span>
                           <span>{progressPercent}%</span>
                         </div>
                         <div className="tasks-sidebar-progress-bar">
-                          <div className="tasks-sidebar-progress-fill" style={{ width: `${progressPercent}%` }} />
+                          <div
+                            className="tasks-sidebar-progress-fill"
+                            style={{ width: `${progressPercent}%` }}
+                          />
                         </div>
                       </div>
+
                       <div className="tasks-sidebar-steps">
                         {task.steps.map((step, index) => (
                           <div
                             key={step.id}
                             className="tasks-sidebar-step"
-                            onClick={(e) => handleStepClickWithRange(step, task, e)}
+                            onClick={e => handleStepClickWithRange(step, task, e)}
                           >
                             <div className="tasks-sidebar-step-info">
                               <div className="tasks-sidebar-step-row">
                                 <input
                                   type="checkbox"
                                   checked={step.is_completed}
-                                  onChange={(e) => {
+                                  onChange={e => {
                                     e.stopPropagation();
                                     onToggleStep?.(task.id, step.id, step.is_completed);
                                   }}
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={e => e.stopPropagation()}
                                 />
                                 <span className="tasks-sidebar-step-name">
                                   Этап {index + 1}: {step.name}
                                 </span>
                               </div>
                               <span className="tasks-sidebar-step-date">
-                                {format(new Date(step.start_date), 'dd.MM.yyyy')} - {format(new Date(step.end_date), 'dd.MM.yyyy')}
+                                {format(new Date(step.start_date), 'dd.MM.yyyy')} -{' '}
+                                {format(new Date(step.end_date), 'dd.MM.yyyy')}
                               </span>
                             </div>
-                            {step.is_completed && <div className="tasks-sidebar-step-completed">✓</div>}
+                            {step.is_completed && (
+                              <div className="tasks-sidebar-step-completed">✓</div>
+                            )}
                           </div>
                         ))}
                       </div>

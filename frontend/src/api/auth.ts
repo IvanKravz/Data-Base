@@ -1,234 +1,189 @@
 // auth.ts
 import { LoginResponse, ModulePermissions, RegisterData } from '../types';
-import { api } from './client';
+import { api, refreshClient } from './client';
 
-// Добавляем тип для модулей приложения
 type AppModule = 'employees' | 'equipment' | 'facilities' | 'tasks' | 'networks' | 'communicationPosts';
 
-// Тип для новой структуры permissions
 interface UserPermissions {
-  roles: string[];
-  filters: Record<string, any>;
-  models: Record<string, string[]>;
-  modules: string[];
+    roles: string[];
+    filters: Record<string, any>;
+    models: Record<string, string[]>;
+    modules: string[];
 }
 
 export const authApi = {
-  login: async (username: string, password: string): Promise<LoginResponse | { requires_2fa: boolean; temp_token: string }> => {
-    const { data } = await api.post('/users/auth/login/', { username, password });
-    if (data.requires_2fa) {
-      // Не сохраняем токены, возвращаем признак
-      return { requires_2fa: true, temp_token: data.temp_token };
-    }
-    // Стандартный вход
-    localStorage.setItem('accessToken', data.access);
-    localStorage.setItem('refreshToken', data.refresh);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    return data;
-  },
+    login: async (username: string, password: string): Promise<LoginResponse | { requires_2fa: boolean; temp_token: string }> => {
+        const { data } = await api.post('/users/auth/login/', { username, password });
+        if (data.requires_2fa) {
+            return { requires_2fa: true, temp_token: data.temp_token };
+        }
+        localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return data;
+    },
 
-  verify2fa: async (tempToken: string, code: string): Promise<LoginResponse> => {
-    const { data } = await api.post('/users/auth/verify-2fa/', { temp_token: tempToken, code });
-    localStorage.setItem('accessToken', data.access);
-    localStorage.setItem('refreshToken', data.refresh);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    return data;
-  },
+    verify2fa: async (tempToken: string, code: string): Promise<LoginResponse> => {
+        const { data } = await api.post('/users/auth/verify-2fa/', { temp_token: tempToken, code });
+        localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return data;
+    },
 
-  register: async (userData: RegisterData): Promise<LoginResponse> => {
-    const { data } = await api.post('/users/auth/register/', userData);
+    register: async (userData: RegisterData): Promise<LoginResponse> => {
+        const { data } = await api.post('/users/auth/register/', userData);
+        localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return data;
+    },
 
-    localStorage.setItem('accessToken', data.access);
-    localStorage.setItem('refreshToken', data.refresh);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    /**
+     * Обновление access-токена.
+     * ВАЖНО: используется refreshClient (без интерсепторов), иначе 401 на
+     * самом refresh-запросе запускает повторный refresh → deadlock.
+     */
+    refreshToken: async (): Promise<{ access: string }> => {
+        const refresh = localStorage.getItem('refreshToken');
+        if (!refresh) {
+            throw new Error('No refresh token available');
+        }
+        const { data } = await refreshClient.post('/users/auth/refresh/', { refresh });
+        localStorage.setItem('accessToken', data.access);
+        return data;
+    },
 
-    return data;
-  },
-
-  refreshToken: async (): Promise<{ access: string }> => {
-    const refresh = localStorage.getItem('refreshToken');
-    if (!refresh) {
-      throw new Error('No refresh token available');
-    }
-    const { data } = await api.post('/users/auth/refresh/', { refresh });
-    localStorage.setItem('accessToken', data.access);
-    return data;
-  },
-
-  logout: async () => {
-
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      // Используем правильный путь
-      if (refreshToken) {
-        await api.post('/users/auth/logout/', { refresh: refreshToken });
-      }
-    } catch (error) {
-      console.error('FRONTEND: Logout error:', error);
-      // Даже если запрос на сервер не удался, очищаем локальное хранилище
-    } finally {
-      // Полная очистка данных аутентификации
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('module_permissions');
-
-      // Также очищаем sessionStorage если используется
-      sessionStorage.removeItem('appLoaded');
-
-      // Перенаправляем на страницу входа
-      window.location.href = '/auth';
-    }
-  },
-  
-
-  // Метод для получения прав доступа из новой структуры
-  getModulePermissions: (): UserPermissions | null => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-
-        // Возвращаем permissions из пользователя
-        if (user.permissions) {
-          return user.permissions;
+    /**
+     * Выход из системы.
+     * Локальное состояние чистится ВСЕГДА, независимо от ответа сервера.
+     * Серверный вызов — best-effort и не блокирует редирект.
+     */
+    logout: async () => {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+            // Не ждём ответа: если токен уже истёк, сервер вернёт 401, но нам
+            // всё равно — локально мы уже выходим.
+            refreshClient
+                .post('/users/auth/logout/', { refresh: refreshToken })
+                .catch(() => { /* игнорируем */ });
         }
 
-        // Если permissions нет, создаем базовую структуру из roles
-        if (user.roles && Array.isArray(user.roles)) {
-          return {
-            roles: user.roles,
-            filters: {},
-            models: {},
-            modules: []
-          };
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('module_permissions');
+        sessionStorage.removeItem('appLoaded');
+
+        window.location.href = '/auth';
+    },
+
+    getModulePermissions: (): UserPermissions | null => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user.permissions) return user.permissions;
+                if (user.roles && Array.isArray(user.roles)) {
+                    return { roles: user.roles, filters: {}, models: {}, modules: [] };
+                }
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
         }
+        return null;
+    },
 
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
+    hasPermission: (module: AppModule, permission: string): boolean => {
+        const permissions = authApi.getModulePermissions();
+        if (!permissions) return false;
+        const moduleToModelMap: Record<AppModule, string> = {
+            'employees': 'Employee',
+            'equipment': 'Equipment',
+            'facilities': 'Facility',
+            'tasks': 'Task',
+            'networks': 'CommunicationNetwork',
+            'communicationPosts': 'CommunicationPost',
+        };
+        const modelName = moduleToModelMap[module];
+        if (!modelName) return false;
+        const modelPermissions = permissions.models[modelName];
+        if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+        return modelPermissions.includes(permission);
+    },
 
-    return null;
-  },
+    canViewModule: (module: string): boolean => {
+        const permissions = authApi.getModulePermissions();
+        if (!permissions) return false;
+        const moduleToModelMap: Record<string, string> = {
+            'employees': 'Employee',
+            'equipment': 'Equipment',
+            'facilities': 'Facility',
+            'tasks': 'Task',
+            'networks': 'CommunicationNetwork',
+            'communicationPosts': 'CommunicationPost',
+        };
+        const modelName = moduleToModelMap[module];
+        if (!modelName) return false;
+        const modelPermissions = permissions.models[modelName];
+        if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+        return modelPermissions.includes('view');
+    },
 
-  // ОБНОВЛЕННЫЙ МЕТОД ДЛЯ ПРОВЕРКИ КОНКРЕТНЫХ ПРАВ
-  hasPermission: (module: AppModule, permission: string): boolean => {
-    const permissions = authApi.getModulePermissions();
-    if (!permissions) return false;
+    canEditModule: (module: string): boolean => {
+        const permissions = authApi.getModulePermissions();
+        if (!permissions) return false;
+        const moduleToModelMap: Record<string, string> = {
+            'employees': 'Employee',
+            'equipment': 'Equipment',
+            'facilities': 'Facility',
+            'tasks': 'Task',
+            'networks': 'CommunicationNetwork',
+            'communicationPosts': 'CommunicationPost',
+        };
+        const modelName = moduleToModelMap[module];
+        if (!modelName) return false;
+        const modelPermissions = permissions.models[modelName];
+        if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+        return modelPermissions.includes('change') || modelPermissions.includes('edit');
+    },
 
-    // Маппинг модулей на модели
-    const moduleToModelMap: Record<AppModule, string> = {
-      'employees': 'Employee',
-      'equipment': 'Equipment',
-      'facilities': 'Facility',
-      'tasks': 'Task',
-      'networks': 'CommunicationNetwork',
-      'communicationPosts': 'CommunicationPost'
-    };
+    updateGlobalView: (isGlobalView: boolean): void => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        try {
+            const user = JSON.parse(userStr);
+            user.is_global_view = isGlobalView;
+            localStorage.setItem('user', JSON.stringify(user));
+        } catch (e) {
+            console.error('Error updating global view:', e);
+        }
+    },
 
-    const modelName = moduleToModelMap[module];
-    if (!modelName) return false;
+    getGlobalView: (): boolean => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return false;
+        try {
+            const user = JSON.parse(userStr);
+            return user.is_global_view || false;
+        } catch (e) {
+            console.error('Error getting global view:', e);
+            return false;
+        }
+    },
 
-    const modelPermissions = permissions.models[modelName];
-    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
+    getCurrentUser: () => {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return null;
+        try {
+            return JSON.parse(userStr);
+        } catch (e) {
+            console.error('Error getting current user:', e);
+            return null;
+        }
+    },
 
-    // Проверяем наличие конкретного права в массиве
-    return modelPermissions.includes(permission);
-  },
-
-  // Метод для проверки доступа к модулю
-  canViewModule: (module: string): boolean => {
-    const permissions = authApi.getModulePermissions();
-    if (!permissions) return false;
-
-    // Маппинг модулей на модели
-    const moduleToModelMap: Record<string, string> = {
-      'employees': 'Employee',
-      'equipment': 'Equipment',
-      'facilities': 'Facility',
-      'tasks': 'Task',
-      'networks': 'CommunicationNetwork',
-      'communicationPosts': 'CommunicationPost'
-    };
-
-    const modelName = moduleToModelMap[module];
-    if (!modelName) return false;
-
-    const modelPermissions = permissions.models[modelName];
-    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
-
-    return modelPermissions.includes('view');
-  },
-
-  canEditModule: (module: string): boolean => {
-    const permissions = authApi.getModulePermissions();
-    if (!permissions) return false;
-
-    // Маппинг модулей на модели
-    const moduleToModelMap: Record<string, string> = {
-      'employees': 'Employee',
-      'equipment': 'Equipment',
-      'facilities': 'Facility',
-      'tasks': 'Task',
-      'networks': 'CommunicationNetwork',
-      'communicationPosts': 'CommunicationPost'
-    };
-
-    const modelName = moduleToModelMap[module];
-    if (!modelName) return false;
-
-    const modelPermissions = permissions.models[modelName];
-    if (!modelPermissions || !Array.isArray(modelPermissions)) return false;
-
-    // Для редактирования проверяем наличие change или edit прав
-    return modelPermissions.includes('change') || modelPermissions.includes('edit');
-  },
-
-  // Метод для обновления режима просмотра
-  updateGlobalView: (isGlobalView: boolean): void => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return;
-
-    try {
-      const user = JSON.parse(userStr);
-      user.is_global_view = isGlobalView;
-      localStorage.setItem('user', JSON.stringify(user));
-    } catch (e) {
-      console.error('Error updating global view:', e);
-    }
-  },
-
-  // Метод для получения режима просмотра
-  getGlobalView: (): boolean => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return false;
-
-    try {
-      const user = JSON.parse(userStr);
-      return user.is_global_view || false;
-    } catch (e) {
-      console.error('Error getting global view:', e);
-      return false;
-    }
-  },
-
-  // Дополнительный метод для получения всей информации о пользователе
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-
-    try {
-      return JSON.parse(userStr);
-    } catch (e) {
-      console.error('Error getting current user:', e);
-      return null;
-    }
-  },
-
-  // Метод для проверки, авторизован ли пользователь
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('accessToken') && !!localStorage.getItem('user');
-  }
+    isAuthenticated: (): boolean => {
+        return !!localStorage.getItem('accessToken') && !!localStorage.getItem('user');
+    },
 };

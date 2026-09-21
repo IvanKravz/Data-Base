@@ -90,8 +90,14 @@ export function PersonnelList({
 
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
+
+  // Право на редактирование (change) — управляет колонкой «Действия» и кнопкой удаления
   const hasEditPermission = useMemo(() =>
     permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
+
+  // Право на просмотр (view) — управляет переходом на детальную страницу по клику
+  const hasViewPermission = useMemo(() =>
+    permissions?.models?.Employee?.includes('view') ?? false, [permissions]);
 
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
@@ -578,6 +584,7 @@ export function PersonnelList({
           onPersonClick={handlePersonClick}
           onDelete={handleDelete}
           hasEditPermission={hasEditPermission}
+          hasViewPermission={hasViewPermission}
           viewMode={viewMode}
           storageKey={collapsedStorageKey}
           searchTerm={searchTerm}

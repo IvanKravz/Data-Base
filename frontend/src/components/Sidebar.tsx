@@ -70,7 +70,7 @@ export function Sidebar({ activeTab, onSetActiveTab, availableTabs }: SidebarPro
   const handleTabClick = (item: MenuItem, parentId?: string) => {
     // Особый случай: для эксплуатационников "divisions" ведёт на их подразделение
     if (item.id === 'divisions' && (isChief || isExploitationEmp) && userDivision) {
-      navigate(`/divisions/${userDivision}`);
+      navigate(`/divisions/${userDivision}`, { state: null });
       onSetActiveTab(item.id);
       return;
     }
@@ -85,13 +85,15 @@ export function Sidebar({ activeTab, onSetActiveTab, availableTabs }: SidebarPro
       return;
     }
 
-    // Клик по листовому пункту — навигация
+    // Клик по листовому пункту — навигация.
+    // Явно сбрасываем state: так кнопка «назад» на странице графика не
+    // залипнет, если пользователь до этого пришёл туда из карточки подразделения.
     const targetTab = parentId ?? item.id;
     onSetActiveTab(targetTab);
     if (item.path) {
-      navigate(item.path);
+      navigate(item.path, { state: null });
     } else {
-      navigate('/');
+      navigate('/', { state: null });
     }
   };
 

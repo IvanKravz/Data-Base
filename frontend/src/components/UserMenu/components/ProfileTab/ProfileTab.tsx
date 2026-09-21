@@ -94,12 +94,13 @@ const ROLE_ORDER = [
     'deputy_director',
     'head_of_department_1',
     'head_of_section_1_1',
+    'head_of_section_2_1', 
     'hr_section_1_1',
     'tech_section_1_1',
     'employee_section_1_2',
     'tech_section_1_3',
     'exploitation_chief',
-    'exploitation_employee'
+    'exploitation_employee',
 ];
 
 // --- Вспомогательные функции (вынесены из компонента) ---

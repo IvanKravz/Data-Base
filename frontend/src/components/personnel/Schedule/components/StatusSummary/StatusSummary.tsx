@@ -1,5 +1,6 @@
 // components/StatusSummary/StatusSummary.tsx
 import React, { useMemo } from 'react';
+import { List, FolderTree } from 'lucide-react';
 import { Employee, ScheduleEvent } from '../../../../../types';
 import './StatusSummary.css';
 
@@ -13,6 +14,8 @@ interface StatusSummaryProps {
     eventColors: Record<string, string>;
     currentYear: number;
     currentMonth: number;
+    viewMode: 'flat' | 'grouped';
+    onViewModeChange: (mode: 'flat' | 'grouped') => void;
 }
 
 // Приоритет статусов (меньше число = выше приоритет)
@@ -39,6 +42,8 @@ const StatusSummary: React.FC<StatusSummaryProps> = ({
     eventColors,
     currentYear,
     currentMonth,
+    viewMode,
+    onViewModeChange,
 }) => {
     const formatLocalDate = (date: Date): string => {
         const year = date.getFullYear();
@@ -98,6 +103,7 @@ const StatusSummary: React.FC<StatusSummaryProps> = ({
     return (
         <div className="status-summary-container">
             <div className="status-cards">
+                {/* Левая часть: карточки статусов */}
                 <button
                     className={`status-card total ${filterStatus === null ? 'active' : ''}`}
                     onClick={() => handleStatusClick('', true)}
@@ -125,6 +131,26 @@ const StatusSummary: React.FC<StatusSummaryProps> = ({
                         </button>
                     );
                 })}
+
+                {/* Правая часть: переключатель режима отображения */}
+                <div className="status-view-toggle" role="tablist" aria-label="Режим отображения">
+                    <button
+                        type="button"
+                        className={`status-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`}
+                        onClick={() => onViewModeChange('flat')}
+                        title="Показать всех сотрудников одним списком"
+                    >
+                        <List size={16} /> Список
+                    </button>
+                    <button
+                        type="button"
+                        className={`status-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`}
+                        onClick={() => onViewModeChange('grouped')}
+                        title="Сгруппировать сотрудников по подразделениям и отделениям"
+                    >
+                        <FolderTree size={16} /> По подразделениям
+                    </button>
+                </div>
             </div>
         </div>
     );

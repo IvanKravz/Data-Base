@@ -59,6 +59,40 @@ const isVisibleForDivision = (
   return true;
 };
 
+/**
+ * Проверка: виден ли график этого подразделения пользователю.
+ * Учитывает фильтр `filters.ScheduleEvent` (ключ `employee__division_id`).
+ *  - нет права view ScheduleEvent → false;
+ *  - нет фильтров ScheduleEvent → видит график всех подразделений;
+ *  - фильтр с USER_DIVISION_MARKER → только своё подразделение;
+ *  - статический id → только это подразделение.
+ */
+const isScheduleVisibleForDivision = (
+  canAccess: boolean,
+  filters: { [key: string]: any } | null,
+  divisionId: number,
+  userDivisionId?: number | null,
+): boolean => {
+  if (!canAccess) return false;
+  if (!filters) return true;
+
+  const filterValue = filters.employee__division_id;
+
+  if (filterValue === undefined || filterValue === null) {
+    // Фильтра по подразделению нет → видит все подразделения
+    return true;
+  }
+
+  let actualDivisionId: number | null = null;
+  if (filterValue === USER_DIVISION_MARKER) {
+    actualDivisionId = userDivisionId ?? null;
+  } else if (typeof filterValue === 'number') {
+    actualDivisionId = filterValue;
+  }
+
+  return actualDivisionId !== null && actualDivisionId === divisionId;
+};
+
 export function Overview({ division }: OverviewProps) {
   const {
     canAccessPersonnel,
@@ -71,6 +105,7 @@ export function Overview({ division }: OverviewProps) {
     facilitiesFilters,
     networksFilters,
     taskFilters,
+    scheduleFilters,
     canAccessPage,
     getCurrentUser,
   } = useAppPermissions();
@@ -91,7 +126,16 @@ export function Overview({ division }: OverviewProps) {
   const userDivisionId = currentUser?.division_info?.id ?? null;
   const userSubdivisionId = currentUser?.division_info?.subdivision?.id ?? null;
 
-  const canAccessSchedule = canAccessPage('ScheduleEvent', 'view');
+  // График именно ЭТОГО подразделения
+  const isScheduleVisibleForThisDivision = useMemo(
+    () => isScheduleVisibleForDivision(
+      canAccessPage('ScheduleEvent', 'view'),
+      scheduleFilters,
+      division.id,
+      userDivisionId,
+    ),
+    [canAccessPage, scheduleFilters, division.id, userDivisionId],
+  );
 
   const isTasksVisible = useMemo(() => {
     if (!canAccessTasks()) return false;
@@ -256,12 +300,12 @@ export function Overview({ division }: OverviewProps) {
           disabled={!isPersonnelVisible}
           storageKey={`card_menu_employees_${division.id}`}
         >
-          {canAccessSchedule && (
+          {isScheduleVisibleForThisDivision && (
             <div
               className="schedule-link-card"
               onClick={() =>
                 navigate(`/employee-schedule?division=${division.id}`, {
-                  state: { divisionName: division.name },
+                  state: { divisionName: division.name, fromDivisionPage: true },
                 })
               }
             >
@@ -292,7 +336,7 @@ export function Overview({ division }: OverviewProps) {
             onClick={() =>
               navigate('/equipment-disposed', {
                 state: {
-                  from: 'division-overview',   // ← ДОБАВЛЕНО: маркер источника
+                  from: 'division-overview',
                   divisionId: division.id,
                   divisionName: division.name,
                 },

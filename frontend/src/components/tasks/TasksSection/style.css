@@ -97,9 +97,17 @@
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* TasksFilters.css */
@@ -272,8 +280,30 @@
     color: white;
 }
 
+/* Снимаем встроенную подсветку выбранной ячейки.
+   react-datepicker ставит --keyboard-selected на последний кликнутый день,
+   из-за чего после выбора диапазона или его очистки остаётся «залипший» фон.
+   Делаем фон прозрачным — подсветку полностью контролирует наша логика
+   через __day--selected / __day--in-range / __day--range-start/end. */
 .tasks-date-calendar .react-datepicker__day--keyboard-selected {
-    background-color: #93c5fd;
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Если день одновременно keyboard-selected и range-start/range-end/selected —
+   приоритет у диапазонных стилей (у них тот же уровень специфичности,
+   поэтому ставим keyboard-selected в самое начало блока выше, чтобы не затирать). */
+.tasks-date-calendar .react-datepicker__day--keyboard-selected.react-datepicker__day--selected,
+.tasks-date-calendar .react-datepicker__day--keyboard-selected.react-datepicker__day--in-range,
+.tasks-date-calendar .react-datepicker__day--keyboard-selected.react-datepicker__day--in-selecting-range {
+    background-color: #3891da;
+    color: #fff;
+}
+
+.tasks-date-calendar .react-datepicker__day--keyboard-selected.react-datepicker__day--range-start,
+.tasks-date-calendar .react-datepicker__day--keyboard-selected.react-datepicker__day--range-end {
+    background-color: #1e40af;
+    color: #fff;
 }
 
 .tasks-date-calendar .react-datepicker__day--range-start,

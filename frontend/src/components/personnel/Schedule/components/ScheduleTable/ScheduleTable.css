@@ -176,6 +176,71 @@
     background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
+/* ===== Строки-заголовки групп (режим "По подразделениям") ===== */
+.schedule-table--grouped .schedule-division-header-row td,
+.schedule-table--grouped .schedule-subdivision-header-row td {
+    padding: 8px 12px;
+    border-top: 1px solid #e2e8f0;
+    background: #f1f5f9;
+}
+
+.schedule-table--grouped .schedule-subdivision-header-row td {
+    background: #f8fafc;
+    padding-left: 24px;
+}
+
+.schedule-table--grouped .schedule-global-management-header td {
+    background: #eef2ff;
+}
+
+.schedule-group-header-cell {
+    font-size: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #334155;
+    user-select: none;
+}
+
+.schedule-subgroup-header-cell {
+    font-size: 0.9rem;
+}
+
+.schedule-group-header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.schedule-collapse-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #475569;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.schedule-collapse-button:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.schedule-group-count {
+    font-weight: 400;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Подсветка строк руководства */
+.schedule-table--grouped tr.schedule-management-row td {
+    background-color: #fdf7e156;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .schedule-table {

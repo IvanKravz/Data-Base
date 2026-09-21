@@ -8,7 +8,10 @@ interface TableViewProps {
   onPersonClick: (person: Employee) => void;
   onDelete: (id: string) => void;
   divisionName: string;
+  /** Право на изменение: управляет колонкой «Действия» и кнопкой удаления */
   hasEditPermission: boolean;
+  /** Право на просмотр: управляет переходом на детальную страницу по клику */
+  hasViewPermission: boolean;
   viewMode: 'flat' | 'grouped';
   storageKey?: string;
   searchTerm?: string;
@@ -20,6 +23,7 @@ export function TableView({
   onDelete,
   divisionName,
   hasEditPermission,
+  hasViewPermission,
   viewMode,
   storageKey = 'default',
   searchTerm = ''
@@ -412,8 +416,8 @@ export function TableView({
             {flatSortedData.map((person, idx) => (
               <tr
                 key={person.id}
-                onClick={() => hasEditPermission && onPersonClick(person)}
-                className={`personnel-table-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
+                onClick={() => hasViewPermission && onPersonClick(person)}
+                className={`personnel-table-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasViewPermission ? 'personnel-table-row-no-click' : ''}`}
               >
                 <td className="personnel-table-cell personnel-table-cell-index">{idx + 1}</td>
                 <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
@@ -491,8 +495,8 @@ export function TableView({
                   return (
                     <tr
                       key={person.id}
-                      onClick={() => hasEditPermission && onPersonClick(person)}
-                      className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
+                      onClick={() => hasViewPermission && onPersonClick(person)}
+                      className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasViewPermission ? 'personnel-table-row-no-click' : ''}`}
                     >
                       <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                       <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
@@ -576,8 +580,8 @@ export function TableView({
                             return (
                               <tr
                                 key={person.id}
-                                onClick={() => hasEditPermission && onPersonClick(person)}
-                                className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
+                                onClick={() => hasViewPermission && onPersonClick(person)}
+                                className={`personnel-table-row personnel-management-row ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasViewPermission ? 'personnel-table-row-no-click' : ''}`}
                               >
                                 <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                                 <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
@@ -634,8 +638,8 @@ export function TableView({
                               return (
                                 <tr
                                   key={person.id}
-                                  onClick={() => hasEditPermission && onPersonClick(person)}
-                                  className={`personnel-table-row ${person.category === 'management' ? 'personnel-management-row' : ''} ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasEditPermission ? 'personnel-table-row-no-click' : ''}`}
+                                  onClick={() => hasViewPermission && onPersonClick(person)}
+                                  className={`personnel-table-row ${person.category === 'management' ? 'personnel-management-row' : ''} ${isRowHighlighted(person) ? 'personnel-table-row-highlighted' : ''} ${!hasViewPermission ? 'personnel-table-row-no-click' : ''}`}
                                 >
                                   <td className="personnel-table-cell personnel-table-cell-index">{currentIndex}</td>
                                   <td className="personnel-table-cell personnel-table-cell-name">{renderPersonCell(person)}</td>
