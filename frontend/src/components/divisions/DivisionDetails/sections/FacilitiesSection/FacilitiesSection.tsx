@@ -1,5 +1,5 @@
 // FacilitiesSection.tsx
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
@@ -67,6 +67,15 @@ export function FacilitiesSection() {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  // ===== Анимированный индикатор активной вкладки =====
+  const tabsRef = useRef<HTMLDivElement | null>(null);
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; visible: boolean }>({
+    left: 0,
+    width: 0,
+    visible: false,
+  });
 
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
@@ -271,6 +280,76 @@ export function FacilitiesSection() {
   const hasOpenFacilities = filteredBySubdivisionFacilities.some(f => !f.is_closed);
   const hasClosedFacilities = filteredBySubdivisionFacilities.some(f => f.is_closed);
 
+  // Ключ состава видимых вкладок — для пересчёта индикатора
+  const visibleTabsKey = useMemo(() => {
+    const tabs: string[] = [];
+    if (hasAllFacilities) tabs.push('all');
+    if (hasOpenFacilities) tabs.push('open');
+    if (hasClosedFacilities) tabs.push('closed');
+    if (canViewCommunicationPosts) tabs.push('posts');
+    return tabs.join(',');
+  }, [hasAllFacilities, hasOpenFacilities, hasClosedFacilities, canViewCommunicationPosts]);
+
+  // Позиционирование индикатора под активной вкладкой
+  useLayoutEffect(() => {
+    const updateIndicator = () => {
+      const container = tabsRef.current;
+      const activeBtn = tabRefs.current[activeTab];
+
+      if (!container || !activeBtn) {
+        setIndicatorStyle(prev => (prev.visible ? { ...prev, visible: false } : prev));
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+
+      // Пропускаем, если layout ещё не посчитан (нулевые размеры)
+      if (btnRect.width === 0 && containerRect.width === 0) return;
+
+      setIndicatorStyle({
+        left: btnRect.left - containerRect.left + container.scrollLeft,
+        width: btnRect.width,
+        visible: true,
+      });
+    };
+
+    // Сразу + на следующем кадре, чтобы поймать первый корректный layout
+    updateIndicator();
+    const raf = requestAnimationFrame(updateIndicator);
+
+    const container = tabsRef.current;
+    if (!container) {
+      return () => cancelAnimationFrame(raf);
+    }
+
+    // Реагируем на любые изменения размеров контейнера/кнопок:
+    // подгрузка шрифтов, появление скроллбара, изменение состава вкладок и т.д.
+    const ro = new ResizeObserver(() => updateIndicator());
+    ro.observe(container);
+    Object.values(tabRefs.current).forEach(btn => {
+      if (btn) ro.observe(btn);
+    });
+
+    container.addEventListener('scroll', updateIndicator, { passive: true });
+    window.addEventListener('resize', updateIndicator);
+
+    // Страховочные пересчёты после первого layout
+    const t1 = window.setTimeout(updateIndicator, 50);
+    const t2 = window.setTimeout(updateIndicator, 200);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      container.removeEventListener('scroll', updateIndicator);
+      window.removeEventListener('resize', updateIndicator);
+    };
+    // loading в зависимостях — чтобы пересчитать индикатор ровно в момент,
+    // когда вкладки впервые появляются в DOM после завершения загрузки
+  }, [activeTab, visibleTabsKey, loading]);
+
   const displayFacilities = useMemo(() => {
     let result = filteredBySubdivisionFacilities;
     if (activeTab === 'open') result = result.filter(f => !f.is_closed);
@@ -441,9 +520,10 @@ export function FacilitiesSection() {
 
       <div className="facilities-content-wrapper">
         <div className="facilities-tabs-container">
-          <div className="facilities-tabs">
+          <div className="facilities-tabs" ref={tabsRef}>
             {hasAllFacilities && (
               <button
+                ref={(el) => { tabRefs.current['all'] = el; }}
                 className={`facilities-tab-button ${activeTab === 'all' ? 'active' : ''}`}
                 onClick={() => handleTabChange('all')}
               >
@@ -453,6 +533,7 @@ export function FacilitiesSection() {
             )}
             {hasOpenFacilities && (
               <button
+                ref={(el) => { tabRefs.current['open'] = el; }}
                 className={`facilities-tab-button ${activeTab === 'open' ? 'active' : ''}`}
                 onClick={() => handleTabChange('open')}
               >
@@ -462,6 +543,7 @@ export function FacilitiesSection() {
             )}
             {hasClosedFacilities && (
               <button
+                ref={(el) => { tabRefs.current['closed'] = el; }}
                 className={`facilities-tab-button ${activeTab === 'closed' ? 'active' : ''}`}
                 onClick={() => handleTabChange('closed')}
               >
@@ -471,6 +553,7 @@ export function FacilitiesSection() {
             )}
             {canViewCommunicationPosts && (
               <button
+                ref={(el) => { tabRefs.current['posts'] = el; }}
                 className={`facilities-tab-button ${activeTab === 'posts' ? 'active' : ''}`}
                 onClick={() => handleTabChange('posts')}
               >
@@ -478,6 +561,11 @@ export function FacilitiesSection() {
                 Посты связи
               </button>
             )}
+
+            <span
+              className={`facilities-tab-indicator${indicatorStyle.visible ? ' visible' : ''}`}
+              style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
+            />
           </div>
         </div>
 
@@ -556,15 +644,17 @@ export function FacilitiesSection() {
                     storageKey={storageKey}
                   />
                 </div>
-                <div className="facilities-right-column">
-                  {showMap && filteredBySearch.length > 0 && (
-                    <div className="facilities-map-overlay">
-                      <Suspense fallback={<div className="loading-spinner"></div>}>
-                        <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
-                      </Suspense>
-                    </div>
-                  )}
-                </div>
+                {filteredBySearch.length > 0 && (
+                  <div className="facilities-right-column">
+                    {showMap && (
+                      <div className="facilities-map-overlay">
+                        <Suspense fallback={<div className="loading-spinner"></div>}>
+                          <LazyMapView facilities={mapFacilities} searchTerm={mapSearchTerm} />
+                        </Suspense>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}

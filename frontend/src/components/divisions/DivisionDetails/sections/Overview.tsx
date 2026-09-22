@@ -18,7 +18,7 @@ import { Division } from '../../../../types';
 import { StatCard } from './StatCard';
 import { SubdivisionsList } from './SubdivisionsList';
 import { DivisionLeadership } from './DivisionLeadership/DivisionLeadership';
-import { employeesApi, tasksApi } from '../../../../api';
+import { employeesApi, tasksApi, equipmentApi, facilitiesApi } from '../../../../api';
 import { setPersonnel } from '../../../../store/slices/personnelSlice';
 import { isExploitationEmployee, isExploitationChief } from '../../../../api/utils/permissions';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
@@ -33,9 +33,22 @@ interface OverviewProps {
   division: Division;
 }
 
+/** Приводит ответ API (array или {results}) к массиву. */
+const asArray = (data: any): any[] => {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.results)) return data.results;
+  return [];
+};
+
+/** Сравнение id безопасно (string/number). */
+const idsEqual = (a: unknown, b: unknown): boolean => {
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  return String(a) === String(b);
+};
+
 const isVisibleForDivision = (
   canAccess: boolean,
-  filters: { division_id?: number | string; subdivision_id?: number | string } | null,
+  filters: any,
   divisionId: number,
   userDivisionId?: number | null,
   userSubdivisionId?: number | null,
@@ -43,54 +56,65 @@ const isVisibleForDivision = (
   if (!canAccess) return false;
   if (!filters) return true;
 
-  if (filters.division_id !== undefined && filters.division_id !== null) {
-    const filterValue = filters.division_id;
-    let actualDivisionId: number | null = null;
-    if (filterValue === USER_DIVISION_MARKER) {
-      actualDivisionId = userDivisionId ?? null;
-    } else if (typeof filterValue === 'number') {
-      actualDivisionId = filterValue;
+  const alternatives: any[] = Array.isArray(filters) ? filters : [filters];
+
+  for (const alt of alternatives) {
+    if (!alt || typeof alt !== 'object') continue;
+
+    const filterValue = alt.division_id;
+    if (filterValue === undefined || filterValue === null) {
+      return true;
     }
-    if (actualDivisionId === null || actualDivisionId !== divisionId) {
-      return false;
+
+    let actual: number | null = null;
+    if (filterValue === USER_DIVISION_MARKER) {
+      actual = userDivisionId ?? null;
+    } else if (typeof filterValue === 'number' || typeof filterValue === 'string') {
+      const n = Number(filterValue);
+      actual = Number.isFinite(n) ? n : null;
+    }
+
+    if (actual !== null && actual === divisionId) {
+      return true;
     }
   }
 
-  return true;
+  return false;
 };
 
-/**
- * Проверка: виден ли график этого подразделения пользователю.
- * Учитывает фильтр `filters.ScheduleEvent` (ключ `employee__division_id`).
- *  - нет права view ScheduleEvent → false;
- *  - нет фильтров ScheduleEvent → видит график всех подразделений;
- *  - фильтр с USER_DIVISION_MARKER → только своё подразделение;
- *  - статический id → только это подразделение.
- */
 const isScheduleVisibleForDivision = (
   canAccess: boolean,
-  filters: { [key: string]: any } | null,
+  filters: any,
   divisionId: number,
   userDivisionId?: number | null,
 ): boolean => {
   if (!canAccess) return false;
   if (!filters) return true;
 
-  const filterValue = filters.employee__division_id;
+  const alternatives: any[] = Array.isArray(filters) ? filters : [filters];
 
-  if (filterValue === undefined || filterValue === null) {
-    // Фильтра по подразделению нет → видит все подразделения
-    return true;
+  for (const alt of alternatives) {
+    if (!alt || typeof alt !== 'object') continue;
+
+    const filterValue = alt.employee__division_id;
+    if (filterValue === undefined || filterValue === null) {
+      return true;
+    }
+
+    let actual: number | null = null;
+    if (filterValue === USER_DIVISION_MARKER) {
+      actual = userDivisionId ?? null;
+    } else {
+      const n = Number(filterValue);
+      actual = Number.isFinite(n) ? n : null;
+    }
+
+    if (actual !== null && actual === divisionId) {
+      return true;
+    }
   }
 
-  let actualDivisionId: number | null = null;
-  if (filterValue === USER_DIVISION_MARKER) {
-    actualDivisionId = userDivisionId ?? null;
-  } else if (typeof filterValue === 'number') {
-    actualDivisionId = filterValue;
-  }
-
-  return actualDivisionId !== null && actualDivisionId === divisionId;
+  return false;
 };
 
 export function Overview({ division }: OverviewProps) {
@@ -114,10 +138,23 @@ export function Overview({ division }: OverviewProps) {
   const dispatch = useDispatch();
   const { id } = useParams<{ id: string }>();
   const token = localStorage.getItem('accessToken');
+
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // Счётчики (считаем на клиенте — см. комментарии в useEffect'ах)
+  const [personnelCount, setPersonnelCount] = useState<number | null>(null);
+  const [equipmentCount, setEquipmentCount] = useState<number | null>(null);
+  const [facilitiesCount, setFacilitiesCount] = useState<number | null>(null);
+  // Сети берём из division.networks_count (нет API с ролевой фильтрацией)
+  const [networksCount] = useState<number | null>(division.networks_count ?? null);
+
+  const [personnelLoading, setPersonnelLoading] = useState(true);
+  const [equipmentLoading, setEquipmentLoading] = useState(false);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+
   const [tasksLoading, setTasksLoading] = useState(true);
   const [incompleteTasksCount, setIncompleteTasksCount] = useState<number | null>(null);
+
   const isExploitationEmp = isExploitationEmployee();
   const isChief = isExploitationChief();
   const isExploitation = isChief || isExploitationEmp;
@@ -126,7 +163,6 @@ export function Overview({ division }: OverviewProps) {
   const userDivisionId = currentUser?.division_info?.id ?? null;
   const userSubdivisionId = currentUser?.division_info?.subdivision?.id ?? null;
 
-  // График именно ЭТОГО подразделения
   const isScheduleVisibleForThisDivision = useMemo(
     () => isScheduleVisibleForDivision(
       canAccessPage('ScheduleEvent', 'view'),
@@ -141,31 +177,33 @@ export function Overview({ division }: OverviewProps) {
     if (!canAccessTasks()) return false;
     if (!taskFilters) return true;
 
-    if (taskFilters.division_id !== undefined && taskFilters.division_id !== null) {
-      const filterValue = taskFilters.division_id;
-      let actualDivisionId: number | null = null;
-      if (filterValue === USER_DIVISION_MARKER) {
-        actualDivisionId = userDivisionId;
-      } else if (typeof filterValue === 'number') {
-        actualDivisionId = filterValue;
-      }
-      if (actualDivisionId === null || actualDivisionId !== division.id) {
-        return false;
-      }
-    }
+    const alternatives: any[] = Array.isArray(taskFilters) ? taskFilters : [taskFilters];
+    for (const alt of alternatives) {
+      if (!alt || typeof alt !== 'object') continue;
+      const filterValue = alt.division_id;
+      if (filterValue === undefined || filterValue === null) return true;
 
-    return true;
+      let actual: number | null = null;
+      if (filterValue === USER_DIVISION_MARKER) {
+        actual = userDivisionId;
+      } else {
+        const n = Number(filterValue);
+        actual = Number.isFinite(n) ? n : null;
+      }
+      if (actual !== null && actual === division.id) return true;
+    }
+    return false;
   }, [canAccessTasks, taskFilters, division.id, userDivisionId]);
 
   const effectiveSubdivisionId = useMemo(() => {
-    if (!taskFilters?.subdivision_id) return null;
-    const filterValue = taskFilters.subdivision_id;
-    if (filterValue === USER_SUBDIVISION_MARKER) {
-      return userSubdivisionId;
-    } else if (typeof filterValue === 'number') {
-      return filterValue;
-    }
-    return null;
+    if (!taskFilters) return null;
+    const alt = Array.isArray(taskFilters) ? taskFilters[0] : taskFilters;
+    if (!alt || typeof alt !== 'object') return null;
+    const filterValue = alt.subdivision_id;
+    if (filterValue === undefined || filterValue === null) return null;
+    if (filterValue === USER_SUBDIVISION_MARKER) return userSubdivisionId;
+    const n = Number(filterValue);
+    return Number.isFinite(n) ? n : null;
   }, [taskFilters, userSubdivisionId]);
 
   const storageKeySub = `subdivisions_visible_${division.id}`;
@@ -228,25 +266,87 @@ export function Overview({ division }: OverviewProps) {
     navigate(path);
   };
 
+  // === Сотрудники: считаем на клиенте, как и PersonnelSection ===
   useEffect(() => {
     if (!isPersonnelVisible) {
-      setLoading(false);
+      setPersonnelLoading(false);
+      setPersonnelCount(null);
       return;
     }
     const fetchEmployees = async () => {
       try {
-        const data = await employeesApi.getPersonnel(token, { division: division.id });
-        dispatch(setPersonnel(data));
+        setPersonnelLoading(true);
+        const data = await employeesApi.getPersonnel(token, {});
+        const list = asArray(data);
+        const filtered = list.filter((p: any) =>
+          idsEqual(p.division?.id, division.id),
+        );
+        setPersonnelCount(filtered.length);
+        dispatch(setPersonnel(list as any));
       } catch (err) {
         setError('Failed to load personnel');
         console.error(err);
+        setPersonnelCount(null);
       } finally {
-        setLoading(false);
+        setPersonnelLoading(false);
       }
     };
     fetchEmployees();
   }, [token, dispatch, division.id, isPersonnelVisible]);
 
+  // === Техника: считаем на клиенте, исключаем списанные ===
+  useEffect(() => {
+    if (!isEquipmentVisible) {
+      setEquipmentLoading(false);
+      setEquipmentCount(null);
+      return;
+    }
+    const fetchEquipment = async () => {
+      try {
+        setEquipmentLoading(true);
+        const data = await equipmentApi.getEquipment(token, {});
+        const list = asArray(data).filter((e: any) => e?.status !== 'disposed');
+        const filtered = list.filter((e: any) =>
+          idsEqual(e.division?.id, division.id),
+        );
+        setEquipmentCount(filtered.length);
+      } catch (err) {
+        console.error('Failed to load equipment count', err);
+        setEquipmentCount(null);
+      } finally {
+        setEquipmentLoading(false);
+      }
+    };
+    fetchEquipment();
+  }, [token, division.id, isEquipmentVisible]);
+
+  // === Объекты: считаем на клиенте, ролевые фильтры уже применены API ===
+  useEffect(() => {
+    if (!isFacilitiesVisible) {
+      setFacilitiesLoading(false);
+      setFacilitiesCount(null);
+      return;
+    }
+    const fetchFacilities = async () => {
+      try {
+        setFacilitiesLoading(true);
+        const data = await facilitiesApi.getFacilities({ token });
+        const list = asArray(data);
+        const filtered = list.filter((f: any) =>
+          idsEqual(f.division?.id, division.id),
+        );
+        setFacilitiesCount(filtered.length);
+      } catch (err) {
+        console.error('Failed to load facilities count', err);
+        setFacilitiesCount(null);
+      } finally {
+        setFacilitiesLoading(false);
+      }
+    };
+    fetchFacilities();
+  }, [token, division.id, isFacilitiesVisible]);
+
+  // === Задачи: считаем через api (уже с учётом роли) ===
   useEffect(() => {
     if (!isTasksVisible) {
       setTasksLoading(false);
@@ -255,6 +355,7 @@ export function Overview({ division }: OverviewProps) {
     }
     const fetchTasksCount = async () => {
       try {
+        setTasksLoading(true);
         const params: { divisionId: number; subdivisionId?: number } = { divisionId: division.id };
         if (effectiveSubdivisionId) {
           params.subdivisionId = effectiveSubdivisionId;
@@ -291,12 +392,12 @@ export function Overview({ division }: OverviewProps) {
       <div className="division-stats-grid">
         <StatCard
           title="Сотрудники"
-          count={getCount(isPersonnelVisible, division.employees_count, loading)}
+          count={getCount(isPersonnelVisible, personnelCount, personnelLoading)}
           icon={Users}
           iconColor="#4d5edb"
           details={[]}
           onClick={() => handleSectionClick('personnel')}
-          loading={loading && isPersonnelVisible}
+          loading={personnelLoading && isPersonnelVisible}
           disabled={!isPersonnelVisible}
           storageKey={`card_menu_employees_${division.id}`}
         >
@@ -322,12 +423,12 @@ export function Overview({ division }: OverviewProps) {
 
         <StatCard
           title="Техника"
-          count={getCount(isEquipmentVisible, division.equipment_count, false)}
+          count={getCount(isEquipmentVisible, equipmentCount, equipmentLoading)}
           icon={Plug}
           iconColor="#10b981"
           details={[]}
           onClick={() => handleSectionClick('equipment')}
-          loading={false}
+          loading={equipmentLoading && isEquipmentVisible}
           disabled={!isEquipmentVisible}
           storageKey={`card_menu_equipment_${division.id}`}
         >
@@ -358,18 +459,18 @@ export function Overview({ division }: OverviewProps) {
 
         <StatCard
           title="Объекты"
-          count={getCount(isFacilitiesVisible, division.facilities_count, false)}
+          count={getCount(isFacilitiesVisible, facilitiesCount, facilitiesLoading)}
           icon={Building2}
           iconColor="#888676"
           details={[]}
           onClick={() => handleSectionClick('facilities')}
-          loading={false}
+          loading={facilitiesLoading && isFacilitiesVisible}
           disabled={!isFacilitiesVisible}
         />
 
         <StatCard
           title="Сети связи"
-          count={getCount(isNetworksVisible, division.networks_count, false)}
+          count={getCount(isNetworksVisible, networksCount, false)}
           icon={RadioTower}
           iconColor="#70b3d0"
           details={[]}

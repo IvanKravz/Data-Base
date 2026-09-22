@@ -36,6 +36,18 @@ type TabId = 'main' | 'notes' | 'sha' | 'equipment' | 'qualitative';
 // Вкладки, которые поддерживаются формой редактирования (кроме "Характеристика" и "Техника")
 const EDITABLE_TABS: TabId[] = ['main', 'sha', 'notes'];
 
+// Маркеры фильтров — те же, что приходят с бэкенда
+const USER_DIVISION_MARKER = '__user_division_id__';
+const USER_SUBDIVISION_MARKER = '__user_subdivision_id__';
+
+/**
+ * Сравнение id, приходящих как строки или числа.
+ */
+const idsEqual = (a: unknown, b: unknown): boolean => {
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  return String(a) === String(b);
+};
+
 export function PersonnelDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -76,8 +88,8 @@ export function PersonnelDetails() {
   const canEditBasic = canEditEmployee && !isRestricted;
   const canEditShaComments = canEditEmployee;
 
-  // Права на график — из контекста, чтобы поддерживать маркеры фильтров роли
-  const { canAccessPage, personnelFilters } = useAppPermissions();
+  // Права и фильтры для графика
+  const { canAccessPage, personnelFilters, scheduleFilters } = useAppPermissions();
   const canViewSchedule = canAccessPage('ScheduleEvent', 'view');
   const canEditSchedule = canAccessPage('ScheduleEvent', 'change');
 
@@ -85,6 +97,51 @@ export function PersonnelDetails() {
     const hasFilters = personnelFilters && Object.keys(personnelFilters).length > 0;
     return canEditEmployee && !hasFilters;
   }, [canEditEmployee, personnelFilters]);
+
+  /**
+   * Попадает ли текущий сотрудник в read-область графика.
+   *
+   * Логика зеркалит бэкенд (RoleBasedFilterMixin._build_role_q):
+   *  - нет права ScheduleEvent.view → false;
+   *  - нет scheduleFilters → видит всех → true;
+   *  - фильтр `employee__division_id` = USER_DIVISION_MARKER → сравнить с подразделением пользователя;
+   *  - фильтр `employee__subdivision_id` = USER_SUBDIVISION_MARKER → сравнить с отделением пользователя;
+   *  - статические значения → сравнить с полями сотрудника.
+   */
+  const isPersonInScheduleScope = useMemo(() => {
+    if (!canViewSchedule) return false;
+    if (!person) return false;
+
+    if (!scheduleFilters || Object.keys(scheduleFilters).length === 0) {
+      return true;
+    }
+
+    const userDivisionId = user?.division_info?.id ?? null;
+    const userSubdivisionId = user?.division_info?.subdivision?.id ?? null;
+
+    const divFilter = (scheduleFilters as Record<string, any>).employee__division_id;
+    const subFilter = (scheduleFilters as Record<string, any>).employee__subdivision_id;
+
+    if (divFilter !== undefined && divFilter !== null) {
+      let expected: unknown = divFilter;
+      if (divFilter === USER_DIVISION_MARKER) {
+        expected = userDivisionId;
+      }
+      if (expected === null || expected === undefined) return false;
+      if (!idsEqual(person.division?.id, expected)) return false;
+    }
+
+    if (subFilter !== undefined && subFilter !== null) {
+      let expected: unknown = subFilter;
+      if (subFilter === USER_SUBDIVISION_MARKER) {
+        expected = userSubdivisionId;
+      }
+      if (expected === null || expected === undefined) return false;
+      if (!idsEqual(person.subdivision?.id, expected)) return false;
+    }
+
+    return true;
+  }, [canViewSchedule, person, scheduleFilters, user]);
 
   useEffect(() => {
     const fetchDivisions = async () => {
@@ -267,8 +324,11 @@ export function PersonnelDetails() {
   const showNotesTab = person.description && person.description.trim().length > 0;
   const showQualitativeTab = canViewEmployee;
 
-  // Блок графика показываем только если есть право на просмотр ScheduleEvent
-  const showSchedule = canViewEmployee && canViewSchedule;
+  // Блок графика показываем, если:
+  //  - есть право на просмотр сотрудников,
+  //  - есть право ScheduleEvent.view,
+  //  - и сам сотрудник попадает в read-область графика роли.
+  const showSchedule = canViewEmployee && isPersonInScheduleScope;
 
   const showSearch = !isEditing && !isEditingQualitative;
   const isAnyEditing = isEditing || isEditingQualitative;

@@ -12,6 +12,10 @@ interface DisposedEquipmentListProps {
   onDelete: (id: string) => void;
   onRestore: (id: string) => void;
   onViewDetails: (equipment: Equipment) => void;
+  /** Право на восстановление (change) */
+  canRestore?: boolean;
+  /** Право на удаление (delete) */
+  canDelete?: boolean;
 }
 
 const safeFormatDate = (dateString: string | undefined | null): string => {
@@ -30,11 +34,15 @@ export function DisposedEquipmentList({
   onDelete,
   onRestore,
   onViewDetails,
+  canRestore = false,
+  canDelete = false,
 }: DisposedEquipmentListProps) {
   const [modalState, setModalState] = useState<{
     type: 'delete' | 'restore';
     equipmentId: string | null;
   }>({ type: 'delete', equipmentId: null });
+
+  const showActions = canRestore || canDelete;
 
   const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -90,13 +98,13 @@ export function DisposedEquipmentList({
             <th className="det-table-header-cell">№ справки</th>
             <th className="det-table-header-cell">Дата справки</th>
             <th className="det-table-header-cell">Комментарии</th>
-            <th className="det-table-header-cell det-actions-header">Действия</th>
+            {showActions && (
+              <th className="det-table-header-cell det-actions-header">Действия</th>
+            )}
           </tr>
         </thead>
         <tbody>
           {equipment.map((item, index) => {
-            // Передаём весь объект категории: функция сама вернёт KeyRound,
-            // если category.is_closed === true. Фолбэк Box — только для неизвестных value.
             const CategoryIcon = getCategoryIconComponent(item.category) ?? Box;
             const categoryName = item.category?.name || item.category?.value || '';
 
@@ -114,7 +122,6 @@ export function DisposedEquipmentList({
                 <td className="det-table-cell">{safeFormatDate(item.exploitation_date)}</td>
                 <td className="det-table-cell">{item.type || '-'}</td>
 
-                {/* === Категория: иконка вместо текста === */}
                 <td className="det-table-cell det-category-cell">
                   {item.category ? (
                     <CategoryIcon
@@ -154,24 +161,31 @@ export function DisposedEquipmentList({
                 <td className="det-table-cell det-cell-comments">
                   {item.disposal_info?.comments || '-'}
                 </td>
-                <td className="det-table-cell det-cell-actions">
-                  <div className="det-actions-group">
-                    <button
-                      onClick={(e) => handleRestoreClick(e, String(item.id))}
-                      className="det-restore-btn"
-                      title="Восстановить"
-                    >
-                      <RefreshCw size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteClick(e, String(item.id))}
-                      className="det-delete-btn"
-                      title="Удалить"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+
+                {showActions && (
+                  <td className="det-table-cell det-cell-actions">
+                    <div className="det-actions-group">
+                      {canRestore && (
+                        <button
+                          onClick={(e) => handleRestoreClick(e, String(item.id))}
+                          className="det-restore-btn"
+                          title="Восстановить"
+                        >
+                          <RefreshCw size={16} />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, String(item.id))}
+                          className="det-delete-btn"
+                          title="Удалить"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

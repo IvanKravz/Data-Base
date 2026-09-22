@@ -152,7 +152,7 @@
 .equipment-tab-indicator {
   position: absolute;
   bottom: 0;
-  height: 2px;
+  height: 1.2px;
   background-color: #2563eb;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 4;
@@ -678,6 +678,18 @@
   padding: 1rem;
   text-align: center;
   font-weight: 500;
+}
+
+.equipment-list-empty-message {
+  text-align: center;
+  padding: 2rem 2rem;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  margin: 0.5rem 0;
 }
 
 /* Адаптивность */

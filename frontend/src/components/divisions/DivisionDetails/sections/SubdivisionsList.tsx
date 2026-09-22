@@ -5,6 +5,9 @@ import { Division } from '../../../../types';
 import './style.css';
 import { useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../../../api/tasks';
+import { employeesApi } from '../../../../api/employees';
+import { equipmentApi } from '../../../../api/equipment';
+import { facilitiesApi } from '../../../../api/facilities';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 
 // Маркеры фильтров (соответствуют бэкендным)
@@ -15,9 +18,32 @@ interface SubdivisionsListProps {
     division: Division;
 }
 
+/** Приводит ответ API (array или {results}) к массиву. */
+const asArray = (data: any): any[] => {
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.results)) return data.results;
+    return [];
+};
+
+/** Группирует элементы по subdivision.id, возвращает Record<string, number>. */
+const groupBySubdivision = (items: any[]): Record<string, number> => {
+    const acc: Record<string, number> = {};
+    for (const item of items) {
+        const key = item?.subdivision?.id != null ? String(item.subdivision.id) : 'no-subdivision';
+        acc[key] = (acc[key] ?? 0) + 1;
+    }
+    return acc;
+};
+
+/** Отображает число: 0 → «—», иначе — число. */
+const formatCount = (value: number | null | undefined): string | number => {
+    if (value === null || value === undefined) return '—';
+    return value > 0 ? value : '—';
+};
+
 const isVisibleForSubdivision = (
     canAccess: boolean,
-    filters: { division_id?: number | string; subdivision_id?: number | string } | null,
+    filters: any,
     divisionId: number,
     subdivisionId: number,
     userDivisionId: number | null,
@@ -26,35 +52,46 @@ const isVisibleForSubdivision = (
     if (!canAccess) return false;
     if (!filters) return true;
 
-    // Проверка division_id
-    if (filters.division_id !== undefined && filters.division_id !== null) {
-        const filterValue = filters.division_id;
-        let actualDivisionId: number | null = null;
-        if (filterValue === USER_DIVISION_MARKER) {
-            actualDivisionId = userDivisionId;
-        } else if (typeof filterValue === 'number') {
-            actualDivisionId = filterValue;
+    // filters может быть dict или list[dict]. list — OR альтернатив.
+    const alternatives: any[] = Array.isArray(filters) ? filters : [filters];
+
+    for (const alt of alternatives) {
+        if (!alt || typeof alt !== 'object') continue;
+
+        let matches = true;
+
+        // Проверка division_id
+        const divValue = alt.division_id;
+        if (divValue !== undefined && divValue !== null) {
+            let actual: number | null = null;
+            if (divValue === USER_DIVISION_MARKER) {
+                actual = userDivisionId;
+            } else {
+                const n = Number(divValue);
+                actual = Number.isFinite(n) ? n : null;
+            }
+            if (actual === null || actual !== divisionId) matches = false;
         }
-        if (actualDivisionId === null || actualDivisionId !== divisionId) {
-            return false;
+
+        // Проверка subdivision_id
+        if (matches) {
+            const subValue = alt.subdivision_id;
+            if (subValue !== undefined && subValue !== null) {
+                let actual: number | null = null;
+                if (subValue === USER_SUBDIVISION_MARKER) {
+                    actual = userSubdivisionId;
+                } else {
+                    const n = Number(subValue);
+                    actual = Number.isFinite(n) ? n : null;
+                }
+                if (actual === null || actual !== subdivisionId) matches = false;
+            }
         }
+
+        if (matches) return true;
     }
 
-    // Проверка subdivision_id
-    if (filters.subdivision_id !== undefined && filters.subdivision_id !== null) {
-        const filterValue = filters.subdivision_id;
-        let actualSubdivisionId: number | null = null;
-        if (filterValue === USER_SUBDIVISION_MARKER) {
-            actualSubdivisionId = userSubdivisionId;
-        } else if (typeof filterValue === 'number') {
-            actualSubdivisionId = filterValue;
-        }
-        if (actualSubdivisionId === null || actualSubdivisionId !== subdivisionId) {
-            return false;
-        }
-    }
-
-    return true;
+    return false;
 };
 
 export function SubdivisionsList({ division }: SubdivisionsListProps) {
@@ -72,13 +109,82 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
 
     const navigate = useNavigate();
     const subdivisions = division.subdivisions || [];
+
+    const token = localStorage.getItem('accessToken');
+
+    // Счётчики задач (запрашиваются отдельно, по каждому подразделению)
     const [tasksCounts, setTasksCounts] = useState<Record<string, number>>({});
+
+    // Счётчики сотрудников / техники / объектов — считаем на клиенте из API,
+    // чтобы применялись те же ролевые фильтры, что и в списках.
+    const [personnelBySub, setPersonnelBySub] = useState<Record<string, number>>({});
+    const [equipmentBySub, setEquipmentBySub] = useState<Record<string, number>>({});
+    const [facilitiesBySub, setFacilitiesBySub] = useState<Record<string, number>>({});
+
     const [loading, setLoading] = useState(true);
 
     const currentUser = getCurrentUser();
     const userDivisionId = currentUser?.division_info?.id ?? null;
     const userSubdivisionId = currentUser?.division_info?.subdivision?.id ?? null;
 
+    // === Загрузка счётчиков сотрудников/техники/объектов ===
+    useEffect(() => {
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        const fetchAll = async () => {
+            setLoading(true);
+            try {
+                // Сотрудники — все доступные роли; группируем по subdivision.id.
+                const employeesPromise = canAccessPersonnel()
+                    ? employeesApi.getPersonnel(token, {})
+                    : Promise.resolve([]);
+
+                // Техника — все доступные роли; списанные (status='disposed') исключаем.
+                const equipmentPromise = canAccessEquipment()
+                    ? equipmentApi.getEquipment(token, {})
+                    : Promise.resolve([]);
+
+                // Объекты — все доступные роли; is_closed здесь не фильтруем
+                // (это признак «защищённости», а не списания).
+                const facilitiesPromise = canAccessFacilities()
+                    ? facilitiesApi.getFacilities({ token })
+                    : Promise.resolve([]);
+
+                const [employees, equipment, facilities] = await Promise.all([
+                    employeesPromise,
+                    equipmentPromise,
+                    facilitiesPromise,
+                ]);
+
+                if (cancelled) return;
+
+                const empList = asArray(employees);
+                const eqList = asArray(equipment).filter(
+                    (e: any) => e?.status !== 'disposed',
+                );
+                const facList = asArray(facilities);
+
+                setPersonnelBySub(groupBySubdivision(empList));
+                setEquipmentBySub(groupBySubdivision(eqList));
+                setFacilitiesBySub(groupBySubdivision(facList));
+            } catch (err) {
+                console.error('Ошибка загрузки счётчиков подразделений:', err);
+            }
+        };
+
+        fetchAll();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, division.id]);
+
+    // === Счётчики задач (отдельным запросом на каждое отделение) ===
     useEffect(() => {
         const fetchTasksCounts = async () => {
             const counts: Record<string, number> = {};
@@ -148,6 +254,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
         <div className="division-subdivisions-section">
             <div className="division-subdivisions-cards">
                 {subdivisions.map((sub) => {
+                    const subIdStr = String(sub.id);
+
                     const canViewPersonnel = isVisibleForSubdivision(
                         canAccessPersonnel(),
                         personnelFilters,
@@ -185,8 +293,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                         {
                             label: 'Сотрудники',
                             value: canViewPersonnel
-                                ? (loading ? '...' : sub.employees_count ?? 0)
-                                : 0,
+                                ? (loading ? '...' : formatCount(personnelBySub[subIdStr]))
+                                : '—',
                             icon: Users,
                             section: 'personnel',
                             disabled: !canViewPersonnel,
@@ -194,8 +302,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                         {
                             label: 'Техника',
                             value: canViewEquipment
-                                ? (loading ? '...' : sub.equipment_count ?? 0)
-                                : 0,
+                                ? (loading ? '...' : formatCount(equipmentBySub[subIdStr]))
+                                : '—',
                             icon: Plug,
                             section: 'equipment',
                             disabled: !canViewEquipment,
@@ -203,8 +311,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                         {
                             label: 'Объекты',
                             value: canViewFacilities
-                                ? (loading ? '...' : sub.facilities_count ?? 0)
-                                : 0,
+                                ? (loading ? '...' : formatCount(facilitiesBySub[subIdStr]))
+                                : '—',
                             icon: Building2,
                             section: 'facilities',
                             disabled: !canViewFacilities,
@@ -212,8 +320,8 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                         {
                             label: 'Задачи',
                             value: canViewTasks
-                                ? (loading ? '...' : tasksCounts[sub.id] ?? 0)
-                                : 0,
+                                ? (loading ? '...' : formatCount(tasksCounts[sub.id]))
+                                : '—',
                             icon: ListTodo,
                             section: 'tasks',
                             disabled: !canViewTasks,
@@ -221,7 +329,6 @@ export function SubdivisionsList({ division }: SubdivisionsListProps) {
                     ];
 
                     const head = sub.head;
-                    const deputy = sub.deputy_head;
 
                     return (
                         <div key={sub.id} className="subdivision-card">

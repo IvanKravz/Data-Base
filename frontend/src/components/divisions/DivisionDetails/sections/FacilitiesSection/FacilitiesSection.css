@@ -82,7 +82,10 @@
     display: flex;
     overflow-x: auto;
     scrollbar-width: thin;
-    border-bottom: 1.5px solid #e5e7eb;
+    position: relative;
+    /* ВАЖНО: вместо border-bottom используем inset box-shadow,
+       иначе он клипается из-за overflow-x: auto */
+    box-shadow: inset 0 -1.5px 0 0 #e5e7eb;
 }
 
 .facilities-tabs::-webkit-scrollbar {
@@ -107,11 +110,12 @@
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, font-weight 0.15s ease;
     white-space: nowrap;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    z-index: 1;
 }
 
 .facilities-tab-button:hover {
@@ -125,14 +129,26 @@
     background-color: rgba(241, 245, 249, 0.3);
 }
 
-.facilities-tab-button.active::after {
-    content: '';
+/* Плавающий индикатор активной вкладки */
+.facilities-tab-indicator {
     position: absolute;
-    bottom: -1.5px;
-    left: 0;
-    right: 0;
+    /* Прижимаем к низу padding-box, чтобы overflow-x: auto его не срезал */
+    bottom: 0;
     height: 2px;
     background-color: #2563eb;
+    border-radius: 2px 2px 0 0;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition:
+        left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.2s ease;
+    will-change: left, width;
+}
+
+.facilities-tab-indicator.visible {
+    opacity: 1;
 }
 
 .facilities-tab-icon {
@@ -142,7 +158,7 @@
 
 .facilities-content {
     padding: 1rem;
-    overflow: visible; 
+    overflow: visible;
 }
 
 /* Панель управления (фильтр типов) */

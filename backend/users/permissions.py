@@ -97,7 +97,16 @@ class RoleBasedPermission(permissions.BasePermission):
     def _check_division_access(self, user, obj):
         """
         Проверяет доступ к объекту на основе подразделения и фильтров роли.
+
+        Фильтры для модели могут быть заданы:
+          - как dict        — все условия AND;
+          - как list[dict]  — OR альтернатив, внутри каждой — AND.
+
+        Для каждой альтернативы строится Q и прогоняется через ORM —
+        тот же Q, что применяется в queryset. Это гарантирует согласованность:
+        если объект виден в списке, он доступен и при retrieve.
         """
+        from django.db.models import Q
         from .permissions_config import (
             ROLE_PERMISSIONS,
             USER_DIVISION_MARKER,
@@ -107,8 +116,6 @@ class RoleBasedPermission(permissions.BasePermission):
         user_roles = self._get_user_roles(user)
         model_name = obj.__class__.__name__
 
-        # Если хотя бы одна роль без ограничений по подразделениям
-        # и без фильтров — доступ разрешён.
         for role in user_roles:
             cfg = ROLE_PERMISSIONS.get(role)
             if not cfg:
@@ -120,10 +127,10 @@ class RoleBasedPermission(permissions.BasePermission):
 
             role_filters = cfg.get('filters', {}).get(model_name)
 
+            # Роль без явных фильтров
             if not role_filters:
                 if cfg.get('can_see_all_divisions', False):
                     return True
-                # Фолбэк: только своё подразделение
                 if not user.division:
                     continue
                 if model_name == 'Division':
@@ -135,46 +142,41 @@ class RoleBasedPermission(permissions.BasePermission):
                         return True
                 continue
 
-            # У роли есть фильтры — проверяем их вручную
-            match = True
-            for key, value in role_filters.items():
-                if value == USER_DIVISION_MARKER:
-                    value = user.division.id if user.division else None
-                elif value == USER_SUBDIVISION_MARKER:
-                    value = user.subdivision.id if user.subdivision else None
+            # Приводим фильтры к списку альтернатив
+            if isinstance(role_filters, dict):
+                alternatives = [role_filters]
+            else:
+                alternatives = list(role_filters)
 
-                # Разбираем lookup (например, "category__value__in")
-                parts = key.split('__')
-                attr = obj
-                for p in parts[:-1]:
-                    attr = getattr(attr, p, None)
-                    if attr is None:
-                        break
-                last = parts[-1]
+            for alt in alternatives:
+                if not isinstance(alt, dict):
+                    continue
 
-                if attr is None:
-                    match = False
-                    break
+                q = Q()
+                valid = True
+                for key, value in alt.items():
+                    if value == USER_DIVISION_MARKER:
+                        if user.division is None:
+                            valid = False
+                            break
+                        q &= Q(**{key: user.division.id})
+                    elif value == USER_SUBDIVISION_MARKER:
+                        if user.subdivision is None:
+                            valid = False
+                            break
+                        q &= Q(**{key: user.subdivision.id})
+                    else:
+                        q &= Q(**{key: value})
 
-                # Обрабатываем __in, __contains и т.п.
-                if last == 'in':
-                    if not isinstance(value, (list, tuple, set)):
-                        match = False
-                        break
-                    if getattr(obj, parts[-2], None) not in value:
-                        match = False
-                        break
-                elif last == 'icontains':
-                    if value.lower() not in str(attr).lower():
-                        match = False
-                        break
-                else:
-                    if getattr(attr, last, None) != value:
-                        match = False
-                        break
+                if not valid:
+                    continue
 
-            if match:
-                return True
+                try:
+                    if obj.__class__.objects.filter(q, pk=obj.pk).exists():
+                        return True
+                except Exception:
+                    # Если фильтр содержит нестандартные lookup'ы — пропускаем
+                    continue
 
         # Дополнительная защита для ролей только-просмотр
         if self.is_view_only_user(user):

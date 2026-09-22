@@ -98,6 +98,12 @@ export function EquipmentList({
         storageKey={storageKey}
       />
 
+      {visibleEquipment.length === 0 && (
+        <div className="equipment-list-empty-message">
+          Нет техники для отображения
+        </div>
+      )}
+
       {deleteModal.isOpen && deleteModal.equipment && (
         <ConfirmationModal
           type="delete"

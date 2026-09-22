@@ -61,6 +61,18 @@ export function DisposedEquipmentPage() {
   const divisionId = navState?.divisionId ?? null;
   const divisionName = navState?.divisionName ?? null;
 
+  // ==== Права пользователя ====
+  const user = useSelector((state: RootState) => state.auth.user);
+  const permissions = user?.permissions;
+  const canRestoreEquipment = useMemo(
+    () => permissions?.models?.Equipment?.includes('change') ?? false,
+    [permissions],
+  );
+  const canDeleteEquipment = useMemo(
+    () => permissions?.models?.Equipment?.includes('delete') ?? false,
+    [permissions],
+  );
+
   const token = localStorage.getItem('accessToken') || '';
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<DisposalAdvancedFilters>(initialFilters);
@@ -478,6 +490,8 @@ export function DisposedEquipmentPage() {
           onDelete={handleDelete}
           onRestore={handleRestore}
           onViewDetails={handleViewDetails}
+          canRestore={canRestoreEquipment}
+          canDelete={canDeleteEquipment}
         />
       </div>
     </div>

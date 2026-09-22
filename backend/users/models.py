@@ -233,9 +233,29 @@ class User(AbstractUser):
                 
                 if 'filters' in role_config:
                     for model, model_filters in role_config['filters'].items():
-                        if model not in permissions['filters']:
-                            permissions['filters'][model] = {}
-                        permissions['filters'][model].update(model_filters)
+                        existing = permissions['filters'].get(model)
+
+                        # Нормализуем приходящий фильтр к списку альтернатив.
+                        if isinstance(model_filters, list):
+                            incoming_alts = list(model_filters)
+                        elif isinstance(model_filters, dict):
+                            incoming_alts = [model_filters]
+                        else:
+                            # На всякий случай игнорируем неизвестный формат
+                            continue
+
+                        # Существующее значение тоже нормализуем.
+                        if existing is None:
+                            existing_alts = []
+                        elif isinstance(existing, list):
+                            existing_alts = list(existing)
+                        elif isinstance(existing, dict):
+                            existing_alts = [existing]
+                        else:
+                            existing_alts = []
+
+                        # Объединяем: все альтернативы сохраняются (OR-семантика на фронте).
+                        permissions['filters'][model] = existing_alts + incoming_alts
         
         permissions['models'] = {
             model: list(actions) for model, actions in permissions['models'].items()

@@ -29,6 +29,11 @@ class RoleBasedFilterMixin:
     - Для изменяющих (create, update, partial_update, destroy) применяется
       `write_filters[model]`; если он для модели не задан — берётся
       `filters[model]` (обратная совместимость).
+
+    Формат фильтров для модели:
+    - dict         — {field: value, ...} — все условия объединяются через AND;
+    - list[dict]   — [{...}, {...}] — альтернативы объединяются через OR,
+                     внутри каждого dict — AND.
     """
 
     # Действия, для которых применяется write-фильтр
@@ -63,11 +68,6 @@ class RoleBasedFilterMixin:
           - None         — доступа нет;
           - ALL_ACCESS   — доступ без ограничений;
           - Q(...)       — доступ с ограничением.
-
-        mode:
-          - 'read'  — использовать cfg['filters'][model_name]
-          - 'write' — использовать cfg['write_filters'][model_name] (если нет —
-                      fallback на cfg['filters'][model_name])
         """
         user = self.request.user
         user_roles = self._get_user_roles()
@@ -95,22 +95,11 @@ class RoleBasedFilterMixin:
                 filters = cfg.get('filters', {}).get(model_name)
 
             if filters:
-                role_q = Q()
-                skip = False
-                for key, value in filters.items():
-                    if value == USER_DIVISION_MARKER:
-                        if user_division_id is None:
-                            skip = True
-                            break
-                        role_q &= Q(**{key: user_division_id})
-                    elif value == USER_SUBDIVISION_MARKER:
-                        if user_subdivision_id is None:
-                            skip = True
-                            break
-                        role_q &= Q(**{key: user_subdivision_id})
-                    else:
-                        role_q &= Q(**{key: value})
-                if skip:
+                role_q = self._filters_to_q(
+                    filters, user_division_id, user_subdivision_id
+                )
+                if role_q is None:
+                    # ни одна альтернатива не применима (не хватает маркеров)
                     continue
                 final_q = role_q if final_q is None else (final_q | role_q)
                 continue
@@ -131,6 +120,49 @@ class RoleBasedFilterMixin:
             final_q = fallback_q if final_q is None else (final_q | fallback_q)
 
         return final_q
+
+    @staticmethod
+    def _filters_to_q(filters, user_division_id, user_subdivision_id):
+        """
+        Строит Q из filters.
+
+        Поддерживает:
+          - dict        — одно AND-условие;
+          - list[dict]  — OR альтернатив, каждая альтернатива — AND.
+
+        Возвращает None, если ни одна альтернатива не применима
+        (например, все требуют маркер, а у пользователя соответствующее
+        поле = None).
+        """
+        if isinstance(filters, dict):
+            alternatives = [filters]
+        else:
+            alternatives = list(filters)
+
+        combined = None
+        for alt in alternatives:
+            if not isinstance(alt, dict):
+                continue
+            role_q = Q()
+            skip = False
+            for key, value in alt.items():
+                if value == USER_DIVISION_MARKER:
+                    if user_division_id is None:
+                        skip = True
+                        break
+                    role_q &= Q(**{key: user_division_id})
+                elif value == USER_SUBDIVISION_MARKER:
+                    if user_subdivision_id is None:
+                        skip = True
+                        break
+                    role_q &= Q(**{key: user_subdivision_id})
+                else:
+                    role_q &= Q(**{key: value})
+            if skip:
+                continue
+            combined = role_q if combined is None else (combined | role_q)
+
+        return combined
 
     # ------------------------------------------------------------------ #
     # Хелперы для RoleBasedPermission                                    #
@@ -161,7 +193,12 @@ class RoleBasedFilterMixin:
         return self.request.user.groups.filter(name__startswith='role_').exists()
 
     def _get_role_filters(self, model_name):
-        """DEPRECATED. Плоский dict-фильтр (объединение ключей всех ролей)."""
+        """
+        DEPRECATED. Плоский dict-фильтр (объединение ключей всех ролей).
+
+        Для list-формата берётся только первая альтернатива — это legacy-метод;
+        новый код должен использовать `_build_role_q`.
+        """
         user = self.request.user
         user_division_id = user.division.id if user.division else None
         user_subdivision_id = user.subdivision.id if user.subdivision else None
@@ -174,6 +211,10 @@ class RoleBasedFilterMixin:
             role_filters = cfg.get('filters', {}).get(model_name)
             if not role_filters:
                 continue
+            if isinstance(role_filters, list):
+                if not role_filters:
+                    continue
+                role_filters = role_filters[0]
             for key, value in role_filters.items():
                 if value == USER_DIVISION_MARKER:
                     if user_division_id is not None:

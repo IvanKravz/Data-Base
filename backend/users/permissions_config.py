@@ -240,6 +240,49 @@ ROLE_PERMISSIONS = {
         'description': 'Управление техникой и сетями связи 1 отделения',
     },
 
+    'head_of_section_2_1': {
+        'name': 'Начальник 2 отделения 1 отдела',
+        'models': {
+            'Division': ['view'],
+            'Subdivision': ['view'],
+            'Employee': ['view'],
+            'Equipment': ['view'],
+            'Facility': ['view'],
+            'CommunicationNetwork': ['view'],
+            'CommunicationPost': ['view'],
+            'FacilityType': ['view'],
+            'EquipmentCategory': ['view'],
+            'Task': ['view'],
+            'ShaWorkerDetails': ['view'],
+            'ShaEquipmentConclusion': ['view'],
+            'StorageFolder': ['view', 'add', 'change', 'delete'],
+            'StorageFile': ['view', 'add', 'change', 'delete'],
+            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+        },
+        'filters': {
+            'Employee': [
+                {'is_sha_worker': True},
+                {'division_id': USER_DIVISION_MARKER, 'subdivision_id': USER_SUBDIVISION_MARKER},
+            ],
+            'Equipment': {'category__value__in': ['tko', 'shd', 'shdTelephone']},
+            'Facility': {'is_closed': True},
+            'ScheduleEvent': {
+                'employee__division_id': USER_DIVISION_MARKER,
+                'employee__subdivision_id': USER_SUBDIVISION_MARKER,
+            },
+            'Task': {
+                'division_id': USER_DIVISION_MARKER,
+                'subdivision_id': USER_SUBDIVISION_MARKER,
+            },
+        },
+        'can_see_all_divisions': True,
+        'can_access_storage': True,
+        'can_see_all_storage': False,
+        'storage_quota': 5 * 1024 * 1024 * 1024,
+        'max_file_size': 50 * 1024 * 1024,
+        'description': 'Просмотр ШаРаботников, управление графиком своего отделения',
+    },
+
     'employee_section_1_2': {
         'name': 'Сотрудник 2 отделения 1 отдела',
         'models': {
@@ -376,42 +419,6 @@ ROLE_PERMISSIONS = {
         'storage_quota': 5 * 1024 * 1024 * 1024,
         'max_file_size': 50 * 1024 * 1024,
         'description': 'Управление техникой, сетями и объектами своего отделения',
-    },
-
-    'head_of_section_2_1': {
-        'name': 'Начальник 2 отделения 1 отдела',
-        'models': {
-            'Division': ['view'],
-            'Subdivision': ['view'],
-            'Employee': ['view'],
-            'Equipment': ['view'],
-            'Facility': ['view'],
-            'CommunicationNetwork': ['view'],
-            'CommunicationPost': ['view'],
-            'FacilityType': ['view'],
-            'EquipmentCategory': ['view'],
-            'Task': ['view'],
-            'ShaWorkerDetails': ['view'],
-            'ShaEquipmentConclusion': ['view'],
-            'StorageFolder': ['view', 'add', 'change', 'delete'],
-            'StorageFile': ['view', 'add', 'change', 'delete'],
-            'ScheduleEvent': ['view', 'add', 'change', 'delete'],
-        },
-        'filters': {
-            'Employee': {'is_sha_worker': True},
-            # read и write совпадают — своё отделение
-            'ScheduleEvent': {
-                'employee__division_id': USER_DIVISION_MARKER,
-                'employee__subdivision_id': USER_SUBDIVISION_MARKER,
-            },
-            'Division': {},
-        },
-        'can_see_all_divisions': True,
-        'can_access_storage': True,
-        'can_see_all_storage': False,
-        'storage_quota': 5 * 1024 * 1024 * 1024,
-        'max_file_size': 50 * 1024 * 1024,
-        'description': 'Просмотр ШаРаботников, управление графиком своего отделения',
     },
 }
 

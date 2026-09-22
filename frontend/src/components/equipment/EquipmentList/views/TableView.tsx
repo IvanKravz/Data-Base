@@ -291,6 +291,10 @@ export function TableView({
     );
   }, [searchTerm]);
 
+  if (equipment.length === 0) {
+    return null;
+  }
+
   // Плоский режим
   if (viewMode === 'flat') {
     return (

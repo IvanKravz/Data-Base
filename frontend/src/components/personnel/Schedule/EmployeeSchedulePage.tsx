@@ -42,12 +42,13 @@ interface ContextMenuState {
 
 interface ScheduleLocationState {
   divisionName?: string;
+  subdivisionName?: string;
   fromDivisionPage?: boolean;
 }
 
 export function EmployeeSchedulePage() {
   const token = localStorage.getItem('accessToken');
-  const { canAccessPage } = useAppPermissions();
+  const { canAccessPage, getCurrentUser } = useAppPermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -61,7 +62,9 @@ export function EmployeeSchedulePage() {
   const divisionIdNum = divisionIdFromUrl ? Number(divisionIdFromUrl) : undefined;
   const subdivisionIdNum = subdivisionIdFromUrl ? Number(subdivisionIdFromUrl) : undefined;
 
+  // === Названия подразделения и отделения (из URL) ===
   const [divisionName, setDivisionName] = useState<string | null>(null);
+  const [subdivisionName, setSubdivisionName] = useState<string | null>(null);
 
   const now = new Date();
   const [currentYear, setCurrentYear] = useState<number>(now.getFullYear());
@@ -99,35 +102,54 @@ export function EmployeeSchedulePage() {
     localStorage.setItem('schedule_view_mode', mode);
   };
 
-  // === Название подразделения ===
+  // === Названия подразделения и отделения (по API, если пришли не с карточки) ===
   useEffect(() => {
     if (!divisionIdFromUrl) {
       setDivisionName(null);
+      setSubdivisionName(null);
       return;
     }
 
     const stateDivName = locationState?.divisionName ?? null;
-    if (stateDivName) {
-      setDivisionName(stateDivName);
-      return;
-    }
+    const stateSubName = locationState?.subdivisionName ?? null;
+
+    if (stateDivName) setDivisionName(stateDivName);
+    if (stateSubName) setSubdivisionName(stateSubName);
+
+    const needsDivision = !stateDivName;
+    const needsSubdivision = !!subdivisionIdFromUrl && !stateSubName;
+
+    if (!needsDivision && !needsSubdivision) return;
 
     let cancelled = false;
-    setDivisionName(null);
+    if (needsDivision) setDivisionName(null);
+    if (needsSubdivision) setSubdivisionName(null);
+
     (async () => {
       try {
         const div = await divisionsApi.getDivisionById(divisionIdFromUrl, token);
-        if (!cancelled) setDivisionName(div?.name ?? null);
+        if (cancelled) return;
+        if (needsDivision) setDivisionName(div?.name ?? null);
+
+        if (needsSubdivision && subdivisionIdFromUrl && div?.subdivisions) {
+          const sub = div.subdivisions.find(
+            (s: any) => String(s.id) === String(subdivisionIdFromUrl),
+          );
+          if (!cancelled) setSubdivisionName(sub?.name ?? null);
+        }
       } catch (err) {
-        console.error('Не удалось получить название подразделения', err);
-        if (!cancelled) setDivisionName(null);
+        console.error('Не удалось получить данные подразделения/отделения', err);
+        if (cancelled) return;
+        if (needsDivision) setDivisionName(null);
+        if (needsSubdivision) setSubdivisionName(null);
       }
     })();
+
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [divisionIdFromUrl, token]);
+  }, [divisionIdFromUrl, subdivisionIdFromUrl, token]);
 
   const employeesFilteredByDivision = useMemo(() => {
     let base = employees;
@@ -350,8 +372,8 @@ export function EmployeeSchedulePage() {
     }
   };
 
-  const handleCellMouseLeave = () => {};
-  const handleTableMouseLeave = () => {};
+  const handleCellMouseLeave = () => { };
+  const handleTableMouseLeave = () => { };
 
   const handleContextMenu = (e: React.MouseEvent, employee: Employee, date: Date) => {
     e.preventDefault();
@@ -495,16 +517,17 @@ export function EmployeeSchedulePage() {
 
   const refreshEvents = async () => {
     try {
-        const data = await employeesApi.getScheduleEvents(token, {
-            year: currentYear,
-            month: currentMonth,
-        });
-        const employeeEvents = data.filter(e => e.employee === employee.id);
-        setEvents(employeeEvents);
+      const data = await employeesApi.getScheduleEvents(token, {
+        year: currentYear,
+        month: currentMonth,
+        division: divisionIdNum,
+        subdivision: subdivisionIdNum,
+      });
+      setEvents(data);
     } catch (error) {
-        console.error('Failed to refresh events', error);
+      console.error('Failed to refresh events', error);
     }
-};
+  };
 
   const handleDeleteEvent = async () => {
     if (!existingEvent) return;
@@ -568,29 +591,115 @@ export function EmployeeSchedulePage() {
     navigate(-1);
   };
 
+  // === Подзаголовок шапки ===
+  // Приоритет:
+  //  1) URL содержит division → «Подразделение [· Отделение]».
+  //     Отделение берём по порядку:
+  //       a) из URL, если оно там есть;
+  //       b) иначе из фактического списка сотрудников, если все из одного отделения;
+  //       c) иначе из данных пользователя, если его подразделение совпадает с URL.
+  //  2) URL без division → подразделение/отделение пользователя или «Все подразделения».
   const headerSubtitle = useMemo(() => {
+    // ----- Случай 1: URL содержит division -----
     if (divisionIdFromUrl) {
-      return divisionName ?? 'Загрузка...';
+      const parts: string[] = [];
+      parts.push(divisionName ?? 'Загрузка...');
+
+      let subLabel: string | null = null;
+
+      if (subdivisionIdFromUrl) {
+        // (a) Отделение явно в URL
+        subLabel = subdivisionName ?? 'Загрузка...';
+      } else if (!loadingEmployees && employees.length > 0) {
+        // (b) Вычисляем по фактическому списку сотрудников
+        const subIds = new Set<number>();
+        let firstSubName: string | null = null;
+        for (const emp of employees) {
+          if (emp.subdivision?.id != null) {
+            subIds.add(Number(emp.subdivision.id));
+            if (!firstSubName && emp.subdivision.name) {
+              firstSubName = emp.subdivision.name;
+            }
+          }
+        }
+        if (subIds.size === 1 && firstSubName) {
+          subLabel = firstSubName;
+        }
+      } else if (!loadingEmployees && employees.length === 0) {
+        // (c) Список пуст → fallback на отделение пользователя,
+        //      если его подразделение совпадает с открытым
+        const currentUser = getCurrentUser();
+        const uDivId = currentUser?.division_info?.id;
+        const uSubName: string | null =
+          currentUser?.division_info?.subdivision?.name ?? null;
+
+        if (String(uDivId) === String(divisionIdFromUrl) && uSubName) {
+          subLabel = uSubName;
+        }
+      }
+
+      if (subLabel) parts.push(subLabel);
+      return parts.join(' · ');
     }
 
-    if (loadingEmployees) {
-      return 'Загрузка...';
-    }
+    // ----- Случай 2: URL без division -----
+    if (loadingEmployees) return 'Загрузка...';
+
+    const currentUser = getCurrentUser();
+    const uDivisionName: string | null = currentUser?.division_info?.name ?? null;
+    const uSubdivisionName: string | null =
+      currentUser?.division_info?.subdivision?.name ?? null;
 
     const divisionIds = new Set<number>();
+    const subdivisionIds = new Set<number>();
+    let firstDivisionName: string | null = null;
+    let firstSubdivisionName: string | null = null;
+
     for (const emp of employees) {
       if (emp.division?.id != null) {
         divisionIds.add(Number(emp.division.id));
+        if (!firstDivisionName && emp.division.name) {
+          firstDivisionName = emp.division.name;
+        }
+      }
+      if (emp.subdivision?.id != null) {
+        subdivisionIds.add(Number(emp.subdivision.id));
+        if (!firstSubdivisionName && emp.subdivision.name) {
+          firstSubdivisionName = emp.subdivision.name;
+        }
       }
     }
 
-    if (divisionIds.size === 1) {
-      const onlyEmp = employees.find((e) => e.division?.id != null);
-      return onlyEmp?.division?.name ?? 'Все подразделения';
+    // Список пуст → данные пользователя
+    if (divisionIds.size === 0) {
+      if (uDivisionName && uSubdivisionName) {
+        return `${uDivisionName} · ${uSubdivisionName}`;
+      }
+      if (uDivisionName) return uDivisionName;
+      return 'Все подразделения';
     }
 
+    // Один дивизион
+    if (divisionIds.size === 1) {
+      const divName = firstDivisionName ?? uDivisionName ?? 'Подразделение';
+      if (subdivisionIds.size === 1) {
+        const subName = firstSubdivisionName ?? uSubdivisionName ?? '';
+        return subName ? `${divName} · ${subName}` : divName;
+      }
+      return divName;
+    }
+
+    // Несколько дивизионов
     return 'Все подразделения';
-  }, [divisionIdFromUrl, divisionName, employees, loadingEmployees]);
+  }, [
+    divisionIdFromUrl,
+    subdivisionIdFromUrl,
+    divisionName,
+    subdivisionName,
+    employees,
+    loadingEmployees,
+    getCurrentUser,
+  ]);
 
   // Уникальный ключ для хранения свёрнутости в разрезе подразделения/отделения
   const storageKey = useMemo(
