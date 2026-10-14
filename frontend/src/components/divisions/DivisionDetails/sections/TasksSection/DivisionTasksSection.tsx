@@ -57,6 +57,9 @@ export function DivisionTasksSection() {
   const [subdivisionName, setSubdivisionName] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // НОВОЕ: фильтр по ответственному исполнителю
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | null>(null);
+
   const [highlightedRange, setHighlightedRange] = useState<{
     start: Date;
     end: Date;
@@ -290,7 +293,12 @@ export function DivisionTasksSection() {
       const mineMatch =
         !showOnlyMine || (task.is_private && task.created_by?.id === currentUserId);
 
-      return searchMatch && categoryMatch && dateMatch && mineMatch;
+      // НОВОЕ: фильтр по ответственному исполнителю.
+      // null = «Все исполнители» (без фильтрации).
+      const assigneeMatch =
+        selectedAssigneeId === null || task.assignee?.id === selectedAssigneeId;
+
+      return searchMatch && categoryMatch && dateMatch && mineMatch && assigneeMatch;
     });
   }, [
     tasks,
@@ -301,6 +309,7 @@ export function DivisionTasksSection() {
     endDate,
     showOnlyMine,
     currentUserId,
+    selectedAssigneeId,
   ]);
 
   const handleDeleteTask = async (taskId: string) => {
@@ -441,7 +450,12 @@ export function DivisionTasksSection() {
 
   const renderNoTasksMessage = () => {
     const hasActiveFilters =
-      searchTerm || selectedCategory !== 'all' || startDate || endDate || showOnlyMine;
+      searchTerm ||
+      selectedCategory !== 'all' ||
+      startDate ||
+      endDate ||
+      showOnlyMine ||
+      selectedAssigneeId !== null;
 
     const handleResetFilters = () => {
       setSearchTerm('');
@@ -449,6 +463,7 @@ export function DivisionTasksSection() {
       setStartDate(null);
       setEndDate(null);
       setShowOnlyMine(false);
+      setSelectedAssigneeId(null);
       // calendarState не трогаем — вид и текущий месяц навигации остаются
     };
 
@@ -580,6 +595,8 @@ export function DivisionTasksSection() {
               onEndDateChange={handleEndDateChange}
               showOnlyMine={showOnlyMine}
               onToggleMine={() => setShowOnlyMine(!showOnlyMine)}
+              selectedAssigneeId={selectedAssigneeId}
+              onAssigneeChange={setSelectedAssigneeId}
             />
           </div>
           <div className="tasks-main-section">{renderTasksContent()}</div>

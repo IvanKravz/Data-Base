@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar } from 'lucide-react';
+import { Plus, Trash2, Calendar, ChevronDown } from 'lucide-react';
 import { TaskStep } from '../../../types/tasks';
 import './style.css';
 
@@ -20,34 +20,50 @@ interface TaskStepsListProps {
 }
 
 export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
-  const [newStepIndex, setNewStepIndex] = useState<number | null>(null);
-  
+  // Какие этапы раскрыты. По умолчанию раскрыт только что добавленный.
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
+
   useEffect(() => {
-    if (newStepIndex !== null) {
-      const timer = setTimeout(() => setNewStepIndex(null), 300);
+    if (justAddedId !== null) {
+      const timer = setTimeout(() => setJustAddedId(null), 350);
       return () => clearTimeout(timer);
     }
-  }, [newStepIndex]);
+  }, [justAddedId]);
 
   const handleAddStep = () => {
+    const newId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     const newSteps = [
       ...steps,
-      { 
-        name: '', 
-        comments: '', 
-        startDate: '', 
+      {
+        name: '',
+        comments: '',
+        startDate: '',
         endDate: '',
-        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        is_completed: false, 
-      }
+        id: newId,
+        is_completed: false,
+      },
     ];
     onStepsChange(newSteps);
-    setNewStepIndex(newSteps.length - 1);
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      next.add(newId);
+      return next;
+    });
+    setJustAddedId(newId);
   };
 
   const handleRemoveStep = (index: number) => {
+    const stepToRemove = steps[index];
     const newSteps = steps.filter((_, i) => i !== index);
     onStepsChange(newSteps);
+    if (stepToRemove?.id) {
+      setOpenIds((prev) => {
+        const next = new Set(prev);
+        next.delete(stepToRemove.id as string);
+        return next;
+      });
+    }
   };
 
   const handleStepChange = (
@@ -60,6 +76,15 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
     onStepsChange(newSteps);
   };
 
+  const toggleOpen = (id: string) => {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const formatDateForInput = (dateString: string): string => {
     if (!dateString) return '';
     return dateString.split('T')[0];
@@ -70,131 +95,207 @@ export function TaskStepsList({ steps, onStepsChange }: TaskStepsListProps) {
     return `${dateString}T00:00:00`;
   };
 
+  const formatDateShort = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
   return (
-    <div className="task-steps-container">
-      <div className="task-steps-header">
-        <h3 className="task-steps-title">Этапы выполнения задачи</h3>
+    <div className="task-form-card">
+      <div className="task-form-card-title">
+        <span>Этапы выполнения</span>
+        {steps.length > 0 && (
+          <span className="task-form-card-title-count">{steps.length}</span>
+        )}
       </div>
 
-      <div className="task-steps-list">
-        {steps.map((step, index) => (
-          <div 
-            key={step.id || `step-${index}`}
-            className={`task-step-card ${newStepIndex === index ? 'task-step-card-new' : ''}`}
-          >
+      <div className="task-steps-container">
+        {steps.length > 0 && (
+          <div className="task-steps-list">
+            {steps.map((step, index) => {
+              const key = step.id || `step-${index}`;
+              const isOpen = openIds.has(key);
+              const hasName = step.name.trim().length > 0;
+              const hasDates = !!step.startDate && !!step.endDate;
+              const hasComments = !!step.comments && step.comments.trim().length > 0;
+
+              return (
+                <div
+                  key={key}
+                  className={`task-step-row ${isOpen ? 'task-step-row-open' : ''} ${
+                    justAddedId === key ? 'task-step-row-new' : ''
+                  }`}
+                >
+                  <div
+                    className="task-step-row-header"
+                    onClick={() => toggleOpen(key)}
+                  >
+                    <span className="task-step-row-number">{index + 1}</span>
+
+                    <div className="task-step-row-info">
+                      <div className={`task-step-row-name ${!hasName ? 'task-step-row-name-placeholder' : ''}`}>
+                        {hasName ? step.name : 'Новый этап'}
+                      </div>
+                      <div className="task-step-row-summary">
+                        {hasDates ? (
+                          <>
+                            <span>
+                              {formatDateShort(step.startDate)} — {formatDateShort(step.endDate)}
+                            </span>
+                            {hasComments && (
+                              <>
+                                <span className="task-step-row-summary-sep">·</span>
+                                <span>{step.comments.slice(0, 40)}{step.comments.length > 40 ? '…' : ''}</span>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <span>Даты не заданы</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="task-step-row-actions">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveStep(index);
+                        }}
+                        className="task-step-icon-btn task-step-icon-btn-danger"
+                        aria-label={`Удалить этап ${index + 1}`}
+                        title="Удалить этап"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="task-step-icon-btn task-step-icon-btn-chevron"
+                        aria-label={isOpen ? 'Свернуть этап' : 'Развернуть этап'}
+                        tabIndex={-1}
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className="task-step-row-body">
+                      <div className="task-step-field">
+                        <label className="task-form-label" htmlFor={`step-name-${index}`}>
+                          Название этапа
+                        </label>
+                        <input
+                          id={`step-name-${index}`}
+                          type="text"
+                          required
+                          value={step.name}
+                          onChange={(e) => handleStepChange(index, 'name', e.target.value)}
+                          className="task-form-input"
+                          placeholder="Например: подготовить черновик"
+                        />
+                      </div>
+
+                      <div className="task-step-field">
+                        <label className="task-form-label" htmlFor={`step-comments-${index}`}>
+                          Комментарий
+                        </label>
+                        <textarea
+                          id={`step-comments-${index}`}
+                          value={step.comments}
+                          onChange={(e) => handleStepChange(index, 'comments', e.target.value)}
+                          className="task-form-input"
+                          placeholder="Дополнительные детали (необязательно)"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="task-step-dates-grid">
+                        <div className="task-step-field">
+                          <label className="task-form-label" htmlFor={`step-start-${index}`}>
+                            Дата начала
+                          </label>
+                          <div className="task-step-date-input-container">
+                            <Calendar className="task-step-date-icon" />
+                            <input
+                              id={`step-start-${index}`}
+                              type="date"
+                              required
+                              value={formatDateForInput(step.startDate)}
+                              onChange={(e) =>
+                                handleStepChange(
+                                  index,
+                                  'startDate',
+                                  formatDateForServer(e.target.value)
+                                )
+                              }
+                              className="task-form-input task-step-date-input"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="task-step-field">
+                          <label className="task-form-label" htmlFor={`step-end-${index}`}>
+                            Дата окончания
+                          </label>
+                          <div className="task-step-date-input-container">
+                            <Calendar className="task-step-date-icon" />
+                            <input
+                              id={`step-end-${index}`}
+                              type="date"
+                              required
+                              value={formatDateForInput(step.endDate)}
+                              onChange={(e) =>
+                                handleStepChange(
+                                  index,
+                                  'endDate',
+                                  formatDateForServer(e.target.value)
+                                )
+                              }
+                              className="task-form-input task-step-date-input"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {steps.length === 0 ? (
+          <div className="task-steps-empty-state">
+            <div className="task-steps-empty-title">Пока нет этапов</div>
+            <div className="task-steps-empty-text">
+              Разбейте задачу на этапы — так её будет проще отслеживать
+            </div>
             <button
               type="button"
-              onClick={() => handleRemoveStep(index)}
-              className="task-step-delete-btn"
-              aria-label={`Удалить этап ${index + 1}`}
+              onClick={handleAddStep}
+              className="task-step-add-first-btn"
             >
-              <Trash2 className="h-4 w-4" />
+              <Plus className="task-step-add-first-icon" />
+              Добавить первый этап
             </button>
-
-            <div className="task-step-header">
-              <div className="task-step-number">{index + 1}</div>
-              <h4 className="task-step-title">Этап {index + 1}</h4>
-            </div>
-
-            <div className="task-step-content">
-              <div className="task-step-field">
-                <label className="task-form-label" htmlFor={`step-name-${index}`}>
-                  Название этапа
-                </label>
-                <input
-                  id={`step-name-${index}`}
-                  type="text"
-                  required
-                  value={step.name}
-                  onChange={(e) => handleStepChange(index, 'name', e.target.value)}
-                  className="task-form-input"
-                  placeholder="Введите название этапа"
-                />
-              </div>
-
-              <div className="task-step-field">
-                <label className="task-form-label" htmlFor={`step-comments-${index}`}>
-                  Комментарий
-                </label>
-                <textarea
-                  id={`step-comments-${index}`}
-                  value={step.comments}
-                  onChange={(e) => handleStepChange(index, 'comments', e.target.value)}
-                  className="task-form-input"
-                  placeholder="Добавьте комментарий к этапу"
-                  rows={3}
-                />
-              </div>
-
-              <div className="task-step-dates-grid">
-                <div className="task-step-date-field">
-                  <label className="task-form-label" htmlFor={`step-start-${index}`}>
-                    Дата начала
-                  </label>
-                  <div className="task-step-date-input-container">
-                    <Calendar className="task-step-date-icon" />
-                    <input
-                      id={`step-start-${index}`}
-                      type="date"
-                      required
-                      value={formatDateForInput(step.startDate)}
-                      onChange={(e) => handleStepChange(
-                        index,
-                        'startDate',
-                        formatDateForServer(e.target.value)
-                      )}
-                      className="task-step-date-input"
-                    />
-                  </div>
-                </div>
-                
-                <div className="task-step-date-field">
-                  <label className="task-form-label" htmlFor={`step-end-${index}`}>
-                    Дата окончания
-                  </label>
-                  <div className="task-step-date-input-container">
-                    <Calendar className="task-step-date-icon" />
-                    <input
-                      id={`step-end-${index}`}
-                      type="date"
-                      required
-                      value={formatDateForInput(step.endDate)}
-                      onChange={(e) => handleStepChange(
-                        index,
-                        'endDate',
-                        formatDateForServer(e.target.value)
-                      )}
-                      className="task-step-date-input"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-        ))}
-      </div>
-
-      {steps.length === 0 ? (
-        <div className="task-steps-empty-state">
+        ) : (
           <button
             type="button"
             onClick={handleAddStep}
-            className="task-step-add-first-btn"
+            className="task-step-add-last-btn"
           >
-            <Plus className="task-step-add-first-icon" />
-            Создать первый этап
+            <Plus className="task-step-add-last-icon" />
+            Добавить этап
           </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={handleAddStep}
-          className="task-step-add-last-btn"
-        >
-          <Plus className="task-step-add-last-icon" />
-          Добавить новый этап
-        </button>
-      )}
+        )}
+      </div>
     </div>
   );
 }

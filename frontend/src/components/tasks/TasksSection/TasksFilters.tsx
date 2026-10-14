@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { List, Calendar as CalendarIcon } from 'lucide-react';
 import { SearchBar } from '../../common/SearchBar';
 import { TaskCategoryFilter } from './TaskCategoryFilter';
+import { TaskAssigneeFilter } from './TaskAssigneeFilter';
 import { Task } from '../../../types/tasks';
 import DatePicker from 'react-datepicker';
 import ru from 'date-fns/locale/ru';
@@ -25,6 +26,10 @@ interface TasksFiltersProps {
   onEndDateChange: (date: string | null) => void;
   showOnlyMine: boolean;
   onToggleMine: () => void;
+
+  // НОВОЕ: фильтр по ответственному исполнителю
+  selectedAssigneeId: number | null;
+  onAssigneeChange: (assigneeId: number | null) => void;
 }
 
 export function TasksFilters({
@@ -41,16 +46,14 @@ export function TasksFilters({
   onEndDateChange,
   showOnlyMine,
   onToggleMine,
+  selectedAssigneeId,
+  onAssigneeChange,
 }: TasksFiltersProps) {
-  // parseISO('2026-03-03') возвращает локальную полночь 3 марта,
-  // а не UTC-полночь, как new Date('2026-03-03').
   const startDateObj = startDate ? parseISO(startDate) : undefined;
   const endDateObj = endDate ? parseISO(endDate) : undefined;
 
   const handleDateRangeChange = (update: [Date | null, Date | null]) => {
     const [start, end] = update;
-    // format(date, 'yyyy-MM-dd') берёт локальный день —
-    // toISOString().split('T')[0] в UTC+3 превращал 3 марта в '2026-03-02'.
     onStartDateChange(start ? format(start, 'yyyy-MM-dd') : null);
     onEndDateChange(end ? format(end, 'yyyy-MM-dd') : null);
   };
@@ -62,9 +65,6 @@ export function TasksFilters({
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
-    // parseISO → локальная дата; new Date(dateStr) в UTC+3 даёт 3am,
-    // но toLocaleDateString всё равно вернёт правильный день.
-    // Используем parseISO для единообразия.
     const date = parseISO(dateStr);
     return date.toLocaleDateString('ru-RU', {
       day: '2-digit',
@@ -91,21 +91,30 @@ export function TasksFilters({
           />
         </div>
 
+        {/* НОВОЕ: фильтр по ответственному исполнителю */}
+        <TaskAssigneeFilter
+          tasks={tasks}
+          selectedAssigneeId={selectedAssigneeId}
+          onAssigneeChange={onAssigneeChange}
+        />
+
         <div className="tasks-view-toggle-container">
           <label className="tasks-filter-label">Вид отображения</label>
           <div className="tasks-view-toggle">
             <button
               onClick={() => onViewChange('list')}
-              className={`tasks-view-toggle-button ${activeView === 'list' ? 'tasks-view-toggle-active' : ''
-                }`}
+              className={`tasks-view-toggle-button ${
+                activeView === 'list' ? 'tasks-view-toggle-active' : ''
+              }`}
             >
               <List className="tasks-view-icon" />
               <span>Список</span>
             </button>
             <button
               onClick={() => onViewChange('calendar')}
-              className={`tasks-view-toggle-button ${activeView === 'calendar' ? 'tasks-view-toggle-active' : ''
-                }`}
+              className={`tasks-view-toggle-button ${
+                activeView === 'calendar' ? 'tasks-view-toggle-active' : ''
+              }`}
             >
               <CalendarIcon className="tasks-view-icon" />
               <span>Календарь</span>

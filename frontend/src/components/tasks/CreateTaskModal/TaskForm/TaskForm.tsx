@@ -19,6 +19,17 @@ interface TaskFormProps {
   onUpdate?: (task: Task) => void;
 }
 
+interface StepFormData {
+  id?: string;
+  name: string;
+  comments: string;
+  startDate: string;
+  endDate: string;
+  is_completed?: boolean;
+  completed_by?: any;
+  completed_at?: string;
+}
+
 export function TaskForm({
   initialTask,
   divisionId,
@@ -267,21 +278,28 @@ export function TaskForm({
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
-      <div className="task-form-section">
-        <div className="task-form-basicinfo">
-          <div className="task-form-field">
-            <label htmlFor="task-title" className="task-form-label">Название задачи</label>
-            <input
-              id="task-title"
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="task-form-input"
-              placeholder="Введите название задачи"
-            />
-          </div>
+      {/* Карточка: Основная информация */}
+      <div className="task-form-card">
+        <div className="task-form-card-title">
+          <span>Основная информация</span>
+        </div>
 
+        <div className="task-form-field">
+          <label htmlFor="task-title" className="task-form-label">
+            Название задачи
+          </label>
+          <input
+            id="task-title"
+            type="text"
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="task-form-input"
+            placeholder="Что нужно сделать?"
+          />
+        </div>
+
+        <div className="task-form-grid">
           <DivisionSelector
             divisions={divisions}
             selectedDivisionId={selectedDivisionId}
@@ -297,7 +315,6 @@ export function TaskForm({
             hasDivision={!!selectedDivisionId}
           />
 
-          {/* НОВОЕ: выбор ответственного исполнителя */}
           <AssigneeSelector
             assignees={assignees}
             selectedAssigneeId={selectedAssigneeId}
@@ -306,23 +323,30 @@ export function TaskForm({
             hasDivision={!!selectedDivisionId}
           />
         </div>
-
-        <TaskCategorySelector category={category} onChange={setCategory} />
       </div>
 
-      <div className="task-form-section">
+      {/* Карточка: Категория и приватность */}
+      <div className="task-form-card">
+        <div className="task-form-card-title">
+          <span>Категория</span>
+        </div>
+
+        <TaskCategorySelector category={category} onChange={setCategory} />
+
         <label className="task-privacy-checkbox">
           <input
             type="checkbox"
             checked={isPrivate}
             onChange={(e) => setIsPrivate(e.target.checked)}
           />
-          Приватная задача (видна только вам)
+          Приватная задача — видна только вам
         </label>
       </div>
 
+      {/* Карточка: Этапы */}
       <TaskStepsList steps={steps} onStepsChange={setSteps} />
 
+      {/* Липкий футер */}
       <div className="task-form-footer">
         <button type="button" onClick={onSuccess} className="task-form-cancel-btn">
           Отмена
@@ -333,7 +357,7 @@ export function TaskForm({
           className="task-form-submit-btn"
         >
           {initialTask ? 'Сохранить изменения' : 'Создать задачу'}
-          {isSubmitting && '...'}
+          {isSubmitting && '…'}
         </button>
       </div>
     </form>
