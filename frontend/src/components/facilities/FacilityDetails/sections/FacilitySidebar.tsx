@@ -1,6 +1,6 @@
 // FacilitySidebar.tsx
 import React from 'react';
-import { Facility } from '../../../types';
+import { Facility } from '../../../../types';
 import {
   MapPin,
   KeyRound,

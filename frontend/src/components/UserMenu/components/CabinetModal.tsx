@@ -1,12 +1,10 @@
 // components/CabinetModal.tsx
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { User, X, Clock, Database } from 'lucide-react';
+import { User, X, Clock } from 'lucide-react';
 import ProfileTab from './ProfileTab/ProfileTab';
 import { ActivityTab } from './ActivityTab';
-import { AdminPanel } from '../UserManagementPage/components/AdminPanel';
 import '../styles/CabinetModal.css';
-
 
 interface CabinetModalProps {
     isOpen: boolean;
@@ -15,11 +13,9 @@ interface CabinetModalProps {
 }
 
 export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
-    const [activeTab, setActiveTab] = useState<'profile' | 'activity' | 'admin'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'activity'>('profile');
 
     if (!isOpen) return null;
-
-    const isAdmin = userData?.is_staff || userData?.roles?.includes('admin');
 
     const modalContent = (
         <div className="cabinet-modal-overlay" onClick={onClose}>
@@ -56,21 +52,11 @@ export function CabinetModal({ isOpen, onClose, userData }: CabinetModalProps) {
                         <Clock className="w-4 h-4" />
                         <span>Активность</span>
                     </button>
-                    {isAdmin && (
-                        <button
-                            className={`cabinet-tab ${activeTab === 'admin' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('admin')}
-                        >
-                            <Database className="w-4 h-4" />
-                            <span>Администрирование</span>
-                        </button>
-                    )}
                 </div>
 
                 <div className="cabinet-content">
                     {activeTab === 'profile' && <ProfileTab userData={userData} />}
                     {activeTab === 'activity' && <ActivityTab />}
-                    {activeTab === 'admin' && <AdminPanel />}
                 </div>
             </div>
         </div>

@@ -1,0 +1,133 @@
+/* ============================================================ */
+/*  CandidateDetailsPage — стили страницы деталей кандидата     */
+/*                                                              */
+/*  Файл содержит:                                              */
+/*    - заголовок страницы (header, title-block, actions)       */
+/*    - карточку с полями (card, grid, field, label, value)     */
+/*    - секцию с примечаниями (note)                            */
+/*    - секцию таймлайна (timeline + section-title)             */
+/*    - адаптив                                                 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. Заголовок страницы                                        */
+/* ------------------------------------------------------------ */
+.candidate-details__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.candidate-details__title-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.candidate-details__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. Карточка с полями                                         */
+/* ------------------------------------------------------------ */
+.candidate-details__card {
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius-lg);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+    padding: 20px 22px;
+}
+
+.candidate-details__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px 24px;
+}
+
+.candidate-details__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.candidate-details__label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cnd-text-dim);
+    font-weight: 600;
+}
+
+.candidate-details__value {
+    font-size: 0.95rem;
+    color: var(--cnd-text);
+    font-weight: 500;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. Примечания                                                */
+/* ------------------------------------------------------------ */
+.candidate-details__note {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--cnd-border);
+}
+
+.candidate-details__note p {
+    margin: 6px 0 0;
+    color: #374151;
+    white-space: pre-wrap;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. Секция таймлайна                                          */
+/* ------------------------------------------------------------ */
+.candidate-details__timeline {
+    display: flex;
+    flex-direction: column;
+}
+
+.candidate-details__section-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--cnd-text);
+    margin: 0 0 12px;
+}
+
+/* ------------------------------------------------------------ */
+/* 5. Адаптив                                                   */
+/* ------------------------------------------------------------ */
+@media (max-width: 1024px) {
+    .candidate-details__title {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .candidate-details {
+        padding: 6px;
+        gap: 14px;
+    }
+
+    .candidate-details__title {
+        font-size: 1.3rem;
+    }
+
+    .candidate-details__actions {
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .candidate-details__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

@@ -129,6 +129,14 @@ export interface Equipment {
   facility_id?: number;
   assigned_to_id?: number;
   interest_organ_id?: number;
+
+  // === СЗИ ===
+  /** Является ли техника средством защиты информации (категория szi) */
+  is_szi?: boolean;
+  /** Номер сертификата СЗИ */
+  szi_certificate_number?: string | null;
+  /** Дата сертификата СЗИ */
+  szi_certificate_date?: string | null;
 }
 
 export interface ClosedEquipmentCategory {
@@ -157,7 +165,6 @@ export interface Division {
     tasks_count: number;
     networks_count: number;
   }[];
-  // дополнительные поля для Overview
   employees_count?: number;
   equipment_count?: number;
   facilities_count?: number;
@@ -230,7 +237,6 @@ export interface Network {
   protocol: 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
 }
 
-// Импорт Subdivision из другого места – будем считать, что он определён
 export interface Subdivision {
   id: string;
   name: string;
@@ -322,6 +328,8 @@ export interface EquipmentFieldPermissions {
   canEditDocuments: boolean;
   canEditIdentification: boolean;
   canEditIsNetwork: boolean;
+  /** Может ли пользователь редактировать поля СЗИ (сертификат, дата) */
+  canEditSzi: boolean;
 }
 
 export interface LoginResponse {

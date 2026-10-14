@@ -8,8 +8,29 @@
   color: #64748b;
 }
 
-/* Заголовок «Подразделение» – самостоятельный элемент над таблицей */
+/* === Иконки заголовков разделов === */
+.subheader-icon {
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.subheader-icon--blue {
+  color: #0443a8;
+}
+
+.subheader-icon--purple {
+  color: #35108d;
+}
+
+.subheader-icon--green {
+  color: #05895ff6;
+}
+
+/* Заголовок «Подразделения» – самостоятельный элемент над таблицей */
 .division-subheader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0 1rem 0.5rem 1rem;
   font-size: 1.3rem;
   font-weight: 600;
@@ -18,7 +39,9 @@
 }
 
 .division-subheader-hh {
-  /* padding: 0 1rem 0.5rem 1rem; */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.3rem;
   font-weight: 600;
   color: #050505;
@@ -183,7 +206,7 @@
 }
 
 .metric-icon--green {
-  color: #10b981;
+  color: #10b9818e;
 }
 
 .metric-icon--purple {
@@ -194,7 +217,7 @@
   color: #f59e0b;
 }
 
-/* === Карта === */
+/* === Карта (секция в списке подразделений) === */
 .map-country {
   margin-top: 1rem;
   padding: 0 1rem 1rem;
@@ -214,6 +237,31 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* === Заголовок секции карты в списке подразделений === */
+.map-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #050505;
+  cursor: pointer;
+  user-select: none;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.map-title:hover {
+  color: #2563eb;
+}
+
+.map-title:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
 }
 
 /* === Модальные окна === */
@@ -321,8 +369,10 @@
 }
 
 .hovered-region-name {
-  height: 2.2rem;               /* фиксированная высота */
-  line-height: 2.2rem;          /* центрирование текста по вертикали */
+  height: 2.2rem;
+  /* фиксированная высота */
+  line-height: 2.2rem;
+  /* центрирование текста по вертикали */
   font-size: 1.1rem;
   font-weight: 500;
   color: #4b5563;
@@ -330,7 +380,8 @@
   text-align: center;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;      /* длинные названия обрезаются с многоточием */
+  text-overflow: ellipsis;
+  /* длинные названия обрезаются с многоточием */
 }
 
 /* ===== Поиск региона ===== */
@@ -401,10 +452,12 @@
     justify-content: stretch;
     flex-wrap: nowrap;
   }
+
   .search-input-region {
     width: 100%;
     flex: 1;
   }
+
   .search-button {
     flex: 0 0 auto;
   }

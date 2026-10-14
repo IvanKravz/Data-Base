@@ -238,7 +238,7 @@
   cursor: not-allowed;
 }
 
-.checkbox-input:disabled + .checkbox-label-text {
+.checkbox-input:disabled+.checkbox-label-text {
   color: var(--ep-gray-500);
   cursor: not-allowed;
 }
@@ -389,8 +389,13 @@
 }
 
 @keyframes ep-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== АДАПТИВНОСТЬ ДЛЯ ФУТЕРА И КОНТЕЙНЕРА ===== */
@@ -549,6 +554,39 @@
   padding: 1rem;
   text-align: center;
 }
+
+/* ============================================================
+   БЛОК СЗИ (в секции «Документы»)
+   ============================================================ */
+
+.equipment-szi-section {
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+
+.equipment-szi-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9e3ff;
+  font-weight: 600;
+  font-size: var(--ep-text-base);
+  color: #4c1d95;
+}
+
+.equipment-szi-section-icon {
+  color: #7c3aed;
+}
+
+/* Ошибки полей */
+.ep-field-error {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--ep-red-600, #dc2626);
+}
+
 
 /* ===== СТИЛИ ДЛЯ БЛОКА ДЕЙСТВИЙ РЕДАКТИРОВАНИЯ ===== */
 .equipment-edit-actions {

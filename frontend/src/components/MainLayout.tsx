@@ -38,12 +38,16 @@ import {
   MapRoute,
   UsersRoute,
   ScheduleRoute,
+  CandidatesRoute,
   ProtectedRoute,
 } from './ProtectedRoute';
 import { UserManagementPage } from './UserMenu/UserManagementPage/UserManagementPage';
 import { useAppPermissions } from '../api/utils/AppPermissionsContext';
 import { AdminDivisionsManagementPage } from './UserMenu/AdminDivisionsManagement/AdminDivisionsManagementPage';
 import { EmployeeSchedulePage } from './personnel/Schedule/EmployeeSchedulePage';
+import { CandidatesPage } from './candidates/CandidatesPage';
+import { CandidateDetailsPage } from './candidates/CandidateDetailsPage';
+import { CandidateForm } from './candidates/CandidateForm';
 
 export function MainLayout() {
   const navigate = useNavigate();
@@ -55,6 +59,7 @@ export function MainLayout() {
     // «График работы» — дочерний пункт «Сотрудников»
     if (pathname.startsWith('/employee-schedule')) return 'personnel';
     if (pathname.startsWith('/personnel')) return 'personnel';
+    if (pathname.startsWith('/candidates')) return 'personnel';
     if (pathname.startsWith('/equipment')) return 'equipment';
     if (pathname.startsWith('/facilities')) return 'facilities';
     if (pathname.startsWith('/tasks')) return 'tasks';
@@ -178,6 +183,10 @@ export function MainLayout() {
         <Route path="/" element={<RootRedirect />} />
         <Route path="/divisions" element={<Navigate to="/" replace />} />
         <Route path="/personnel" element={<PersonnelRoute><PersonnelSection /></PersonnelRoute>} />
+        <Route path="/candidates" element={<CandidatesRoute><CandidatesPage /></CandidatesRoute>} />
+        <Route path="/candidates/:id" element={<CandidatesRoute><CandidateDetailsPage /></CandidatesRoute>} />
+        <Route path="/candidates/create" element={<CandidatesRoute action="add"><CandidateForm /></CandidatesRoute>} />
+        <Route path="/candidates/:id/edit" element={<CandidatesRoute action="change"><CandidateForm /></CandidatesRoute>} />
         <Route path="/equipment" element={<EquipmentRoute><EquipmentSection /></EquipmentRoute>} />
         <Route path="/facilities" element={<FacilitiesRoute><FacilitiesSection /></FacilitiesRoute>} />
         <Route path="/tasks" element={<TasksRoute><DivisionTasksSection /></TasksRoute>} />

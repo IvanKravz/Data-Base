@@ -452,7 +452,7 @@ export function TableView({
       <table className="personnel-table">
         <thead className="personnel-table-header">
           <tr>
-            <th className="personnel-table-header-cell">№ п/п</th>
+            <th className="personnel-table-header-cell-pp">№ п/п</th>
             <th className="personnel-table-header-cell">Фамилия, имя, отчество</th>
             <th className="personnel-table-header-cell">Звание</th>
             <th className="personnel-table-header-cell">Должность</th>

@@ -1,0 +1,601 @@
+/* ============================================================ */
+/*  CandidateForm — стили формы создания/редактирования         */
+/*                                                              */
+/*  Файл содержит:                                              */
+/*    - заголовок страницы                                      */
+/*    - тело формы (сетка секций)                               */
+/*    - секции формы (header + grid)                            */
+/*    - label с иконкой                                         */
+/*    - кастомный select со стрелкой                            */
+/*    - чекбокс «Другое подразделение»                          */
+/*    - picker куратора (input + dropdown)                      */
+/*    - строку виртуального списка сотрудников                  */
+/*    - выбранного куратора                                     */
+/*    - hint, actions                                           */
+/*    - адаптив                                                 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. Заголовок                                                 */
+/* ------------------------------------------------------------ */
+.candidate-form__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. Тело формы                                                */
+/* ------------------------------------------------------------ */
+.candidate-form__body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. Секции формы                                              */
+/* ------------------------------------------------------------ */
+.candidates-form-section {
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius-lg);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+    padding: 14px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.candidates-form-section__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--cnd-border-soft);
+}
+
+.candidates-form-section__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--cnd-primary-soft);
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+}
+
+.candidates-form-section__title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #111827;
+    letter-spacing: -0.01em;
+}
+
+.candidates-form-section__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. Строки формы и label                                      */
+/* ------------------------------------------------------------ */
+.candidates-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.candidates-form-row--full {
+    grid-column: 1 / -1;
+}
+
+.candidates-form-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.candidates-form-label svg {
+    color: var(--cnd-text-dim);
+    flex-shrink: 0;
+}
+
+.candidates-form-row input[type="text"],
+.candidates-form-row textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    background: var(--cnd-bg);
+    font-size: 0.95rem;
+    color: var(--cnd-text);
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.candidates-form-row input[type="text"]:hover,
+.candidates-form-row textarea:hover {
+    border-color: #cbd5e1;
+}
+
+.candidates-form-row input[type="text"]:focus,
+.candidates-form-row textarea:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+}
+
+.candidates-form-row input[type="text"]::placeholder,
+.candidates-form-row textarea::placeholder {
+    color: var(--cnd-text-dim);
+}
+
+.candidates-form-row textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+}
+
+/* ------------------------------------------------------------ */
+/* 5. Кастомный <select> со стрелкой                            */
+/* ------------------------------------------------------------ */
+.candidates-form-select {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.candidates-form-select select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    width: 100%;
+    padding: 10px 40px 10px 14px;
+
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    background: var(--cnd-bg);
+    font-size: 0.95rem;
+    color: var(--cnd-text);
+    font-family: inherit;
+
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.candidates-form-select select:hover {
+    border-color: #cbd5e1;
+}
+
+.candidates-form-select select:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+}
+
+.candidates-form-select__chevron {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cnd-text-dim);
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.candidates-form-select select:focus+.candidates-form-select__chevron {
+    color: var(--cnd-primary);
+}
+
+/* ------------------------------------------------------------ */
+/* 6. Чекбокс «Другое подразделение»                            */
+/* ------------------------------------------------------------ */
+.candidates-form-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--cnd-text);
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    /* background: var(--cnd-bg-soft); */
+    border: 1px solid var(--cnd-border);
+    transition: border-color 0.15s, background-color 0.15s;
+    width: fit-content;
+}
+
+.candidates-form-checkbox:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+/* Прячем нативный чекбокс, рисуем свой */
+.candidates-form-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.candidates-form-checkbox__box {
+    position: relative;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.candidates-form-checkbox__box::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.15s ease;
+    transform-origin: center;
+}
+
+.candidates-form-checkbox input[type="checkbox"]:checked+.candidates-form-checkbox__box {
+    background: var(--cnd-primary);
+    border-color: var(--cnd-primary);
+}
+
+.candidates-form-checkbox input[type="checkbox"]:checked+.candidates-form-checkbox__box::after {
+    transform: rotate(45deg) scale(1);
+}
+
+.candidates-form-checkbox input[type="checkbox"]:focus-visible+.candidates-form-checkbox__box {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.candidates-form-checkbox__label {
+    font-weight: 500;
+}
+
+/* ------------------------------------------------------------ */
+/* 7. Picker куратора                                           */
+/* ------------------------------------------------------------ */
+.candidates-curator-picker {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.candidates-curator-picker__input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    color: var(--cnd-text-muted);
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.candidates-curator-picker__input:hover {
+    border-color: #cbd5e1;
+}
+
+.candidates-curator-picker__input:focus-within {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+}
+
+.candidates-curator-picker__icon {
+    color: var(--cnd-text-dim);
+    flex-shrink: 0;
+}
+
+.candidates-curator-picker__input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.95rem;
+    color: var(--cnd-text);
+    font-family: inherit;
+    padding: 0;
+    min-width: 0;
+}
+
+.candidates-curator-picker__input input::placeholder {
+    color: var(--cnd-text-dim);
+}
+
+.candidates-curator-picker__input input:disabled {
+    cursor: not-allowed;
+    color: var(--cnd-text-dim);
+}
+
+.candidates-curator-picker__chevron {
+    color: var(--cnd-text-dim);
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.candidates-curator-picker__chevron.is-open {
+    transform: rotate(180deg);
+    color: var(--cnd-primary);
+}
+
+.candidates-curator-picker__spinner {
+    color: var(--cnd-primary);
+    animation: candidates-spin 0.9s linear infinite;
+    flex-shrink: 0;
+}
+
+.candidates-curator-picker__dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    box-shadow: var(--cnd-shadow-md);
+    overflow: hidden;
+    animation: candidates-popover-in 0.14s ease-out;
+}
+
+.candidates-curator-picker__empty {
+    padding: 16px 14px;
+    font-size: 0.85rem;
+    color: var(--cnd-text-muted);
+    text-align: center;
+}
+
+/* ------------------------------------------------------------ */
+/* 8. Строка виртуального списка сотрудников                    */
+/* ------------------------------------------------------------ */
+.candidates-curator-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--cnd-border-soft);
+    text-align: left;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--cnd-text);
+    cursor: pointer;
+    transition: background-color 0.1s;
+    box-sizing: border-box;
+}
+
+.candidates-curator-option:last-child {
+    border-bottom: none;
+}
+
+.candidates-curator-option:hover {
+    background: #eff6ff;
+}
+
+.candidates-curator-option__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+    opacity: 0.75;
+}
+
+.candidates-curator-option__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+
+.candidates-curator-option__name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--cnd-text);
+}
+
+.candidates-curator-option__position {
+    color: var(--cnd-text-muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ */
+/* 9. Выбранный куратор                                         */
+/* ------------------------------------------------------------ */
+.candidates-curator-selected {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    background: var(--cnd-bg-soft);
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.candidates-curator-selected:hover {
+    background: #f1f5f9;
+}
+
+.candidates-curator-selected__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--cnd-primary-soft);
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+}
+
+.candidates-curator-selected__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1px;
+}
+
+.candidates-curator-selected__name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--cnd-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.candidates-curator-selected__position {
+    font-size: 0.78rem;
+    color: var(--cnd-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.candidates-curator-selected__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--cnd-border);
+    background: var(--cnd-bg);
+    color: #475569;
+    cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+    flex-shrink: 0;
+}
+
+.candidates-curator-selected__clear:hover {
+    background: var(--cnd-danger-bg);
+    border-color: var(--cnd-danger-border);
+    color: var(--cnd-danger);
+}
+
+/* ------------------------------------------------------------ */
+/* 10. Hint                                                     */
+/* ------------------------------------------------------------ */
+.candidates-form-hint {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--cnd-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    padding: 10px 12px;
+    background: var(--cnd-primary-soft);
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+}
+
+.candidates-form-hint__icon {
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ------------------------------------------------------------ */
+/* 11. Кнопки формы                                             */
+/* ------------------------------------------------------------ */
+.candidate-form__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+/* ------------------------------------------------------------ */
+/* 12. Адаптив                                                  */
+/* ------------------------------------------------------------ */
+@media (max-width: 768px) {
+    .candidate-form {
+        padding: 6px;
+        gap: 14px;
+    }
+
+    .candidate-form__title {
+        font-size: 1.3rem;
+    }
+
+    .candidates-form-section {
+        padding: 16px 16px;
+    }
+}
+
+@media (max-width: 640px) {
+    .candidates-form-section__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .candidate-form__actions {
+        flex-direction: column-reverse;
+    }
+
+    .candidate-form__actions .candidates-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ------------------------------------------------------------ */
+/* 13. Read-only статус (для принятого кандидата)               */
+/* ------------------------------------------------------------ */
+.candidates-form-status-readonly {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px dashed var(--cnd-border);
+    border-radius: 10px;
+    background: var(--cnd-bg-soft);
+}
+
+.candidates-form-status-readonly__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--cnd-text-muted);
+}
+
+.candidates-form-status-readonly__hint svg {
+    color: var(--cnd-text-dim);
+    flex-shrink: 0;
+}

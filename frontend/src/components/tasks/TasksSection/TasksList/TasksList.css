@@ -12,9 +12,6 @@
     margin-bottom: 0.5rem;
     border-bottom: 2px solid #e2e8f0;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
 }
 
 .tasks-tabs::-webkit-scrollbar {
@@ -99,9 +96,6 @@
     margin-bottom: 1.3rem;
     border-bottom: 1px solid #e2e8f0;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
 }
 
 .tasks-subdivision-tabs::-webkit-scrollbar {

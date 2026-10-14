@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useRef, useCallback } from 'react';
 import { DivideIcon as LucideIcon, ChevronDown } from 'lucide-react';
 import { CircularProgress } from '@mui/material';
 import './StatCard.css';
@@ -27,6 +27,9 @@ const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+/** Длительность анимации закрытия — должна совпадать с CSS (.sc-menu-content.closing) */
+const MENU_CLOSE_MS = 200;
+
 export function StatCard({
   title,
   count,
@@ -42,6 +45,9 @@ export function StatCard({
   const validChildren = React.Children.toArray(children);
   const hasMenu = validChildren.length > 0;
 
+  // Стабильный id для связи кнопки и меню (aria-controls)
+  const menuId = useId();
+
   const [menuOpen, setMenuOpen] = useState<boolean>(() => {
     if (!storageKey) return false;
     try {
@@ -52,20 +58,60 @@ export function StatCard({
     }
   });
 
+  // Меню рендерится, пока идёт анимация закрытия — потом удаляется из DOM.
+  // Так DOM остаётся чистым в закрытом состоянии (как в исходной версии).
+  const [menuMounted, setMenuMounted] = useState<boolean>(menuOpen);
+  const [closing, setClosing] = useState<boolean>(false);
+  const closeTimer = useRef<number | null>(null);
+
   useEffect(() => {
     if (storageKey) {
       localStorage.setItem(storageKey, JSON.stringify(menuOpen));
     }
   }, [menuOpen, storageKey]);
 
+  // Синхронизация рендеринга меню с menuOpen (с учётом анимации закрытия)
+  useEffect(() => {
+    if (menuOpen) {
+      // Открываем: если шла анимация закрытия — отменяем её
+      if (closeTimer.current !== null) {
+        window.clearTimeout(closeTimer.current);
+        closeTimer.current = null;
+      }
+      setClosing(false);
+      setMenuMounted(true);
+    } else if (menuMounted) {
+      // Закрываем: сначала проигрываем анимацию, потом размонтируем
+      setClosing(true);
+      closeTimer.current = window.setTimeout(() => {
+        setMenuMounted(false);
+        setClosing(false);
+        closeTimer.current = null;
+      }, MENU_CLOSE_MS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuOpen]);
+
+  // Чистим таймер при размонтировании
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current !== null) {
+        window.clearTimeout(closeTimer.current);
+      }
+    };
+  }, []);
+
   const handleClick = () => {
     if (!disabled) onClick();
   };
 
-  const toggleMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setMenuOpen((v) => !v);
-  };
+  const toggleMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMenuOpen((v) => !v);
+    },
+    [],
+  );
 
   return (
     <div className="sc-wrapper">
@@ -111,18 +157,23 @@ export function StatCard({
             className={`sc-menu-toggle ${menuOpen ? 'expanded' : ''}`}
             onClick={toggleMenu}
             aria-expanded={menuOpen}
+            aria-controls={menuId}
             aria-label={menuOpen ? 'Скрыть меню' : 'Показать меню'}
           >
-            <ChevronDown
-              size={16}
-              className={`sc-menu-toggle-icon ${menuOpen ? 'expanded' : ''}`}
-            />
+            <ChevronDown size={16} className="sc-menu-toggle-icon" />
           </button>
         )}
       </div>
 
-      {hasMenu && menuOpen && (
-        <div className="sc-menu-content">{validChildren}</div>
+      {hasMenu && menuMounted && (
+        <div
+          id={menuId}
+          role="region"
+          aria-hidden={!menuOpen}
+          className={`sc-menu-content ${closing ? 'closing' : ''}`}
+        >
+          {validChildren}
+        </div>
       )}
     </div>
   );

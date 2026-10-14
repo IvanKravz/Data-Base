@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, ListTodo } from 'lucide-react';
 import './style.css';
 
 interface TasksHeaderProps {
@@ -11,10 +11,10 @@ interface TasksHeaderProps {
   headerTitle: string;
 }
 
-export function TasksHeader({ 
-  divisionName, 
-  subdivisionName, 
-  onBack, 
+export function TasksHeader({
+  divisionName,
+  subdivisionName,
+  onBack,
   onCreateTask,
   showBackButton,
   headerTitle
@@ -28,7 +28,10 @@ export function TasksHeader({
           </button>
         )}
         <div>
-          <h1 className="tasks-title">{headerTitle}</h1>
+          <h1 className="tasks-title">
+            <ListTodo size={28} />
+            {headerTitle}
+          </h1>
         </div>
       </div>
       <button onClick={onCreateTask} className="tasks-create-button">

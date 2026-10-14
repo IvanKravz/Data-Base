@@ -95,23 +95,29 @@ RUSSIAN_REGIONS = [
     ("Запорожская область", "Запорожская область"),
 ]
 
+
+class FSBOfficeManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class FSBOffice(models.Model):
     # Основная информация
     name = models.CharField(
-        max_length=255, 
+        max_length=255,
         verbose_name="Наименование органа",
         unique=True
     )
     address = models.TextField(verbose_name="Адрес")
-    
+
     # Регион (выбор из фиксированного списка)
     region = models.CharField(
-        max_length=255, 
+        max_length=255,
         verbose_name="Регион",
         choices=RUSSIAN_REGIONS,
         db_index=True
     )
-    
+
     # Контактная информация
     phone_operator = models.CharField(
         max_length=100,
@@ -123,7 +129,7 @@ class FSBOffice(models.Model):
         #     )
         # ]
     )
-    
+
     phone_communication = models.CharField(
         max_length=100,
         verbose_name="Телефон дежурного по связи",
@@ -134,7 +140,7 @@ class FSBOffice(models.Model):
         #     )
         # ]
     )
-    
+
     fax = models.CharField(
         max_length=100,
         verbose_name="Факс",
@@ -147,35 +153,40 @@ class FSBOffice(models.Model):
         #     )
         # ]
     )
-    
+
     email = models.EmailField(
         verbose_name="Адрес электронной почты",
         blank=True,
         null=True
     )
-    
+
     # Дополнительные поля
     description = models.TextField(
         verbose_name="Дополнительная информация",
         blank=True,
         null=True
     )
-    
+
     is_active = models.BooleanField(
         default=True,
         verbose_name="Активный"
     )
-    
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания"
     )
-    
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name="Дата обновления"
     )
-    
+
+    objects = FSBOfficeManager()
+
+    def natural_key(self):
+        return (self.name,)
+
     class Meta:
         verbose_name = "Территориальный орган ФСБ"
         verbose_name_plural = "Территориальные органы ФСБ"
@@ -184,6 +195,6 @@ class FSBOffice(models.Model):
             models.Index(fields=['region']),
             models.Index(fields=['is_active']),
         ]
-    
+
     def __str__(self):
         return f"{self.name} ({self.region})"

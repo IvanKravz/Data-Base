@@ -331,6 +331,7 @@ export function DivisionTasksSection() {
         ...newTaskData,
         division_id: divisionId,
         subdivision_id: subdivisionId ?? null,
+        assignee_id: (newTaskData as any).assignee_id ?? null,
       };
       const createdTask = await tasksApi.createTask(finalTaskData, stableToken!);
       updateTaskInState(createdTask);
@@ -348,6 +349,7 @@ export function DivisionTasksSection() {
         category: updatedTask.category,
         division_id: updatedTask.division?.id,
         subdivision_id: updatedTask.subdivision?.id ?? null,
+        assignee_id: updatedTask.assignee?.id ?? null,
         is_private: updatedTask.is_private,
         steps: updatedTask.steps.map(step => ({
           id:

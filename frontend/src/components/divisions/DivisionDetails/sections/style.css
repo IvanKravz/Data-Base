@@ -483,12 +483,44 @@
   color: #6b7280;
 }
 
+/* ===== Скелетоны StatCard: сетка карточек во время загрузки ===== */
+.division-stats-grid--skeleton {
+  /* та же сетка, что у реальных карточек, чтобы не было «прыжка» */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 1rem;
+}
+
+.sc-skeleton {
+  min-height: 180px;
+  border-radius: 20px;
+  background: linear-gradient(90deg,
+      rgba(241, 245, 249, 0.9) 0%,
+      rgba(226, 232, 240, 0.95) 50%,
+      rgba(241, 245, 249, 0.9) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid rgba(228, 227, 227, 0.595);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 /* ===== Анимация появления страниц ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

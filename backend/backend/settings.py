@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'networks',
     'map',
     'employees',
+    'candidates',
 ]
 
 # ========== MIDDLEWARE ==========

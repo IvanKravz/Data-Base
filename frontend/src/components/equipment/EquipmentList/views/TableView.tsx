@@ -1,4 +1,4 @@
-// TableView.tsx — полностью обновленная версия с уникальными классами
+// TableView.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -228,7 +228,7 @@ export function TableView({
       if (savedCollapsed !== null) {
         setCollapsedDivisions(savedCollapsed.collapsedDivisions);
         setCollapsedSubdivisions(savedCollapsed.collapsedSubdivisions);
-        setCollapsedNoDivision(savedCollapsed.collapsedNoDivision);
+        setCollapsedNoDivision(savedCollapsed.noDivision ?? false);
         setSavedCollapsed(null);
       }
     }
@@ -284,7 +284,7 @@ export function TableView({
     const term = searchTerm.toLowerCase();
     return (
       item.name.toLowerCase().includes(term) ||
-      item.serial_number.toLowerCase().includes(term) ||
+      (item.serial_number || '').toLowerCase().includes(term) ||
       (item.inventory_number?.toLowerCase().includes(term) ?? false) ||
       (item.assigned_to?.full_name?.toLowerCase().includes(term) ?? false) ||
       (item.interest_organ?.name?.toLowerCase().includes(term) ?? false)
@@ -386,12 +386,65 @@ export function TableView({
   // Группированный режим
   let rowIndex = 0;
 
+  const renderEquipmentRow = (item: Equipment, currentIndex: number) => {
+    const StatusIcon = getStatusIcon(item.status);
+    return (
+      <tr
+        key={item.id}
+        onClick={() => handleRowClick(item)}
+        className={`tv-table-row-equipment ${isRowHighlighted(item) ? 'tv-table-row-highlighted' : ''}`}
+      >
+        <td className="tv-table-cell-equipment tv-table-cell-index">{currentIndex}</td>
+        <td className="tv-table-cell-equipment tv-table-cell-name">
+          <div className="tv-cell-content-full-width">{item.name}</div>
+        </td>
+        <td className="tv-table-cell-equipment">{item.serial_number}</td>
+        <td className="tv-table-cell-equipment">{item.inventory_number}</td>
+        <td className="tv-table-cell-equipment">{formatDate(item.manufacturing_date)}</td>
+        <td className="tv-table-cell-equipment">{formatDate(item.exploitation_date)}</td>
+        <td className="tv-table-cell-equipment">{item.type || '-'}</td>
+        <td className="tv-table-cell-equipment">{item.category_display}</td>
+        <td className="tv-table-cell-equipment">{formatInterestOrgan(item.interest_organ)}</td>
+        <td className="tv-table-cell-equipment">
+          <div className="tv-division-container">
+            <div className="tv-division-name">{item.division?.name || '-'}</div>
+            {item.subdivision?.name && <div className="tv-subdivision-name">{item.subdivision.name}</div>}
+          </div>
+        </td>
+        <td className="tv-table-cell-equipment tv-table-cell-assigned-to">
+          <div className="tv-cell-content">
+            {item.assigned_to ? (
+              <>
+                <span>{formatEmployeeName(item.assigned_to)}</span>
+                {item.assigned_to.position && <span className="tv-position-text">{item.assigned_to.position}</span>}
+              </>
+            ) : '-'}
+          </div>
+        </td>
+        <td className="tv-table-cell-equipment">
+          <div className={`tv-cell-content ${getStatusColor(item.status)}`}>
+            <StatusIcon className="tv-status-icon" />
+          </div>
+        </td>
+        {shouldShowActions && (
+          <td className="tv-table-cell-actions">
+            <div className="tv-actions-container">
+              <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="tv-delete-button">
+                <Trash2 className="tv-action-icon" />
+              </button>
+            </div>
+          </td>
+        )}
+      </tr>
+    );
+  };
+
   return (
     <div className="tv-table-container">
       <table className="tv-equipment-table">
         <thead className="tv-table-header">
           <tr>
-            <th className="tv-table-header-cell-equipment">№ п/п</th>
+            <th className="tv-table-header-cell-equipment-pp">№ п/п</th>
             <th className="tv-table-header-cell-equipment">Название</th>
             <th className="tv-table-header-cell-equipment">Серийный номер</th>
             <th className="tv-table-header-cell-equipment">Инв. номер</th>
@@ -426,57 +479,7 @@ export function TableView({
                 </td>
               </tr>
               {!collapsedNoDivision &&
-                groupedData.noDivision.equipment.map(item => {
-                  const StatusIcon = getStatusIcon(item.status);
-                  const currentIndex = ++rowIndex;
-                  return (
-                    <tr
-                      key={item.id}
-                      onClick={() => handleRowClick(item)}
-                      className={`tv-table-row-equipment tv-no-division-row ${isRowHighlighted(item) ? 'tv-table-row-highlighted' : ''}`}
-                    >
-                      <td className="tv-table-cell-equipment tv-table-cell-index">{currentIndex}</td>
-                      <td className="tv-table-cell-equipment tv-table-cell-name">{item.name}</td>
-                      <td className="tv-table-cell-equipment">{item.serial_number}</td>
-                      <td className="tv-table-cell-equipment">{item.inventory_number}</td>
-                      <td className="tv-table-cell-equipment">{formatDate(item.manufacturing_date)}</td>
-                      <td className="tv-table-cell-equipment">{formatDate(item.exploitation_date)}</td>
-                      <td className="tv-table-cell-equipment">{item.type || '-'}</td>
-                      <td className="tv-table-cell-equipment">{item.category_display}</td>
-                      <td className="tv-table-cell-equipment">{formatInterestOrgan(item.interest_organ)}</td>
-                      <td className="tv-table-cell-equipment">
-                        <div className="tv-division-container">
-                          <div className="tv-division-name">{item.division?.name || '-'}</div>
-                          {item.subdivision?.name && <div className="tv-subdivision-name">{item.subdivision.name}</div>}
-                        </div>
-                      </td>
-                      <td className="tv-table-cell-equipment tv-table-cell-assigned-to">
-                        <div className="tv-cell-content">
-                          {item.assigned_to ? (
-                            <>
-                              <span>{formatEmployeeName(item.assigned_to)}</span>
-                              {item.assigned_to.position && <span className="tv-position-text">{item.assigned_to.position}</span>}
-                            </>
-                          ) : '-'}
-                        </div>
-                      </td>
-                      <td className="tv-table-cell-equipment">
-                        <div className={`tv-cell-content ${getStatusColor(item.status)}`}>
-                          <StatusIcon className="tv-status-icon" />
-                        </div>
-                      </td>
-                      {shouldShowActions && (
-                        <td className="tv-table-cell-actions">
-                          <div className="tv-actions-container">
-                            <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="tv-delete-button">
-                              <Trash2 className="tv-action-icon" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
+                groupedData.noDivision.equipment.map(item => renderEquipmentRow(item, ++rowIndex))}
             </>
           )}
 
@@ -524,57 +527,7 @@ export function TableView({
                           </td>
                         </tr>
                         {!isSubCollapsed &&
-                          sub.equipment.map(item => {
-                            const StatusIcon = getStatusIcon(item.status);
-                            const currentIndex = ++rowIndex;
-                            return (
-                              <tr
-                                key={item.id}
-                                onClick={() => handleRowClick(item)}
-                                className={`tv-table-row-equipment ${isRowHighlighted(item) ? 'tv-table-row-highlighted' : ''}`}
-                              >
-                                <td className="tv-table-cell-equipment tv-table-cell-index">{currentIndex}</td>
-                                <td className="tv-table-cell-equipment tv-table-cell-name">{item.name}</td>
-                                <td className="tv-table-cell-equipment">{item.serial_number}</td>
-                                <td className="tv-table-cell-equipment">{item.inventory_number}</td>
-                                <td className="tv-table-cell-equipment">{formatDate(item.manufacturing_date)}</td>
-                                <td className="tv-table-cell-equipment">{formatDate(item.exploitation_date)}</td>
-                                <td className="tv-table-cell-equipment">{item.type || '-'}</td>
-                                <td className="tv-table-cell-equipment">{item.category_display}</td>
-                                <td className="tv-table-cell-equipment">{formatInterestOrgan(item.interest_organ)}</td>
-                                <td className="tv-table-cell-equipment">
-                                  <div className="tv-division-container">
-                                    <div className="tv-division-name">{item.division?.name || '-'}</div>
-                                    {item.subdivision?.name && <div className="tv-subdivision-name">{item.subdivision.name}</div>}
-                                  </div>
-                                </td>
-                                <td className="tv-table-cell-equipment tv-table-cell-assigned-to">
-                                  <div className="tv-cell-content">
-                                    {item.assigned_to ? (
-                                      <>
-                                        <span>{formatEmployeeName(item.assigned_to)}</span>
-                                        {item.assigned_to.position && <span className="tv-position-text">{item.assigned_to.position}</span>}
-                                      </>
-                                    ) : '-'}
-                                  </div>
-                                </td>
-                                <td className="tv-table-cell-equipment">
-                                  <div className={`tv-cell-content ${getStatusColor(item.status)}`}>
-                                    <StatusIcon className="tv-status-icon" />
-                                  </div>
-                                </td>
-                                {shouldShowActions && (
-                                  <td className="tv-table-cell-actions">
-                                    <div className="tv-actions-container">
-                                      <button onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} className="tv-delete-button">
-                                        <Trash2 className="tv-action-icon" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                )}
-                              </tr>
-                            );
-                          })}
+                          sub.equipment.map(item => renderEquipmentRow(item, ++rowIndex))}
                       </React.Fragment>
                     );
                   })}

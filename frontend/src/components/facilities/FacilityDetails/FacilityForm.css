@@ -168,7 +168,7 @@ body {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--radius-md);
-    background: #eff0f1;
+    background: #f0f2f470;
     border: none;
     cursor: pointer;
     color: var(--color-text-secondary);
@@ -176,7 +176,48 @@ body {
 }
 
 .facility-details-btn--icon:hover {
-    background: var(--color-border);
+    background: #e0e3e571;
+}
+
+/* === Блок СЗИ на карточке объекта === */
+.facility-szi-block {
+    border-radius: 8px;
+}
+
+.facility-szi-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9e3ff;
+}
+
+.facility-szi-icon {
+    color: #7c3aed;
+}
+
+.facility-szi-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #4c1d95;
+}
+
+.facility-szi-count {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.facility-szi-table {
+    background-color: #ffffff;
+}
+
+.facility-szi-row {
+    background-color: #ffffff;
+}
+
+.facility-szi-row:hover {
+    background-color: #f5f3ff;
 }
 
 /* ===== Правая колонка – вкладки ===== */

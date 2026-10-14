@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CabinetModal } from './components/CabinetModal';
+import { AdminModal } from './components/AdminModal';
 import { UserDropdownMenu } from './components';
 import './UserMenu.css';
 import './styles/DropdownMenu.css';
 import './styles/CabinetModal.css';
+import './styles/AdminModal.css';
 
 interface UserCabinetData {
     id: number;
@@ -29,6 +31,7 @@ interface UserCabinetData {
 export function UserMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const [isCabinetOpen, setIsCabinetOpen] = useState(false);
+    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [userData, setUserData] = useState<UserCabinetData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState<string>('');
@@ -68,8 +71,12 @@ export function UserMenu() {
 
     const updateDateTime = () => {
         const now = new Date();
-        const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const date = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const time = now.toLocaleTimeString('ru-RU', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+        });
+        const date = now.toLocaleDateString('ru-RU', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+        });
         setCurrentTime(time);
         setCurrentDate(date);
     };
@@ -81,7 +88,6 @@ export function UserMenu() {
 
     return (
         <div className="user-menu-container" ref={menuRef}>
-            {/* Блок с датой и временем (вертикальное расположение) */}
             <div className="user-datetime">
                 <div className="datetime-time">{currentTime}</div>
                 <div className="datetime-date">{currentDate}</div>
@@ -103,7 +109,10 @@ export function UserMenu() {
                 <span className="user-name">
                     {isLoading ? 'Загрузка...' : userData?.username || 'Гость'}
                 </span>
-                <ChevronDown className={`chevron-icon-user ${isOpen ? 'rotated' : ''}`} size={18} />
+                <ChevronDown
+                    className={`chevron-icon-user ${isOpen ? 'rotated' : ''}`}
+                    size={18}
+                />
             </button>
 
             {isOpen && (
@@ -112,6 +121,10 @@ export function UserMenu() {
                     onCabinetOpen={() => {
                         setIsOpen(false);
                         setIsCabinetOpen(true);
+                    }}
+                    onAdminOpen={() => {
+                        setIsOpen(false);
+                        setIsAdminModalOpen(true);
                     }}
                 />
             )}
@@ -123,6 +136,11 @@ export function UserMenu() {
                     userData={userData}
                 />
             )}
+
+            <AdminModal
+                isOpen={isAdminModalOpen}
+                onClose={() => setIsAdminModalOpen(false)}
+            />
         </div>
     );
 }

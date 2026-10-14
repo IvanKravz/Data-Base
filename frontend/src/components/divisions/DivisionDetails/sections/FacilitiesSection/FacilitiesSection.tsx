@@ -496,7 +496,10 @@ export function FacilitiesSection() {
               <ArrowLeft className="back-button-icon" />
             </button>
           )}
-          <h2 className="facilities-title">{getHeaderTitle()}</h2>
+          <h2 className="facilities-title">
+            <Building2 size={28} />
+            {getHeaderTitle()}
+          </h2>
         </div>
 
         <div className="facilities-add-buttons">

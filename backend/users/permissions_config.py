@@ -27,6 +27,8 @@ ROLE_PERMISSIONS = {
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'InterestOrgan': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+            'Candidate': ['view', 'add', 'change', 'delete'],
+            'CandidateStage': ['view', 'add', 'change', 'delete'],
         },
         'filters': {},
         'can_see_all_divisions': True,
@@ -56,6 +58,7 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view'],
+            'Candidate': ['view'],
         },
         'filters': {},
         'can_see_all_divisions': True,
@@ -82,6 +85,7 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view'],
+            'Candidate': ['view'],
         },
         'filters': {},
         'can_see_all_divisions': True,
@@ -111,6 +115,7 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+            'Candidate': ['view'],
         },
         'filters': {
             'Task': {'division_id': USER_DIVISION_MARKER},
@@ -147,6 +152,7 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+            'Candidate': ['view'],
         },
         'filters': {
             'Task': {
@@ -185,6 +191,7 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+            'Candidate': ['view', 'add', 'change', 'delete'],
         },
         'filters': {
             'Task': {
@@ -369,12 +376,14 @@ ROLE_PERMISSIONS = {
             'StorageFolder': ['view', 'add', 'change', 'delete'],
             'StorageFile': ['view', 'add', 'change', 'delete'],
             'ScheduleEvent': ['view', 'add', 'change', 'delete'],
+            'Candidate': ['view'],
         },
         'filters': {
             'Task': {'division_id': USER_DIVISION_MARKER},
             'Employee': {'division_id': USER_DIVISION_MARKER},
             # read и write совпадают — своё подразделение
             'ScheduleEvent': {'employee__division_id': USER_DIVISION_MARKER},
+            'Candidate': {'division_id': USER_DIVISION_MARKER},
         },
         'can_see_all_divisions': False,
         'can_access_storage': True,

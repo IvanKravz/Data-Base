@@ -1,0 +1,866 @@
+/* ============================================================ */
+/*  Кандидаты — общие стили модуля                              */
+/*                                                              */
+/*  Файл содержит:                                              */
+/*    - CSS-переменные                                          */
+/*    - базовые контейнеры страниц                              */
+/*    - кнопки (candidates-btn)                                 */
+/*    - бейджи (candidates-badge)                               */
+/*    - прогресс-бар (candidates-progress-bar)                  */
+/*    - таймлайн этапов (candidates-timeline-*)                 */
+/*    - карточку этапа (candidates-stage-card)                  */
+/*    - скелетоны, пустые состояния, ошибки                     */
+/*    - Rich-прогресс (candidates-progress)                     */
+/*    - общий кейфрейм вращения (candidates-spin)               */
+/*                                                              */
+/*  Стили страниц и модалок — в отдельных файлах:                */
+/*    - CandidatesPage.css                                      */
+/*    - CandidateDetailsPage.css                                */
+/*    - CandidateForm.css                                       */
+/*    - CandidateModals.css                                     */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. Переменные                                                */
+/* ------------------------------------------------------------ */
+:root {
+    --cnd-bg: #ffffff;
+    --cnd-bg-soft: #f8fafc;
+    --cnd-bg-hover: #f9fafb;
+    --cnd-border: #e5e7eb;
+    --cnd-border-soft: #f1f5f9;
+    --cnd-border-strong: #d1d5db;
+    --cnd-text: #1f2937;
+    --cnd-text-muted: #6b7280;
+    --cnd-text-dim: #94a3b8;
+    --cnd-primary: #2563eb;
+    --cnd-primary-hover: #1d4ed8;
+    --cnd-primary-soft: #eff6ff;
+    --cnd-danger: #b91c1c;
+    --cnd-danger-bg: #fee2e2;
+    --cnd-danger-border: #fecaca;
+    --cnd-success: #10b981;
+    --cnd-warning: #f59e0b;
+    --cnd-radius: 12px;
+    --cnd-radius-sm: 8px;
+    --cnd-radius-lg: 14px;
+    --cnd-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --cnd-shadow-md: 0 10px 20px rgba(0, 0, 0, 0.08);
+    --cnd-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+/* ------------------------------------------------------------ */
+/* 2. Базовое                                                   */
+/* ------------------------------------------------------------ */
+.candidates-page,
+.candidate-details,
+.candidate-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 8px;
+}
+
+.candidates-loading {
+    padding: 32px;
+    text-align: center;
+    color: var(--cnd-text-muted);
+    font-size: 0.95rem;
+}
+
+.candidates-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: var(--cnd-danger);
+    border: 1px solid var(--cnd-danger-border);
+}
+
+/* ------------------------------------------------------------ */
+/* 3. Кнопки (candidates-btn)                                   */
+/* ------------------------------------------------------------ */
+.candidates-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    font-family: inherit;
+}
+
+.candidates-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidates-btn--primary {
+    background: var(--cnd-primary);
+    color: #fff;
+}
+
+.candidates-btn--primary:hover:not(:disabled) {
+    background: var(--cnd-primary-hover);
+}
+
+.candidates-btn--secondary {
+    background: var(--cnd-bg);
+    color: var(--cnd-text);
+    border-color: var(--cnd-border);
+}
+
+.candidates-btn--secondary:hover:not(:disabled) {
+    background: var(--cnd-bg-hover);
+}
+
+.candidates-btn--ghost {
+    background: transparent;
+    color: var(--cnd-primary);
+    padding: 6px 10px;
+}
+
+.candidates-btn--ghost:hover:not(:disabled) {
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.candidates-btn--danger {
+    background: var(--cnd-danger-bg);
+    color: #991b1b;
+}
+
+.candidates-btn--danger:hover:not(:disabled) {
+    background: #fecaca;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. Заголовки страниц (общие)                                 */
+/* ------------------------------------------------------------ */
+.candidates-page__title,
+.candidate-details__title,
+.candidate-form__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.candidate-form__title {
+    font-size: 1.4rem;
+}
+
+/* ------------------------------------------------------------ */
+/* 5. Бейджи статусов (candidates-badge)                        */
+/* ------------------------------------------------------------ */
+.candidates-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.candidates-badge--blue   { background: #dbeafe; color: #1e40af; }
+.candidates-badge--green  { background: #d1fae5; color: #065f46; }
+.candidates-badge--red    { background: #fee2e2; color: #991b1b; }
+.candidates-badge--yellow { background: #fef3c7; color: #92400e; }
+.candidates-badge--gray   { background: #f1f5f9; color: #475569; }
+
+/* ------------------------------------------------------------ */
+/* 5.5. Общий кейфрейм вращения                                 */
+/* ------------------------------------------------------------ */
+@keyframes candidates-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------------------------ */
+/* 6. Компактный прогресс-бар (для ячеек таблицы)               */
+/* ------------------------------------------------------------ */
+.candidates-progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.candidates-progress-bar {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    background: var(--cnd-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.candidates-progress-bar--lg {
+    height: 10px;
+}
+
+.candidates-progress-bar__fill {
+    height: 100%;
+    background: linear-gradient(to right, #2563eb, #4f46e5);
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.candidates-progress-cell__label {
+    font-size: 0.8rem;
+    color: var(--cnd-text-muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    text-align: right;
+}
+
+.candidates-overdue-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: var(--cnd-danger-bg);
+    color: #991b1b;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.candidates-overdue-pill--empty {
+    background: #f1f5f9;
+    color: var(--cnd-text-dim);
+}
+
+/* ------------------------------------------------------------ */
+/* 7. Таймлайн этапов (candidates-timeline-*)                   */
+/* ------------------------------------------------------------ */
+.candidates-timeline-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+}
+
+.candidates-timeline-track {
+    display: flex;
+    gap: 16px;
+    min-width: max-content;
+    padding: 4px 2px 12px;
+    align-items: flex-start;
+}
+
+.candidates-timeline-phase {
+    flex: 0 0 auto;
+    width: 280px;
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius-lg);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+    padding: 12px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.candidates-timeline-phase__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--cnd-border);
+}
+
+.candidates-timeline-phase__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.candidates-timeline-phase__counter {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cnd-primary);
+    background: var(--cnd-primary-soft);
+    border-radius: 10px;
+    padding: 2px 8px;
+}
+
+.candidates-timeline-phase__stages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ------------------------------------------------------------ */
+/* 8. Карточка этапа (candidates-stage-card)                    */
+/* ------------------------------------------------------------ */
+.candidates-stage-card {
+    position: relative;
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fcfdff;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.candidates-stage-card:hover {
+    border-color: #c7d2fe;
+    background: #f8faff;
+}
+
+.candidates-stage-card--overdue {
+    border-color: var(--cnd-danger-border);
+    background: #fff7f7;
+}
+
+.candidates-stage-card.candidates-stage-card--highlight {
+    border-color: #93c5fd;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35),
+        0 8px 20px rgba(37, 99, 235, 0.18);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.candidates-stage-card--saving {
+    opacity: 0.9;
+}
+
+.candidates-stage-card--comment-open,
+.candidates-stage-card--status-open {
+    z-index: 5;
+}
+
+.candidates-stage-card__saving-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #2563eb, #4f46e5, #2563eb);
+    background-size: 200% 100%;
+    animation: candidates-skeleton-shimmer 1.2s linear infinite;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.candidates-stage-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.candidates-stage-card__order {
+    font-weight: 700;
+    color: var(--cnd-text-dim);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.candidates-stage-card__title {
+    font-size: 0.85rem;
+    color: var(--cnd-text);
+    line-height: 1.3;
+    font-weight: 500;
+}
+
+.candidates-stage-card__dates {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.78rem;
+}
+
+.candidates-stage-card__date-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.candidates-stage-card__label { color: var(--cnd-text-dim); }
+.candidates-stage-card__value {
+    color: #374151;
+    font-variant-numeric: tabular-nums;
+}
+
+.candidates-stage-card__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.candidates-stage-card__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.candidates-stage-card__status-trigger {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: box-shadow 0.12s;
+    outline: none;
+}
+
+.candidates-stage-card__status-trigger:hover {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.candidates-stage-card__status-trigger:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28);
+}
+
+.candidates-stage-card__comment {
+    color: var(--cnd-text-dim);
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.candidates-stage-card__comment--has {
+    color: var(--cnd-primary);
+}
+
+.candidates-stage-icon--red    { color: #ef4444; }
+.candidates-stage-icon--green  { color: var(--cnd-success); }
+.candidates-stage-icon--yellow { color: var(--cnd-warning); }
+.candidates-stage-icon--gray   { color: #cbd5e1; }
+
+.candidates-stage-card__editable {
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    transition: border-color 0.12s;
+}
+
+.candidates-stage-card__editable:hover {
+    border-bottom-color: #c7d2fe;
+}
+
+.candidates-stage-card__edit input {
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    background: #f8faff;
+    color: var(--cnd-text);
+    font-family: inherit;
+}
+
+/* Поповеры под карточкой этапа */
+.candidates-stage-card__comment-popover,
+.candidates-stage-card__status-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    box-shadow: var(--cnd-shadow-md);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: candidates-popover-in 0.14s ease-out;
+}
+
+@keyframes candidates-popover-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.candidates-stage-card__popover-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--cnd-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0 2px 2px;
+    border-bottom: 1px dashed var(--cnd-border);
+    margin-bottom: 2px;
+}
+
+.candidates-stage-card__status-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--cnd-bg-soft);
+    color: var(--cnd-text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.candidates-stage-card__status-option:hover:not(:disabled) {
+    background: #eef4ff;
+    border-color: #c7d2fe;
+}
+
+.candidates-stage-card__status-option:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidates-stage-card__status-option.is-active {
+    background: var(--cnd-primary-soft);
+    border-color: #bfdbfe;
+    color: var(--cnd-primary-hover);
+    font-weight: 600;
+}
+
+.candidates-stage-card__status-option-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    flex-shrink: 0;
+}
+
+.candidates-stage-card__status-option.is-active .candidates-stage-card__status-option-dot {
+    background: var(--cnd-primary);
+}
+
+.candidates-stage-card__status-option-check {
+    margin-left: auto;
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+}
+
+.candidates-stage-card__comment-popover textarea {
+    width: 100%;
+    min-height: 60px;
+    resize: vertical;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+    border: 1px solid var(--cnd-border);
+    border-radius: 6px;
+    background: var(--cnd-bg-soft);
+    color: var(--cnd-text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.candidates-stage-card__comment-popover textarea:focus {
+    border-color: #c7d2fe;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    background: #fff;
+}
+
+.candidates-stage-card__comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.candidates-stage-card__comment-hint {
+    flex: 1;
+    font-size: 0.7rem;
+    color: var(--cnd-text-dim);
+}
+
+.candidates-stage-card__comment-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--cnd-border);
+    background: var(--cnd-bg);
+    color: #475569;
+    cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.candidates-stage-card__comment-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+}
+
+.candidates-stage-card__comment-btn--save {
+    background: var(--cnd-primary);
+    color: #fff;
+    border-color: var(--cnd-primary);
+}
+
+.candidates-stage-card__comment-btn--save:hover:not(:disabled) {
+    background: var(--cnd-primary-hover);
+    border-color: var(--cnd-primary-hover);
+}
+
+.candidates-stage-card__comment-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidates-stage-card__error {
+    color: var(--cnd-danger);
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+/* ------------------------------------------------------------ */
+/* 9. Скелетоны и пустые состояния                              */
+/* ------------------------------------------------------------ */
+.candidates-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--cnd-radius);
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+}
+
+.candidates-skeleton__row {
+    height: 44px;
+    border-radius: var(--cnd-radius-sm);
+    background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+    background-size: 200% 100%;
+    animation: candidates-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes candidates-skeleton-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.candidates-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 48px 24px;
+    color: #64748b;
+    text-align: center;
+}
+
+.candidates-empty p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* ------------------------------------------------------------ */
+/* 10. Rich-прогресс (candidates-progress)                      */
+/* ------------------------------------------------------------ */
+.candidates-progress {
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius-lg);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+    padding: 16px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.candidates-progress__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.candidates-progress__label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--cnd-text-dim);
+    font-weight: 600;
+}
+
+.candidates-progress__counters {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.candidates-progress__counter {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--cnd-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.candidates-progress__percent {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cnd-primary);
+    background: var(--cnd-primary-soft);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.candidates-progress__phases {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+}
+
+.candidates-progress-phase {
+    flex-basis: 0;
+    flex-shrink: 1;
+    min-width: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.candidates-progress-phase__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: var(--cnd-text-muted);
+    min-width: 0;
+}
+
+.candidates-progress-phase__title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.candidates-progress-phase__counter {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--cnd-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.candidates-progress-phase__segments {
+    display: flex;
+    gap: 2px;
+    height: 12px;
+}
+
+.candidates-progress-segment {
+    flex: 1;
+    min-width: 4px;
+    border: none;
+    padding: 0;
+    border-radius: 2px;
+    background: #e5e7eb;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.candidates-progress-segment:hover {
+    transform: scaleY(1.35);
+    filter: brightness(1.05);
+    z-index: 5;
+}
+
+.candidates-progress-segment:focus-visible {
+    outline: 2px solid var(--cnd-primary);
+    outline-offset: 2px;
+}
+
+.candidates-progress-segment--done    { background: linear-gradient(180deg, #a7f3d0, #12c76ca7); }
+.candidates-progress-segment--overdue { background: linear-gradient(180deg, #f87171, #dc2626); }
+.candidates-progress-segment--pending { background: #e5e7eb; }
+.candidates-progress-segment--skipped { background: #fcd34d; }
+
+.candidates-progress-segment::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%) translateY(2px);
+    background: rgba(15, 23, 42, 0.96);
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1.35;
+    font-family: inherit;
+    white-space: pre-line;
+    text-align: left;
+    padding: 6px 10px;
+    border-radius: 8px;
+    min-width: 180px;
+    max-width: 260px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 40;
+    transition: opacity 0.2s ease, transform 0.12s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.candidates-progress-segment::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: rgba(15, 23, 42, 0.96);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 41;
+    transition: opacity 0.12s ease;
+}
+
+.candidates-progress-segment:hover::after,
+.candidates-progress-segment:focus-visible::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.candidates-progress-segment:hover::before,
+.candidates-progress-segment:focus-visible::before {
+    opacity: 1;
+}
+
+.candidates-progress__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--cnd-text-muted);
+}
+
+.candidates-progress-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.candidates-progress-legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.candidates-progress-legend__dot--done    { background: linear-gradient(180deg, #a7f3d0, #12c76ca7); }
+.candidates-progress-legend__dot--overdue { background: linear-gradient(180deg, #f87171, #dc2626); }
+.candidates-progress-legend__dot--pending { background: #e5e7eb; }
+.candidates-progress-legend__dot--skipped { background: #fcd34d; }

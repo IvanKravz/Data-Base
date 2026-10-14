@@ -6,44 +6,54 @@ from django.db.models import Count, Q
 
 User = get_user_model()
 
+
 class Task(models.Model):
     URGENT = 'urgent'
     PLANNED = 'planned'
     ATTENTION = 'attention'
-    
+
     TASK_CATEGORIES = [
         (URGENT, 'Срочно'),
         (PLANNED, 'Плановая'),
-        (ATTENTION, 'Обратить внимание')
+        (ATTENTION, 'Обратить внимание'),
     ]
 
     is_private = models.BooleanField(default=False, verbose_name='Приватная задача')
     title = models.CharField(max_length=255, verbose_name='Название')
     category = models.CharField(
-        max_length=20, 
-        choices=TASK_CATEGORIES, 
-        verbose_name='Категория'
+        max_length=20,
+        choices=TASK_CATEGORIES,
+        verbose_name='Категория',
     )
     division = models.ForeignKey(
-        Division, 
-        on_delete=models.CASCADE, 
+        Division,
+        on_delete=models.CASCADE,
         related_name='tasks',
-        verbose_name='Подразделение'
+        verbose_name='Подразделение',
     )
     subdivision = models.ForeignKey(
-        Subdivision, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        Subdivision,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
         related_name='tasks',
-        verbose_name='Отделение'
+        verbose_name='Отделение',
+    )
+    # НОВОЕ: ответственный исполнитель — именно сотрудник, а не учётная запись
+    assignee = models.ForeignKey(
+        'employees.Employee',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_tasks',
+        verbose_name='Ответственный исполнитель',
     )
     created_by = models.ForeignKey(
-        User, 
-        on_delete=models.SET_NULL, 
+        User,
+        on_delete=models.SET_NULL,
         null=True,
         related_name='created_tasks',
-        verbose_name='Создатель'
+        verbose_name='Создатель',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,36 +73,35 @@ class Task(models.Model):
             return 0
         completed_steps = self.steps.filter(is_completed=True).count()
         return int((completed_steps / total_steps) * 100)
-    
+
     @property
     def is_completed(self):
         return self.progress == 100
 
     @classmethod
     def get_incomplete_count(cls, division_id=None, subdivision_id=None, user=None):
-        queryset = cls.objects.filter(
-            steps__is_completed=False
-        ).distinct()
-        
+        queryset = cls.objects.filter(steps__is_completed=False).distinct()
+
         visibility_condition = Q(is_private=False)
         if user and user.is_authenticated:
             visibility_condition |= Q(is_private=True, created_by=user)
-        
+
         queryset = queryset.filter(visibility_condition)
-        
+
         if division_id:
             queryset = queryset.filter(division_id=division_id)
         if subdivision_id:
             queryset = queryset.filter(subdivision_id=subdivision_id)
-            
+
         return queryset.count()
+
 
 class TaskStep(models.Model):
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
         related_name='steps',
-        verbose_name='Задача'
+        verbose_name='Задача',
     )
     name = models.CharField(max_length=255, verbose_name='Название')
     comments = models.TextField(blank=True, verbose_name='Комментарии')
@@ -105,12 +114,12 @@ class TaskStep(models.Model):
         null=True,
         blank=True,
         related_name='completed_steps',
-        verbose_name='Выполнил'
+        verbose_name='Выполнил',
     )
     completed_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name='Дата выполнения'
+        verbose_name='Дата выполнения',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

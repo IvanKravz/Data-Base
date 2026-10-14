@@ -11,7 +11,7 @@ export function Header({ title, onBack }: HeaderProps) {
   return (
     <div className="personnel-header">
       <div className="personnel-header-left">
-        <button onClick={onBack} className="personnel-header-icon-button">
+        <button onClick={onBack} className="header-icon-button">
           <ArrowLeft size={18} />
         </button>
         <h1 className="personnel-header-title">{title}</h1>

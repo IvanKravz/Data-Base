@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         categories_data = [
-            {'value': 'tko', 'name': 'Телекоммуникационное оборудование', 'is_closed': False},
+            {'value': 'tko', 'name': 'Телеком. оборудование', 'is_closed': False},
             {'value': 'analog', 'name': 'Аппаратура проводной связи', 'is_closed': False},
             {'value': 'shd', 'name': 'ШДтехника', 'is_closed': True},
             {'value': 'radio', 'name': 'Радио, спутник', 'is_closed': False},
@@ -19,9 +19,10 @@ class Command(BaseCommand):
             {'value': 'material', 'name': 'Материалы', 'is_closed': False},
             {'value': 'furniture', 'name': 'Мебель и оборудование', 'is_closed': False},
             {'value': 'telephone', 'name': 'Телефонные аппараты, факсы', 'is_closed': False},
-            {'value': 'shdTelephone', 'name': 'Специальные телефонные аппараты, факсы', 'is_closed': True},
+            {'value': 'shdTelephone', 'name': 'Спец. телефонные аппараты, факсы', 'is_closed': True},
             {'value': 'mobileTelephone', 'name': 'Сотовые телефоны', 'is_closed': False},
             {'value': 'car', 'name': 'Автомобильная техника', 'is_closed': False},
+            {'value': 'szi', 'name': 'Средства защиты информации (СЗИ)', 'is_closed': False},
         ]
 
         for item in categories_data:

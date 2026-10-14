@@ -1,6 +1,6 @@
 // components/ScheduleHeader/ScheduleHeader.tsx
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import './ScheduleHeader.css';
 
 interface ScheduleHeaderProps {
@@ -29,7 +29,10 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
                     </button>
                 )}
                 <div className="schedule-title-block">
-                    <h2 className="schedule-page-title">График работы сотрудников</h2>
+                    <h2 className="schedule-page-title">
+                        <Calendar size={24} />
+                        График работы сотрудников
+                    </h2>
                     {subtitle && (
                         <span className="schedule-page-subtitle">{subtitle}</span>
                     )}

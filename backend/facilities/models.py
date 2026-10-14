@@ -2,10 +2,26 @@ from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
 
+
+class DivisionManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+class SubdivisionManager(models.Manager):
+    def get_by_natural_key(self, division_name, name):
+        return self.get(division__name=division_name, name=name)
+
+
+class FacilityTypeManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Division(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField(
-        default=0, 
+        default=0,
         verbose_name='Порядок сортировки',
         help_text='Чем меньше число, тем выше в списке'
     )
@@ -34,27 +50,32 @@ class Division(models.Model):
         verbose_name='Заместитель начальника отдела'
     )
 
+    objects = DivisionManager()
+
+    def natural_key(self):
+        return (self.name,)
+
     def __str__(self):
         return self.name
-    
+
     def get_employees_count(self):
         return self.employees.count()
-    
+
     def get_management_count(self):
         return self.employees.filter(category='management').count()
-    
+
     def get_officers_count(self):
         return self.employees.filter(category='officer').count()
-    
+
     def get_warrant_officers_count(self):
         return self.employees.filter(category='warrant_officer').count()
-    
+
     def get_civilian_count(self):
         return self.employees.filter(category='civilian').count()
-    
+
     def get_equipment_count(self):
         return self.equipment.count()
-    
+
     def get_facilities_count(self):
         return self.facilities.count()
 
@@ -74,7 +95,7 @@ class Subdivision(models.Model):
     name = models.CharField(max_length=100)
     division = models.ForeignKey(Division, on_delete=models.CASCADE, related_name='subdivisions', null=True)
     order = models.IntegerField(
-        default=0, 
+        default=0,
         verbose_name='Порядок сортировки',
         help_text='Чем меньше число, тем выше в списке'
     )
@@ -103,24 +124,31 @@ class Subdivision(models.Model):
         verbose_name='Заместитель начальника отделения'
     )
 
+    objects = SubdivisionManager()
+
+    def natural_key(self):
+        return (self.division.name, self.name) if self.division else (None, self.name)
+
+    natural_key.dependencies = ['facilities.division']
+
     def get_employees_count(self):
         return self.employees.count()
-    
+
     def get_management_count(self):
         return self.employees.filter(category='management').count()
-    
+
     def get_officers_count(self):
         return self.employees.filter(category='officer').count()
-    
+
     def get_warrant_officers_count(self):
         return self.employees.filter(category='warrant_officer').count()
-    
+
     def get_civilian_count(self):
         return self.employees.filter(category='civilian').count()
-    
+
     def get_equipment_count(self):
         return self.equipment.count()
-    
+
     def get_facilities_count(self):
         return self.facilities.count()
 
@@ -128,7 +156,7 @@ class Subdivision(models.Model):
         return self.tasks.count()
 
     def __str__(self):
-        return f"{self.division.name} - {self.name}"
+        return f"{self.division.name} - {self.name}" if self.division else self.name
 
     class Meta:
         ordering = ['order', 'name']
@@ -137,11 +165,16 @@ class Subdivision(models.Model):
 
 
 class FacilityType(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Наименование типа объекта')
+    name = models.CharField(max_length=100, verbose_name='Наименование типа объекта', unique=True)
     description = models.TextField(blank=True, null=True, verbose_name='Описание')
     is_closed_type = models.BooleanField(default=False, verbose_name='Закрытый тип')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = FacilityTypeManager()
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         return f"{self.name}"
@@ -155,16 +188,16 @@ class FacilityType(models.Model):
 class CommunicationPost(models.Model):
     name = models.CharField(max_length=100, verbose_name='Наименование поста связи')
     division = models.ForeignKey(
-        Division, 
-        on_delete=models.CASCADE, 
+        Division,
+        on_delete=models.CASCADE,
         related_name='communication_posts',
         verbose_name='Подразделение'
     )
     subdivision = models.ForeignKey(
-        Subdivision, 
-        on_delete=models.SET_NULL,  
+        Subdivision,
+        on_delete=models.SET_NULL,
         related_name='communication_posts',
-        null=True, 
+        null=True,
         blank=True,
         verbose_name='Отделение'
     )
@@ -176,7 +209,7 @@ class CommunicationPost(models.Model):
         verbose_name = "Пост связи"
         verbose_name_plural = "Посты связи"
         ordering = ['name']
-    
+
     def __str__(self):
         return self.name
 
@@ -203,16 +236,16 @@ class Facility(models.Model):
     house_number = models.CharField(max_length=20, verbose_name='Номер дома', blank=True, null=True)
     division = models.ForeignKey(Division, on_delete=models.PROTECT, related_name='facilities', verbose_name='Подразделение')
     subdivision = models.ForeignKey(
-        Subdivision, on_delete=models.SET_NULL, 
-        null=True, blank=True, 
-        related_name='facilities', 
+        Subdivision, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='facilities',
         verbose_name='Отделение'
     )
     communication_posts = models.ManyToManyField(
         CommunicationPost,
         blank=True,
         verbose_name='Посты связи'
-    )    
+    )
     inn = models.CharField(max_length=12, blank=True, null=True, verbose_name='ИНН')
     comments = models.TextField(blank=True, null=True, verbose_name='Комментарии')
     is_closed = models.BooleanField(default=False, verbose_name='Закрытый объект')
@@ -221,11 +254,11 @@ class Facility(models.Model):
     rim_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер акта РИМ')
     commissioning_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер акта ввода')
     opening_permission_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='Номер разрешения на открытие')
-    
+
     kz_size = models.CharField(max_length=255, blank=True, null=True, verbose_name='Размер КЗ')
     has_transformer_in_kz = models.BooleanField(default=False, verbose_name='ТП в пределах КЗ')
     has_grounding_in_kz = models.BooleanField(default=False, verbose_name='Контур заземления в пределах КЗ')
-    
+
     latitude = models.DecimalField(
         max_digits=10,
         decimal_places=7,
@@ -274,8 +307,8 @@ class Facility(models.Model):
         if self.pk:
             try:
                 old = Facility.objects.get(pk=self.pk)
-                if (old.city != self.city or old.street != self.street or 
-                    old.house_number != self.house_number):
+                if (old.city != self.city or old.street != self.street or
+                        old.house_number != self.house_number):
                     address_changed = True
             except Facility.DoesNotExist:
                 address_changed = True

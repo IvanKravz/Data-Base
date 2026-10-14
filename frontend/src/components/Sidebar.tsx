@@ -12,6 +12,7 @@ import {
   Map,
   Shield,
   Calendar,
+  UserPlus,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppPermissions } from '../api/utils/AppPermissionsContext';
@@ -173,6 +174,15 @@ export function Sidebar({ activeTab, onSetActiveTab, availableTabs }: SidebarPro
           model: 'Employee',
         },
         ...(scheduleItem ? [scheduleItem] : []),
+        ...(canAccessPage('Candidate', 'view')
+          ? [{
+            id: 'candidates',
+            icon: UserPlus,
+            label: 'Кандидаты',
+            path: '/candidates',
+            model: 'Candidate',
+          }]
+          : []),
       ],
     },
     {

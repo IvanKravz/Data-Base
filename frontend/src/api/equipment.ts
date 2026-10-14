@@ -73,12 +73,15 @@ export const equipmentApi = {
 
   createEquipment: async (token: string, data: any) => {
     try {
-      // Преобразуем пустые строки в null для полей, которые могут быть null
       const processedData = {
         ...data,
         secret_level: data.secret_level === '' ? null : data.secret_level,
         free_use_act_number: data.free_use_act_number === '' ? null : data.free_use_act_number,
-        // Добавьте другие поля по необходимости
+        // === СЗИ ===
+        szi_certificate_number:
+          data.szi_certificate_number === '' ? null : data.szi_certificate_number,
+        szi_certificate_date:
+          data.szi_certificate_date === '' ? null : data.szi_certificate_date,
       };
 
       const response = await api.post('/equipment/', processedData, {

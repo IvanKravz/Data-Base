@@ -154,7 +154,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                     <td>{user.division_info?.name || '—'}</td>
                                     <td>{user.division_info?.subdivision?.name || '—'}</td>
                                     <td>
-                                        <span className={`status-badge ${user.is_online ? 'online' : 'offline'}`}>
+                                        <span className={`status-badge-users ${user.is_online ? 'online' : 'offline'}`}>
                                             {user.is_online ? 'Онлайн' : 'Офлайн'}
                                         </span>
                                     </td>

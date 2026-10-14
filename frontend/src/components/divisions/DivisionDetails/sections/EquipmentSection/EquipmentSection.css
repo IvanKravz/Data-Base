@@ -10,13 +10,10 @@
   margin-bottom: 1rem;
   display: flex;
   gap: 1rem;
-  background: white;
-  padding: 1.2rem 1.5rem;
+  padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
   position: relative;
   z-index: 2;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
@@ -30,7 +27,7 @@
 }
 
 .equipment-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 600;
   color: #111827;
   display: flex;
@@ -654,18 +651,26 @@
 
 /* Кнопка назад */
 .back-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  background-color: #f1f5f9;
-  transition: all 0.2s;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #2563eb;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .back-button:hover {
-  background-color: #e2e8f0;
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+}
+
+.back-button:active {
+  background-color: rgba(37, 99, 235, 0.14);
 }
 
 .back-button-icon {

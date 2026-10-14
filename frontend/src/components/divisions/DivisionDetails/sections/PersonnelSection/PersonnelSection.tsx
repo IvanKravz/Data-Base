@@ -1,14 +1,12 @@
 // PersonnelSection.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ArrowLeft, Plus, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, Users } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
 import { PersonnelList } from '../../../../personnel/PersonnelList/PersonnelList';
-import { SearchBar } from '../../../../common/SearchBar';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { authApi, divisionsApi, employeesApi } from '../../../../../api';
 import './PersonnelSection.css';
-import { PersonnelAdvancedSearchModal } from '../../../../personnel/forms/PersonnelAdvancedSearchModal/PersonnelAdvancedSearchModal';
 
 interface PersonnelAdvancedSearchFilters {
   ranks: string[];
@@ -233,6 +231,7 @@ export function PersonnelSection() {
               <ArrowLeft className="back-button-icon" />
             </button>
           )}
+          <Users size={28} />
           {getHeaderTitle()}
         </h3>
         {canCreateEmployee && (

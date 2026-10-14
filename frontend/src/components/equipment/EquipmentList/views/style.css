@@ -231,7 +231,6 @@ button.tv-collapse-button:hover {
 
 /* Действия */
 .tv-table-cell-actions {
-  padding: 1rem 1.25rem;
   text-align: right;
   border: 1px solid #e2e8f0;
 }
@@ -316,4 +315,3 @@ button.tv-collapse-button:hover {
     max-width: 250px;
   }
 }
-

@@ -1,13 +1,10 @@
 .communication-header {
     margin-bottom: 1rem;
     display: flex;
-    background: white;
-    padding: 1.2rem 1.5rem;
+    padding: 0.5rem 0.5rem;
     border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
     position: relative;
     z-index: 2;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -17,7 +14,7 @@
 .communication-header-title {
     display: flex;
     align-items: center;
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 600;
     color: #2d3748;
     margin: 0;
@@ -25,25 +22,36 @@
 }
 
 .communication-header-title h1 {
-    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.8rem;
     font-weight: 600;
     color: #2d3748;
     margin: 0;
 }
 
 .communication-header-back-button {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    background-color: #f1f5f9;
-    transition: all 0.2s;
+    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #2563eb;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
 }
 
 .communication-header-back-button:hover {
-    background-color: #e2e8f0;
+    background-color: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+}
+
+.communication-header-back-button:active {
+    background-color: rgba(37, 99, 235, 0.14);
 }
 
 .communication-header-back-icon {
@@ -53,6 +61,7 @@
 
 .communication-header-create-button {
     display: flex;
+    font-size: 0.8rem;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
@@ -94,6 +103,7 @@
 
 .view-toggle-button {
     display: flex;
+    font-size: 0.8rem;
     align-items: center;
     gap: 8px;
     padding: 8px 16px;

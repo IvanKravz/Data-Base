@@ -37,6 +37,7 @@ interface AppPermissionsContextType {
     networksFilters: ModelFilters | null;
     taskFilters: ModelFilters | null;
     scheduleFilters: ModelFilters | null;
+    candidateFilters: ModelFilters | null;
     isEditorShaWorker: boolean;
 }
 
@@ -100,6 +101,10 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
     const facilitiesFilters = useMemo(() => extractFilters(permissions?.filters?.Facility), [permissions]);
     const networksFilters = useMemo(() => extractFilters(permissions?.filters?.CommunicationNetwork), [permissions]);
     const taskFilters = useMemo(() => extractFilters(permissions?.filters?.Task), [permissions]);
+    const candidateFilters = useMemo(
+        () => extractFilters(permissions?.filters?.Candidate),
+        [permissions],
+    );
     const scheduleFilters = useMemo(() => extractFilters(permissions?.filters?.ScheduleEvent), [permissions]);
     const isEditorShaWorker = permissions?.is_editor_sha_worker ?? false;
 
@@ -164,6 +169,7 @@ export const AppPermissionsProvider: React.FC<{ children: React.ReactNode }> = (
         networksFilters,
         taskFilters,
         scheduleFilters,
+        candidateFilters,
         isEditorShaWorker,
     }), [
         canAccessPersonnel,

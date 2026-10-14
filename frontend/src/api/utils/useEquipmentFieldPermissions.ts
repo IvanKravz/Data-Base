@@ -24,13 +24,14 @@ const BASE_PERMISSIONS: EquipmentFieldPermissions = {
   canEditProductStructure: false,
   canEditDocuments: false,
   canEditIdentification: false,
-  // Добавлено новое поле
   canEditIsNetwork: false,
+  // Новое поле для СЗИ
+  canEditSzi: false,
 };
 
 export const useEquipmentFieldPermissions = (): EquipmentFieldPermissions => {
   const { canEdit, hasRole } = useAppPermissions();
-  
+
   return useMemo(() => {
     try {
       const hasEditPermission = canEdit('equipment');
@@ -61,8 +62,9 @@ export const useEquipmentFieldPermissions = (): EquipmentFieldPermissions => {
           canEditFacility: true,
           canEditComments: true,
           canEditProductStructure: true,
-          // Добавлено право на редактирование is_network
           canEditIsNetwork: true,
+          // Эксплуатация может редактировать СЗИ
+          canEditSzi: true,
         };
       }
 

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { TaskStepsList } from '../TaskStepsList';
 import { DivisionSelector } from './DivisionSelector';
 import { SubdivisionSelector } from './SubdivisionSelector';
+import { AssigneeSelector } from './AssigneeSelector';
 import { TaskCategorySelector } from './TaskCategorySelector';
-import { tasksApi } from '../../../../api/tasks';
+import { tasksApi, AssigneeOption } from '../../../../api/tasks';
 import '../style.css';
 import { TaskCategory } from '../../../../types/taskCategories';
 
@@ -51,6 +52,14 @@ export function TaskForm({
   const [selectedSubdivisionId, setSelectedSubdivisionId] = useState<string | null>(
     initialTask?.subdivision?.id || null
   );
+
+  // НОВОЕ: ответственный исполнитель
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | null>(
+    initialTask?.assignee?.id ?? null
+  );
+  const [assignees, setAssignees] = useState<AssigneeOption[]>([]);
+  const [assigneesLoading, setAssigneesLoading] = useState(false);
+
   const [allSubdivisions, setAllSubdivisions] = useState<any[]>([]);
   const [displayedSubdivisions, setDisplayedSubdivisions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +73,6 @@ export function TaskForm({
         setDivisions(data.divisions);
         setAllSubdivisions(data.subdivisions);
 
-        // Если есть начальное значение (при редактировании), проверяем, что оно в списке
         if (initialTask?.division?.id) {
           const divisionExists = data.divisions.some(d => d.id == initialTask.division.id);
           if (divisionExists) {
@@ -83,7 +91,6 @@ export function TaskForm({
             setDisplayedSubdivisions([]);
           }
         } else if (data.divisions.length === 1 && !initialTask) {
-          // Если только одно подразделение доступно, выбираем его автоматически
           const firstDivision = data.divisions[0];
           setSelectedDivisionId(firstDivision.id);
           const filteredSubdivisions = data.subdivisions.filter(
@@ -105,9 +112,37 @@ export function TaskForm({
     fetchAvailableDivisions();
   }, [initialTask, divisionId, onError]);
 
+  // НОВОЕ: загрузка сотрудников при изменении подразделения/отделения
+  useEffect(() => {
+    const fetchAssignees = async () => {
+      if (!selectedDivisionId) {
+        setAssignees([]);
+        return;
+      }
+      setAssigneesLoading(true);
+      try {
+        const data = await tasksApi.getAvailableAssignees({
+          division: selectedDivisionId,
+          subdivision: selectedSubdivisionId,
+        });
+        setAssignees(data);
+        // Если выбранный ранее исполнитель не входит в список — сбрасываем
+        if (selectedAssigneeId && !data.some(a => a.id === selectedAssigneeId)) {
+          setSelectedAssigneeId(null);
+        }
+      } catch (err) {
+        console.error('Не удалось загрузить список сотрудников:', err);
+        setAssignees([]);
+      } finally {
+        setAssigneesLoading(false);
+      }
+    };
+    fetchAssignees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDivisionId, selectedSubdivisionId]);
+
   const handleDivisionChange = (divisionId: string) => {
     setSelectedDivisionId(divisionId);
-    // Фильтруем отделения по выбранному подразделению из полного списка
     const filtered = allSubdivisions.filter(s => s.division_id == divisionId);
     setDisplayedSubdivisions(filtered);
     if (filtered.length === 1) {
@@ -115,6 +150,14 @@ export function TaskForm({
     } else {
       setSelectedSubdivisionId(null);
     }
+    // При смене подразделения сбрасываем исполнителя
+    setSelectedAssigneeId(null);
+  };
+
+  const handleSubdivisionChange = (id: string | null) => {
+    setSelectedSubdivisionId(id);
+    // При смене отделения сбрасываем исполнителя
+    setSelectedAssigneeId(null);
   };
 
   const isTempId = (id: string | undefined): boolean => {
@@ -153,6 +196,7 @@ export function TaskForm({
         category,
         division_id: selectedDivisionId,
         subdivision_id: selectedSubdivisionId,
+        assignee_id: selectedAssigneeId,
         is_private: isPrivate,
         steps: steps.map(step => ({
           name: step.name,
@@ -169,6 +213,21 @@ export function TaskForm({
           category,
           division: { id: selectedDivisionId, name: '' },
           subdivision: selectedSubdivisionId ? { id: selectedSubdivisionId, name: '' } : null,
+          assignee: selectedAssigneeId
+            ? (() => {
+              const found = assignees.find(a => a.id === selectedAssigneeId);
+              return found
+                ? {
+                  id: found.id,
+                  full_name: found.full_name,
+                  position: found.position,
+                  rank: found.rank,
+                  division: null,
+                  subdivision: null,
+                }
+                : { id: selectedAssigneeId, full_name: '' };
+            })()
+            : null,
           is_private: isPrivate,
           steps: steps.map(step => {
             const stepData: any = {
@@ -198,7 +257,6 @@ export function TaskForm({
     }
   };
 
-  // Если список подразделений пуст и загрузка завершена, показываем сообщение
   if (!isLoading && divisions.length === 0) {
     return (
       <div className="task-form-empty">
@@ -234,8 +292,17 @@ export function TaskForm({
           <SubdivisionSelector
             subdivisions={displayedSubdivisions}
             selectedSubdivisionId={selectedSubdivisionId}
-            onChange={(id) => setSelectedSubdivisionId(id)}
+            onChange={handleSubdivisionChange}
             isLoading={isLoading}
+            hasDivision={!!selectedDivisionId}
+          />
+
+          {/* НОВОЕ: выбор ответственного исполнителя */}
+          <AssigneeSelector
+            assignees={assignees}
+            selectedAssigneeId={selectedAssigneeId}
+            onChange={setSelectedAssigneeId}
+            isLoading={assigneesLoading}
             hasDivision={!!selectedDivisionId}
           />
         </div>

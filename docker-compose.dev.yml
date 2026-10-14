@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15.2
@@ -15,6 +13,15 @@ services:
       - "5432:5432"
     networks:
       - dev_network
+    # Проверка готовности Postgres: healthcheck выполняется каждые 5 сек,
+    # пока pg_isready не вернёт успех. Compose будет ждать этого статуса
+    # перед запуском backend (см. depends_on ниже).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   backend:
     build: ./backend
@@ -35,14 +42,20 @@ services:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
-      - INITIAL_DATA=${INITIAL_DATA:-false} 
+      - INITIAL_DATA=${INITIAL_DATA:-false}
     volumes:
+      # В dev монтируем весь код — работает авторелоад.
       - ./backend:/app
+      # Медиа выносим в volume, чтобы файлы пережили пересборку образа.
       - media_volume_dev:/app/media
+      # Статику в dev не собираем (collectstatic отключён в entrypoint),
+      # поэтому volume не нужен.
     ports:
       - "8000:8000"
+    # Ждём не просто «контейнер запущен», а «БД готова принимать соединения».
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - dev_network
 

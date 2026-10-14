@@ -4,6 +4,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -160,14 +161,14 @@
   position: relative;
 }
 
-/* Кнопка-шеврон */
+/* ===== Кнопка-шеврон ===== */
 .sc-menu-toggle {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translate(-50%, 50%);
-  width: 28px;
-  height: 28px;
+  transform: translate(-50%, 40%);
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid rgba(228, 227, 227, 0.7);
   background: rgba(255, 255, 255, 0.9);
@@ -179,30 +180,64 @@
   cursor: pointer;
   padding: 0;
   opacity: 0;
-  transition: opacity 0.2s ease, background 0.2s ease, transform 0.15s ease;
   z-index: 5;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  /* Подсказка браузеру: анимируем transform и opacity */
+  will-change: transform, opacity;
+  /* Плавные переходы для всех изменяемых свойств */
+  transition:
+    opacity 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
 }
 
+/* Показываем кнопку при наведении на карточку ИЛИ когда меню раскрыто */
 .sc-root:hover .sc-menu-toggle,
 .sc-menu-toggle.expanded {
   opacity: 1;
 }
 
+/* Обычное (закрытое) состояние — при наведении чуть ярче */
 .sc-menu-toggle:hover {
   background: rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
 }
 
 .sc-menu-toggle:active {
   transform: translate(-50%, 50%) scale(0.9);
 }
 
+/* Фокус с клавиатуры — заметная обводка */
+.sc-menu-toggle:focus-visible {
+  outline: 2px solid #6b7280;
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* ===== Раскрытое состояние — приглушённый вид ===== */
+.sc-menu-toggle.expanded {
+  /* Почти сливается с карточкой: полупрозрачный, без яркого фона */
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(228, 227, 227, 0.45);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* При наведении на раскрытую кнопку — «включается» свой оттенок */
+.sc-menu-toggle.expanded:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(210, 210, 210, 0.85);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Иконка шеврона */
 .sc-menu-toggle-icon {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
   color: #6b7280;
 }
 
-.sc-menu-toggle-icon.expanded {
+.sc-menu-toggle.expanded .sc-menu-toggle-icon {
   transform: rotate(180deg);
 }
 
@@ -213,27 +248,61 @@
   }
 }
 
-/* Тёмная тема */
+/* ===== Тёмная тема ===== */
 @media (prefers-color-scheme: dark) {
   .sc-menu-toggle {
     background: rgba(50, 50, 50, 0.9);
     border-color: rgba(120, 120, 120, 0.5);
   }
+
   .sc-menu-toggle:hover {
     background: rgba(70, 70, 70, 1);
   }
+
+  /* Раскрытая — приглушённая, почти как карточка */
+  .sc-menu-toggle.expanded {
+    background: rgba(60, 60, 60, 0.45);
+    border-color: rgba(110, 110, 110, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  /* При наведении на раскрытую — свой оттенок */
+  .sc-menu-toggle.expanded:hover {
+    background: rgba(85, 85, 85, 0.95);
+    border-color: rgba(150, 150, 150, 0.7);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
   .sc-menu-toggle-icon {
     color: #d0d0d0;
   }
+
+  .sc-menu-toggle.expanded .sc-menu-toggle-icon {
+    color: #f1f0f0;
+  }
+
+  .sc-menu-toggle.expanded:hover .sc-menu-toggle-icon {
+    color: #f0f0f0;
+  }
 }
 
-/* Контейнер с пунктами меню (под карточкой) */
+/* ===== Контейнер с пунктами меню (под карточкой) =====
+   Появляется/исчезает как раньше (условный рендеринг в TSX),
+   но с анимацией и в обе стороны — за счёт класса .closing. */
 .sc-menu-content {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-top: 20px; /* отступ, чтобы освободить место под шеврон */
+  /* Подсказка браузеру: анимируем transform и opacity */
+  will-change: transform, opacity;
   animation: scMenuFadeIn 0.25s ease-out;
+}
+
+/* Анимация закрытия — проигрывается перед удалением из DOM */
+.sc-menu-content.closing {
+  animation: scMenuFadeOut 0.2s ease-in forwards;
+  pointer-events: none;
 }
 
 @keyframes scMenuFadeIn {
@@ -241,9 +310,34 @@
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scMenuFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Уважаем настройку «уменьшить движение» */
+@media (prefers-reduced-motion: reduce) {
+
+  .sc-menu-content,
+  .sc-menu-content.closing,
+  .sc-menu-toggle,
+  .sc-menu-toggle-icon {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

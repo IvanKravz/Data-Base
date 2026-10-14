@@ -1,7 +1,7 @@
 // Header.tsx
 import React from 'react';
 import './Header.css';
-import { ArrowLeft, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, Settings, Network } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -45,7 +45,10 @@ export function Header({
             <ArrowLeft className="communication-header-back-icon" />
           </button>
         )}
-        <h1>{getHeaderTitle()}</h1>
+        <h1 className="communication-header-h1">
+          <Network size={28} />
+          {getHeaderTitle()}
+        </h1>
       </div>
       {canCreateNetworks && (<div className="header-actions">
         <button className="view-toggle-button" onClick={onNavigateToManagement}>

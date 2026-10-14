@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/networks/', include('networks.urls')),
     path('api/map/', include('map.urls')),
     path('api/storage/', include('storage.urls')),
+    path('api/candidates/', include('candidates.urls')), 
 
     path('api/backup/download/', DatabaseBackupView.as_view(), name='database-backup'),
     path('api/backup/restore/', DatabaseRestoreView.as_view(), name='database-restore'),

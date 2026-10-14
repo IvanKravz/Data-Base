@@ -1,6 +1,6 @@
 // EquipmentSection.tsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { ArrowLeft, Filter, Plus, List, FolderTree, Package, Box, KeyRound } from 'lucide-react';
+import { ArrowLeft, Filter, Plus, List, FolderTree, Package, Box, KeyRound, Database } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../store/store';
@@ -382,7 +382,10 @@ export function EquipmentSection() {
               <ArrowLeft className="back-button-icon" />
             </button>
           )}
-          <h2 className="equipment-title">{getHeaderTitle()}</h2>
+          <h2 className="equipment-title">
+            <Database size={28} />
+            {getHeaderTitle()}
+          </h2>
         </div>
         {canCreateEquipment && (
           <button onClick={handleCreateEquipment} className="add-equipment-btn">

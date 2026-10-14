@@ -1,6 +1,6 @@
 // components/UserDropdownMenu.tsx
 import React from 'react';
-import { Settings, LogOut, Users, User as UserIcon, Building2 } from 'lucide-react';
+import { Settings, LogOut, Users, Building2, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/DropdownMenu.css';
 import { authApi } from '../../../api';
@@ -9,9 +9,15 @@ import { getCurrentUser } from '../../../api/utils/permissions';
 interface UserDropdownMenuProps {
     onClose: () => void;
     onCabinetOpen: () => void;
+    /** Открыть модальное окно администрирования (только для admin). */
+    onAdminOpen: () => void;
 }
 
-export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuProps) {
+export function UserDropdownMenu({
+    onClose,
+    onCabinetOpen,
+    onAdminOpen,
+}: UserDropdownMenuProps) {
     const navigate = useNavigate();
     const user = getCurrentUser();
     const isAdmin = user?.is_staff || user?.roles?.includes('admin');
@@ -57,6 +63,18 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
             {isAdmin && (
                 <>
                     <div className="dropdown-divider" />
+
+                    <button
+                        onClick={() => {
+                            onClose();
+                            onAdminOpen();
+                        }}
+                        className="dropdown-item"
+                    >
+                        <Shield className="dropdown-icon" size={18} />
+                        <span>Администрирование</span>
+                    </button>
+
                     <button
                         onClick={handleUsersManagement}
                         className="dropdown-item"
@@ -64,6 +82,7 @@ export function UserDropdownMenu({ onClose, onCabinetOpen }: UserDropdownMenuPro
                         <Users className="dropdown-icon" size={18} />
                         <span>Управление пользователями</span>
                     </button>
+
                     <button
                         onClick={handleDivisionsManagement}
                         className="dropdown-item"

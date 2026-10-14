@@ -1,0 +1,502 @@
+/* ============================================================ */
+/*  CandidatesPage — стили страницы списка кандидатов           */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. Заголовок страницы                                        */
+/* ------------------------------------------------------------ */
+.candidates-page__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.candidates-page__title-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.candidates-page__count {
+    font-size: 0.85rem;
+    color: var(--cnd-text-muted);
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.candidates-page__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Спиннер обновления рядом с заголовком */
+.candidates-page__spinner {
+    color: var(--cnd-primary);
+    animation: candidates-spin 0.9s linear infinite;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+@keyframes candidates-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ------------------------------------------------------------ */
+/* 2. Экспорт                                                   */
+/* ------------------------------------------------------------ */
+.candidates-export-dropdown {
+    position: relative;
+}
+
+.candidates-export-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    box-shadow: var(--cnd-shadow-md);
+    overflow: hidden;
+    z-index: 10;
+    min-width: 120px;
+}
+
+.candidates-export-dropdown__menu button {
+    display: block;
+    width: 100%;
+    padding: 8px 14px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--cnd-text);
+    font-family: inherit;
+}
+
+.candidates-export-dropdown__menu button:hover {
+    background: #f3f4f6;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. Фильтры                                                   */
+/* ------------------------------------------------------------ */
+.candidates-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+}
+
+.candidates-filters__search {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 220px;
+    min-width: 180px;
+    max-width: 100%;
+    padding: 6px 12px;
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    background: var(--cnd-bg-soft);
+    color: var(--cnd-text-muted);
+}
+
+.candidates-filters__search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--cnd-text);
+    font-family: inherit;
+}
+
+.candidates-filters__checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--cnd-radius-sm);
+    background: var(--cnd-bg-soft);
+    color: #475569;
+    font-size: 0.85rem;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid var(--cnd-border);
+    flex: 0 0 auto;
+}
+
+.candidates-filters__checkbox input {
+    cursor: pointer;
+}
+
+/* Кастомный dropdown фильтра */
+.candidates-filter-select {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.candidates-filter-select__trigger {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    min-width: 150px;
+    max-width: 260px;
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--cnd-text);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.candidates-filter-select__trigger:hover {
+    background: var(--cnd-bg-hover);
+    border-color: #cbd5e1;
+}
+
+.candidates-filter-select__trigger.is-open {
+    border-color: #c7d2fe;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.candidates-filter-select__trigger-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.candidates-filter-select__chevron {
+    flex-shrink: 0;
+    color: var(--cnd-text-dim);
+    transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.candidates-filter-select__trigger.is-open .candidates-filter-select__chevron {
+    transform: rotate(180deg);
+    color: var(--cnd-primary);
+}
+
+.candidates-filter-select__popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 30;
+    background: var(--cnd-bg);
+    border: 1px solid var(--cnd-border);
+    border-radius: 10px;
+    box-shadow: var(--cnd-shadow-md);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: candidates-popover-in 0.14s ease-out;
+}
+
+.candidates-filter-select__popover-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--cnd-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0 2px 4px;
+    border-bottom: 1px dashed var(--cnd-border);
+    margin-bottom: 2px;
+}
+
+.candidates-filter-select__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--cnd-bg-soft);
+    color: var(--cnd-text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+}
+
+.candidates-filter-select__option:hover {
+    background: #eef4ff;
+    border-color: #c7d2fe;
+}
+
+.candidates-filter-select__option.is-active {
+    background: var(--cnd-primary-soft);
+    border-color: #bfdbfe;
+    color: var(--cnd-primary-hover);
+    font-weight: 600;
+}
+
+.candidates-filter-select__option-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    flex-shrink: 0;
+}
+
+.candidates-filter-select__option.is-active .candidates-filter-select__option-dot {
+    background: var(--cnd-primary);
+}
+
+.candidates-filter-select__option-check {
+    margin-left: auto;
+    color: var(--cnd-primary);
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. Таблица (с границами в ячейках)                           */
+/* ------------------------------------------------------------ */
+.candidates-table-wrapper {
+    position: relative;
+    overflow-x: auto;
+    background: var(--cnd-bg);
+    border-radius: var(--cnd-radius);
+    border: 1px solid var(--cnd-border);
+    box-shadow: var(--cnd-shadow-sm);
+}
+
+/* Тонкая полоса загрузки над таблицей */
+.candidates-table-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--cnd-primary) 50%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: candidates-table-progress-slide 1.2s ease-in-out infinite;
+    z-index: 2;
+    border-top-left-radius: var(--cnd-radius);
+    border-top-right-radius: var(--cnd-radius);
+    pointer-events: none;
+}
+
+@keyframes candidates-table-progress-slide {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+.candidates-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background: var(--cnd-bg);
+}
+
+/* Границы в каждой ячейке — и по горизонтали, и по вертикали */
+.candidates-table th,
+.candidates-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border: 1px solid var(--cnd-border);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Углы таблицы — внешние границы через рамку обёртки.
+   Внутренние границы заданы border: 1px solid. */
+.candidates-table thead tr:first-child th {
+    border-top: none;
+}
+
+.candidates-table thead tr:last-child th {
+    border-bottom: 1px solid var(--cnd-border-strong);
+}
+
+.candidates-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.candidates-table tr th:first-child,
+.candidates-table tr td:first-child {
+    border-left: none;
+}
+
+.candidates-table tr th:last-child,
+.candidates-table tr td:last-child {
+    border-right: none;
+}
+
+.candidates-table th {
+    background: var(--cnd-bg-soft);
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.candidates-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.candidates-table th.sortable:hover {
+    background: #eef2f7;
+}
+
+.candidates-table__row {
+    cursor: pointer;
+    transition: background-color 0.12s;
+}
+
+.candidates-table__row:hover {
+    background: #f1f5ff;
+}
+
+.candidates-table__num {
+    color: var(--cnd-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.candidates-table__name {
+    font-weight: 600;
+    color: var(--cnd-text);
+}
+
+/* Колонка «№ п/п»: узкая, с обычным регистром (не CAPS) */
+.candidates-table th.candidates-table__index-col,
+.candidates-table td.candidates-table__index-col {
+    width: 1%;
+    white-space: nowrap;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: center;
+}
+
+.candidates-table th.candidates-table__index-col {
+    /* Перебиваем общий text-transform: uppercase из .candidates-table th */
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* ------------------------------------------------------------ */
+/* 5. Адаптив                                                   */
+/* ------------------------------------------------------------ */
+@media (max-width: 900px) {
+    .candidates-filters {
+        gap: 8px;
+    }
+
+    .candidates-filter-select {
+        flex: 1 1 calc(50% - 4px);
+    }
+
+    .candidates-filter-select__trigger {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .candidates-page {
+        padding: 6px;
+        gap: 14px;
+    }
+
+    .candidates-page__title {
+        font-size: 1.3rem;
+    }
+
+    .candidates-filters {
+        padding: 10px;
+    }
+
+    .candidates-page__actions {
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .candidates-page__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .candidates-filters__search,
+    .candidates-filter-select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .candidates-filter-select__trigger {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* ------------------------------------------------------------ */
+/* 6. Ячейка статуса с периодом (для hired / archived / rejected) */
+/* ------------------------------------------------------------ */
+.candidates-status-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.candidates-status-cell__period {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
+}

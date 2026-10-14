@@ -3,11 +3,27 @@ from django.utils import timezone
 from employees.models import Employee
 from facilities.models import Division, Facility, Subdivision
 
+
+class EquipmentCategoryManager(models.Manager):
+    def get_by_natural_key(self, value):
+        return self.get(value=value)
+
+
+class InterestOrganManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class EquipmentCategory(models.Model):
     value = models.CharField(max_length=20, unique=True, verbose_name='Код категории', null=True)
     name = models.CharField(max_length=255, verbose_name='Название категории')
     is_closed = models.BooleanField(default=False, verbose_name='Для закрытой техники')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Дата создания')
+
+    objects = EquipmentCategoryManager()
+
+    def natural_key(self):
+        return (self.value,)
 
     def __str__(self):
         return self.name
@@ -17,11 +33,21 @@ class EquipmentCategory(models.Model):
         verbose_name_plural = 'Категории техники'
         ordering = ['created_at']
 
+
 class InterestOrgan(models.Model):
     """Модель для органов, в чьих интересах эксплуатируется техника"""
-    name = models.CharField(max_length=255, verbose_name='Наименование органа')
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        verbose_name='Наименование органа',
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = InterestOrganManager()
+
+    def natural_key(self):
+        return (self.name,)
 
     def __str__(self):
         return self.name
@@ -30,6 +56,7 @@ class InterestOrgan(models.Model):
         verbose_name = 'Орган интересов'
         verbose_name_plural = 'Органы интересов'
         ordering = ['name']
+
 
 class Equipment(models.Model):
     EQUIPMENT_STATUSES = [
@@ -59,9 +86,9 @@ class Equipment(models.Model):
         verbose_name='Категория техники'
     )
     service_life = models.CharField(
-        max_length=100, 
-        blank=True, 
-        null=True, 
+        max_length=100,
+        blank=True,
+        null=True,
         verbose_name='Срок службы'
     )
     interest_organ = models.ForeignKey(
@@ -72,20 +99,20 @@ class Equipment(models.Model):
         verbose_name='В чьих интересах эксплуатируется'
     )
     secret_level = models.CharField(
-        max_length=20, 
-        choices=SECRET_LEVELS, 
-        blank=True, 
-        null=True, 
+        max_length=20,
+        choices=SECRET_LEVELS,
+        blank=True,
+        null=True,
         verbose_name='Степень секретности'
     )
     is_free_use = models.BooleanField(
-        default=False, 
+        default=False,
         verbose_name='Выдана в безвозмездное пользование'
     )
     free_use_act_number = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
+        max_length=255,
+        blank=True,
+        null=True,
         verbose_name='Номер акта приема-передачи в безвозмездное пользование'
     )
     status = models.CharField(max_length=20, choices=EQUIPMENT_STATUSES, verbose_name='Статус')
@@ -107,50 +134,62 @@ class Equipment(models.Model):
     comments = models.TextField(blank=True, null=True, verbose_name='Комментарии')
 
     first_invoice = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
+        max_length=255,
+        blank=True,
+        null=True,
         verbose_name='Первичный документ на получение'
     )
     material_invoice = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
+        max_length=255,
+        blank=True,
+        null=True,
         verbose_name='Накладная на МОЛ'
     )
     ver_software = models.CharField(
-        max_length=255, 
-        blank=True, 
-        null=True, 
+        max_length=255,
+        blank=True,
+        null=True,
         verbose_name='Версия программного обеспечения'
+    )
+
+    # === СЗИ (Средства защиты информации) ===
+    szi_certificate_number = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Номер сертификата СЗИ'
+    )
+    szi_certificate_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name='Дата сертификата СЗИ'
     )
 
     vlans = models.ManyToManyField(
         'networks.VLAN',
         blank=True,
         verbose_name='VLANы',
-        related_name='equipment_vlans' 
+        related_name='equipment_vlans'
     )
     network_interfaces = models.ManyToManyField(
         'networks.NetworkInterface',
         blank=True,
         verbose_name='Сетевые интерфейсы',
-        related_name='net_network_interfaces',  
+        related_name='net_network_interfaces',
     )
     ip_addresses = models.ManyToManyField(
         'networks.IPAddress',
         blank=True,
         verbose_name='IP-адреса',
-        related_name='equipment_ip_addresses'  
+        related_name='equipment_ip_addresses'
     )
-    
-    # Disposal information
+
     disposal_act_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='№ акта списания')
     disposal_act_date = models.DateField(blank=True, null=True, verbose_name='Дата акта списания')
     disposal_cert_number = models.CharField(max_length=255, blank=True, null=True, verbose_name='№ справки о ликвидации')
     disposal_cert_date = models.DateField(blank=True, null=True, verbose_name='Дата справки о ликвидации')
     disposal_comments = models.TextField(blank=True, null=True, verbose_name='Комментарии к списанию')
-    
+
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -173,9 +212,15 @@ class Equipment(models.Model):
 
     def get_category_display(self):
         return self.category.name if self.category else 'Без категории'
-        
+
     def get_status_display(self):
         return dict(self.EQUIPMENT_STATUSES).get(self.status, self.status)
+
+    @property
+    def is_szi(self) -> bool:
+        """Является ли техника средством защиты информации."""
+        return bool(self.category and self.category.value == 'szi')
+
 
 class ProductStructure(models.Model):
     equipment = models.ForeignKey(

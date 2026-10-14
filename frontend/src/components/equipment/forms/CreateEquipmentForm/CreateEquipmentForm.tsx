@@ -225,6 +225,11 @@ export function CreateEquipmentForm() {
                 interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
                 product_structures: formData.product_structures || [],
                 secret_level: formData.secret_level === '' ? null : formData.secret_level,
+                // === СЗИ: пустые строки → null ===
+                szi_certificate_number:
+                    formData.szi_certificate_number === '' ? null : formData.szi_certificate_number,
+                szi_certificate_date:
+                    formData.szi_certificate_date === '' ? null : formData.szi_certificate_date,
             };
             await equipmentApi.createEquipment(token, dataToSend);
 

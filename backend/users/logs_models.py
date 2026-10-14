@@ -26,6 +26,7 @@ class UserActionLog(models.Model):
         ('auth', 'Аутентификация'),
         ('users', 'Пользователи'),
         ('employees', 'Сотрудники'),
+        ('candidates', 'Кандидаты'),        
         ('equipment', 'Оборудование'),
         ('divisions', 'Подразделения'),
         ('networks', 'Сети связи'),

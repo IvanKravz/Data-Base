@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp, Phone, Smartphone } from 'lucide-react';
+import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp, Phone, Smartphone, Map } from 'lucide-react';
 import { Division, Employee } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { divisionsApi } from '../../../api/divisions';
@@ -162,7 +162,10 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
       {/* Блок руководства над списком */}
       {!loadingLeadership && hasLeadership && (
         <div className="leadership-section">
-          <div className="division-subheader-hh">Руководство</div>
+          <div className="division-subheader-hh">
+            <Users className="subheader-icon subheader-icon--blue" size={22} />
+            <span>Руководство</span>
+          </div>
           <div className="leadership-cards">
             {chief && renderLeaderCard(chief, 'Главный руководитель')}
             {deputies.map((deputy, index) => (
@@ -174,7 +177,10 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         </div>
       )}
 
-      <div className="division-subheader">Подразделения</div>
+      <div className="division-subheader">
+        <Building2 className="subheader-icon subheader-icon--purple" size={22} />
+        <span>Подразделения</span>
+      </div>
 
       <div className="tables-wrapper">
         <div className="tables-grid">
@@ -296,7 +302,8 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && toggleMap()}
             >
-              Территориальные органы ФСБ России
+              <Map className="subheader-icon subheader-icon--green" size={22} />
+              <span>Территориальные органы ФСБ России</span>
             </h3>
             <button
               className="map-toggle"

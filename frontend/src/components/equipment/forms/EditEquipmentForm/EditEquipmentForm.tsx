@@ -172,9 +172,9 @@ export function EditEquipmentForm({
       ...formData,
       category: formData.category
         ? {
-            value: formData.category.value || formData.category,
-            name: formData.category.name || formData.category,
-          }
+          value: formData.category.value || formData.category,
+          name: formData.category.name || formData.category,
+        }
         : null,
       is_closed: isClosedEquipment,
       division_id: formData.division?.id || null,
@@ -183,6 +183,11 @@ export function EditEquipmentForm({
       assigned_to_id: formData.assigned_to?.id || null,
       interest_organ_id: formData.interest_organ?.id || formData.interest_organ_id || null,
       product_structures: formData.product_structures || [],
+      // === СЗИ: пустые строки → null ===
+      szi_certificate_number:
+        formData.szi_certificate_number === '' ? null : formData.szi_certificate_number,
+      szi_certificate_date:
+        formData.szi_certificate_date === '' ? null : formData.szi_certificate_date,
     };
     try {
       setIsLoading(true);

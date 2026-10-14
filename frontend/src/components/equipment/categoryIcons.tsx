@@ -8,9 +8,10 @@ import {
     Zap,
     Box,
     KeyRound,
+    ShieldCheck,
     type LucideIcon,
   } from 'lucide-react';
-  
+
   /**
    * Соответствие «код категории → иконка» для ОТКРЫТЫХ категорий.
    * Для закрытых категорий (is_closed === true) всегда используется KeyRound —
@@ -24,15 +25,17 @@ import {
     antenna: Antenna,
     power: Zap,
     material: Box,
+    // Средства защиты информации
+    szi: ShieldCheck,
     // На случай, если где-то в данных реально придёт value='closed':
     closed: KeyRound,
   };
-  
+
   interface CategoryLike {
     value?: string | null;
     is_closed?: boolean | null;
   }
-  
+
   /**
    * Возвращает компонент иконки для категории.
    *
@@ -49,16 +52,16 @@ import {
     categoryOrValue?: CategoryLike | string | null,
   ): LucideIcon | null {
     if (!categoryOrValue) return null;
-  
+
     // Объект категории
     if (typeof categoryOrValue === 'object') {
       if (categoryOrValue.is_closed) return KeyRound;
-  
+
       const value = categoryOrValue.value;
       if (!value) return null;
       return CATEGORY_ICON_COMPONENTS[String(value).toLowerCase()] ?? null;
     }
-  
+
     // Строка value — старое поведение
     return CATEGORY_ICON_COMPONENTS[String(categoryOrValue).toLowerCase()] ?? null;
   }

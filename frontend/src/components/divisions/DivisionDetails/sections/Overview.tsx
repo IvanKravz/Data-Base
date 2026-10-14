@@ -13,6 +13,7 @@ import {
   Map,
   Calendar,
   Archive,
+  UserPlus,
 } from 'lucide-react';
 import { Division } from '../../../../types';
 import { StatCard } from './StatCard';
@@ -23,6 +24,7 @@ import { setPersonnel } from '../../../../store/slices/personnelSlice';
 import { isExploitationEmployee, isExploitationChief } from '../../../../api/utils/permissions';
 import { useAppPermissions } from '../../../../api/utils/AppPermissionsContext';
 import { MapCountry } from '../../../map/MapCountry/MapCountry';
+import { candidatesApi } from '../../../../api/candidatesApi';
 import './style.css';
 
 // Маркеры фильтров (соответствуют бэкендным)
@@ -33,14 +35,12 @@ interface OverviewProps {
   division: Division;
 }
 
-/** Приводит ответ API (array или {results}) к массиву. */
 const asArray = (data: any): any[] => {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.results)) return data.results;
   return [];
 };
 
-/** Сравнение id безопасно (string/number). */
 const idsEqual = (a: unknown, b: unknown): boolean => {
   if (a === null || a === undefined || b === null || b === undefined) return false;
   return String(a) === String(b);
@@ -130,6 +130,7 @@ export function Overview({ division }: OverviewProps) {
     networksFilters,
     taskFilters,
     scheduleFilters,
+    candidateFilters,
     canAccessPage,
     getCurrentUser,
   } = useAppPermissions();
@@ -141,19 +142,20 @@ export function Overview({ division }: OverviewProps) {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Счётчики (считаем на клиенте — см. комментарии в useEffect'ах)
+  // ── Счётчики ──────────────────────────────────────────────────────
   const [personnelCount, setPersonnelCount] = useState<number | null>(null);
   const [equipmentCount, setEquipmentCount] = useState<number | null>(null);
   const [facilitiesCount, setFacilitiesCount] = useState<number | null>(null);
   // Сети берём из division.networks_count (нет API с ролевой фильтрацией)
   const [networksCount] = useState<number | null>(division.networks_count ?? null);
 
-  const [personnelLoading, setPersonnelLoading] = useState(true);
-  const [equipmentLoading, setEquipmentLoading] = useState(false);
-  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
-
   const [tasksLoading, setTasksLoading] = useState(true);
   const [incompleteTasksCount, setIncompleteTasksCount] = useState<number | null>(null);
+
+  // ── Состояния загрузки — все стартуют с true, чтобы избежать «мигания»
+  const [personnelLoading, setPersonnelLoading] = useState(true);
+  const [equipmentLoading, setEquipmentLoading] = useState(true);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(true);
 
   const isExploitationEmp = isExploitationEmployee();
   const isChief = isExploitationChief();
@@ -162,6 +164,39 @@ export function Overview({ division }: OverviewProps) {
   const currentUser = getCurrentUser();
   const userDivisionId = currentUser?.division_info?.id ?? null;
   const userSubdivisionId = currentUser?.division_info?.subdivision?.id ?? null;
+
+  const [candidatesCount, setCandidatesCount] = useState<number | null>(null);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+
+  const isCandidatesVisibleForThisDivision = useMemo(
+    () => isVisibleForDivision(
+      canAccessPage('Candidate', 'view'),
+      candidateFilters,
+      division.id,
+      userDivisionId,
+    ),
+    [canAccessPage, candidateFilters, division.id, userDivisionId],
+  );
+
+  useEffect(() => {
+    if (!isCandidatesVisibleForThisDivision) {
+      setCandidatesCount(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        setCandidatesLoading(true);
+        const stats = await candidatesApi.stats({ division: division.id });
+        if (!cancelled) setCandidatesCount(stats.total);
+      } catch {
+        if (!cancelled) setCandidatesCount(null);
+      } finally {
+        if (!cancelled) setCandidatesLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [division.id, isCandidatesVisibleForThisDivision]);
 
   const isScheduleVisibleForThisDivision = useMemo(
     () => isScheduleVisibleForDivision(
@@ -230,6 +265,7 @@ export function Overview({ division }: OverviewProps) {
 
   const toggleMap = () => setShowMap((prev) => !prev);
 
+  // ── Видимость секций ──────────────────────────────────────────────
   const isPersonnelVisible = isVisibleForDivision(
     canAccessPersonnel(),
     personnelFilters,
@@ -259,6 +295,24 @@ export function Overview({ division }: OverviewProps) {
     userSubdivisionId,
   );
 
+  /**
+   * Пока хотя бы одна видимая секция грузится — показываем скелетоны,
+   * а все карточки раскрываем одновременно, когда всё готово.
+   */
+  const countsLoading =
+    (isPersonnelVisible && personnelLoading) ||
+    (isEquipmentVisible && equipmentLoading) ||
+    (isFacilitiesVisible && facilitiesLoading) ||
+    (isTasksVisible && tasksLoading);
+
+  const visibleCardsCount = [
+    isPersonnelVisible,
+    isEquipmentVisible,
+    isFacilitiesVisible,
+    isNetworksVisible,
+    isTasksVisible,
+  ].filter(Boolean).length;
+
   const handleSectionClick = (section: string, subdivisionId?: string) => {
     const path = subdivisionId
       ? `/divisions/${id}/${section}?subdivision=${subdivisionId}`
@@ -266,13 +320,14 @@ export function Overview({ division }: OverviewProps) {
     navigate(path);
   };
 
-  // === Сотрудники: считаем на клиенте, как и PersonnelSection ===
+  // ── Загрузка сотрудников ──────────────────────────────────────────
   useEffect(() => {
     if (!isPersonnelVisible) {
       setPersonnelLoading(false);
       setPersonnelCount(null);
       return;
     }
+    let cancelled = false;
     const fetchEmployees = async () => {
       try {
         setPersonnelLoading(true);
@@ -281,26 +336,32 @@ export function Overview({ division }: OverviewProps) {
         const filtered = list.filter((p: any) =>
           idsEqual(p.division?.id, division.id),
         );
-        setPersonnelCount(filtered.length);
-        dispatch(setPersonnel(list as any));
+        if (!cancelled) {
+          setPersonnelCount(filtered.length);
+          dispatch(setPersonnel(list as any));
+        }
       } catch (err) {
-        setError('Failed to load personnel');
-        console.error(err);
-        setPersonnelCount(null);
+        if (!cancelled) {
+          setError('Failed to load personnel');
+          console.error(err);
+          setPersonnelCount(null);
+        }
       } finally {
-        setPersonnelLoading(false);
+        if (!cancelled) setPersonnelLoading(false);
       }
     };
     fetchEmployees();
+    return () => { cancelled = true; };
   }, [token, dispatch, division.id, isPersonnelVisible]);
 
-  // === Техника: считаем на клиенте, исключаем списанные ===
+  // ── Загрузка техники ──────────────────────────────────────────────
   useEffect(() => {
     if (!isEquipmentVisible) {
       setEquipmentLoading(false);
       setEquipmentCount(null);
       return;
     }
+    let cancelled = false;
     const fetchEquipment = async () => {
       try {
         setEquipmentLoading(true);
@@ -309,24 +370,28 @@ export function Overview({ division }: OverviewProps) {
         const filtered = list.filter((e: any) =>
           idsEqual(e.division?.id, division.id),
         );
-        setEquipmentCount(filtered.length);
+        if (!cancelled) setEquipmentCount(filtered.length);
       } catch (err) {
-        console.error('Failed to load equipment count', err);
-        setEquipmentCount(null);
+        if (!cancelled) {
+          console.error('Failed to load equipment count', err);
+          setEquipmentCount(null);
+        }
       } finally {
-        setEquipmentLoading(false);
+        if (!cancelled) setEquipmentLoading(false);
       }
     };
     fetchEquipment();
+    return () => { cancelled = true; };
   }, [token, division.id, isEquipmentVisible]);
 
-  // === Объекты: считаем на клиенте, ролевые фильтры уже применены API ===
+  // ── Загрузка объектов ─────────────────────────────────────────────
   useEffect(() => {
     if (!isFacilitiesVisible) {
       setFacilitiesLoading(false);
       setFacilitiesCount(null);
       return;
     }
+    let cancelled = false;
     const fetchFacilities = async () => {
       try {
         setFacilitiesLoading(true);
@@ -335,24 +400,28 @@ export function Overview({ division }: OverviewProps) {
         const filtered = list.filter((f: any) =>
           idsEqual(f.division?.id, division.id),
         );
-        setFacilitiesCount(filtered.length);
+        if (!cancelled) setFacilitiesCount(filtered.length);
       } catch (err) {
-        console.error('Failed to load facilities count', err);
-        setFacilitiesCount(null);
+        if (!cancelled) {
+          console.error('Failed to load facilities count', err);
+          setFacilitiesCount(null);
+        }
       } finally {
-        setFacilitiesLoading(false);
+        if (!cancelled) setFacilitiesLoading(false);
       }
     };
     fetchFacilities();
+    return () => { cancelled = true; };
   }, [token, division.id, isFacilitiesVisible]);
 
-  // === Задачи: считаем через api (уже с учётом роли) ===
+  // ── Загрузка задач ────────────────────────────────────────────────
   useEffect(() => {
     if (!isTasksVisible) {
       setTasksLoading(false);
       setIncompleteTasksCount(null);
       return;
     }
+    let cancelled = false;
     const fetchTasksCount = async () => {
       try {
         setTasksLoading(true);
@@ -361,26 +430,19 @@ export function Overview({ division }: OverviewProps) {
           params.subdivisionId = effectiveSubdivisionId;
         }
         const count = await tasksApi.getIncompleteTasksCount(params);
-        setIncompleteTasksCount(count);
+        if (!cancelled) setIncompleteTasksCount(count);
       } catch (err: any) {
-        console.error('Failed to fetch incomplete tasks count', err);
-        setIncompleteTasksCount(null);
+        if (!cancelled) {
+          console.error('Failed to fetch incomplete tasks count', err);
+          setIncompleteTasksCount(null);
+        }
       } finally {
-        setTasksLoading(false);
+        if (!cancelled) setTasksLoading(false);
       }
     };
     fetchTasksCount();
+    return () => { cancelled = true; };
   }, [division.id, isTasksVisible, effectiveSubdivisionId]);
-
-  const getCount = (
-    visible: boolean,
-    value: number | null | undefined,
-    isLoading: boolean
-  ): number | null => {
-    if (!visible) return null;
-    if (isLoading) return null;
-    return value !== undefined ? value : null;
-  };
 
   const hasSubdivisions = division.subdivisions && division.subdivisions.length > 0;
   const showSubdivisionsBlock = !isExploitationEmp && hasSubdivisions;
@@ -389,107 +451,145 @@ export function Overview({ division }: OverviewProps) {
     <div className="division-overview-container">
       <DivisionLeadership division={division} />
 
-      <div className="division-stats-grid">
-        <StatCard
-          title="Сотрудники"
-          count={getCount(isPersonnelVisible, personnelCount, personnelLoading)}
-          icon={Users}
-          iconColor="#4d5edb"
-          details={[]}
-          onClick={() => handleSectionClick('personnel')}
-          loading={personnelLoading && isPersonnelVisible}
-          disabled={!isPersonnelVisible}
-          storageKey={`card_menu_employees_${division.id}`}
-        >
-          {isScheduleVisibleForThisDivision && (
+      {countsLoading ? (
+        <div className="division-stats-grid division-stats-grid--skeleton">
+          {Array.from({ length: Math.max(visibleCardsCount, 1) }).map((_, i) => (
+            <div key={i} className="sc-skeleton" aria-hidden="true" />
+          ))}
+        </div>
+      ) : (
+        <div className="division-stats-grid">
+          <StatCard
+            title="Сотрудники"
+            count={isPersonnelVisible ? personnelCount : null}
+            icon={Users}
+            iconColor="#4d5edb"
+            details={[]}
+            onClick={() => handleSectionClick('personnel')}
+            loading={false}
+            disabled={!isPersonnelVisible}
+            storageKey={`card_menu_employees_${division.id}`}
+          >
+            {isScheduleVisibleForThisDivision && (
+              <div
+                className="schedule-link-card"
+                onClick={() =>
+                  navigate(`/employee-schedule?division=${division.id}`, {
+                    state: {
+                      divisionName: division.name,
+                      fromDivisionPage: true,
+                      from: `/divisions/${division.id}`,
+                    },
+                  })
+                }
+              >
+                <div className="schedule-link-icon">
+                  <Calendar size={28} />
+                </div>
+                <div className="schedule-link-text">
+                  <span className="schedule-link-title">График работы</span>
+                  <span className="schedule-link-sub">Планирование событий</span>
+                </div>
+              </div>
+            )}
+
+            {isCandidatesVisibleForThisDivision && (
+              <div
+                className="schedule-link-card"
+                onClick={() =>
+                  navigate(`/candidates?division=${division.id}`, {
+                    state: { from: `/divisions/${division.id}` },
+                  })
+                }
+              >
+                <div
+                  className="schedule-link-icon"
+                  style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}
+                >
+                  <UserPlus size={28} />
+                </div>
+                <div className="schedule-link-text">
+                  <span className="schedule-link-title">Кандидаты</span>
+                  <span className="schedule-link-sub">
+                    {candidatesLoading
+                      ? 'Загрузка…'
+                      : `${candidatesCount ?? 0} в работе`}
+                  </span>
+                </div>
+              </div>
+            )}
+          </StatCard>
+
+          <StatCard
+            title="Техника"
+            count={isEquipmentVisible ? equipmentCount : null}
+            icon={Plug}
+            iconColor="#10b981"
+            details={[]}
+            onClick={() => handleSectionClick('equipment')}
+            loading={false}
+            disabled={!isEquipmentVisible}
+            storageKey={`card_menu_equipment_${division.id}`}
+          >
             <div
               className="schedule-link-card"
               onClick={() =>
-                navigate(`/employee-schedule?division=${division.id}`, {
-                  state: { divisionName: division.name, fromDivisionPage: true },
+                navigate('/equipment-disposed', {
+                  state: {
+                    from: 'division-overview',
+                    divisionId: division.id,
+                    divisionName: division.name,
+                  },
                 })
               }
             >
-              <div className="schedule-link-icon">
-                <Calendar size={28} />
+              <div
+                className="schedule-link-icon"
+                style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
+              >
+                <Archive size={28} />
               </div>
               <div className="schedule-link-text">
-                <span className="schedule-link-title">График работы</span>
-                <span className="schedule-link-sub">Планирование событий</span>
+                <span className="schedule-link-title">Архив техники</span>
+                <span className="schedule-link-sub">Списанное оборудование</span>
               </div>
             </div>
-          )}
-        </StatCard>
+          </StatCard>
 
-        <StatCard
-          title="Техника"
-          count={getCount(isEquipmentVisible, equipmentCount, equipmentLoading)}
-          icon={Plug}
-          iconColor="#10b981"
-          details={[]}
-          onClick={() => handleSectionClick('equipment')}
-          loading={equipmentLoading && isEquipmentVisible}
-          disabled={!isEquipmentVisible}
-          storageKey={`card_menu_equipment_${division.id}`}
-        >
-          <div
-            className="schedule-link-card"
-            onClick={() =>
-              navigate('/equipment-disposed', {
-                state: {
-                  from: 'division-overview',
-                  divisionId: division.id,
-                  divisionName: division.name,
-                },
-              })
-            }
-          >
-            <div
-              className="schedule-link-icon"
-              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
-            >
-              <Archive size={28} />
-            </div>
-            <div className="schedule-link-text">
-              <span className="schedule-link-title">Архив техники</span>
-              <span className="schedule-link-sub">Списанное оборудование</span>
-            </div>
-          </div>
-        </StatCard>
+          <StatCard
+            title="Объекты"
+            count={isFacilitiesVisible ? facilitiesCount : null}
+            icon={Building2}
+            iconColor="#888676"
+            details={[]}
+            onClick={() => handleSectionClick('facilities')}
+            loading={false}
+            disabled={!isFacilitiesVisible}
+          />
 
-        <StatCard
-          title="Объекты"
-          count={getCount(isFacilitiesVisible, facilitiesCount, facilitiesLoading)}
-          icon={Building2}
-          iconColor="#888676"
-          details={[]}
-          onClick={() => handleSectionClick('facilities')}
-          loading={facilitiesLoading && isFacilitiesVisible}
-          disabled={!isFacilitiesVisible}
-        />
+          <StatCard
+            title="Сети связи"
+            count={isNetworksVisible ? networksCount : null}
+            icon={RadioTower}
+            iconColor="#70b3d0"
+            details={[]}
+            onClick={() => handleSectionClick('networks')}
+            loading={false}
+            disabled={!isNetworksVisible}
+          />
 
-        <StatCard
-          title="Сети связи"
-          count={getCount(isNetworksVisible, networksCount, false)}
-          icon={RadioTower}
-          iconColor="#70b3d0"
-          details={[]}
-          onClick={() => handleSectionClick('networks')}
-          loading={false}
-          disabled={!isNetworksVisible}
-        />
-
-        <StatCard
-          title="Задачи"
-          count={getCount(isTasksVisible, incompleteTasksCount, tasksLoading)}
-          icon={ListTodo}
-          iconColor="#f97316"
-          details={[]}
-          onClick={() => handleSectionClick('tasks')}
-          loading={tasksLoading && isTasksVisible}
-          disabled={!isTasksVisible}
-        />
-      </div>
+          <StatCard
+            title="Задачи"
+            count={isTasksVisible ? incompleteTasksCount : null}
+            icon={ListTodo}
+            iconColor="#f97316"
+            details={[]}
+            onClick={() => handleSectionClick('tasks')}
+            loading={false}
+            disabled={!isTasksVisible}
+          />
+        </div>
+      )}
 
       {showSubdivisionsBlock && (
         <>

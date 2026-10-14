@@ -22,10 +22,13 @@
     animation: fadeIn 0.5s ease-in-out;
 }
 
-.map-title {
+/* Заголовок внутри шапки карты (изолирован от .map-title в DivisionList) */
+.map-header .map-title {
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0;
+    color: rgb(113, 113, 113);
+    text-align: center;
 }
 
 .map-container {
@@ -33,6 +36,7 @@
     display: flex;
     position: relative;
     overflow: hidden;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .map {
@@ -83,10 +87,6 @@
     to {
         opacity: 1;
     }
-}
-
-.map-container {
-    animation: fadeIn 0.5s ease-in-out;
 }
 
 .address-search-container {

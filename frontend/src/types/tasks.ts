@@ -5,13 +5,23 @@ export interface TaskStep {
   id: string;
   name: string;
   comments?: string;
-  start_date: string; 
-  end_date: string;   
+  start_date: string;
+  end_date: string;
   is_completed: boolean;
   completed_by?: User;
   completed_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+/** Краткая карточка сотрудника-исполнителя, приходит с бэкенда. */
+export interface TaskAssignee {
+  id: number;
+  full_name: string;
+  position?: string;
+  rank?: string;
+  division?: { id: string; name: string } | null;
+  subdivision?: { id: string; name: string } | null;
 }
 
 export interface Task {
@@ -22,6 +32,7 @@ export interface Task {
   subdivision?: Subdivision;
   steps: TaskStep[];
   created_by: User;
+  assignee?: TaskAssignee | null;  
   created_at: string;
   updated_by?: User;
   updated_at?: string;

@@ -86,11 +86,6 @@ const viewToEditMap: Record<ViewTabId, EditTabId> = {
     disposal: 'disposal',
 };
 
-/**
- * Состояние, которое передаётся со страницы архива списанной техники
- * в карточку техники. `fromState` — это исходный state самой страницы архива,
- * чтобы после возврата восстановить контекст (divisionId и т. п.).
- */
 interface DetailsNavigationState {
     from?: 'equipment-section' | 'equipment-disposed' | 'global-equipment' | string;
     divisionId?: number | string;
@@ -106,10 +101,6 @@ interface DetailsNavigationState {
     };
 }
 
-/**
- * Проверяет, есть ли у техники непустые данные о списании.
- * Сериализатор отдаёт данные ТОЛЬКО через вложенный объект disposal_info.
- */
 function hasDisposalData(equipment: Equipment | null): boolean {
     const d = equipment?.disposal_info;
     if (!d) return false;
@@ -167,7 +158,6 @@ export function EquipmentDetailsPage() {
     );
     const isGlobalView = authApi.getGlobalView();
 
-    // Функция обработки списания
     const handleDispose = async (disposalInfo: any) => {
         try {
             await equipmentApi.disposeEquipment(token, equipment!.id, disposalInfo);
@@ -180,7 +170,6 @@ export function EquipmentDetailsPage() {
         }
     };
 
-    // Загрузка техники
     useEffect(() => {
         const fetchEquipment = async () => {
             if (!id || !token) return;
@@ -197,7 +186,6 @@ export function EquipmentDetailsPage() {
         fetchEquipment();
     }, [id, token]);
 
-    // Загрузка справочников
     useEffect(() => {
         const fetchDictionaries = async () => {
             if (!token) return;
@@ -231,7 +219,6 @@ export function EquipmentDetailsPage() {
         fetchDictionaries();
     }, [token, canEditEquipment]);
 
-    // Загрузка персонала при редактировании
     useEffect(() => {
         const fetchPersonnel = async () => {
             if (!token || !editFormData?.division?.id) return;
@@ -283,6 +270,15 @@ export function EquipmentDetailsPage() {
                 assigned_to_id: editFormData.assigned_to?.id || null,
                 interest_organ_id: editFormData.interest_organ?.id || editFormData.interest_organ_id || null,
                 product_structures: editFormData.product_structures || [],
+                // === СЗИ: пустые строки → null ===
+                szi_certificate_number:
+                    editFormData.szi_certificate_number === ''
+                        ? null
+                        : editFormData.szi_certificate_number,
+                szi_certificate_date:
+                    editFormData.szi_certificate_date === ''
+                        ? null
+                        : editFormData.szi_certificate_date,
             };
             await equipmentApi.updateEquipment(token, id, dataToSend);
             const updated = await equipmentApi.getEquipmentById(token, id);
@@ -308,7 +304,6 @@ export function EquipmentDetailsPage() {
         setActiveViewTab(previousViewTab);
     };
 
-    // === НАВИГАЦИЯ НАЗАД ===
     const handleBack = () => {
         if (isEditing) {
             handleCancelEdit();
@@ -317,8 +312,6 @@ export function EquipmentDetailsPage() {
 
         const state = location.state as DetailsNavigationState | undefined;
 
-        // 1) Пришли из архива списанной техники — возвращаемся туда,
-        //    восстанавливая исходный state архива (divisionId, фильтры и т. п.).
         if (state?.from === 'equipment-disposed') {
             navigate('/equipment-disposed', {
                 state: state.fromState ?? undefined,
@@ -326,7 +319,6 @@ export function EquipmentDetailsPage() {
             return;
         }
 
-        // 2) Пришли со страницы техники (общий/по подразделению список)
         if (state?.from === 'equipment-section') {
             let backUrl = state.divisionId
                 ? `/divisions/${state.divisionId}/equipment`
@@ -339,13 +331,11 @@ export function EquipmentDetailsPage() {
             return;
         }
 
-        // 3) Пришли с глобальной страницы техники
         if (state?.from === 'global-equipment') {
             navigate('/equipment', { state: { activeTab: state.activeTab || 'all' } });
             return;
         }
 
-        // 4) Фолбэки: глобальный просмотр / известное подразделение / браузерный back
         if (isGlobalView) {
             navigate(`/equipment`, {
                 state: { activeTab: state?.activeTab || 'all' },
@@ -367,7 +357,6 @@ export function EquipmentDetailsPage() {
         navigate(-1);
     };
 
-    // === УДАЛЕНИЕ ===
     const handleDeleteConfirm = async () => {
         try {
             await equipmentApi.deleteEquipment(token, equipment!.id);
@@ -380,7 +369,6 @@ export function EquipmentDetailsPage() {
         }
     };
 
-    // === ВОССТАНОВЛЕНИЕ ===
     const handleRestoreConfirm = async () => {
         if (!equipment || !token) return;
         setIsRestoring(true);
@@ -388,8 +376,6 @@ export function EquipmentDetailsPage() {
         try {
             await equipmentApi.restoreEquipment(token, equipment.id);
             setShowRestoreModal(false);
-            // Возвращаемся в архив — там запись уже не будет отображаться,
-            // т.к. статус сменился с 'disposed' на 'in-operation'.
             handleBack();
         } catch (error: any) {
             console.error('Ошибка восстановления техники:', error);
@@ -402,7 +388,6 @@ export function EquipmentDetailsPage() {
         }
     };
 
-    // === ОПРЕДЕЛЕНИЕ ВИДИМОСТИ ВКЛАДОК ===
     const showDisposalTab = equipment?.status === 'disposed';
     const showNetworksTab =
         (equipment?.network_memberships?.length ?? 0) > 0 || equipment?.is_network;
@@ -458,7 +443,15 @@ export function EquipmentDetailsPage() {
                 return <AdditionalInfo equipment={equipment} searchTerm={searchTerm} />;
             }
             case 'documents': {
-                const hasDocuments = !!(equipment.first_invoice || equipment.material_invoice);
+                // СЗИ-сертификат тоже считается документом
+                const isSzi = equipment.is_szi || equipment.category?.value === 'szi';
+                const hasDocuments = Boolean(
+                    equipment.first_invoice ||
+                    equipment.material_invoice ||
+                    (equipment.is_free_use && equipment.free_use_act_number) ||
+                    (isSzi &&
+                        (equipment.szi_certificate_number || equipment.szi_certificate_date)),
+                );
                 if (!hasDocuments) return renderEmpty('Нет документов');
                 return <DocumentsInfo equipment={equipment} searchTerm={searchTerm} />;
             }

@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from users.logging import log_user_action
 from users.permissions import RoleBasedPermission
 from users.mixins import RoleBasedFilterMixin, ALL_ACCESS
-from users.permissions_config import ROLE_PERMISSIONS  
+from users.permissions_config import ROLE_PERMISSIONS
 
 from .models import Employee, ScheduleEvent, ShaWorkerDetails, ShaEquipmentConclusion
 from .serializers import (
@@ -70,6 +70,22 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['priority', 'full_name', 'category', 'position']
     ordering = ['priority', 'full_name']
+
+    def get_queryset(self):
+        qs = super().get_queryset()   # уже отфильтрован по ролям
+        division_id = self.request.query_params.get('division')
+        subdivision_id = self.request.query_params.get('subdivision')
+        if division_id:
+            try:
+                qs = qs.filter(division_id=int(division_id))
+            except (TypeError, ValueError):
+                pass
+        if subdivision_id:
+            try:
+                qs = qs.filter(subdivision_id=int(subdivision_id))
+            except (TypeError, ValueError):
+                pass
+        return qs
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -268,6 +284,13 @@ class ScheduleEventViewSet(RoleBasedFilterMixin, BaseViewSet):
       события при просмотре, изменить он их не сможет (объект вне
       write-области не будет найден get_object'ом → 404).
     - action `available_employees` возвращает список сотрудников по read-области.
+
+    Логирование:
+    - Все изменяющие действия пишутся в `UserActionLog` с модулем `schedule`.
+    - В `details` передаются date / event_type / comment / employee_id,
+      чтобы по логу можно было восстановить, что именно менялось.
+    - `bulk_update` логируется одной записью с агрегатами (created / updated)
+      и списком затронутых сотрудников.
     """
     queryset = ScheduleEvent.objects.all()
     serializer_class = ScheduleEventSerializer
@@ -348,28 +371,98 @@ class ScheduleEventViewSet(RoleBasedFilterMixin, BaseViewSet):
             })
 
     # ------------------------------------------------------------------ #
-    # Создание/обновление/удаление — с write-валидацией                  #
+    # Создание/обновление — с write-валидацией и логированием            #
     # ------------------------------------------------------------------ #
 
     def perform_create(self, serializer):
         employee = serializer.validated_data.get('employee')
         self._validate_employee_accessible(employee, mode='write')
         try:
-            serializer.save()
+            instance = serializer.save()
         except IntegrityError:
             raise ValidationError({
                 'date': 'Событие на эту дату для данного сотрудника уже существует',
             })
 
+        log_user_action(
+            user=self.request.user, action='create', module='schedule',
+            request=self.request, model_name='ScheduleEvent',
+            object_id=instance.pk,
+            object_name=f'{instance.employee.full_name} — {instance.date}',
+            details={
+                'employee_id': instance.employee_id,
+                'date': str(instance.date),
+                'event_type': instance.event_type,
+                'comment': instance.comment or '',
+            },
+        )
+
     def perform_update(self, serializer):
+        # Снимок «до» — чтобы в логе видеть, что именно изменилось
+        instance_before = serializer.instance
+        old_snapshot = {
+            'employee_id': instance_before.employee_id,
+            'date': str(instance_before.date),
+            'event_type': instance_before.event_type,
+            'comment': instance_before.comment or '',
+        }
+
         employee = serializer.validated_data.get('employee')
         self._validate_employee_accessible(employee, mode='write')
         try:
-            serializer.save()
+            instance = serializer.save()
         except IntegrityError:
             raise ValidationError({
                 'date': 'Событие на эту дату для данного сотрудника уже существует',
             })
+
+        new_snapshot = {
+            'employee_id': instance.employee_id,
+            'date': str(instance.date),
+            'event_type': instance.event_type,
+            'comment': instance.comment or '',
+        }
+        changed_fields = {
+            key: {'old': old_snapshot[key], 'new': new_snapshot[key]}
+            for key in old_snapshot
+            if old_snapshot[key] != new_snapshot[key]
+        }
+
+        log_user_action(
+            user=self.request.user, action='update', module='schedule',
+            request=self.request, model_name='ScheduleEvent',
+            object_id=instance.pk,
+            object_name=f'{instance.employee.full_name} — {instance.date}',
+            details={
+                'old': old_snapshot,
+                'new': new_snapshot,
+                'changed_fields': changed_fields,
+            },
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        """Логируем удаление до фактического удаления."""
+        instance = self.get_object()
+        snapshot = {
+            'id': instance.pk,
+            'employee_id': instance.employee_id,
+            'employee_name': instance.employee.full_name,
+            'date': str(instance.date),
+            'event_type': instance.event_type,
+            'comment': instance.comment or '',
+        }
+
+        response = super().destroy(request, *args, **kwargs)
+
+        if response.status_code == status.HTTP_204_NO_CONTENT:
+            log_user_action(
+                user=request.user, action='delete', module='schedule',
+                request=request, model_name='ScheduleEvent',
+                object_id=instance.pk,
+                object_name=f'{snapshot["employee_name"]} — {snapshot["date"]}',
+                details={'deleted_data': snapshot},
+            )
+        return response
 
     # ------------------------------------------------------------------ #
     # Actions                                                            #
@@ -502,5 +595,25 @@ class ScheduleEventViewSet(RoleBasedFilterMixin, BaseViewSet):
             logger.exception("bulk_update integrity error: %s", e)
             return Response({'error': 'Integrity error while updating events'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+        # Логируем одно агрегированное действие
+        log_user_action(
+            user=request.user, action='update', module='schedule',
+            request=request, model_name='ScheduleEvent',
+            object_id=None,
+            object_name=(
+                f'Bulk update: {len(requested_ids)} сотрудников, '
+                f'{start} … {end}'
+            ),
+            details={
+                'employee_ids': requested_ids,
+                'start_date': str(start),
+                'end_date': str(end),
+                'event_type': event_type,
+                'comment': comment,
+                'created': created,
+                'updated': updated,
+            },
+        )
 
         return Response({'created': created, 'updated': updated})

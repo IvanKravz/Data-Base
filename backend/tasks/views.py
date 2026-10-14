@@ -7,12 +7,13 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from .models import Task, TaskStep
 from .serializers import TaskSerializer, TaskStepSerializer
+from employees.models import Employee
 from users.mixins import RoleBasedFilterMixin
 from users.permissions_config import ROLE_PERMISSIONS
 from users.logging.tasks import (
     log_task_create, log_task_update, log_task_delete, log_task_view,
     log_taskstep_create, log_taskstep_update, log_taskstep_delete,
-    log_taskstep_view, log_taskstep_complete
+    log_taskstep_view, log_taskstep_complete,
 )
 import logging
 
@@ -27,12 +28,11 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Если действие — получение конкретного объекта, не применяем дополнительные фильтры
         if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            return queryset.prefetch_related('steps')
+            return queryset.prefetch_related('steps').select_related(
+                'division', 'subdivision', 'created_by', 'assignee'
+            )
 
-        # Дополнительные фильтры из query параметров
-        # Применяем division/subdivision только если пользователь может видеть все подразделения
         if self._can_see_all_divisions():
             division_id = self.request.query_params.get('division')
             if division_id:
@@ -42,7 +42,6 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
             if subdivision_id:
                 queryset = queryset.filter(subdivision_id=subdivision_id)
 
-        # Остальные фильтры (безопасны)
         show_completed = self.request.query_params.get('show_completed')
         show_only_mine = self.request.query_params.get('show_only_mine', '').lower() == 'true'
         user = self.request.user
@@ -55,29 +54,32 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         if show_completed is not None:
             show_completed = show_completed.lower() == 'true'
             queryset = queryset.annotate(
-                incomplete_steps=Count('steps', filter=Q(steps__is_completed=False)))
+                incomplete_steps=Count('steps', filter=Q(steps__is_completed=False))
+            )
             if show_completed:
                 queryset = queryset.filter(incomplete_steps=0)
             else:
                 queryset = queryset.filter(incomplete_steps__gt=0)
 
-        return queryset.prefetch_related('steps')
-    
+        return queryset.prefetch_related('steps').select_related(
+            'division', 'subdivision', 'created_by', 'assignee'
+        )
+
+    # ------------------------------------------------------------------ #
+    # available-divisions                                                 #
+    # ------------------------------------------------------------------ #
+
     @action(detail=False, methods=['get'], url_path='available-divisions')
     def available_divisions(self, request):
-        """Возвращает подразделения и отделения, доступные пользователю для создания задач."""
         user = request.user
         mixin = RoleBasedFilterMixin()
         mixin.request = request
 
-        # Получаем фильтры для модели Task из ролей пользователя
         filters = mixin._get_role_filters('Task')
-        
-        # Если есть фильтр по division_id, ограничиваем этим подразделением
+
         if 'division_id' in filters:
             division = Division.objects.filter(id=filters['division_id']).first()
             if division:
-                # Если есть фильтр по subdivision_id, возвращаем только это отделение
                 if 'subdivision_id' in filters:
                     subdivisions = Subdivision.objects.filter(id=filters['subdivision_id'])
                 else:
@@ -87,12 +89,10 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
                     'subdivisions': [
                         {'id': s.id, 'name': s.name, 'division_id': division.id}
                         for s in subdivisions
-                    ]
+                    ],
                 })
-            else:
-                return Response({'divisions': [], 'subdivisions': []})
+            return Response({'divisions': [], 'subdivisions': []})
 
-        # Если нет фильтра по division_id, проверяем, может ли пользователь видеть все подразделения
         user_roles = mixin._get_user_roles()
         can_see_all = any(
             ROLE_PERMISSIONS.get(role, {}).get('can_see_all_divisions', False)
@@ -100,17 +100,15 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         )
 
         if can_see_all:
-            # Пользователь может видеть все подразделения
             divisions = Division.objects.all()
             return Response({
                 'divisions': [{'id': d.id, 'name': d.name} for d in divisions],
                 'subdivisions': [
                     {'id': s.id, 'name': s.name, 'division_id': s.division_id}
                     for s in Subdivision.objects.all()
-                ]
+                ],
             })
 
-        # В противном случае – только подразделение пользователя
         division = user.division
         if division:
             return Response({
@@ -118,20 +116,78 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
                 'subdivisions': [
                     {'id': s.id, 'name': s.name, 'division_id': division.id}
                     for s in division.subdivisions.all()
-                ]
+                ],
             })
 
-        # Если ничего не подошло – пустой список
         return Response({'divisions': [], 'subdivisions': []})
 
+    # ------------------------------------------------------------------ #
+    # available-assignees — теперь по Employee                            #
+    # ------------------------------------------------------------------ #
+
+    @action(detail=False, methods=['get'], url_path='available-assignees')
+    def available_assignees(self, request):
+        """
+        Возвращает список СОТРУДНИКОВ (Employee), доступных для назначения
+        ответственным исполнителем.
+
+        Фильтры:
+          - division (обязательно имеет смысл передавать) — ID подразделения;
+          - subdivision (опционально) — ID отделения.
+
+        Сортировка — как у Employee.Meta.ordering (priority, full_name),
+        то есть руководители выше, гражданские ниже.
+        """
+        division_id = request.query_params.get('division')
+        subdivision_id = request.query_params.get('subdivision')
+
+        queryset = Employee.objects.all()
+
+        if division_id:
+            try:
+                queryset = queryset.filter(division_id=int(division_id))
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'Invalid division id'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if subdivision_id:
+            try:
+                queryset = queryset.filter(subdivision_id=int(subdivision_id))
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'Invalid subdivision id'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        queryset = queryset.order_by('priority', 'full_name')
+
+        data = [
+            {
+                'id': emp.id,
+                'full_name': emp.full_name,
+                'position': emp.position or '',
+                'rank': emp.rank or '',
+                'division_id': emp.division_id,
+                'subdivision_id': emp.subdivision_id,
+            }
+            for emp in queryset
+        ]
+
+        return Response(data)
+
+    # ------------------------------------------------------------------ #
+    # CRUD + логирование                                                  #
+    # ------------------------------------------------------------------ #
+
     def _get_changed_fields(self, old_data, new_data):
-        """Определяет изменённые поля между старыми и новыми данными"""
         changed = {}
         for key in old_data:
             if key in new_data and old_data[key] != new_data[key]:
                 changed[key] = {
                     'old': old_data[key],
-                    'new': new_data[key]
+                    'new': new_data[key],
                 }
         return changed
 
@@ -139,18 +195,17 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         logger.info(f"Creating task with data: {request.data}")
         response = super().create(request, *args, **kwargs)
         if response.status_code == status.HTTP_201_CREATED:
-            # Получаем созданный объект напрямую из модели (игнорируем фильтры queryset)
             instance = Task.objects.get(id=response.data['id'])
             log_task_create(
                 user=request.user,
                 instance=instance,
                 request=request,
-                details={'data': response.data}
+                details={'data': response.data},
             )
         return response
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', True)  # Разрешаем частичное обновление
+        partial = kwargs.pop('partial', True)
         instance = self.get_object()
         old_data = self.get_serializer(instance).data
         response = super().update(request, *args, **kwargs)
@@ -160,7 +215,7 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
                 instance=instance,
                 request=request,
                 old_data=old_data,
-                details={'changed_fields': self._get_changed_fields(old_data, response.data)}
+                details={'changed_fields': self._get_changed_fields(old_data, response.data)},
             )
         return response
 
@@ -173,7 +228,7 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
                 user=request.user,
                 instance=instance,
                 request=request,
-                details={'deleted_data': task_data}
+                details={'deleted_data': task_data},
             )
         return response
 
@@ -183,36 +238,33 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         log_task_view(
             user=request.user,
             instance=instance,
-            request=request
+            request=request,
         )
         return response
+
+    # ------------------------------------------------------------------ #
+    # Доп. эндпоинты                                                      #
+    # ------------------------------------------------------------------ #
 
     @action(detail=False, methods=['get'])
     def incomplete_count(self, request):
         subdivision_id = request.query_params.get('subdivision')
         division_id = request.query_params.get('division')
-        
-        # Фильтруем только публичные незавершенные задачи
+
         queryset = Task.objects.filter(is_private=False)
-        
+
         if division_id:
             queryset = queryset.filter(division_id=division_id)
         if subdivision_id:
             queryset = queryset.filter(subdivision_id=subdivision_id)
-        
-        # Аннотируем количество незавершенных шагов
+
         queryset = queryset.annotate(
             incomplete_steps=Count('steps', filter=Q(steps__is_completed=False))
         ).filter(incomplete_steps__gt=0)
-        
-        count = queryset.count()
-        return Response({'count': count})
+
+        return Response({'count': queryset.count()})
 
     def perform_update(self, serializer):
-        # Проверяем, что пользователь может изменять подразделение
-        instance = self.get_object()
-        division = serializer.validated_data.get('division', instance.division)
-        # Здесь можно добавить дополнительную проверку прав
         serializer.save()
 
     def get_serializer_context(self):
@@ -223,10 +275,9 @@ class TaskViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def progress(self, request, pk=None):
         task = self.get_object()
-        # Не логируем как просмотр, так как это кастомное действие
         return Response({'progress': task.progress})
-    
-    
+
+
 class TaskStepViewSet(viewsets.ModelViewSet):
     queryset = TaskStep.objects.all()
     serializer_class = TaskStepSerializer
@@ -247,7 +298,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 instance=instance,
                 request=request,
-                details={'data': response.data}
+                details={'data': response.data},
             )
         return response
 
@@ -261,7 +312,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
                 instance=instance,
                 request=request,
                 old_data=old_data,
-                details={'changed_fields': self._get_changed_fields(old_data, response.data)}
+                details={'changed_fields': self._get_changed_fields(old_data, response.data)},
             )
         return response
 
@@ -274,7 +325,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 instance=instance,
                 request=request,
-                details={'deleted_data': step_data}
+                details={'deleted_data': step_data},
             )
         return response
 
@@ -284,7 +335,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
         log_taskstep_view(
             user=request.user,
             instance=instance,
-            request=request
+            request=request,
         )
         return response
 
@@ -302,7 +353,7 @@ class TaskStepViewSet(viewsets.ModelViewSet):
             instance=step,
             old_value=old_value,
             new_value=True,
-            request=request
+            request=request,
         )
         return Response(TaskStepSerializer(step).data)
 
@@ -320,6 +371,6 @@ class TaskStepViewSet(viewsets.ModelViewSet):
             instance=step,
             old_value=old_value,
             new_value=False,
-            request=request
+            request=request,
         )
         return Response(TaskStepSerializer(step).data)

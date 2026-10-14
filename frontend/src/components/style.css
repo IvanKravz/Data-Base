@@ -17,6 +17,10 @@
   position: relative;
 }
 
+.menu-item-button:hover {
+  cursor: pointer;
+}
+
 .menu-item-button--active {
   background-color: #eff6ff;
   color: #1045b7;
@@ -25,6 +29,7 @@
 
 .menu-item-button--active:hover {
   transform: translateY(-0.03rem);
+
 }
 
 .menu-item-button--inactive {
@@ -96,6 +101,7 @@
     opacity: 0;
     transform: translateY(-50%) translateX(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
@@ -212,9 +218,11 @@
   .sidebar-footer__title {
     font-size: 0.8rem;
   }
+
   .sidebar-footer__version {
     font-size: 0.65rem;
   }
+
   .sidebar-footer__icon {
     width: 16px;
     height: 16px;

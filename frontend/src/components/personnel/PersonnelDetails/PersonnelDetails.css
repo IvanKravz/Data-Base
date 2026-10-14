@@ -548,7 +548,7 @@ body {
   background-color: #4b5563;
 }
 
-.personnel-header-icon-button {
+.header-icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -562,7 +562,7 @@ body {
   color: var(--color-text-secondary);
 }
 
-.personnel-header-icon-button:hover {
+.header-icon-button:hover {
   background-color: var(--color-border-light);
   color: var(--color-text-primary);
 }
