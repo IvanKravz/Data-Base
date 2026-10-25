@@ -55,7 +55,7 @@
   background-color: #3182ce;
 }
 
-/* Вкладки */
+/* Вкладки (верхние — по категориям) */
 .equipment-tabs-container {
   background: white;
   border-radius: 0.5rem;
@@ -163,6 +163,7 @@
     opacity: 0;
     transform: translateY(2px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -196,14 +197,13 @@
   min-width: 200px;
 }
 
-/* ===== СТАТУСНЫЕ КНОПКИ С ЛЁГКИМИ ЦВЕТОВЫМИ АКЦЕНТАМИ ===== */
+/* ===== СТАТУСНЫЕ КНОПКИ ===== */
 .equipment-status-buttons-wrapper .status-buttons-container {
   margin: 0;
   gap: 0.5rem;
   grid-template-columns: repeat(6, minmax(100px, 1fr));
 }
 
-/* Базовый стиль всех кнопок */
 .equipment-status-buttons-wrapper .status-button {
   padding: 0.4rem 0.5rem;
   min-height: 36px;
@@ -218,63 +218,60 @@
   transition: all 0.2s ease;
   cursor: pointer;
   font-weight: 500;
-  border-bottom: 3px solid transparent; /* толще, но прозрачное */
+  border-bottom: 3px solid transparent;
 }
 
-/* Кнопка "Итого" — нейтральная */
 .equipment-status-buttons-wrapper .status-button-all {
   background: #f9fafb;
   border-color: #e5e7eb;
 }
 
-/* Кнопка "В эксплуатации" — бледно-зелёный */
 .equipment-status-buttons-wrapper .status-button-in-operation {
   background: #f0fdf4;
   border-color: #bbf7d0;
 }
 
-/* Кнопка "На складе" — бледно-синий */
 .equipment-status-buttons-wrapper .status-button-in-storage {
   background: #eff6ff;
   border-color: #bfdbfe;
 }
 
-/* Кнопка "Неисправно" — бледно-жёлтый */
 .equipment-status-buttons-wrapper .status-button-defective {
   background: #fefce8;
   border-color: #fde047;
 }
 
-/* Кнопка "На списание" — бледно-красный */
 .equipment-status-buttons-wrapper .status-button-for-disposal {
   background: #fee2e2;
   border-color: #fca5a5;
 }
 
-/* Общие эффекты при наведении (без изменения подчёркивания для выбранных) */
 .equipment-status-buttons-wrapper .status-button:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
   color: #1f2937;
 }
 
-/* Усиление цвета при наведении для каждого статуса (только для НЕвыбранных) */
 .equipment-status-buttons-wrapper .status-button-all:not(.selected):hover {
   background: #f3f4f6;
   border-color: #d1d5db;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation:not(.selected):hover {
   background: #dcfce7;
   border-color: #86efac;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage:not(.selected):hover {
   background: #dbeafe;
   border-color: #93c5fd;
 }
+
 .equipment-status-buttons-wrapper .status-button-defective:not(.selected):hover {
   background: #fef9c3;
   border-color: #facc15;
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal:not(.selected):hover {
   background: #fecaca;
   border-color: #f87171;
@@ -284,71 +281,78 @@
   transform: scale(0.97);
 }
 
-/* Выбранная кнопка: светлый фон, цветная рамка и толстое подчёркивание */
 .equipment-status-buttons-wrapper .status-button.selected {
   background: #ffffff;
-  border-color: #3b82f6;     /* базовый, переопределяется ниже */
+  border-color: #3b82f6;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border-bottom: 3px solid #3b82f6; /* толщина 3px, цвет переопределяется */
+  border-bottom: 3px solid #3b82f6;
 }
 
-/* Цвета для выбранного состояния (более насыщенные) */
 .equipment-status-buttons-wrapper .status-button-all.selected {
   border-color: #4b5563;
   border-bottom-color: #4b5563;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation.selected {
   border-color: #16a34a;
   border-bottom-color: #16a34a;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage.selected {
   border-color: #2563eb;
   border-bottom-color: #2563eb;
 }
+
 .equipment-status-buttons-wrapper .status-button-defective.selected {
   border-color: #ca8a04;
   border-bottom-color: #ca8a04;
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal.selected {
   border-color: #dc2626;
   border-bottom-color: #dc2626;
 }
 
-/* При наведении на выбранную кнопку — сохраняем цвет подчёркивания (не даём ему стать полупрозрачным) */
 .equipment-status-buttons-wrapper .status-button-all.selected:hover {
   border-bottom-color: #4b5563;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation.selected:hover {
   border-bottom-color: #16a34a;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage.selected:hover {
   border-bottom-color: #2563eb;
 }
+
 .equipment-status-buttons-wrapper .status-button-defective.selected:hover {
   border-bottom-color: #ca8a04;
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal.selected:hover {
   border-bottom-color: #dc2626;
 }
 
-/* При наведении на НЕвыбранные — лёгкое полупрозрачное подчёркивание */
 .equipment-status-buttons-wrapper .status-button-all:not(.selected):hover {
   border-bottom-color: rgba(75, 85, 99, 0.3);
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation:not(.selected):hover {
   border-bottom-color: rgba(22, 163, 74, 0.3);
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage:not(.selected):hover {
   border-bottom-color: rgba(37, 99, 235, 0.3);
 }
+
 .equipment-status-buttons-wrapper .status-button-defective:not(.selected):hover {
   border-bottom-color: rgba(202, 138, 4, 0.3);
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal:not(.selected):hover {
   border-bottom-color: rgba(220, 38, 38, 0.3);
 }
 
-/* Контент внутри кнопки — горизонтальный ряд */
 .equipment-status-buttons-wrapper .status-button-content {
   flex-direction: row;
   gap: 0.5rem;
@@ -391,25 +395,27 @@
   transition: all 0.2s;
 }
 
-/* При наведении — затемняем иконку и текст, счётчик становится ярче */
 .equipment-status-buttons-wrapper .status-button:hover .status-button-icon {
   color: #374151;
 }
+
 .equipment-status-buttons-wrapper .status-button:hover .status-button-text {
   color: #1f2937;
 }
+
 .equipment-status-buttons-wrapper .status-button:hover .status-button-count {
   background: rgba(0, 0, 0, 0.08);
   color: #111827;
 }
 
-/* Для выбранной кнопки — цветные акценты для иконки, текста и счётчика */
 .equipment-status-buttons-wrapper .status-button.selected .status-button-icon {
-  color: #2563eb; /* базовый, переопределяется ниже */
+  color: #2563eb;
 }
+
 .equipment-status-buttons-wrapper .status-button.selected .status-button-text {
   color: #1e40af;
 }
+
 .equipment-status-buttons-wrapper .status-button.selected .status-button-count {
   background: #dbeafe;
   color: #1e40af;
@@ -418,9 +424,11 @@
 .equipment-status-buttons-wrapper .status-button-all.selected .status-button-icon {
   color: #4b5563;
 }
+
 .equipment-status-buttons-wrapper .status-button-all.selected .status-button-text {
   color: #1f2937;
 }
+
 .equipment-status-buttons-wrapper .status-button-all.selected .status-button-count {
   background: #e5e7eb;
   color: #1f2937;
@@ -429,9 +437,11 @@
 .equipment-status-buttons-wrapper .status-button-in-operation.selected .status-button-icon {
   color: #16a34a;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation.selected .status-button-text {
   color: #14532d;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-operation.selected .status-button-count {
   background: #dcfce7;
   color: #14532d;
@@ -440,9 +450,11 @@
 .equipment-status-buttons-wrapper .status-button-in-storage.selected .status-button-icon {
   color: #2563eb;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage.selected .status-button-text {
   color: #1e40af;
 }
+
 .equipment-status-buttons-wrapper .status-button-in-storage.selected .status-button-count {
   background: #dbeafe;
   color: #1e40af;
@@ -451,9 +463,11 @@
 .equipment-status-buttons-wrapper .status-button-defective.selected .status-button-icon {
   color: #ca8a04;
 }
+
 .equipment-status-buttons-wrapper .status-button-defective.selected .status-button-text {
   color: #854d0e;
 }
+
 .equipment-status-buttons-wrapper .status-button-defective.selected .status-button-count {
   background: #fef9c3;
   color: #854d0e;
@@ -462,9 +476,11 @@
 .equipment-status-buttons-wrapper .status-button-for-disposal.selected .status-button-icon {
   color: #dc2626;
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal.selected .status-button-text {
   color: #991b1b;
 }
+
 .equipment-status-buttons-wrapper .status-button-for-disposal.selected .status-button-count {
   background: #fecaca;
   color: #991b1b;
@@ -697,7 +713,136 @@
   margin: 0.5rem 0;
 }
 
-/* Адаптивность */
+/* ===== Вкладки подразделений (grouped) ===== */
+.equipment-division-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.05rem;
+  margin-bottom: 0.1rem;
+  padding: 0.2rem 0.4rem;
+  background: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.equipment-division-tab {
+  padding: 0.28rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.equipment-division-tab:hover {
+  color: #1e293b;
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.equipment-division-tab.active {
+  color: #2563eb;
+  background-color: rgba(219, 234, 254, 0.45);
+}
+
+.equipment-division-tab-count {
+  font-size: 0.7rem;
+  padding: 0.02rem 0.28rem;
+  background: #e2e8f0;
+  border-radius: 0.35rem;
+  font-weight: 400;
+  color: #475569;
+}
+
+.equipment-division-tab.active .equipment-division-tab-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.equipment-division-tabs-indicator {
+  position: absolute;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px;
+  pointer-events: none;
+  transition:
+    left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* ===== Вкладки отделений (grouped) ===== */
+.equipment-subdivision-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.05rem;
+  margin-bottom: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  background: white;
+}
+
+.equipment-subdivision-tab {
+  padding: 0.24rem 0.45rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.equipment-subdivision-tab:hover {
+  color: #1e293b;
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.equipment-subdivision-tab.active {
+  color: #2563eb;
+  background-color: rgba(219, 234, 254, 0.45);
+}
+
+.equipment-subdivision-tab-count {
+  font-size: 0.7rem;
+  padding: 0.01rem 0.26rem;
+  background: #e2e8f0;
+  border-radius: 0.3rem;
+  font-weight: 400;
+  color: #475569;
+}
+
+.equipment-subdivision-tab.active .equipment-subdivision-tab-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.equipment-subdivision-tabs-indicator {
+  position: absolute;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px;
+  pointer-events: none;
+  transition:
+    left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* ===== Адаптивность ===== */
 @media (max-width: 1024px) {
   .equipment-status-buttons-wrapper .status-buttons-container {
     gap: 0.5rem;
@@ -779,4 +924,6 @@
   .advanced-filter-button {
     align-self: flex-end;
   }
+
+  /* Вкладки переносятся автоматически, без горизонтального скролла */
 }

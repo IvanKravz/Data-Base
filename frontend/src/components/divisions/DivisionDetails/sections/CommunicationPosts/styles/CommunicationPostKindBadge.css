@@ -1,0 +1,72 @@
+/* =========================================================
+   Бейдж типа поста связи: П / КП / ПС / НДР
+   Используется компонентом CommunicationPostKindBadge.tsx
+   ========================================================= */
+
+.kind-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #fff;
+    border-radius: 4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    line-height: 1;
+    user-select: none;
+    white-space: nowrap;
+    cursor: default;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kind-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Размеры */
+.kind-badge--sm {
+    min-width: 26px;
+    padding: 2px 5px;
+    font-size: 0.65rem;
+}
+
+.kind-badge--md {
+    min-width: 32px;
+    padding: 3px 7px;
+    font-size: 0.7rem;
+}
+
+.kind-badge--lg {
+    min-width: 40px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}
+
+/* Цвета по типам */
+.kind-badge--p {
+    background: #1d4ed8;
+}
+
+.kind-badge--kp {
+    background: #7c3aed;
+}
+
+.kind-badge--ps {
+    background: #0891b2;
+}
+
+.kind-badge--ndr {
+    background: #059669;
+}
+
+/* Полное название рядом с коротким (при showFull) */
+.kind-badge__full {
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    font-size: 0.85em;
+    opacity: 0.95;
+}

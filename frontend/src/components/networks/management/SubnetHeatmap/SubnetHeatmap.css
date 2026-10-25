@@ -1,0 +1,145 @@
+/* src/components/networks/management/SubnetHeatmap/SubnetHeatmap.css */
+
+.shm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    /* Размер клетки — управляется отсюда для удобства */
+    --shm-cell-size: 30px;
+    --shm-cell-font: 12.5px;
+    --shm-cell-gap: 3px;
+}
+
+.shm-grid {
+    display: grid;
+    /* auto-fill: клетки фиксированного размера, колонок столько, сколько влезает */
+    grid-template-columns: repeat(auto-fill, var(--shm-cell-size));
+    gap: var(--shm-cell-gap);
+    padding: 10px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.shm-cell {
+    width: var(--shm-cell-size);
+    height: var(--shm-cell-size);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--shm-cell-font);
+    font-weight: 600;
+    line-height: 1;
+    transition: transform 0.08s, box-shadow 0.08s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    letter-spacing: -0.01em;
+}
+
+.shm-cell:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 2px #1e40af;
+    z-index: 2;
+}
+
+.shm-cell:active {
+    transform: scale(0.96);
+}
+
+/* Цвета фона + контрастный текст */
+.shm-cell-free {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.shm-cell-free:hover {
+    background: #cbd5e1;
+}
+
+.shm-cell-reserved {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.shm-cell-reserved:hover {
+    background: #d97706;
+}
+
+.shm-cell-in_use {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.shm-cell-in_use:hover {
+    background: #2563eb;
+}
+
+.shm-cell-deprecated {
+    background: #94a3b8;
+    color: #f8fafc;
+    opacity: 0.6;
+}
+
+.shm-cell-deprecated:hover {
+    background: #64748b;
+}
+
+.shm-legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: #475569;
+    padding: 0 4px;
+}
+
+.shm-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Планшет / небольшой ноутбук */
+@media (max-width: 900px) {
+    .shm {
+        --shm-cell-size: 28px;
+        --shm-cell-font: 12px;
+        --shm-cell-gap: 2.5px;
+    }
+
+    .shm-grid {
+        padding: 8px;
+    }
+}
+
+/* Мобильные */
+@media (max-width: 640px) {
+    .shm {
+        --shm-cell-size: 26px;
+        --shm-cell-font: 11.5px;
+        --shm-cell-gap: 2px;
+    }
+
+    .shm-grid {
+        padding: 6px;
+    }
+}
+
+/* Очень узкие экраны */
+@media (max-width: 400px) {
+    .shm {
+        --shm-cell-size: 22px;
+        --shm-cell-font: 10px;
+        --shm-cell-gap: 1.5px;
+    }
+}

@@ -1,4 +1,4 @@
-/* NetworkTabs.css */
+/* src/components/networks/management/NetworkTabs/NetworkTabs.css */
 .network-tabs {
     background: white;
     border-radius: 8px;
@@ -44,26 +44,7 @@
     z-index: 2;
 }
 
-.tab-indicator[data-active-tab="vlan"] {
-    left: 0%;
-    width: 25%;
-}
-
-.tab-indicator[data-active-tab="interfaces"] {
-    left: 25%;
-    width: 25%;
-}
-
-.tab-indicator[data-active-tab="ipaddresses"] {
-    left: 50%;
-    width: 25%;
-}
-
-.tab-indicator[data-active-tab="ipranges"] {
-    left: 75%;
-    width: 25%;
-}
-
-/* .tab-content {
-    padding: 20px;
-} */
+.tab-indicator[data-active-tab="vlan"]        { left: 0%;   width: 25%; }
+.tab-indicator[data-active-tab="interfaces"]  { left: 25%;  width: 25%; }
+.tab-indicator[data-active-tab="ipaddresses"] { left: 50%;  width: 25%; }
+.tab-indicator[data-active-tab="subnets"]     { left: 75%;  width: 25%; }

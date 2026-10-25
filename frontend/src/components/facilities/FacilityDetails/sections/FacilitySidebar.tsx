@@ -29,7 +29,7 @@ export function FacilitySidebar({ facility, onBack }: FacilitySidebarProps) {
           <button onClick={onBack} className="facility-details-btn--icon facility-details-sidebar-back">
             <ArrowLeft size={20} />
           </button>
-          <div className="facility-details-sidebar-name">{facility.name}</div>
+          <div className="facility-details-sidebar-name">{facility.type?.name}</div>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
+// src/components/networks/management/InterfaceManagement/InterfaceManagement.tsx
 import React, { useState, useEffect } from 'react';
-import { NetworkInterface, Equipment, VLAN } from '../../types';
+import { NetworkInterface, NetworkInterfaceInput, Equipment, VLAN } from '../../types';
 import InterfaceModal from '../modals/InterfaceModal';
 import '../ManagementPanel.css';
 import { networksApi } from '../../../api/networksApi';
@@ -18,9 +19,7 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
   const [editingInterface, setEditingInterface] = useState<NetworkInterface | null>(null);
 
   useEffect(() => {
-    if (token) {
-      fetchData();
-    }
+    if (token) fetchData();
   }, [token]);
 
   const fetchData = async () => {
@@ -28,16 +27,15 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
       setLoading(true);
       const [interfacesData, equipmentData, vlansData] = await Promise.all([
         networksApi.getNetworkInterfaces(token!),
-        networksApi.getEquipment(token!), // Предполагается, что такой метод есть в API
-        networksApi.getVlans(token!)
+        networksApi.getEquipment(token!),
+        networksApi.getVlans(token!),
       ]);
-      
       setInterfaces(interfacesData);
       setEquipmentList(equipmentData);
       setVlanList(vlansData);
     } catch (err) {
-      setError('Ошибка при загрузке данных');
       console.error(err);
+      setError('Ошибка при загрузке данных');
     } finally {
       setLoading(false);
     }
@@ -54,34 +52,33 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот интерфейс?')) {
-      try {
-        await networksApi.deleteNetworkInterface(token!, id);
-        setInterfaces(interfaces.filter(i => i.id !== id));
-      } catch (err) {
-        setError('Ошибка при удалении интерфейса');
-        console.error(err);
-      }
+    if (!window.confirm('Удалить этот интерфейс?')) return;
+    try {
+      await networksApi.deleteNetworkInterface(token!, id);
+      setInterfaces(interfaces.filter(i => i.id !== id));
+    } catch (err) {
+      console.error(err);
+      setError('Ошибка при удалении интерфейса');
     }
   };
 
-  const handleSave = async (interfaceData: Omit<NetworkInterface, 'id'>) => {
+  const handleSave = async (data: NetworkInterfaceInput) => {
     try {
       if (editingInterface) {
-        const updated = await networksApi.updateNetworkInterface(token!, editingInterface.id, interfaceData);
-        setInterfaces(interfaces.map(i => i.id === editingInterface.id ? updated : i));
+        const updated = await networksApi.updateNetworkInterface(token!, editingInterface.id, data);
+        setInterfaces(interfaces.map(i => (i.id === editingInterface.id ? updated : i)));
       } else {
-        const newInterface = await networksApi.createNetworkInterface(token!, interfaceData);
-        setInterfaces([...interfaces, newInterface]);
+        const created = await networksApi.createNetworkInterface(token!, data);
+        setInterfaces([...interfaces, created]);
       }
       setIsModalOpen(false);
     } catch (err) {
-      setError(`Ошибка при ${editingInterface ? 'обновлении' : 'создании'} интерфейса`);
       console.error(err);
+      setError(`Ошибка при ${editingInterface ? 'обновлении' : 'создании'} интерфейса`);
     }
   };
 
-  if (loading) return <div className="loading">Загрузка...</div>;
+  if (loading) return <div className="loading">Загрузка…</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
@@ -100,29 +97,23 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
               <th>Название</th>
               <th>Тип</th>
               <th>Состояние</th>
-              <th>VLAN</th>
+              <th>Access VLAN</th>
               <th>Действия</th>
             </tr>
           </thead>
           <tbody>
             {interfaces.map(intf => (
               <tr key={intf.id}>
-                <td>{intf.equipment?.name || 'Не указано'}</td>
+                <td>{intf.equipment_name || 'Не указано'}</td>
                 <td>{intf.name}</td>
                 <td>{intf.interface_type}</td>
                 <td>{intf.enabled ? 'Включен' : 'Выключен'}</td>
-                <td>{intf.vlan?.name || 'Не указан'}</td>
+                <td>{intf.access_vlan_name || 'Не указан'}</td>
                 <td>
-                  <button 
-                    className="btn-edit"
-                    onClick={() => handleEdit(intf)}
-                  >
+                  <button className="btn-edit" onClick={() => handleEdit(intf)}>
                     Редактировать
                   </button>
-                  <button 
-                    className="btn-delete"
-                    onClick={() => handleDelete(intf.id)}
-                  >
+                  <button className="btn-delete" onClick={() => handleDelete(intf.id)}>
                     Удалить
                   </button>
                 </td>

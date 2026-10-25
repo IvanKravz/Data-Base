@@ -1,4 +1,4 @@
-/* style.css — переименованные классы с префиксом tv- для избежания конфликтов */
+/* style.css */
 
 /* Основные стили таблицы TableView */
 .tv-table-container {
@@ -18,69 +18,6 @@
   min-width: 1000px;
 }
 
-/* Стили заголовков групп */
-.tv-division-header-row {
-  background-color: #f8f9fa;
-  border-left: 4px solid #3b82f6;
-  transition: background-color 0.2s ease;
-}
-
-.tv-division-header-row:hover {
-  background-color: #eef2ff;
-  border-left-color: #2563eb;
-}
-
-.tv-division-header-row.tv-management-header {
-  background-color: #fff3cd;
-  border-left: 4px solid #ffc107;
-}
-
-.tv-division-header-row.tv-management-header:hover {
-  background-color: #ffe7a1cb;
-  border-left-color: #e6a800;
-}
-
-.tv-subdivision-header-row {
-  background-color: #f1f5f9;
-  border-left: 4px solid #94a3b8;
-  transition: background-color 0.2s ease;
-}
-
-.tv-subdivision-header-row:hover {
-  background-color: #e2e8f0;
-  border-left-color: #5b6e8c;
-}
-
-.tv-division-header-row,
-.tv-subdivision-header-row {
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.tv-division-header-row:not(:last-child) {
-  border-bottom: 2px solid #d1d5db;
-}
-
-.tv-equipment-division-header-cell {
-  padding: 0.3rem 0.5rem;
-  font-weight: 600;
-  color: #1e40af;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #bfdbfe;
-}
-
-.tv-equipment-subdivision-header-cell {
-  padding: 0.3rem 1rem;
-  font-weight: 500;
-  font-size: 1.1em;
-  color: #374151;
-  background-color: #f1f5f9;
-}
-
-.tv-no-division-header .tv-equipment-division-header-cell {
-  background-color: #fff3cd;
-  color: #856404;
-}
-
 .tv-table-cell-equipment {
   padding: 8px 8px;
   font-size: 0.875rem;
@@ -92,7 +29,6 @@
   vertical-align: middle;
 }
 
-/* Стили строк таблицы */
 .tv-table-row-equipment {
   cursor: pointer;
   transition: all 0.2s ease;
@@ -107,37 +43,6 @@
 .tv-table-cell-index {
   width: 50px;
   text-align: center;
-}
-
-.tv-no-division-row {
-  background-color: #fffdf6;
-}
-
-.tv-no-division-row:hover {
-  background-color: #fef9e7;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-button.tv-collapse-button {
-  transition: background-color 0.2s, transform 0.1s;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  margin-right: 8px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: inherit;
-}
-
-button.tv-collapse-button:active {
-  transform: scale(0.96);
-}
-
-button.tv-collapse-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .tv-table-row-equipment:not(:last-child) .tv-table-cell-equipment {
@@ -177,9 +82,8 @@ button.tv-collapse-button:hover {
   font-size: 0.8rem;
   font-weight: 600;
   color: #374151;
-  text-transform: uppercase;
-  border: 1px solid #e2e8f0;
   text-transform: lowercase;
+  border: 1px solid #e2e8f0;
 }
 
 /* Ячейка с названием */
@@ -286,13 +190,6 @@ button.tv-collapse-button:hover {
   margin: 20px 0;
   background-color: #f9f9f9;
   border-radius: 4px;
-}
-
-/* Заголовки групп (контейнеры для кнопки и текста) */
-.tv-division-header-content,
-.tv-subdivision-header-content {
-  display: flex;
-  align-items: center;
 }
 
 /* Подсветка найденных строк */

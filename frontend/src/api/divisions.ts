@@ -1,13 +1,23 @@
 import { api } from './client';
 import { Division, Subdivision } from '../types';
 
+/**
+ * Приводит ответ DRF к массиву.
+ * DRF может вернуть как чистый массив, так и страницу {count, next, previous, results}.
+ */
+const toArray = <T,>(data: any): T[] => {
+  if (Array.isArray(data)) return data as T[];
+  if (data && Array.isArray(data.results)) return data.results as T[];
+  return [];
+};
+
 export const divisionsApi = {
   // Получить все подразделения
-  getDivisions: async (token: string) => {
+  getDivisions: async (token: string): Promise<Division[]> => {
     const { data } = await api.get('/facilities/divisions/', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return data;
+    return toArray<Division>(data);
   },
 
   // Получить подразделение по ID
@@ -29,7 +39,6 @@ export const divisionsApi = {
   // Обновить подразделение
   updateDivision: async (id: string | number, divisionData: Partial<Division>, token: string) => {
     const payload: any = { ...divisionData };
-    // Преобразуем поля head и deputy_head
     if (payload.head !== undefined) {
       payload.head_id = payload.head;
       delete payload.head;
@@ -52,11 +61,11 @@ export const divisionsApi = {
   },
 
   // Получить отделения подразделения
-  getSubdivisions: async (divisionId: string | number, token: string) => {
+  getSubdivisions: async (divisionId: string | number, token: string): Promise<Subdivision[]> => {
     const { data } = await api.get(`/facilities/subdivisions/?division=${divisionId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return data;
+    return toArray<Subdivision>(data);
   },
 
   // Создать отделение
@@ -92,11 +101,11 @@ export const divisionsApi = {
   },
 
   // Получить все отделения (без фильтра)
-  getAllSubdivisions: async (token: string) => {
+  getAllSubdivisions: async (token: string): Promise<Subdivision[]> => {
     const { data } = await api.get('/facilities/subdivisions/', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return data;
+    return toArray<Subdivision>(data);
   },
 
   // Get division equipment

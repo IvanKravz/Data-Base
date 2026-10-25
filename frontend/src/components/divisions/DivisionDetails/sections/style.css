@@ -355,8 +355,7 @@
 }
 
 /* Общая декоративная линия – всегда видна */
-.division-subdivisions-title::after,
-.map-title::after {
+.division-subdivisions-title::after {
   content: '';
   position: absolute;
   left: 0;
@@ -368,11 +367,8 @@
   transition: width 0.5s ease, height 0.5s ease;
 }
 
-/* Расширение линии при наведении или в развёрнутом состоянии */
 .subdivisions-header-left:hover .division-subdivisions-title::after,
-.subdivisions-header-left.expanded .division-subdivisions-title::after,
-.map-header-left:hover .map-title::after,
-.map-header-left.expanded .map-title::after {
+.subdivisions-header-left.expanded .division-subdivisions-title::after {
   width: 120%;
   height: 2px;
 }

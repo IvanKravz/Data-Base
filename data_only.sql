@@ -1,0 +1,4670 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 15.2 (Debian 15.2-1.pgdg110+1)
+-- Dumped by pg_dump version 15.2 (Debian 15.2-1.pgdg110+1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+ALTER TABLE IF EXISTS ONLY public.users_useractionlog DROP CONSTRAINT IF EXISTS users_useractionlog_user_id_ea366a60_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_user_subdivision_id_4743a0dc_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.users_user_user_permissions DROP CONSTRAINT IF EXISTS users_user_user_permissions_user_id_20aca447_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.users_user_user_permissions DROP CONSTRAINT IF EXISTS users_user_user_perm_permission_id_0b93982e_fk_auth_perm;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_user_division_id_19c9f005_fk_facilities_division_id;
+ALTER TABLE IF EXISTS ONLY public.users_user_groups DROP CONSTRAINT IF EXISTS users_user_groups_user_id_5f6f5a90_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.users_user_groups DROP CONSTRAINT IF EXISTS users_user_groups_group_id_9afc8d0e_fk_auth_group_id;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_employee_id_c8435634_fk_employees_employee_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_taskstep DROP CONSTRAINT IF EXISTS tasks_taskstep_task_id_0369112b_fk_tasks_task_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_taskstep DROP CONSTRAINT IF EXISTS tasks_taskstep_completed_by_id_e8d591a1_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_task DROP CONSTRAINT IF EXISTS tasks_task_subdivision_id_4224f1b9_fk_facilities_subdivision_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_task DROP CONSTRAINT IF EXISTS tasks_task_division_id_084e8718_fk_facilities_division_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_task DROP CONSTRAINT IF EXISTS tasks_task_created_by_id_1345568a_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.tasks_task DROP CONSTRAINT IF EXISTS tasks_task_assignee_id_2c3ca866_fk_employees_employee_id;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolder_deleted_by_id_3063b2c7_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolder_created_by_id_bdad0bab_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolde_subdivision_id_d09e9e34_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolde_parent_id_c73486cb_fk_storage_s;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolde_division_id_eadabe7b_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_uploaded_by_id_c001db46_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_subdivision_id_14738815_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_folder_id_46842828_fk_storage_s;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_division_id_fef3c36b_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_deleted_by_id_cf9296c5_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_filesharelink DROP CONSTRAINT IF EXISTS storage_filesharelink_created_by_id_cfeeb423_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_filesharelink DROP CONSTRAINT IF EXISTS storage_filesharelin_file_id_76cb254e_fk_storage_s;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_user_id_f661bae6_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_folder_id_2198433a_fk_storage_storagefolder_id;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_file_id_69802b8f_fk_storage_storagefile_id;
+ALTER TABLE IF EXISTS ONLY public.facilities_subdivision DROP CONSTRAINT IF EXISTS facilities_subdivisi_head_id_9f87ff80_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.facilities_subdivision DROP CONSTRAINT IF EXISTS facilities_subdivisi_division_id_1d559b2b_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_subdivision DROP CONSTRAINT IF EXISTS facilities_subdivisi_deputy_head_id_2c404cd8_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility DROP CONSTRAINT IF EXISTS facilities_facility_type_id_68ebb505_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility DROP CONSTRAINT IF EXISTS facilities_facility_subdivision_id_158d5d1b_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility DROP CONSTRAINT IF EXISTS facilities_facility_division_id_501c5e12_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility_communication_posts DROP CONSTRAINT IF EXISTS facilities_facility__facility_id_0d0107f8_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility_communication_posts DROP CONSTRAINT IF EXISTS facilities_facility__communicationpost_id_3c6cd418_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_division DROP CONSTRAINT IF EXISTS facilities_division_head_id_0c8ffd0e_fk_employees_employee_id;
+ALTER TABLE IF EXISTS ONLY public.facilities_division DROP CONSTRAINT IF EXISTS facilities_division_deputy_head_id_5f88cfd5_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.facilities_communicationpost DROP CONSTRAINT IF EXISTS facilities_communica_subdivision_id_30d388d1_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_communicationpost DROP CONSTRAINT IF EXISTS facilities_communica_parent_id_dec8fa98_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.facilities_communicationpost DROP CONSTRAINT IF EXISTS facilities_communica_division_id_648a327c_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.equipment_productstructure DROP CONSTRAINT IF EXISTS equipment_productstr_equipment_id_eaa13b5d_fk_equipment;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_subdivision_id_a799a471_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_interest_organ_id_923c954d_fk_equipment;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_facility_id_e56a1dbd_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_division_id_b20fe9c5_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_category_id_74d7bc5a_fk_equipment;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_assigned_to_id_cb2d5df1_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.employees_shaworkerdetails DROP CONSTRAINT IF EXISTS employees_shaworkerd_employee_id_352e2a12_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.employees_shaequipmentconclusion DROP CONSTRAINT IF EXISTS employees_shaequipme_sha_worker_id_72c2f927_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.employees_scheduleevent DROP CONSTRAINT IF EXISTS employees_scheduleev_employee_id_af2e721a_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.employees_employee DROP CONSTRAINT IF EXISTS employees_employee_subdivision_id_c1a9f1f1_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.employees_employee DROP CONSTRAINT IF EXISTS employees_employee_division_id_db7916b5_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_user_id_c564eba6_fk_users_user_id;
+ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_content_type_id_c4bce8eb_fk_django_co;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidate DROP CONSTRAINT IF EXISTS candidates_candidate_hired_employee_id_b8804bf9_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidate DROP CONSTRAINT IF EXISTS candidates_candidate_division_id_94b03957_fk_facilitie;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidate DROP CONSTRAINT IF EXISTS candidates_candidate_curator_id_a0432b3d_fk_employees;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidatestage DROP CONSTRAINT IF EXISTS candidates_candidate_candidate_id_91a0cd0a_fk_candidate;
+ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_content_type_id_2f476e4b_fk_django_co;
+ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_group_id_b120cbf9_fk_auth_group_id;
+ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissio_permission_id_84c5c92e_fk_auth_perm;
+DROP INDEX IF EXISTS public.users_useractionlog_user_id_ea366a60;
+DROP INDEX IF EXISTS public.users_usera_user_id_835fca_idx;
+DROP INDEX IF EXISTS public.users_usera_storage_4de976_idx;
+DROP INDEX IF EXISTS public.users_usera_module_41ae74_idx;
+DROP INDEX IF EXISTS public.users_usera_file_ty_16b2ba_idx;
+DROP INDEX IF EXISTS public.users_usera_action_68a535_idx;
+DROP INDEX IF EXISTS public.users_user_username_06e46fe6_like;
+DROP INDEX IF EXISTS public.users_user_user_subdivision_id_4743a0dc;
+DROP INDEX IF EXISTS public.users_user_user_permissions_user_id_20aca447;
+DROP INDEX IF EXISTS public.users_user_user_permissions_permission_id_0b93982e;
+DROP INDEX IF EXISTS public.users_user_user_division_id_19c9f005;
+DROP INDEX IF EXISTS public.users_user_groups_user_id_5f6f5a90;
+DROP INDEX IF EXISTS public.users_user_groups_group_id_9afc8d0e;
+DROP INDEX IF EXISTS public.tasks_taskstep_task_id_0369112b;
+DROP INDEX IF EXISTS public.tasks_taskstep_completed_by_id_e8d591a1;
+DROP INDEX IF EXISTS public.tasks_task_subdivision_id_4224f1b9;
+DROP INDEX IF EXISTS public.tasks_task_division_id_084e8718;
+DROP INDEX IF EXISTS public.tasks_task_created_by_id_1345568a;
+DROP INDEX IF EXISTS public.tasks_task_assignee_id_2c3ca866;
+DROP INDEX IF EXISTS public.storage_storagefolder_subdivision_id_d09e9e34;
+DROP INDEX IF EXISTS public.storage_storagefolder_parent_id_c73486cb;
+DROP INDEX IF EXISTS public.storage_storagefolder_division_id_eadabe7b;
+DROP INDEX IF EXISTS public.storage_storagefolder_deleted_by_id_3063b2c7;
+DROP INDEX IF EXISTS public.storage_storagefolder_created_by_id_bdad0bab;
+DROP INDEX IF EXISTS public.storage_storagefile_uploaded_by_id_c001db46;
+DROP INDEX IF EXISTS public.storage_storagefile_subdivision_id_14738815;
+DROP INDEX IF EXISTS public.storage_storagefile_folder_id_46842828;
+DROP INDEX IF EXISTS public.storage_storagefile_division_id_fef3c36b;
+DROP INDEX IF EXISTS public.storage_storagefile_deleted_by_id_cf9296c5;
+DROP INDEX IF EXISTS public.storage_sto_mime_ty_685888_idx;
+DROP INDEX IF EXISTS public.storage_sto_folder__a1d93c_idx;
+DROP INDEX IF EXISTS public.storage_sto_file_ty_4dfc51_idx;
+DROP INDEX IF EXISTS public.storage_sto_divisio_84a260_idx;
+DROP INDEX IF EXISTS public.storage_sto_divisio_00729d_idx;
+DROP INDEX IF EXISTS public.storage_filesharelink_token_7eb84956_like;
+DROP INDEX IF EXISTS public.storage_filesharelink_file_id_76cb254e;
+DROP INDEX IF EXISTS public.storage_filesharelink_created_by_id_cfeeb423;
+DROP INDEX IF EXISTS public.storage_favorite_user_id_f661bae6;
+DROP INDEX IF EXISTS public.storage_favorite_folder_id_2198433a;
+DROP INDEX IF EXISTS public.storage_favorite_file_id_69802b8f;
+DROP INDEX IF EXISTS public.map_fsboffice_region_a526f75a_like;
+DROP INDEX IF EXISTS public.map_fsboffice_region_a526f75a;
+DROP INDEX IF EXISTS public.map_fsboffice_name_ffd99535_like;
+DROP INDEX IF EXISTS public.map_fsboffi_region_ffc9ff_idx;
+DROP INDEX IF EXISTS public.map_fsboffi_is_acti_8f3df3_idx;
+DROP INDEX IF EXISTS public.facilities_subdivision_head_id_9f87ff80;
+DROP INDEX IF EXISTS public.facilities_subdivision_division_id_1d559b2b;
+DROP INDEX IF EXISTS public.facilities_subdivision_deputy_head_id_2c404cd8;
+DROP INDEX IF EXISTS public.facilities_facilitytype_name_45e24638_like;
+DROP INDEX IF EXISTS public.facilities_facility_type_id_68ebb505;
+DROP INDEX IF EXISTS public.facilities_facility_subdivision_id_158d5d1b;
+DROP INDEX IF EXISTS public.facilities_facility_division_id_501c5e12;
+DROP INDEX IF EXISTS public.facilities_facility_communication_posts_facility_id_0d0107f8;
+DROP INDEX IF EXISTS public.facilities_facility_commun_communicationpost_id_3c6cd418;
+DROP INDEX IF EXISTS public.facilities_division_head_id_0c8ffd0e;
+DROP INDEX IF EXISTS public.facilities_division_deputy_head_id_5f88cfd5;
+DROP INDEX IF EXISTS public.facilities_communicationpost_subdivision_id_30d388d1;
+DROP INDEX IF EXISTS public.facilities_communicationpost_parent_id_dec8fa98;
+DROP INDEX IF EXISTS public.facilities_communicationpost_kind_343c9ac2_like;
+DROP INDEX IF EXISTS public.facilities_communicationpost_kind_343c9ac2;
+DROP INDEX IF EXISTS public.facilities_communicationpost_division_id_648a327c;
+DROP INDEX IF EXISTS public.facilities__kind_623231_idx;
+DROP INDEX IF EXISTS public.facilities__divisio_ba02d8_idx;
+DROP INDEX IF EXISTS public.equipment_productstructure_equipment_id_eaa13b5d;
+DROP INDEX IF EXISTS public.equipment_interestorgan_name_91902492_like;
+DROP INDEX IF EXISTS public.equipment_equipmentcategory_value_8019b619_like;
+DROP INDEX IF EXISTS public.equipment_equipment_subdivision_id_a799a471;
+DROP INDEX IF EXISTS public.equipment_equipment_interest_organ_id_923c954d;
+DROP INDEX IF EXISTS public.equipment_equipment_facility_id_e56a1dbd;
+DROP INDEX IF EXISTS public.equipment_equipment_division_id_b20fe9c5;
+DROP INDEX IF EXISTS public.equipment_equipment_category_id_74d7bc5a;
+DROP INDEX IF EXISTS public.equipment_equipment_assigned_to_id_cb2d5df1;
+DROP INDEX IF EXISTS public.equipment_e_subdivi_788d4f_idx;
+DROP INDEX IF EXISTS public.equipment_e_status_fb8540_idx;
+DROP INDEX IF EXISTS public.equipment_e_is_netw_0cdd4e_idx;
+DROP INDEX IF EXISTS public.equipment_e_is_clos_3bd0f6_idx;
+DROP INDEX IF EXISTS public.equipment_e_facilit_0c19b7_idx;
+DROP INDEX IF EXISTS public.equipment_e_divisio_5df752_idx;
+DROP INDEX IF EXISTS public.equipment_e_assigne_96ad0d_idx;
+DROP INDEX IF EXISTS public.employees_shaequipmentconclusion_sha_worker_id_72c2f927;
+DROP INDEX IF EXISTS public.employees_scheduleevent_employee_id_af2e721a;
+DROP INDEX IF EXISTS public.employees_employee_subdivision_id_c1a9f1f1;
+DROP INDEX IF EXISTS public.employees_employee_division_id_db7916b5;
+DROP INDEX IF EXISTS public.django_session_session_key_c0390e0f_like;
+DROP INDEX IF EXISTS public.django_session_expire_date_a5c62663;
+DROP INDEX IF EXISTS public.django_admin_log_user_id_c564eba6;
+DROP INDEX IF EXISTS public.django_admin_log_content_type_id_c4bce8eb;
+DROP INDEX IF EXISTS public.candidates_candidatestage_candidate_id_91a0cd0a;
+DROP INDEX IF EXISTS public.candidates_candidate_status_changed_at_4b0e8ca2;
+DROP INDEX IF EXISTS public.candidates_candidate_status_68e94dd5_like;
+DROP INDEX IF EXISTS public.candidates_candidate_status_68e94dd5;
+DROP INDEX IF EXISTS public.candidates_candidate_division_id_94b03957;
+DROP INDEX IF EXISTS public.candidates_candidate_curator_id_a0432b3d;
+DROP INDEX IF EXISTS public.candidates__phase_d8e4a7_idx;
+DROP INDEX IF EXISTS public.candidates__candida_571bf3_idx;
+DROP INDEX IF EXISTS public.cand_status_idx;
+DROP INDEX IF EXISTS public.cand_status_changed_idx;
+DROP INDEX IF EXISTS public.cand_fullname_idx;
+DROP INDEX IF EXISTS public.cand_division_idx;
+DROP INDEX IF EXISTS public.auth_permission_content_type_id_2f476e4b;
+DROP INDEX IF EXISTS public.auth_group_permissions_permission_id_84c5c92e;
+DROP INDEX IF EXISTS public.auth_group_permissions_group_id_b120cbf9;
+DROP INDEX IF EXISTS public.auth_group_name_a6ea08ec_like;
+ALTER TABLE IF EXISTS ONLY public.users_useractionlog DROP CONSTRAINT IF EXISTS users_useractionlog_pkey;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_username_key;
+ALTER TABLE IF EXISTS ONLY public.users_user_user_permissions DROP CONSTRAINT IF EXISTS users_user_user_permissions_user_id_permission_id_43338c45_uniq;
+ALTER TABLE IF EXISTS ONLY public.users_user_user_permissions DROP CONSTRAINT IF EXISTS users_user_user_permissions_pkey;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_pkey;
+ALTER TABLE IF EXISTS ONLY public.users_user_groups DROP CONSTRAINT IF EXISTS users_user_groups_user_id_group_id_b88eab82_uniq;
+ALTER TABLE IF EXISTS ONLY public.users_user_groups DROP CONSTRAINT IF EXISTS users_user_groups_pkey;
+ALTER TABLE IF EXISTS ONLY public.users_user DROP CONSTRAINT IF EXISTS users_user_employee_id_key;
+ALTER TABLE IF EXISTS ONLY public.tasks_taskstep DROP CONSTRAINT IF EXISTS tasks_taskstep_pkey;
+ALTER TABLE IF EXISTS ONLY public.tasks_task DROP CONSTRAINT IF EXISTS tasks_task_pkey;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefolder DROP CONSTRAINT IF EXISTS storage_storagefolder_pkey;
+ALTER TABLE IF EXISTS ONLY public.storage_storagefile DROP CONSTRAINT IF EXISTS storage_storagefile_pkey;
+ALTER TABLE IF EXISTS ONLY public.storage_filesharelink DROP CONSTRAINT IF EXISTS storage_filesharelink_token_key;
+ALTER TABLE IF EXISTS ONLY public.storage_filesharelink DROP CONSTRAINT IF EXISTS storage_filesharelink_pkey;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_user_id_folder_id_903bc41c_uniq;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_user_id_file_id_5f52eeb7_uniq;
+ALTER TABLE IF EXISTS ONLY public.storage_favorite DROP CONSTRAINT IF EXISTS storage_favorite_pkey;
+ALTER TABLE IF EXISTS ONLY public.map_fsboffice DROP CONSTRAINT IF EXISTS map_fsboffice_pkey;
+ALTER TABLE IF EXISTS ONLY public.map_fsboffice DROP CONSTRAINT IF EXISTS map_fsboffice_name_key;
+ALTER TABLE IF EXISTS ONLY public.facilities_subdivision DROP CONSTRAINT IF EXISTS facilities_subdivision_pkey;
+ALTER TABLE IF EXISTS ONLY public.facilities_facilitytype DROP CONSTRAINT IF EXISTS facilities_facilitytype_pkey;
+ALTER TABLE IF EXISTS ONLY public.facilities_facilitytype DROP CONSTRAINT IF EXISTS facilities_facilitytype_name_45e24638_uniq;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility DROP CONSTRAINT IF EXISTS facilities_facility_pkey;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility_communication_posts DROP CONSTRAINT IF EXISTS facilities_facility_communication_posts_pkey;
+ALTER TABLE IF EXISTS ONLY public.facilities_facility_communication_posts DROP CONSTRAINT IF EXISTS facilities_facility_comm_facility_id_communicatio_c15475b3_uniq;
+ALTER TABLE IF EXISTS ONLY public.facilities_division DROP CONSTRAINT IF EXISTS facilities_division_pkey;
+ALTER TABLE IF EXISTS ONLY public.facilities_communicationpost DROP CONSTRAINT IF EXISTS facilities_communicationpost_pkey;
+ALTER TABLE IF EXISTS ONLY public.equipment_productstructure DROP CONSTRAINT IF EXISTS equipment_productstructure_pkey;
+ALTER TABLE IF EXISTS ONLY public.equipment_interestorgan DROP CONSTRAINT IF EXISTS equipment_interestorgan_pkey;
+ALTER TABLE IF EXISTS ONLY public.equipment_interestorgan DROP CONSTRAINT IF EXISTS equipment_interestorgan_name_91902492_uniq;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipmentcategory DROP CONSTRAINT IF EXISTS equipment_equipmentcategory_value_key;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipmentcategory DROP CONSTRAINT IF EXISTS equipment_equipmentcategory_pkey;
+ALTER TABLE IF EXISTS ONLY public.equipment_equipment DROP CONSTRAINT IF EXISTS equipment_equipment_pkey;
+ALTER TABLE IF EXISTS ONLY public.employees_shaworkerdetails DROP CONSTRAINT IF EXISTS employees_shaworkerdetails_pkey;
+ALTER TABLE IF EXISTS ONLY public.employees_shaworkerdetails DROP CONSTRAINT IF EXISTS employees_shaworkerdetails_employee_id_key;
+ALTER TABLE IF EXISTS ONLY public.employees_shaequipmentconclusion DROP CONSTRAINT IF EXISTS employees_shaequipmentconclusion_pkey;
+ALTER TABLE IF EXISTS ONLY public.employees_scheduleevent DROP CONSTRAINT IF EXISTS employees_scheduleevent_pkey;
+ALTER TABLE IF EXISTS ONLY public.employees_scheduleevent DROP CONSTRAINT IF EXISTS employees_scheduleevent_employee_id_date_c6469dc8_uniq;
+ALTER TABLE IF EXISTS ONLY public.employees_employee DROP CONSTRAINT IF EXISTS employees_employee_pkey;
+ALTER TABLE IF EXISTS ONLY public.django_session DROP CONSTRAINT IF EXISTS django_session_pkey;
+ALTER TABLE IF EXISTS ONLY public.django_content_type DROP CONSTRAINT IF EXISTS django_content_type_pkey;
+ALTER TABLE IF EXISTS ONLY public.django_content_type DROP CONSTRAINT IF EXISTS django_content_type_app_label_model_76bd3d3b_uniq;
+ALTER TABLE IF EXISTS ONLY public.django_admin_log DROP CONSTRAINT IF EXISTS django_admin_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidatestage DROP CONSTRAINT IF EXISTS candidates_candidatestage_pkey;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidatestage DROP CONSTRAINT IF EXISTS candidates_candidatestage_candidate_id_stage_type_a4c40a3f_uniq;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidate DROP CONSTRAINT IF EXISTS candidates_candidate_pkey;
+ALTER TABLE IF EXISTS ONLY public.candidates_candidate DROP CONSTRAINT IF EXISTS candidates_candidate_hired_employee_id_key;
+ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_pkey;
+ALTER TABLE IF EXISTS ONLY public.auth_permission DROP CONSTRAINT IF EXISTS auth_permission_content_type_id_codename_01ab375a_uniq;
+ALTER TABLE IF EXISTS ONLY public.auth_group DROP CONSTRAINT IF EXISTS auth_group_pkey;
+ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_pkey;
+ALTER TABLE IF EXISTS ONLY public.auth_group_permissions DROP CONSTRAINT IF EXISTS auth_group_permissions_group_id_permission_id_0cd325b0_uniq;
+ALTER TABLE IF EXISTS ONLY public.auth_group DROP CONSTRAINT IF EXISTS auth_group_name_key;
+DROP TABLE IF EXISTS public.users_useractionlog;
+DROP TABLE IF EXISTS public.users_user_user_permissions;
+DROP TABLE IF EXISTS public.users_user_groups;
+DROP TABLE IF EXISTS public.users_user;
+DROP TABLE IF EXISTS public.tasks_taskstep;
+DROP TABLE IF EXISTS public.tasks_task;
+DROP TABLE IF EXISTS public.storage_storagefolder;
+DROP TABLE IF EXISTS public.storage_storagefile;
+DROP TABLE IF EXISTS public.storage_filesharelink;
+DROP TABLE IF EXISTS public.storage_favorite;
+DROP TABLE IF EXISTS public.map_fsboffice;
+DROP TABLE IF EXISTS public.facilities_subdivision;
+DROP TABLE IF EXISTS public.facilities_facilitytype;
+DROP TABLE IF EXISTS public.facilities_facility_communication_posts;
+DROP TABLE IF EXISTS public.facilities_facility;
+DROP TABLE IF EXISTS public.facilities_division;
+DROP TABLE IF EXISTS public.facilities_communicationpost;
+DROP TABLE IF EXISTS public.equipment_productstructure;
+DROP TABLE IF EXISTS public.equipment_interestorgan;
+DROP TABLE IF EXISTS public.equipment_equipmentcategory;
+DROP TABLE IF EXISTS public.equipment_equipment;
+DROP TABLE IF EXISTS public.employees_shaworkerdetails;
+DROP TABLE IF EXISTS public.employees_shaequipmentconclusion;
+DROP TABLE IF EXISTS public.employees_scheduleevent;
+DROP TABLE IF EXISTS public.employees_employee;
+DROP TABLE IF EXISTS public.django_session;
+DROP TABLE IF EXISTS public.django_content_type;
+DROP TABLE IF EXISTS public.django_admin_log;
+DROP TABLE IF EXISTS public.candidates_candidatestage;
+DROP TABLE IF EXISTS public.candidates_candidate;
+DROP TABLE IF EXISTS public.auth_permission;
+DROP TABLE IF EXISTS public.auth_group_permissions;
+DROP TABLE IF EXISTS public.auth_group;
+-- *not* dropping schema, since initdb creates it
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: django_user
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+ALTER SCHEMA public OWNER TO django_user;
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: django_user
+--
+
+COMMENT ON SCHEMA public IS '';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: auth_group; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.auth_group (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL
+);
+
+
+ALTER TABLE public.auth_group OWNER TO django_user;
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.auth_group ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.auth_group_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.auth_group_permissions (
+    id bigint NOT NULL,
+    group_id integer NOT NULL,
+    permission_id integer NOT NULL
+);
+
+
+ALTER TABLE public.auth_group_permissions OWNER TO django_user;
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.auth_group_permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.auth_group_permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: auth_permission; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.auth_permission (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    content_type_id integer NOT NULL,
+    codename character varying(100) NOT NULL
+);
+
+
+ALTER TABLE public.auth_permission OWNER TO django_user;
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.auth_permission ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.auth_permission_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: candidates_candidate; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.candidates_candidate (
+    number bigint NOT NULL,
+    full_name character varying(150) NOT NULL,
+    planned_position character varying(256) NOT NULL,
+    phone character varying(50),
+    note text,
+    status character varying(20) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    curator_id bigint,
+    division_id bigint,
+    hired_employee_id bigint,
+    custom_curator_name character varying(255),
+    custom_division_name character varying(255),
+    status_changed_at timestamp with time zone
+);
+
+
+ALTER TABLE public.candidates_candidate OWNER TO django_user;
+
+--
+-- Name: candidates_candidate_number_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.candidates_candidate ALTER COLUMN number ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.candidates_candidate_number_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: candidates_candidatestage; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.candidates_candidatestage (
+    id bigint NOT NULL,
+    stage_type character varying(32) NOT NULL,
+    phase character varying(20) NOT NULL,
+    "order" smallint NOT NULL,
+    planned_date date,
+    actual_date date,
+    status character varying(16) NOT NULL,
+    comment text,
+    candidate_id bigint NOT NULL,
+    CONSTRAINT candidates_candidatestage_order_check CHECK (("order" >= 0))
+);
+
+
+ALTER TABLE public.candidates_candidatestage OWNER TO django_user;
+
+--
+-- Name: candidates_candidatestage_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.candidates_candidatestage ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.candidates_candidatestage_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: django_admin_log; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.django_admin_log (
+    id integer NOT NULL,
+    action_time timestamp with time zone NOT NULL,
+    object_id text,
+    object_repr character varying(200) NOT NULL,
+    action_flag smallint NOT NULL,
+    change_message text NOT NULL,
+    content_type_id integer,
+    user_id bigint NOT NULL,
+    CONSTRAINT django_admin_log_action_flag_check CHECK ((action_flag >= 0))
+);
+
+
+ALTER TABLE public.django_admin_log OWNER TO django_user;
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.django_admin_log ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.django_admin_log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+ALTER TABLE public.django_content_type OWNER TO django_user;
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.django_content_type ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.django_content_type_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: django_session; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.django_session (
+    session_key character varying(40) NOT NULL,
+    session_data text NOT NULL,
+    expire_date timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.django_session OWNER TO django_user;
+
+--
+-- Name: employees_employee; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.employees_employee (
+    id bigint NOT NULL,
+    photo character varying(100),
+    full_name character varying(50) NOT NULL,
+    "position" character varying(256) NOT NULL,
+    rank character varying(20),
+    order_rank character varying(30),
+    personal_number character varying(15),
+    personal_phone character varying(50),
+    work_phone character varying(50),
+    birth_date date,
+    contract_date date,
+    form_state_secrets character varying(15),
+    number_state_secrets character varying(15),
+    data_state_secrets date,
+    education character varying(50),
+    institution character varying(100),
+    year_graduation date,
+    date_start_work date,
+    date_end_work date,
+    description text,
+    is_sha_worker boolean NOT NULL,
+    is_material_responsible boolean NOT NULL,
+    category character varying(20) NOT NULL,
+    subcategory character varying(25),
+    priority integer NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    division_id bigint,
+    subdivision_id bigint
+);
+
+
+ALTER TABLE public.employees_employee OWNER TO django_user;
+
+--
+-- Name: employees_employee_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.employees_employee ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.employees_employee_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: employees_scheduleevent; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.employees_scheduleevent (
+    id bigint NOT NULL,
+    date date NOT NULL,
+    event_type character varying(20) NOT NULL,
+    comment text,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    employee_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.employees_scheduleevent OWNER TO django_user;
+
+--
+-- Name: employees_scheduleevent_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.employees_scheduleevent ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.employees_scheduleevent_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: employees_shaequipmentconclusion; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.employees_shaequipmentconclusion (
+    id bigint NOT NULL,
+    equipment_type character varying(255) NOT NULL,
+    conclusion_number character varying(255) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    sha_worker_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.employees_shaequipmentconclusion OWNER TO django_user;
+
+--
+-- Name: employees_shaequipmentconclusion_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.employees_shaequipmentconclusion ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.employees_shaequipmentconclusion_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: employees_shaworkerdetails; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.employees_shaworkerdetails (
+    id bigint NOT NULL,
+    start_date date NOT NULL,
+    access_level character varying(1) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    employee_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.employees_shaworkerdetails OWNER TO django_user;
+
+--
+-- Name: employees_shaworkerdetails_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.employees_shaworkerdetails ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.employees_shaworkerdetails_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: equipment_equipment; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.equipment_equipment (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    type character varying(255),
+    status character varying(20) NOT NULL,
+    serial_number character varying(255),
+    inventory_number character varying(255),
+    manufacturing_date date,
+    exploitation_date date,
+    subdivision_id bigint,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    assigned_to_id bigint,
+    division_id bigint NOT NULL,
+    facility_id bigint,
+    comments text,
+    disposal_act_date date,
+    disposal_act_number character varying(255),
+    disposal_cert_date date,
+    disposal_cert_number character varying(255),
+    disposal_comments text,
+    is_closed boolean NOT NULL,
+    first_invoice character varying(255),
+    material_invoice character varying(255),
+    ver_software character varying(255),
+    is_network boolean NOT NULL,
+    category_id bigint,
+    free_use_act_number character varying(255),
+    is_free_use boolean NOT NULL,
+    secret_level character varying(20),
+    service_life character varying(100),
+    interest_organ_id bigint,
+    szi_certificate_date date,
+    szi_certificate_number character varying(255)
+);
+
+
+ALTER TABLE public.equipment_equipment OWNER TO django_user;
+
+--
+-- Name: equipment_equipment_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.equipment_equipment ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.equipment_equipment_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: equipment_equipmentcategory; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.equipment_equipmentcategory (
+    id bigint NOT NULL,
+    value character varying(20),
+    name character varying(255) NOT NULL,
+    is_closed boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.equipment_equipmentcategory OWNER TO django_user;
+
+--
+-- Name: equipment_equipmentcategory_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.equipment_equipmentcategory ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.equipment_equipmentcategory_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: equipment_interestorgan; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.equipment_interestorgan (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.equipment_interestorgan OWNER TO django_user;
+
+--
+-- Name: equipment_interestorgan_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.equipment_interestorgan ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.equipment_interestorgan_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: equipment_productstructure; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.equipment_productstructure (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    model character varying(255),
+    serial_number character varying(255),
+    note text,
+    equipment_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.equipment_productstructure OWNER TO django_user;
+
+--
+-- Name: equipment_productstructure_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.equipment_productstructure ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.equipment_productstructure_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_communicationpost; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_communicationpost (
+    id bigint NOT NULL,
+    name character varying(100) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    division_id bigint NOT NULL,
+    subdivision_id bigint,
+    description text,
+    kind character varying(3) NOT NULL,
+    parent_id bigint
+);
+
+
+ALTER TABLE public.facilities_communicationpost OWNER TO django_user;
+
+--
+-- Name: facilities_communicationpost_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_communicationpost ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_communicationpost_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_division; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_division (
+    id bigint NOT NULL,
+    name character varying(100) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    staff_planned_civilian integer NOT NULL,
+    staff_planned_management integer NOT NULL,
+    staff_planned_officers integer NOT NULL,
+    staff_planned_total integer NOT NULL,
+    staff_planned_warrant_officers integer NOT NULL,
+    "order" integer NOT NULL,
+    deputy_head_id bigint,
+    head_id bigint,
+    CONSTRAINT facilities_division_staff_planned_civilian_check CHECK ((staff_planned_civilian >= 0)),
+    CONSTRAINT facilities_division_staff_planned_management_check CHECK ((staff_planned_management >= 0)),
+    CONSTRAINT facilities_division_staff_planned_officers_check CHECK ((staff_planned_officers >= 0)),
+    CONSTRAINT facilities_division_staff_planned_total_check CHECK ((staff_planned_total >= 0)),
+    CONSTRAINT facilities_division_staff_planned_warrant_officers_check CHECK ((staff_planned_warrant_officers >= 0))
+);
+
+
+ALTER TABLE public.facilities_division OWNER TO django_user;
+
+--
+-- Name: facilities_division_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_division ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_division_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_facility; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_facility (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    type_id bigint,
+    facility_class character varying(1),
+    address text,
+    subdivision_id bigint,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    division_id bigint NOT NULL,
+    acceptance_act_number character varying(255),
+    comments text,
+    commissioning_act_number character varying(255),
+    has_grounding_in_kz boolean NOT NULL,
+    has_transformer_in_kz boolean NOT NULL,
+    kz_size character varying(255),
+    opening_permission_number character varying(255),
+    rim_act_number character varying(255),
+    is_closed boolean NOT NULL,
+    inn character varying(12),
+    city character varying(100),
+    house_number character varying(20),
+    street character varying(100),
+    latitude numeric(10,7),
+    longitude numeric(10,7)
+);
+
+
+ALTER TABLE public.facilities_facility OWNER TO django_user;
+
+--
+-- Name: facilities_facility_communication_posts; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_facility_communication_posts (
+    id bigint NOT NULL,
+    facility_id bigint NOT NULL,
+    communicationpost_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.facilities_facility_communication_posts OWNER TO django_user;
+
+--
+-- Name: facilities_facility_communication_posts_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_facility_communication_posts ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_facility_communication_posts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_facility_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_facility ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_facility_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_facilitytype; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_facilitytype (
+    id bigint NOT NULL,
+    name character varying(100) NOT NULL,
+    description text,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    is_closed_type boolean NOT NULL
+);
+
+
+ALTER TABLE public.facilities_facilitytype OWNER TO django_user;
+
+--
+-- Name: facilities_facilitytype_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_facilitytype ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_facilitytype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: facilities_subdivision; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.facilities_subdivision (
+    id bigint NOT NULL,
+    name character varying(100) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    division_id bigint,
+    staff_planned_civilian integer NOT NULL,
+    staff_planned_management integer NOT NULL,
+    staff_planned_officers integer NOT NULL,
+    staff_planned_total integer NOT NULL,
+    staff_planned_warrant_officers integer NOT NULL,
+    "order" integer NOT NULL,
+    deputy_head_id bigint,
+    head_id bigint,
+    CONSTRAINT facilities_subdivision_staff_planned_civilian_check CHECK ((staff_planned_civilian >= 0)),
+    CONSTRAINT facilities_subdivision_staff_planned_management_check CHECK ((staff_planned_management >= 0)),
+    CONSTRAINT facilities_subdivision_staff_planned_officers_check CHECK ((staff_planned_officers >= 0)),
+    CONSTRAINT facilities_subdivision_staff_planned_total_check CHECK ((staff_planned_total >= 0)),
+    CONSTRAINT facilities_subdivision_staff_planned_warrant_officers_check CHECK ((staff_planned_warrant_officers >= 0))
+);
+
+
+ALTER TABLE public.facilities_subdivision OWNER TO django_user;
+
+--
+-- Name: facilities_subdivision_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.facilities_subdivision ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.facilities_subdivision_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: map_fsboffice; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.map_fsboffice (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    address text NOT NULL,
+    region character varying(255) NOT NULL,
+    phone_operator character varying(100) NOT NULL,
+    phone_communication character varying(100) NOT NULL,
+    fax character varying(100),
+    email character varying(254),
+    description text,
+    is_active boolean NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.map_fsboffice OWNER TO django_user;
+
+--
+-- Name: map_fsboffice_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.map_fsboffice ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.map_fsboffice_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: storage_favorite; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.storage_favorite (
+    id bigint NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    file_id bigint,
+    folder_id bigint,
+    user_id bigint NOT NULL,
+    CONSTRAINT either_folder_or_file CHECK (((folder_id IS NOT NULL) OR (file_id IS NOT NULL)))
+);
+
+
+ALTER TABLE public.storage_favorite OWNER TO django_user;
+
+--
+-- Name: storage_favorite_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.storage_favorite ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.storage_favorite_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: storage_filesharelink; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.storage_filesharelink (
+    id bigint NOT NULL,
+    token character varying(100) NOT NULL,
+    password character varying(255),
+    expires_at timestamp with time zone,
+    max_downloads integer,
+    download_count integer NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    is_active boolean NOT NULL,
+    created_by_id bigint NOT NULL,
+    file_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.storage_filesharelink OWNER TO django_user;
+
+--
+-- Name: storage_filesharelink_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.storage_filesharelink ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.storage_filesharelink_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: storage_storagefile; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.storage_storagefile (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    file character varying(100) NOT NULL,
+    size bigint NOT NULL,
+    mime_type character varying(255) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    folder_id bigint,
+    uploaded_by_id bigint,
+    deleted_at timestamp with time zone,
+    deleted_by_id bigint,
+    division_id bigint,
+    download_count integer NOT NULL,
+    extension character varying(50) NOT NULL,
+    file_type character varying(10) NOT NULL,
+    is_deleted boolean NOT NULL,
+    is_pinned boolean NOT NULL,
+    last_downloaded timestamp with time zone,
+    original_name character varying(255) NOT NULL,
+    subdivision_id bigint
+);
+
+
+ALTER TABLE public.storage_storagefile OWNER TO django_user;
+
+--
+-- Name: storage_storagefile_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.storage_storagefile ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.storage_storagefile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: storage_storagefolder; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.storage_storagefolder (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    created_by_id bigint,
+    parent_id bigint,
+    color character varying(7) NOT NULL,
+    deleted_at timestamp with time zone,
+    deleted_by_id bigint,
+    division_id bigint,
+    folder_type character varying(10) NOT NULL,
+    is_deleted boolean NOT NULL,
+    is_pinned boolean NOT NULL,
+    subdivision_id bigint
+);
+
+
+ALTER TABLE public.storage_storagefolder OWNER TO django_user;
+
+--
+-- Name: storage_storagefolder_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.storage_storagefolder ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.storage_storagefolder_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: tasks_task; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.tasks_task (
+    id bigint NOT NULL,
+    title character varying(255) NOT NULL,
+    category character varying(20) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    created_by_id bigint,
+    division_id bigint NOT NULL,
+    subdivision_id bigint,
+    is_private boolean NOT NULL,
+    assignee_id bigint
+);
+
+
+ALTER TABLE public.tasks_task OWNER TO django_user;
+
+--
+-- Name: tasks_task_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.tasks_task ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.tasks_task_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: tasks_taskstep; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.tasks_taskstep (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    comments text NOT NULL,
+    start_date timestamp with time zone NOT NULL,
+    end_date timestamp with time zone NOT NULL,
+    is_completed boolean NOT NULL,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    completed_by_id bigint,
+    task_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.tasks_taskstep OWNER TO django_user;
+
+--
+-- Name: tasks_taskstep_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.tasks_taskstep ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.tasks_taskstep_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: users_user; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.users_user (
+    id bigint NOT NULL,
+    password character varying(128) NOT NULL,
+    last_login timestamp with time zone,
+    is_superuser boolean NOT NULL,
+    first_name character varying(150) NOT NULL,
+    last_name character varying(150) NOT NULL,
+    is_staff boolean NOT NULL,
+    is_active boolean NOT NULL,
+    date_joined timestamp with time zone NOT NULL,
+    email character varying(254) NOT NULL,
+    username character varying(150) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    employee_id bigint,
+    user_division_id bigint,
+    user_subdivision_id bigint,
+    is_global_view boolean NOT NULL,
+    two_factor_code character varying(4),
+    two_factor_enabled boolean NOT NULL
+);
+
+
+ALTER TABLE public.users_user OWNER TO django_user;
+
+--
+-- Name: users_user_groups; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.users_user_groups (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public.users_user_groups OWNER TO django_user;
+
+--
+-- Name: users_user_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.users_user_groups ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.users_user_groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.users_user ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.users_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: users_user_user_permissions; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.users_user_user_permissions (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    permission_id integer NOT NULL
+);
+
+
+ALTER TABLE public.users_user_user_permissions OWNER TO django_user;
+
+--
+-- Name: users_user_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.users_user_user_permissions ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.users_user_user_permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: users_useractionlog; Type: TABLE; Schema: public; Owner: django_user
+--
+
+CREATE TABLE public.users_useractionlog (
+    id bigint NOT NULL,
+    action character varying(20) NOT NULL,
+    module character varying(20) NOT NULL,
+    model_name character varying(100),
+    object_id character varying(100),
+    object_name character varying(255),
+    details jsonb,
+    ip_address inet,
+    user_agent text,
+    file_path character varying(500),
+    file_size bigint,
+    file_type character varying(100),
+    storage_location character varying(200),
+    created_at timestamp with time zone NOT NULL,
+    user_id bigint NOT NULL
+);
+
+
+ALTER TABLE public.users_useractionlog OWNER TO django_user;
+
+--
+-- Name: users_useractionlog_id_seq; Type: SEQUENCE; Schema: public; Owner: django_user
+--
+
+ALTER TABLE public.users_useractionlog ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.users_useractionlog_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.auth_group (id, name) FROM stdin;
+1	role_admin
+2	role_leader
+3	role_deputy_director
+4	role_head_of_department_1
+5	role_head_of_section_1_1
+6	role_hr_section_1_1
+7	role_tech_section_1_1
+8	role_head_of_section_2_1
+9	role_employee_section_1_2
+10	role_tech_section_1_3
+11	role_exploitation_chief
+12	role_exploitation_employee
+\.
+
+
+--
+-- Data for Name: auth_group_permissions; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.auth_group_permissions (id, group_id, permission_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: auth_permission; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
+1	Can add log entry	1	add_logentry
+2	Can change log entry	1	change_logentry
+3	Can delete log entry	1	delete_logentry
+4	Can view log entry	1	view_logentry
+5	Can add permission	2	add_permission
+6	Can change permission	2	change_permission
+7	Can delete permission	2	delete_permission
+8	Can view permission	2	view_permission
+9	Can add group	3	add_group
+10	Can change group	3	change_group
+11	Can delete group	3	delete_group
+12	Can view group	3	view_group
+13	Can add content type	4	add_contenttype
+14	Can change content type	4	change_contenttype
+15	Can delete content type	4	delete_contenttype
+16	Can view content type	4	view_contenttype
+17	Can add session	5	add_session
+18	Can change session	5	change_session
+19	Can delete session	5	delete_session
+20	Can view session	5	view_session
+21	Can add Техника	6	add_equipment
+22	Can change Техника	6	change_equipment
+23	Can delete Техника	6	delete_equipment
+24	Can view Техника	6	view_equipment
+25	Can add Состав изделия	7	add_productstructure
+26	Can change Состав изделия	7	change_productstructure
+27	Can delete Состав изделия	7	delete_productstructure
+28	Can view Состав изделия	7	view_productstructure
+29	Can add Категория техники	8	add_equipmentcategory
+30	Can change Категория техники	8	change_equipmentcategory
+31	Can delete Категория техники	8	delete_equipmentcategory
+32	Can view Категория техники	8	view_equipmentcategory
+33	Can add Орган интересов	9	add_interestorgan
+34	Can change Орган интересов	9	change_interestorgan
+35	Can delete Орган интересов	9	delete_interestorgan
+36	Can view Орган интересов	9	view_interestorgan
+37	Can add Подразделение	10	add_division
+38	Can change Подразделение	10	change_division
+39	Can delete Подразделение	10	delete_division
+40	Can view Подразделение	10	view_division
+41	Can add Объект	11	add_facility
+42	Can change Объект	11	change_facility
+43	Can delete Объект	11	delete_facility
+44	Can view Объект	11	view_facility
+45	Can add Отделение	12	add_subdivision
+46	Can change Отделение	12	change_subdivision
+47	Can delete Отделение	12	delete_subdivision
+48	Can view Отделение	12	view_subdivision
+49	Can add Пост связи	13	add_communicationpost
+50	Can change Пост связи	13	change_communicationpost
+51	Can delete Пост связи	13	delete_communicationpost
+52	Can view Пост связи	13	view_communicationpost
+53	Can add Тип объекта	14	add_facilitytype
+54	Can change Тип объекта	14	change_facilitytype
+55	Can delete Тип объекта	14	delete_facilitytype
+56	Can view Тип объекта	14	view_facilitytype
+57	Can add Задача	15	add_task
+58	Can change Задача	15	change_task
+59	Can delete Задача	15	delete_task
+60	Can view Задача	15	view_task
+61	Can add Этап задачи	16	add_taskstep
+62	Can change Этап задачи	16	change_taskstep
+63	Can delete Этап задачи	16	delete_taskstep
+64	Can view Этап задачи	16	view_taskstep
+65	Can add Учетная запись	17	add_user
+66	Can change Учетная запись	17	change_user
+67	Can delete Учетная запись	17	delete_user
+68	Can view Учетная запись	17	view_user
+69	Can add Лог действий пользователя	18	add_useractionlog
+70	Can change Лог действий пользователя	18	change_useractionlog
+71	Can delete Лог действий пользователя	18	delete_useractionlog
+72	Can view Лог действий пользователя	18	view_useractionlog
+73	Can add Группа-роль	19	add_rolegroup
+74	Can change Группа-роль	19	change_rolegroup
+75	Can delete Группа-роль	19	delete_rolegroup
+76	Can view Группа-роль	19	view_rolegroup
+77	Can add Папка	20	add_storagefolder
+78	Can change Папка	20	change_storagefolder
+79	Can delete Папка	20	delete_storagefolder
+80	Can view Папка	20	view_storagefolder
+81	Can add Файл	21	add_storagefile
+82	Can change Файл	21	change_storagefile
+83	Can delete Файл	21	delete_storagefile
+84	Can view Файл	21	view_storagefile
+85	Can add Избранное	22	add_favorite
+86	Can change Избранное	22	change_favorite
+87	Can delete Избранное	22	delete_favorite
+88	Can view Избранное	22	view_favorite
+89	Can add Ссылка для общего доступа	23	add_filesharelink
+90	Can change Ссылка для общего доступа	23	change_filesharelink
+91	Can delete Ссылка для общего доступа	23	delete_filesharelink
+92	Can view Ссылка для общего доступа	23	view_filesharelink
+93	Can add Сеть связи	24	add_communicationnetwork
+94	Can change Сеть связи	24	change_communicationnetwork
+95	Can delete Сеть связи	24	delete_communicationnetwork
+96	Can view Сеть связи	24	view_communicationnetwork
+97	Can add IP-адрес	25	add_ipaddress
+98	Can change IP-адрес	25	change_ipaddress
+99	Can delete IP-адрес	25	delete_ipaddress
+100	Can view IP-адрес	25	view_ipaddress
+101	Can add Диапазон IP	26	add_iprange
+102	Can change Диапазон IP	26	change_iprange
+103	Can delete Диапазон IP	26	delete_iprange
+104	Can view Диапазон IP	26	view_iprange
+105	Can add Сетевой интерфейс	27	add_networkinterface
+106	Can change Сетевой интерфейс	27	change_networkinterface
+107	Can delete Сетевой интерфейс	27	delete_networkinterface
+108	Can view Сетевой интерфейс	27	view_networkinterface
+109	Can add VLAN	28	add_vlan
+110	Can change VLAN	28	change_vlan
+111	Can delete VLAN	28	delete_vlan
+112	Can view VLAN	28	view_vlan
+113	Can add Запись маршрутизации	29	add_routingtable
+114	Can change Запись маршрутизации	29	change_routingtable
+115	Can delete Запись маршрутизации	29	delete_routingtable
+116	Can view Запись маршрутизации	29	view_routingtable
+117	Can add Конфигурация VLAN	30	add_vlanconfiguration
+118	Can change Конфигурация VLAN	30	change_vlanconfiguration
+119	Can delete Конфигурация VLAN	30	delete_vlanconfiguration
+120	Can view Конфигурация VLAN	30	view_vlanconfiguration
+121	Can add ACL	31	add_acl
+122	Can change ACL	31	change_acl
+123	Can delete ACL	31	delete_acl
+124	Can view ACL	31	view_acl
+125	Can add Принадлежность сети	32	add_networkmembership
+126	Can change Принадлежность сети	32	change_networkmembership
+127	Can delete Принадлежность сети	32	delete_networkmembership
+128	Can view Принадлежность сети	32	view_networkmembership
+129	Can add Направление сети	33	add_networkdirection
+130	Can change Направление сети	33	change_networkdirection
+131	Can delete Направление сети	33	delete_networkdirection
+132	Can view Направление сети	33	view_networkdirection
+133	Can add Территориальный орган ФСБ	34	add_fsboffice
+134	Can change Территориальный орган ФСБ	34	change_fsboffice
+135	Can delete Территориальный орган ФСБ	34	delete_fsboffice
+136	Can view Территориальный орган ФСБ	34	view_fsboffice
+137	Can add Сотрудник	35	add_employee
+138	Can change Сотрудник	35	change_employee
+139	Can delete Сотрудник	35	delete_employee
+140	Can view Сотрудник	35	view_employee
+141	Can add Детали ШаРаботника	36	add_shaworkerdetails
+142	Can change Детали ШаРаботника	36	change_shaworkerdetails
+143	Can delete Детали ШаРаботника	36	delete_shaworkerdetails
+144	Can view Детали ШаРаботника	36	view_shaworkerdetails
+145	Can add Заключение на технику	37	add_shaequipmentconclusion
+146	Can change Заключение на технику	37	change_shaequipmentconclusion
+147	Can delete Заключение на технику	37	delete_shaequipmentconclusion
+148	Can view Заключение на технику	37	view_shaequipmentconclusion
+149	Can add Событие графика	38	add_scheduleevent
+150	Can change Событие графика	38	change_scheduleevent
+151	Can delete Событие графика	38	delete_scheduleevent
+152	Can view Событие графика	38	view_scheduleevent
+153	Can add Кандидат	39	add_candidate
+154	Can change Кандидат	39	change_candidate
+155	Can delete Кандидат	39	delete_candidate
+156	Can view Кандидат	39	view_candidate
+157	Can add Этап кандидата	40	add_candidatestage
+158	Can change Этап кандидата	40	change_candidatestage
+159	Can delete Этап кандидата	40	delete_candidatestage
+160	Can view Этап кандидата	40	view_candidatestage
+\.
+
+
+--
+-- Data for Name: candidates_candidate; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.candidates_candidate (number, full_name, planned_position, phone, note, status, created_at, updated_at, curator_id, division_id, hired_employee_id, custom_curator_name, custom_division_name, status_changed_at) FROM stdin;
+2	аааа	вввв	пппп	вав	active	2026-10-05 19:06:03.435612+00	2026-10-05 19:06:03.435805+00	12	1	\N	\N	\N	\N
+1	Самсонов Самсон Самсонович	Бизнесмен	8999000888777	\N	hired	2026-10-05 17:15:29.004186+00	2026-10-05 19:48:26.201586+00	15	1	23	\N	\N	\N
+3	ссссс	Инженер	5555	ссс	archived	2026-10-07 19:46:04.301473+00	2026-10-07 19:46:19.595609+00	8	2	\N	\N	\N	2026-10-07 19:46:19.595541+00
+\.
+
+
+--
+-- Data for Name: candidates_candidatestage; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.candidates_candidatestage (id, stage_type, phase, "order", planned_date, actual_date, status, comment, candidate_id) FROM stdin;
+4	application	primary	4	\N	\N	pending	\N	1
+5	osb_approval	coordination	5	\N	\N	pending	\N	1
+7	referral_pfo_vvk	coordination	7	\N	\N	pending	\N	1
+8	pfo	medical	8	\N	\N	pending	\N	1
+9	testing	medical	9	\N	\N	pending	\N	1
+10	psychologist	medical	10	\N	\N	pending	\N	1
+11	polygraph	medical	11	\N	\N	pending	\N	1
+12	pfo_conclusion	medical	12	\N	\N	pending	\N	1
+13	vvk_start	medical	13	\N	\N	pending	\N	1
+14	vvk_conclusion	medical	14	\N	\N	pending	\N	1
+15	fp_test	checks	15	\N	\N	pending	\N	1
+16	two_references	checks	16	\N	\N	pending	\N	1
+17	parents_talk	checks	17	\N	\N	pending	\N	1
+18	hobbies_report	checks	18	\N	\N	pending	\N	1
+19	otks_search	checks	19	\N	\N	pending	\N	1
+20	close_contacts	checks	20	\N	\N	pending	\N	1
+21	spec_check_start	checks	21	\N	\N	pending	\N	1
+22	spec_check_end	checks	22	\N	\N	pending	\N	1
+23	awareness_report	checks	23	\N	\N	pending	\N	1
+24	task_issue	checks	24	\N	\N	pending	\N	1
+25	practical_task	interviews	25	\N	\N	pending	\N	1
+26	task_result	interviews	26	\N	\N	pending	\N	1
+27	talk_sssi	interviews	27	\N	\N	pending	\N	1
+28	talk_osb	interviews	28	\N	\N	pending	\N	1
+29	talk_hr	interviews	29	\N	\N	pending	\N	1
+30	summary_report	interviews	30	\N	\N	pending	\N	1
+31	talk_management	interviews	31	\N	\N	pending	\N	1
+32	attestation	attestation	32	\N	\N	pending	\N	1
+33	send_to_uk_sokr	attestation	33	\N	\N	pending	\N	1
+1	enrollment_month	primary	1	\N	\N	done	\N	1
+2	initial_report	primary	2	\N	\N	done	\N	1
+3	talk_chief	primary	3	\N	\N	skipped	\N	1
+35	initial_report	primary	2	\N	\N	pending	\N	2
+36	talk_chief	primary	3	\N	\N	pending	\N	2
+37	application	primary	4	\N	\N	pending	\N	2
+38	osb_approval	coordination	5	\N	\N	pending	\N	2
+39	send_to_hr	coordination	6	\N	\N	pending	\N	2
+40	referral_pfo_vvk	coordination	7	\N	\N	pending	\N	2
+41	pfo	medical	8	\N	\N	pending	\N	2
+42	testing	medical	9	\N	\N	pending	\N	2
+43	psychologist	medical	10	\N	\N	pending	\N	2
+44	polygraph	medical	11	\N	\N	pending	\N	2
+45	pfo_conclusion	medical	12	\N	\N	pending	\N	2
+46	vvk_start	medical	13	\N	\N	pending	\N	2
+47	vvk_conclusion	medical	14	\N	\N	pending	\N	2
+48	fp_test	checks	15	\N	\N	pending	\N	2
+49	two_references	checks	16	\N	\N	pending	\N	2
+50	parents_talk	checks	17	\N	\N	pending	\N	2
+51	hobbies_report	checks	18	\N	\N	pending	\N	2
+52	otks_search	checks	19	\N	\N	pending	\N	2
+53	close_contacts	checks	20	\N	\N	pending	\N	2
+54	spec_check_start	checks	21	\N	\N	pending	\N	2
+55	spec_check_end	checks	22	\N	\N	pending	\N	2
+56	awareness_report	checks	23	\N	\N	pending	\N	2
+57	task_issue	checks	24	\N	\N	pending	\N	2
+58	practical_task	interviews	25	\N	\N	pending	\N	2
+59	task_result	interviews	26	\N	\N	pending	\N	2
+60	talk_sssi	interviews	27	\N	\N	pending	\N	2
+61	talk_osb	interviews	28	\N	\N	pending	\N	2
+62	talk_hr	interviews	29	\N	\N	pending	\N	2
+63	summary_report	interviews	30	\N	\N	pending	\N	2
+64	talk_management	interviews	31	\N	\N	pending	\N	2
+65	attestation	attestation	32	\N	\N	pending	\N	2
+66	send_to_uk_sokr	attestation	33	\N	\N	pending	\N	2
+34	enrollment_month	primary	1	\N	\N	pending	ууу	2
+6	send_to_hr	coordination	6	2026-10-06	\N	pending	\N	1
+67	enrollment_month	primary	1	\N	\N	pending	\N	3
+68	initial_report	primary	2	\N	\N	pending	\N	3
+69	talk_chief	primary	3	\N	\N	pending	\N	3
+70	application	primary	4	\N	\N	pending	\N	3
+71	osb_approval	coordination	5	\N	\N	pending	\N	3
+72	send_to_hr	coordination	6	\N	\N	pending	\N	3
+73	referral_pfo_vvk	coordination	7	\N	\N	pending	\N	3
+74	pfo	medical	8	\N	\N	pending	\N	3
+75	testing	medical	9	\N	\N	pending	\N	3
+76	psychologist	medical	10	\N	\N	pending	\N	3
+77	polygraph	medical	11	\N	\N	pending	\N	3
+78	pfo_conclusion	medical	12	\N	\N	pending	\N	3
+79	vvk_start	medical	13	\N	\N	pending	\N	3
+80	vvk_conclusion	medical	14	\N	\N	pending	\N	3
+81	fp_test	checks	15	\N	\N	pending	\N	3
+82	two_references	checks	16	\N	\N	pending	\N	3
+83	parents_talk	checks	17	\N	\N	pending	\N	3
+84	hobbies_report	checks	18	\N	\N	pending	\N	3
+85	otks_search	checks	19	\N	\N	pending	\N	3
+86	close_contacts	checks	20	\N	\N	pending	\N	3
+87	spec_check_start	checks	21	\N	\N	pending	\N	3
+88	spec_check_end	checks	22	\N	\N	pending	\N	3
+89	awareness_report	checks	23	\N	\N	pending	\N	3
+90	task_issue	checks	24	\N	\N	pending	\N	3
+91	practical_task	interviews	25	\N	\N	pending	\N	3
+92	task_result	interviews	26	\N	\N	pending	\N	3
+93	talk_sssi	interviews	27	\N	\N	pending	\N	3
+94	talk_osb	interviews	28	\N	\N	pending	\N	3
+95	talk_hr	interviews	29	\N	\N	pending	\N	3
+96	summary_report	interviews	30	\N	\N	pending	\N	3
+97	talk_management	interviews	31	\N	\N	pending	\N	3
+98	attestation	attestation	32	\N	\N	pending	\N	3
+99	send_to_uk_sokr	attestation	33	\N	\N	pending	\N	3
+\.
+
+
+--
+-- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.django_admin_log (id, action_time, object_id, object_repr, action_flag, change_message, content_type_id, user_id) FROM stdin;
+1	2026-10-07 20:02:36.586359+00	1	Телеком. оборудование	2	[{"changed": {"fields": ["\\u041d\\u0430\\u0437\\u0432\\u0430\\u043d\\u0438\\u0435 \\u043a\\u0430\\u0442\\u0435\\u0433\\u043e\\u0440\\u0438\\u0438"]}}]	8	1
+2	2026-10-07 20:03:58.464288+00	13	Спец. телефонные аппараты, факсы	2	[{"changed": {"fields": ["\\u041d\\u0430\\u0437\\u0432\\u0430\\u043d\\u0438\\u0435 \\u043a\\u0430\\u0442\\u0435\\u0433\\u043e\\u0440\\u0438\\u0438"]}}]	8	1
+3	2026-10-14 16:52:59.755302+00	17	1 отдел	3		10	1
+4	2026-10-14 16:52:59.757679+00	18	2 отдел	3		10	1
+5	2026-10-14 16:52:59.758837+00	19	3 отделение	3		10	1
+6	2026-10-14 16:53:56.432473+00	14	14 отделение	3		10	1
+\.
+
+
+--
+-- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.django_content_type (id, app_label, model) FROM stdin;
+1	admin	logentry
+2	auth	permission
+3	auth	group
+4	contenttypes	contenttype
+5	sessions	session
+6	equipment	equipment
+7	equipment	productstructure
+8	equipment	equipmentcategory
+9	equipment	interestorgan
+10	facilities	division
+11	facilities	facility
+12	facilities	subdivision
+13	facilities	communicationpost
+14	facilities	facilitytype
+15	tasks	task
+16	tasks	taskstep
+17	users	user
+18	users	useractionlog
+19	users	rolegroup
+20	storage	storagefolder
+21	storage	storagefile
+22	storage	favorite
+23	storage	filesharelink
+24	networks	communicationnetwork
+25	networks	ipaddress
+26	networks	iprange
+27	networks	networkinterface
+28	networks	vlan
+29	networks	routingtable
+30	networks	vlanconfiguration
+31	networks	acl
+32	networks	networkmembership
+33	networks	networkdirection
+34	map	fsboffice
+35	employees	employee
+36	employees	shaworkerdetails
+37	employees	shaequipmentconclusion
+38	employees	scheduleevent
+39	candidates	candidate
+40	candidates	candidatestage
+\.
+
+
+--
+-- Data for Name: django_session; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
+wcnceyzky9mj78ugtychedxtmdmiggzj	.eJxVjMsOwiAQRf-FtSHDowIu3fcbyMxApWogKe3K-O_apAvd3nPOfYmI21ri1vMS5yQuQonT70bIj1x3kO5Yb01yq-syk9wVedAux5by83q4fwcFe_nWHoAQvOXMrN3ZasdOAQefMGAAMzENxrgp6GBYDYGSM9qit6TJgCPx_gDWLjdp:1xCj4p:_Inz-rGFbcJsOEX9V_Azt1sgT3zhq4AvO8tzTaxPlYg	2026-10-02 20:37:51.988504+00
+uwe9hup9xr2g3ymj5u6737wg2gtxpkov	.eJxVjMsOwiAQRf-FtSHDowIu3fcbyMxApWogKe3K-O_apAvd3nPOfYmI21ri1vMS5yQuQonT70bIj1x3kO5Yb01yq-syk9wVedAux5by83q4fwcFe_nWHoAQvOXMrN3ZasdOAQefMGAAMzENxrgp6GBYDYGSM9qit6TJgCPx_gDWLjdp:1xCj55:pgtix--jWAjFmlAJ70V-1Zqzlp0dsZhieolR_CxLJGw	2026-10-02 20:38:07.366963+00
+yl28cq6stgqtrzqtzllk9uqp015hqp3l	.eJxVjMsOwiAQRf-FtSHDowIu3fcbyMxApWogKe3K-O_apAvd3nPOfYmI21ri1vMS5yQuQonT70bIj1x3kO5Yb01yq-syk9wVedAux5by83q4fwcFe_nWHoAQvOXMrN3ZasdOAQefMGAAMzENxrgp6GBYDYGSM9qit6TJgCPx_gDWLjdp:1xCjjs:ToywlMqOkjHp9rzGN_cwvmJmQOrD-fjWYH-n868A-io	2026-10-02 21:20:16.925303+00
+rwiesttlquvj50vs0a5h25oy7wndhgof	.eJxVjDsOwjAQBe_iGlm7thfHlPQ5g7X-4QBypDipEHeHSCmgfTPzXsLztla_9bz4KYmLQHH63QLHR247SHdut1nGua3LFOSuyIN2Oc4pP6-H-3dQuddvzawBncsGIFqjLDhCKqaQK9omYHUOhsDFrONQMgMHzQoR0pAMoSLx_gDD4zcm:1xEXqF:86r7h6ylXjAiaF1ug4i1hjNhJRkiYs_RP5pKWUFXTOI	2026-10-07 21:02:19.016992+00
+ixwmz9fj05ahtqweddes9ps4oivhc6n6	.eJxVjDsOwjAQBe_iGlm7thfHlPQ5g7X-4QBypDipEHeHSCmgfTPzXsLztla_9bz4KYmLQHH63QLHR247SHdut1nGua3LFOSuyIN2Oc4pP6-H-3dQuddvzawBncsGIFqjLDhCKqaQK9omYHUOhsDFrONQMgMHzQoR0pAMoSLx_gDD4zcm:1xGjE4:Xy77_4GBVIWq1iAjyx7c_3O7PUvV-ykz5oJPBYCkfzU	2026-10-13 21:35:56.283833+00
+ma8l1iid1rj2zgcgehrk55bytqbl32hg	.eJxVjDsOwjAQBe_iGlm7thfHlPQ5g7X-4QBypDipEHeHSCmgfTPzXsLztla_9bz4KYmLQHH63QLHR247SHdut1nGua3LFOSuyIN2Oc4pP6-H-3dQuddvzawBncsGIFqjLDhCKqaQK9omYHUOhsDFrONQMgMHzQoR0pAMoSLx_gDD4zcm:1xH2Cx:3Uy6hiIM8hKto6TPhmjINTr6yJ1bZ2ol1MVOL7QuK-g	2026-10-14 17:52:03.652687+00
+v5jrdcbizubwe3viifn9bcrni8u2va8v	.eJxVjDsOwjAQBe_iGlm7thfHlPQ5g7X-4QBypDipEHeHSCmgfTPzXsLztla_9bz4KYmLQHH63QLHR247SHdut1nGua3LFOSuyIN2Oc4pP6-H-3dQuddvzawBncsGIFqjLDhCKqaQK9omYHUOhsDFrONQMgMHzQoR0pAMoSLx_gDD4zcm:1xHQYw:InzHbeTZGZqby0_Xi4UhaaG2YOiMI1SDvqfa0jYhMcA	2026-10-15 19:52:22.988805+00
+\.
+
+
+--
+-- Data for Name: employees_employee; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.employees_employee (id, photo, full_name, "position", rank, order_rank, personal_number, personal_phone, work_phone, birth_date, contract_date, form_state_secrets, number_state_secrets, data_state_secrets, education, institution, year_graduation, date_start_work, date_end_work, description, is_sha_worker, is_material_responsible, category, subcategory, priority, created_at, updated_at, division_id, subdivision_id) FROM stdin;
+1		Вячеславов Слава Коков	Офицер	Капитан		\N	555	1122	1991-12-22	2012-06-22	\N	\N	\N	\N	\N	\N	\N	\N	111\n324234234\n5555	f	t	officer	\N	730	2026-03-03 11:58:03.181+00	2026-06-16 10:47:10.705+00	1	1
+2		Ковалев Антон Чехович	Заместитель начальника отдела	Майор	555.55-33	111	333	111222	1990-01-22	2000-03-12	\N	\N	\N	\N	\N	\N	2026-06-11	\N	\N	t	t	management	\N	1310	2026-03-22 07:15:25.556+00	2026-06-18 10:18:46.885+00	2	\N
+3	employee_photos/Вопросов_Антон_Владимирович_id_3.jpg	Вопросов Антон Владимирович	Начальник отдела	Подполковник	\N	8не6876	9898	8989	2026-02-23	2026-04-02	1 форма	255	\N	\N	\N	\N	\N	\N	Знает много\r\nФЫВфВ	f	f	management	\N	300	2026-03-26 09:20:33.023+00	2026-10-05 17:20:52.625+00	1	\N
+4		Четкин Вячеслав Яновичс	Офицер	Капитан		\N	3434	4545	2026-02-23	2026-03-27	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	t	officer	\N	730	2026-03-26 09:21:09.409+00	2026-06-18 04:58:12.813+00	1	3
+5		Титов Антонов Антонович	Начальник отделения	Майор		\N	444	5555	2026-04-02	2026-04-07	\N	\N	\N	\N	\N	\N	\N	\N	\N	t	t	management	\N	720	2026-04-28 11:43:09.295+00	2026-05-01 04:17:30.779+00	2	4
+6		Граждан	Радиотехник	Прапорщик		\N	55	55	2026-03-31	2026-04-10	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	t	warrant_officer	\N	1520	2026-04-28 11:50:07.612+00	2026-04-28 11:50:19.488+00	3	\N
+7	employee_photos/Портов_Самсон_Самсонович1_id_7.jpg	Портов Самсон Самсонович1	Главный руководитель	Полковник	\N	111	555	5554	2025-05-05	2023-12-12	1	\N	\N	\N	\N	\N	2023-01-01	\N	111	t	t	management	\N	100	2026-04-30 09:34:29.536+00	2026-10-05 17:20:19.742+00	\N	\N
+8		Поооо	Начальник отдела	Подполковник		\N	435	345	2026-04-27	2026-04-27	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	300	2026-05-01 04:24:07.83+00	2026-09-07 12:21:09.257+00	2	\N
+9	employee_photos/Оборотень_Вячеслав_Сорокин_id_13.png	Оборотень Вячеслав Сорокин	Старший радист	Прапорщик		\N	5555	7777	2026-06-03	2026-06-12	1 форма	\N	\N	\N	\N	\N	\N	\N	\N	t	t	warrant_officer	\N	1420	2026-06-18 10:38:43.914+00	2026-06-18 10:42:26.977+00	2	4
+10		фыувафыва	Офицер	Майор		\N			2026-06-11	2026-06-19	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	officer	\N	720	2026-06-18 10:56:00.802+00	2026-06-18 10:56:00.802+00	\N	\N
+11	employee_photos/sDFSDF_id_16.webp	sDFSDF	Офицер	Майор		\N	sdf	SDF	2026-06-03	2026-06-13	\N	\N	\N	\N	\N	\N	\N	\N	\N	t	t	officer	\N	720	2026-06-29 11:33:57.635+00	2026-06-29 11:33:57.792+00	2	5
+12		Кротов Илья Васильевич	Начальник отделения	Майор		\N			2026-07-02	2026-07-01	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	0	2026-07-13 10:32:40.95+00	2026-07-13 10:32:40.95+00	1	1
+13		Заместиелев Антон Васин	Заместитель начальника отдела	Подполковник		\N			2026-07-03	2026-06-30	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	400	2026-07-13 11:08:09.059+00	2026-07-13 11:08:09.059+00	1	\N
+14		Юсупов Хач Попович	Начальник отделения	Капитан		\N	5555	7777	2026-06-29	2026-07-17	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	500	2026-07-14 10:51:27.205+00	2026-07-14 10:51:27.206+00	1	2
+15		Попович Игнат Хренов	Начальник отделения	Капитан		\N	678678		2026-06-30	2026-07-23	\N	\N	\N	\N	\N	\N	\N	\N	12222	f	f	management	\N	500	2026-07-14 10:52:17.857+00	2026-07-14 10:52:17.858+00	1	3
+16		Кутев Никита	Заместитель начальника отдела	Подполковник		\N			2026-07-02	2026-07-18	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	400	2026-07-15 11:50:07.659+00	2026-07-15 11:50:07.66+00	1	\N
+17		Алекс Алексов	Заместитель главного руководителя	Подполковник		\N	777	888	2026-07-08	2026-07-16	\N	\N	\N	\N	\N	\N	\N	\N	11	f	f	management	\N	200	2026-07-15 13:49:20.288+00	2026-08-27 11:02:58.597+00	\N	\N
+18		Радик Радиков	Заместитель главного руководителя	Подполковник		\N	777	5555	2026-07-01	2026-07-17	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	management	\N	200	2026-07-15 13:49:46.304+00	2026-07-15 13:49:46.304+00	\N	\N
+19		Майор	Офицер	Майор		\N	5555	0000	2026-07-01	2026-07-18	\N	\N	\N	\N	\N	\N	\N	\N	\N	t	t	officer	\N	720	2026-07-16 11:34:35.391+00	2026-07-16 11:34:35.391+00	1	2
+20		Муууу	Ответственный исполнитель	\N	\N	\N			2026-07-08	2026-07-02	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	f	civilian	\N	1700	2026-07-16 13:25:39.091+00	2026-07-16 13:25:39.091+00	1	2
+21	employee_photos/фывфвфвфы_id_26.webp	фывфвфвфы	Флагманский связист	Подполковник		\N	выфф	фывв	2026-06-30	2026-07-02	\N	\N	\N	\N	\N	\N	\N	\N	фывфыв	f	t	officer	\N	610	2026-07-16 13:51:59.684+00	2026-07-16 13:51:59.807+00	2	5
+22	employee_photos/Крутов_Крутой_id_59.jpg	Крутов Крутой	Старший инструктор	Старший прапорщик		\N	5555	777	2026-09-11	2026-09-01	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	t	warrant_officer	\N	1310	2026-09-08 10:13:33.255+00	2026-09-08 10:13:33.376+00	2	4
+23		Самсонов Самсон Самсонович	Офицер	Майор		\N	8999000888777	\N	2026-10-07	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	f	t	officer	\N	720	2026-10-05 19:48:26.198+00	2026-10-05 19:48:50.189+00	1	\N
+\.
+
+
+--
+-- Data for Name: employees_scheduleevent; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.employees_scheduleevent (id, date, event_type, comment, created_at, updated_at, employee_id) FROM stdin;
+1	2026-07-31	duty		2026-08-29 15:02:29.765+00	2026-08-29 15:02:29.765+00	12
+2	2026-08-01	duty		2026-08-29 15:03:29.163+00	2026-08-29 15:17:03.01+00	12
+3	2026-07-31	duty		2026-08-29 15:03:44.679+00	2026-08-29 15:03:44.679+00	8
+4	2026-08-30	duty		2026-08-29 15:06:14.94+00	2026-08-29 15:06:14.94+00	12
+5	2026-08-29	vacation		2026-08-29 15:06:17.601+00	2026-08-29 15:06:17.601+00	12
+6	2026-08-02	study_leave	sdffsdf	2026-08-29 15:06:33.667+00	2026-08-29 15:06:46.164+00	12
+7	2026-07-31	duty		2026-08-29 15:09:01.177+00	2026-08-29 15:09:01.177+00	18
+8	2026-07-31	duty		2026-08-29 15:09:08.606+00	2026-08-29 15:09:08.606+00	3
+9	2026-08-01	duty		2026-08-29 15:11:20.764+00	2026-08-29 15:11:20.764+00	7
+10	2026-07-31	duty		2026-08-29 15:11:26.844+00	2026-08-29 15:11:26.844+00	7
+11	2026-07-31	vacation		2026-08-29 15:13:59.586+00	2026-08-29 15:13:59.586+00	17
+12	2026-08-01	duty		2026-08-29 15:17:00.535+00	2026-08-29 16:22:58.405+00	8
+13	2026-08-05	duty		2026-08-29 15:29:19.738+00	2026-08-29 15:29:19.738+00	16
+14	2026-08-06	duty		2026-08-29 15:29:19.745+00	2026-08-29 15:29:19.745+00	16
+15	2026-08-07	vacation		2026-08-29 15:29:19.755+00	2026-08-29 15:31:55.284+00	16
+16	2026-08-08	duty		2026-08-29 15:29:19.758+00	2026-08-29 15:29:19.758+00	16
+17	2026-08-09	duty		2026-08-29 15:29:19.762+00	2026-08-29 15:29:19.762+00	16
+18	2026-08-10	duty		2026-08-29 15:29:19.765+00	2026-08-29 15:29:19.765+00	16
+19	2026-08-11	duty		2026-08-29 15:29:19.768+00	2026-08-29 15:29:19.768+00	16
+20	2026-08-03	vacation		2026-08-29 15:30:44.832+00	2026-08-29 15:30:44.832+00	3
+21	2026-08-03	vacation		2026-08-29 15:30:50.765+00	2026-08-29 15:30:50.765+00	18
+22	2026-08-04	duty		2026-08-29 15:30:50.769+00	2026-08-29 15:31:46.228+00	18
+23	2026-08-05	vacation		2026-08-29 15:30:50.772+00	2026-08-29 15:30:50.772+00	18
+24	2026-08-06	vacation		2026-08-29 15:30:50.776+00	2026-08-29 15:30:50.776+00	18
+25	2026-08-07	vacation		2026-08-29 15:30:50.78+00	2026-08-29 15:31:55.275+00	18
+26	2026-08-08	vacation		2026-08-29 15:30:50.784+00	2026-08-29 15:30:50.784+00	18
+27	2026-08-04	duty		2026-08-29 15:31:28.944+00	2026-08-29 15:31:46.224+00	17
+28	2026-08-05	duty		2026-08-29 15:31:28.95+00	2026-08-29 15:31:28.95+00	17
+29	2026-08-06	duty		2026-08-29 15:31:28.953+00	2026-08-29 15:31:28.953+00	17
+30	2026-08-07	vacation		2026-08-29 15:31:28.957+00	2026-08-29 15:31:55.271+00	17
+31	2026-08-08	duty		2026-08-29 15:31:28.96+00	2026-08-29 15:31:28.96+00	17
+32	2026-08-09	duty		2026-08-29 15:31:28.964+00	2026-08-29 15:31:28.964+00	17
+33	2026-08-10	duty		2026-08-29 15:31:28.967+00	2026-08-29 15:31:28.967+00	17
+34	2026-08-11	duty		2026-08-29 15:31:28.97+00	2026-08-29 15:31:28.97+00	17
+35	2026-08-12	duty		2026-08-29 15:31:28.974+00	2026-08-29 15:31:28.974+00	17
+36	2026-08-13	duty		2026-08-29 15:31:28.977+00	2026-08-29 15:31:28.977+00	17
+37	2026-08-04	duty		2026-08-29 15:31:46.219+00	2026-08-29 15:31:46.219+00	7
+38	2026-08-04	duty		2026-08-29 15:31:46.231+00	2026-08-29 15:31:46.231+00	3
+39	2026-08-04	duty		2026-08-29 15:31:46.234+00	2026-08-29 15:31:46.234+00	13
+40	2026-08-04	duty		2026-08-29 15:31:46.237+00	2026-08-29 15:31:46.237+00	16
+41	2026-08-04	duty		2026-08-29 15:31:46.241+00	2026-08-29 15:31:46.241+00	15
+42	2026-08-04	duty		2026-08-29 15:31:46.244+00	2026-08-29 15:31:46.244+00	14
+43	2026-08-04	duty		2026-08-29 15:31:46.247+00	2026-08-29 15:31:46.247+00	21
+44	2026-08-04	duty		2026-08-29 15:31:46.251+00	2026-08-29 15:31:46.251+00	19
+45	2026-08-07	vacation		2026-08-29 15:31:55.266+00	2026-08-29 15:31:55.266+00	7
+46	2026-08-07	vacation		2026-08-29 15:31:55.278+00	2026-08-29 15:31:55.278+00	3
+47	2026-08-07	vacation		2026-08-29 15:31:55.281+00	2026-08-29 15:31:55.281+00	13
+48	2026-08-07	vacation		2026-08-29 15:31:55.287+00	2026-08-29 15:31:55.287+00	15
+49	2026-08-07	vacation		2026-08-29 15:31:55.291+00	2026-08-29 15:31:55.291+00	14
+50	2026-08-07	vacation		2026-08-29 15:31:55.294+00	2026-08-29 15:31:55.294+00	21
+51	2026-08-07	hospital	sdd	2026-08-29 15:34:38.922+00	2026-08-29 15:34:38.922+00	10
+52	2026-08-08	hospital	sdd	2026-08-29 15:34:38.927+00	2026-08-29 15:34:38.927+00	10
+53	2026-08-09	hospital	sdd	2026-08-29 15:34:38.93+00	2026-08-29 15:34:38.93+00	10
+54	2026-08-10	hospital	sdd	2026-08-29 15:34:38.934+00	2026-08-29 15:34:38.934+00	10
+55	2026-08-11	hospital	sdd	2026-08-29 15:34:38.937+00	2026-08-29 15:34:38.937+00	10
+56	2026-08-12	hospital	sdd	2026-08-29 15:34:38.94+00	2026-08-29 15:34:38.94+00	10
+57	2026-08-13	hospital	sdd	2026-08-29 15:34:38.943+00	2026-08-29 15:34:38.943+00	10
+58	2026-08-14	duty		2026-08-29 15:38:27.181+00	2026-08-29 15:38:27.181+00	17
+59	2026-08-15	duty		2026-08-29 15:38:27.185+00	2026-08-29 15:38:27.185+00	17
+60	2026-08-16	duty		2026-08-29 15:38:27.188+00	2026-08-29 15:38:27.188+00	17
+61	2026-08-17	duty		2026-08-29 15:38:27.191+00	2026-08-29 15:38:27.191+00	17
+62	2026-08-18	duty		2026-08-29 15:38:27.195+00	2026-08-29 15:38:27.195+00	17
+63	2026-08-19	duty		2026-08-29 15:38:27.198+00	2026-08-29 15:38:27.198+00	17
+64	2026-08-20	duty		2026-08-29 15:38:27.202+00	2026-08-29 15:38:27.202+00	17
+65	2026-08-10	duty		2026-08-29 15:38:32.032+00	2026-08-29 15:38:32.032+00	7
+66	2026-08-11	duty		2026-08-29 15:38:32.038+00	2026-08-29 15:38:32.038+00	7
+67	2026-08-12	duty		2026-08-29 15:38:32.042+00	2026-08-29 15:38:32.042+00	7
+68	2026-08-13	duty		2026-08-29 15:38:32.045+00	2026-08-29 15:38:32.045+00	7
+69	2026-08-14	duty		2026-08-29 15:38:32.049+00	2026-08-29 15:38:32.049+00	7
+70	2026-08-15	duty		2026-08-29 15:38:32.053+00	2026-08-29 15:38:32.053+00	7
+71	2026-08-16	duty		2026-08-29 15:38:32.057+00	2026-08-29 15:38:32.057+00	7
+72	2026-08-17	duty		2026-08-29 15:38:32.06+00	2026-08-29 15:38:32.06+00	7
+73	2026-08-18	duty		2026-08-29 15:38:32.064+00	2026-08-29 15:38:32.064+00	7
+74	2026-08-19	duty		2026-08-29 15:38:32.067+00	2026-08-29 15:38:32.067+00	7
+75	2026-08-20	duty		2026-08-29 15:38:32.071+00	2026-08-29 15:38:32.071+00	7
+76	2026-08-21	duty		2026-08-29 15:38:32.074+00	2026-08-29 15:38:32.074+00	7
+77	2026-08-22	duty		2026-08-29 15:38:32.078+00	2026-08-29 15:38:32.078+00	7
+78	2026-08-23	duty		2026-08-29 15:38:32.082+00	2026-08-29 15:38:32.082+00	7
+79	2026-08-24	duty		2026-08-29 15:38:32.086+00	2026-08-29 15:38:32.086+00	7
+80	2026-08-10	duty		2026-08-29 15:59:15.946+00	2026-08-29 15:59:15.946+00	13
+81	2026-08-11	duty		2026-08-29 15:59:15.953+00	2026-08-29 15:59:15.953+00	13
+82	2026-08-12	duty		2026-08-29 15:59:15.957+00	2026-08-29 15:59:15.957+00	13
+83	2026-08-14	inspection		2026-08-29 15:59:25.716+00	2026-08-29 15:59:25.717+00	13
+84	2026-08-15	duty		2026-08-29 16:00:16.015+00	2026-08-29 16:00:16.015+00	13
+85	2026-08-09	duty		2026-08-29 16:13:19.667+00	2026-08-29 16:13:19.667+00	19
+86	2026-08-10	vacation		2026-08-29 16:13:23.391+00	2026-08-29 16:13:23.391+00	19
+87	2026-08-11	vacation		2026-08-29 16:13:23.396+00	2026-08-29 16:13:23.396+00	19
+88	2026-08-12	vacation		2026-08-29 16:13:23.4+00	2026-08-29 16:13:23.4+00	19
+89	2026-08-14	vacation		2026-08-29 16:13:23.406+00	2026-08-29 16:13:23.406+00	19
+90	2026-08-15	vacation		2026-08-29 16:13:23.41+00	2026-08-29 16:13:23.41+00	19
+91	2026-08-20	vacation		2026-08-29 16:18:05.198+00	2026-08-29 16:18:05.198+00	15
+92	2026-08-19	vacation		2026-08-29 16:18:08.694+00	2026-08-29 16:18:08.694+00	16
+93	2026-08-24	hospital		2026-08-29 16:18:11.275+00	2026-08-29 16:18:11.275+00	21
+94	2026-08-21	vacation		2026-08-29 16:19:14.751+00	2026-08-29 16:19:14.751+00	10
+95	2026-08-12	vacation		2026-08-29 16:19:45.709+00	2026-08-29 16:19:45.709+00	18
+96	2026-08-14	duty		2026-08-29 16:20:58.063+00	2026-08-29 16:20:58.063+00	14
+97	2026-08-13	duty		2026-08-29 16:20:58.065+00	2026-08-29 16:20:58.065+00	14
+98	2026-08-15	duty		2026-08-29 16:20:58.07+00	2026-08-29 16:20:58.07+00	14
+99	2026-08-16	duty		2026-08-29 16:20:58.07+00	2026-08-29 16:20:58.07+00	14
+100	2026-08-17	vacation		2026-08-29 16:21:00.518+00	2026-08-29 16:21:00.518+00	21
+101	2026-08-18	vacation		2026-08-29 16:21:00.522+00	2026-08-29 16:21:00.522+00	21
+102	2026-08-19	vacation		2026-08-29 16:21:00.528+00	2026-08-29 16:21:00.528+00	21
+103	2026-08-20	vacation		2026-08-29 16:21:00.529+00	2026-08-29 16:21:00.529+00	21
+104	2026-08-19	hospital		2026-08-29 16:21:03.33+00	2026-08-29 16:21:03.33+00	5
+105	2026-08-21	hospital		2026-08-29 16:21:03.333+00	2026-08-29 16:21:03.333+00	5
+106	2026-08-18	hospital		2026-08-29 16:21:03.335+00	2026-08-29 16:21:03.335+00	5
+107	2026-08-22	hospital		2026-08-29 16:21:03.343+00	2026-08-29 16:21:03.343+00	5
+108	2026-08-20	hospital		2026-08-29 16:21:03.351+00	2026-08-29 16:21:03.351+00	5
+109	2026-08-23	hospital		2026-08-29 16:21:03.353+00	2026-08-29 16:21:03.353+00	5
+110	2026-08-03	duty		2026-08-29 16:22:43.373+00	2026-08-29 16:28:07.873+00	8
+111	2026-08-04	duty		2026-08-29 16:22:43.381+00	2026-08-29 16:22:43.381+00	8
+112	2026-08-05	duty		2026-08-29 16:22:43.385+00	2026-08-29 16:22:43.385+00	8
+113	2026-08-06	duty		2026-08-29 16:22:43.389+00	2026-08-29 16:22:43.389+00	8
+114	2026-08-02	duty		2026-08-29 16:22:58.411+00	2026-08-29 16:28:07.869+00	8
+115	2026-08-01	duty		2026-08-29 16:23:11.122+00	2026-08-29 16:23:11.122+00	5
+116	2026-08-02	duty		2026-08-29 16:23:16.819+00	2026-08-29 16:23:39.552+00	5
+117	2026-08-03	duty		2026-08-29 16:23:17.806+00	2026-08-29 16:23:39.557+00	5
+118	2026-08-04	sick		2026-08-29 16:23:20.333+00	2026-08-29 16:23:23.624+00	5
+119	2026-08-05	sick		2026-08-29 16:23:23.628+00	2026-08-29 16:23:23.628+00	5
+120	2026-08-06	sick		2026-08-29 16:23:23.632+00	2026-08-29 16:23:23.632+00	5
+121	2026-08-01	sick		2026-08-29 16:23:48.477+00	2026-08-29 16:23:48.477+00	9
+122	2026-08-02	sick		2026-08-29 16:23:48.485+00	2026-08-29 16:23:48.485+00	9
+123	2026-08-03	sick		2026-08-29 16:23:48.488+00	2026-08-29 16:23:48.488+00	9
+124	2026-08-04	sick		2026-08-29 16:23:48.492+00	2026-08-29 16:23:48.492+00	9
+125	2026-08-05	sick		2026-08-29 16:23:48.495+00	2026-08-29 16:23:48.495+00	9
+126	2026-08-06	sick		2026-08-29 16:23:48.499+00	2026-08-29 16:23:48.499+00	9
+127	2026-08-07	sick		2026-08-29 16:23:48.502+00	2026-08-29 16:23:48.502+00	9
+128	2026-08-08	sick		2026-08-29 16:23:48.505+00	2026-08-29 16:23:48.505+00	9
+129	2026-08-09	sick		2026-08-29 16:23:48.509+00	2026-08-29 16:23:48.509+00	9
+130	2026-08-10	sick		2026-08-29 16:23:48.512+00	2026-08-29 16:23:48.512+00	9
+131	2026-08-11	sick		2026-08-29 16:23:48.515+00	2026-08-29 16:23:48.515+00	9
+132	2026-08-12	sick		2026-08-29 16:23:48.519+00	2026-08-29 16:23:48.519+00	9
+133	2026-08-13	sick		2026-08-29 16:23:48.522+00	2026-08-29 16:23:48.522+00	9
+134	2026-08-14	sick		2026-08-29 16:23:48.525+00	2026-08-29 16:23:48.525+00	9
+135	2026-08-15	sick		2026-08-29 16:23:48.528+00	2026-08-29 16:23:48.528+00	9
+136	2026-08-16	sick		2026-08-29 16:23:48.532+00	2026-08-29 16:23:48.532+00	9
+137	2026-08-17	sick		2026-08-29 16:23:48.535+00	2026-08-29 16:23:48.535+00	9
+138	2026-08-18	sick		2026-08-29 16:23:48.539+00	2026-08-29 16:23:48.539+00	9
+139	2026-08-19	sick		2026-08-29 16:23:48.542+00	2026-08-29 16:23:48.542+00	9
+140	2026-08-20	sick		2026-08-29 16:23:48.546+00	2026-08-29 16:23:48.546+00	9
+141	2026-08-21	sick		2026-08-29 16:23:48.549+00	2026-08-29 16:23:48.549+00	9
+142	2026-08-22	sick		2026-08-29 16:23:48.552+00	2026-08-29 16:23:48.552+00	9
+143	2026-08-23	sick		2026-08-29 16:23:48.556+00	2026-08-29 16:23:48.556+00	9
+144	2026-08-24	sick		2026-08-29 16:23:48.559+00	2026-08-29 16:23:48.559+00	9
+145	2026-08-25	sick		2026-08-29 16:23:48.563+00	2026-08-29 16:23:48.563+00	9
+146	2026-08-26	sick		2026-08-29 16:23:48.566+00	2026-08-29 16:23:48.566+00	9
+147	2026-08-27	sick		2026-08-29 16:23:48.569+00	2026-08-29 16:23:48.569+00	9
+148	2026-08-28	sick		2026-08-29 16:23:48.573+00	2026-08-29 16:23:48.573+00	9
+149	2026-08-29	sick		2026-08-29 16:23:48.576+00	2026-08-29 16:23:48.576+00	9
+150	2026-08-30	sick		2026-08-29 16:23:48.58+00	2026-08-29 16:23:48.58+00	9
+151	2026-08-31	sick		2026-08-29 16:23:48.583+00	2026-08-29 16:23:48.583+00	9
+152	2026-08-02	vacation		2026-08-29 16:28:19.895+00	2026-08-29 16:28:19.895+00	11
+153	2026-08-03	vacation		2026-08-29 16:28:19.902+00	2026-08-29 16:28:19.902+00	11
+154	2026-08-04	duty		2026-08-29 16:28:21.868+00	2026-08-29 16:28:21.868+00	11
+155	2026-08-09	duty		2026-08-30 06:05:09.24+00	2026-08-30 06:05:09.24+00	5
+156	2026-08-06	duty		2026-08-30 07:31:28.567+00	2026-08-30 07:31:28.567+00	21
+157	2026-08-08	vacation		2026-08-30 07:31:33.281+00	2026-08-30 07:31:33.281+00	21
+158	2026-08-09	vacation		2026-08-30 07:31:33.286+00	2026-08-30 07:31:33.286+00	21
+159	2026-08-10	vacation		2026-08-30 07:31:33.291+00	2026-08-30 07:31:33.291+00	21
+160	2026-08-11	vacation		2026-08-30 07:31:33.296+00	2026-08-30 07:31:33.296+00	21
+161	2026-08-08	duty		2026-08-30 10:14:12.733+00	2026-08-30 10:14:12.734+00	11
+162	2026-08-08	day_off		2026-08-30 12:13:24.693+00	2026-08-30 12:13:24.693+00	2
+163	2026-08-09	day_off		2026-08-30 12:13:24.701+00	2026-08-30 12:13:24.701+00	2
+164	2026-08-15	inspection		2026-08-30 12:13:48.35+00	2026-08-30 12:13:48.35+00	8
+165	2026-08-17	duty	фукпфыкпфкп	2026-09-07 12:12:58.465+00	2026-09-07 12:12:58.465+00	8
+166	2026-08-18	duty	фукпфыкпфкп	2026-09-07 12:12:58.473+00	2026-09-07 12:12:58.473+00	8
+167	2026-08-19	duty	фукпфыкпфкп	2026-09-07 12:12:58.477+00	2026-09-07 12:12:58.477+00	8
+168	2026-08-20	duty	фукпфыкпфкп	2026-09-07 12:12:58.482+00	2026-09-07 12:12:58.482+00	8
+169	2026-08-12	hospital		2026-09-07 12:20:33.173+00	2026-09-07 12:20:33.173+00	8
+170	2026-08-13	hospital		2026-09-07 12:20:33.178+00	2026-09-07 12:20:33.178+00	8
+171	2026-08-14	hospital		2026-09-07 12:20:33.184+00	2026-09-07 12:20:33.184+00	8
+172	2026-09-02	duty		2026-09-13 09:06:11.098+00	2026-09-13 09:06:11.098+00	8
+173	2026-09-03	duty		2026-09-13 09:06:11.108+00	2026-09-13 09:06:11.108+00	8
+174	2026-09-04	vacation		2026-09-13 09:06:15.385+00	2026-09-13 09:06:15.385+00	2
+175	2026-09-06	vacation		2026-09-18 12:16:23.291+00	2026-09-18 12:16:23.291+00	21
+176	2026-09-04	vacation		2026-09-18 13:11:05.814+00	2026-09-18 13:11:05.814+00	8
+177	2026-09-03	duty		2026-09-22 11:56:15.423+00	2026-09-22 11:56:15.423+00	3
+178	2026-09-04	duty		2026-09-22 11:56:15.434+00	2026-09-22 11:56:15.434+00	3
+179	2026-09-05	vacation		2026-09-22 11:58:43.252+00	2026-09-22 11:58:43.252+00	3
+180	2026-09-06	vacation		2026-09-22 11:58:43.258+00	2026-09-22 11:58:43.258+00	3
+181	2026-09-05	sick		2026-09-22 11:59:01.293+00	2026-09-22 11:59:01.293+00	13
+182	2026-09-06	sick		2026-09-22 11:59:01.303+00	2026-09-22 11:59:01.303+00	13
+183	2026-09-07	business_trip		2026-09-22 11:59:08.917+00	2026-09-22 11:59:08.917+00	3
+184	2026-09-09	duty		2026-09-22 12:00:09.084+00	2026-09-22 12:00:09.084+00	13
+185	2026-09-12	vacation		2026-09-22 12:00:13.327+00	2026-09-22 12:00:13.327+00	16
+186	2026-09-12	sick		2026-09-22 12:01:33.565+00	2026-09-22 12:01:33.565+00	3
+187	2026-09-13	sick		2026-09-22 12:01:33.572+00	2026-09-22 12:01:33.572+00	3
+188	2026-09-01	duty		2026-09-22 13:29:20.944+00	2026-09-22 13:29:20.944+00	14
+189	2026-10-02	duty		2026-10-22 19:22:23.741+00	2026-10-22 19:22:23.741+00	3
+\.
+
+
+--
+-- Data for Name: employees_shaequipmentconclusion; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.employees_shaequipmentconclusion (id, equipment_type, conclusion_number, created_at, updated_at, sha_worker_id) FROM stdin;
+1	фывфыв	aadasd	2026-05-01 04:17:30.792+00	2026-05-01 04:17:30.793+00	2
+2	122	333	2026-06-18 10:18:46.894+00	2026-06-18 10:18:46.894+00	1
+3	sdsd	sdsd	2026-06-18 10:18:46.894+00	2026-06-18 10:18:46.894+00	1
+4	asd	asdas	2026-06-18 10:18:46.894+00	2026-06-18 10:18:46.894+00	1
+5	1221	333	2026-06-18 10:42:26.789+00	2026-06-18 10:42:26.789+00	4
+6	SDF	sdF	2026-06-29 11:33:57.644+00	2026-06-29 11:33:57.644+00	5
+7	4444	5555	2026-07-16 11:34:35.409+00	2026-07-16 11:34:35.409+00	6
+10	111	222	2026-10-05 17:20:19.606+00	2026-10-05 17:20:19.606+00	3
+11	123123	2344 от 3454	2026-10-05 17:20:19.606+00	2026-10-05 17:20:19.606+00	3
+\.
+
+
+--
+-- Data for Name: employees_shaworkerdetails; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.employees_shaworkerdetails (id, start_date, access_level, created_at, updated_at, employee_id) FROM stdin;
+1	2009-03-12	1	2026-03-22 07:15:25.563+00	2026-06-18 10:18:46.889+00	2
+2	2026-04-10	1	2026-04-28 11:43:09.308+00	2026-05-01 04:17:30.786+00	5
+3	2002-02-08	1	2026-06-16 11:03:42.657+00	2026-10-05 17:20:19.602+00	7
+4	2026-06-10	1	2026-06-18 10:38:43.919+00	2026-06-18 10:42:26.785+00	9
+5	2026-06-29	1	2026-06-29 11:33:57.641+00	2026-06-29 11:33:57.641+00	11
+6	2026-07-16	2	2026-07-16 11:34:35.405+00	2026-07-16 11:34:35.405+00	19
+\.
+
+
+--
+-- Data for Name: equipment_equipment; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.equipment_equipment (id, name, type, status, serial_number, inventory_number, manufacturing_date, exploitation_date, subdivision_id, created_at, updated_at, assigned_to_id, division_id, facility_id, comments, disposal_act_date, disposal_act_number, disposal_cert_date, disposal_cert_number, disposal_comments, is_closed, first_invoice, material_invoice, ver_software, is_network, category_id, free_use_act_number, is_free_use, secret_level, service_life, interest_organ_id, szi_certificate_date, szi_certificate_number) FROM stdin;
+1	Н-555	\N	in-operation	555в	333	2026-03-04	\N	4	2026-03-03 13:01:07.849+00	2026-09-09 13:12:16.257+00	5	2	12	asdasd\nфавыа\nsdfsdf	\N	\N	\N	\N	\N	f	333	111	\N	f	1	4444	t	\N	\N	2	\N	\N
+2	Ш-890		in-operation	12345	543321	2026-03-04	2026-03-14	4	2026-03-22 08:09:32.422+00	2026-03-23 09:52:08.757+00	2	2	2		\N	\N	\N	\N	\N	t	555	888	55	t	3	\N	f	SECRET	5	1	\N	\N
+3	Y-099		in-operation	555	888	2026-03-02	2026-03-11	1	2026-03-23 09:07:16.197+00	2026-10-11 12:24:03.283+00	1	1	11		\N	\N	\N	\N	\N	t	555	888	\N	t	3	\N	f	SECRET	\N	1	\N	\N
+4	П-199		in-storage	111	222	2026-03-31	\N	5	2026-04-05 07:18:01.906+00	2026-04-05 07:18:01.915+00	\N	2	2		\N	\N	\N	\N	\N	f	555	777	\N	f	2	\N	f	\N	\N	\N	\N	\N
+5	Р-399		in-storage	333	444	2026-03-31	2026-04-18	4	2026-04-05 07:18:47.877+00	2026-04-05 07:18:47.887+00	2	2	\N		\N	\N	\N	\N	\N	f	111	222	\N	f	4	\N	f	\N	5 лет	2	\N	\N
+6	Спутниковая станция fdfdsfsdfsdfsdfdsffsdf	ааа	disposed	ппп	87688888888888888	2026-04-08	2026-04-25	4	2026-04-28 10:17:30.674+00	2026-09-13 07:20:35.089+00	2	2	\N		2026-09-05	вапвап	2026-09-12	вепрепр		f	ааа	пппп	\N	f	4	\N	f	\N	\N	\N	\N	\N
+7	Картридж HP	HP-123	in-operation	33r	rrr	\N	\N	5	2026-04-28 10:17:59.606+00	2026-04-30 08:00:47.944+00	\N	2	\N		\N	\N	\N	\N	\N	f	asdasd	dsadasd	\N	f	5	\N	f	\N	\N	\N	\N	\N
+8	Коммутатор П-193	авы	in-operation	888	0000	\N	\N	4	2026-04-28 11:22:00.435+00	2026-04-30 08:00:28.128+00	2	2	4		\N	\N	\N	\N	\N	f	444	5555	333	f	2	\N	f	\N	\N	\N	\N	\N
+9	D-Link 3120		in-operation	678687	35456	2026-03-30	2026-05-01	1	2026-04-30 08:02:29.669+00	2026-04-30 08:02:29.681+00	3	1	1		\N	\N	\N	\N	\N	f	5567	876978	\N	t	1	\N	f	DSP	3 года	1	\N	\N
+10	М-789		in-operation	3456	3546	\N	\N	\N	2026-05-14 12:04:14.178+00	2026-05-14 12:04:14.195+00	\N	3	8		\N	\N	\N	\N	\N	f	\N	\N	\N	f	3	\N	f	\N	\N	\N	\N	\N
+11	Новая техника	М444	disposed	5555	7777	2026-06-19	2026-06-26	1	2026-06-25 11:14:59.788+00	2026-09-13 08:07:40.791+00	1	1	6	2344\nfsdfsd\nsdfsа	2026-09-11	sdfs	2026-09-12	sdfsdf		f	456	456	445	t	2	5555	t	SECRET	5	2	\N	\N
+12	вввв	авва	disposed	\N	\N	\N	\N	2	2026-07-08 11:17:50.588+00	2026-09-13 06:52:51.127+00	\N	1	10		2026-09-12	sdfsdf	2026-09-12	sdfgsdfg		f	\N	\N	\N	f	3	\N	f	\N	\N	\N	\N	\N
+13	Генератор шума		in-operation	5555	5555	\N	\N	1	2026-10-11 12:21:05.756+00	2026-10-11 12:41:43.714+00	1	1	11		\N	\N	\N	\N	\N	f	\N	\N	\N	f	16	\N	f	\N	\N	\N	2026-10-10	555
+\.
+
+
+--
+-- Data for Name: equipment_equipmentcategory; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.equipment_equipmentcategory (id, value, name, is_closed, created_at) FROM stdin;
+1	tko	Телеком. оборудование	f	2026-02-25 02:01:33+00
+2	analog	Аппаратура проводной связи	f	2026-02-25 02:01:33.375+00
+3	shd	ШДтехника	t	2026-02-25 02:01:33.377+00
+4	radio	Радио, спутник	f	2026-02-25 02:01:33.379+00
+5	computer	СВТ	f	2026-02-25 02:01:33.381+00
+6	antenna	Антенны, мачты	f	2026-02-25 02:01:33.383+00
+7	power	Источники питания, агрегаты	f	2026-02-25 02:01:33.385+00
+8	battery	АКБ	f	2026-02-25 02:01:33.387+00
+9	cabel	Кабель, провода	f	2026-02-25 02:01:33.389+00
+10	material	Материалы	f	2026-02-25 02:01:33.391+00
+11	furniture	Мебель и оборудование	f	2026-02-25 02:01:33.393+00
+12	telephone	Телефонные аппараты, факсы	f	2026-04-02 10:48:00+00
+13	shdTelephone	Спец. телефонные аппараты, факсы	t	2026-04-02 10:48:00+00
+14	mobileTelephone	Сотовые телефоны	f	2026-02-25 02:01:33.397+00
+15	car	Автомобильная техника	f	2026-02-25 02:01:33.399+00
+16	szi	Средства защиты информации (СЗИ)	f	2026-10-11 12:19:36.459+00
+\.
+
+
+--
+-- Data for Name: equipment_interestorgan; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.equipment_interestorgan (id, name, created_at, updated_at) FROM stdin;
+1	ТОБ	2026-03-08 14:58:51.477+00	2026-03-08 14:58:51.477+00
+2	ПУ	2026-03-08 14:58:54.798+00	2026-03-08 14:58:54.799+00
+\.
+
+
+--
+-- Data for Name: equipment_productstructure; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.equipment_productstructure (id, name, model, serial_number, note, equipment_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: facilities_communicationpost; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_communicationpost (id, name, created_at, updated_at, division_id, subdivision_id, description, kind, parent_id) FROM stdin;
+2	П-100	2026-07-08 12:03:50.472+00	2026-10-17 16:04:24.937+00	1	1		P	\N
+3	П-500	2026-07-09 10:53:08.278+00	2026-10-17 18:40:49.475+00	2	5	Привет Пока	P	\N
+4	1П-200	2026-10-15 19:41:47.317+00	2026-10-15 19:41:47.317+00	1	3	\N	P	\N
+5	2ПС-200	2026-10-15 19:46:01.759+00	2026-10-15 19:46:01.759+00	1	3	\N	PS	4
+6	1 НДР - 222	2026-10-15 19:46:30.066+00	2026-10-15 19:46:30.066+00	1	3	\N	NDR	5
+7	1П111	2026-10-15 20:37:15.218+00	2026-10-15 20:37:15.219+00	1	1	\N	P	\N
+8	333	2026-10-15 20:37:19.589+00	2026-10-15 20:37:19.589+00	1	1	\N	PS	7
+9	3232	2026-10-15 20:37:24.044+00	2026-10-15 21:07:04.959+00	1	1	орири	NDR	8
+12	1ПС-100	2026-10-15 21:06:35.192+00	2026-10-15 21:06:35.192+00	1	1	\N	PS	2
+13	1КП-200	2026-10-17 15:25:11.471+00	2026-10-17 15:25:11.471+00	1	1	\N	KP	\N
+14	3ПС-201	2026-10-17 15:26:35.616+00	2026-10-17 15:26:35.616+00	1	3	\N	PS	4
+15	111	2026-10-17 15:44:08.595+00	2026-10-17 15:44:08.595+00	1	1	\N	PS	13
+16	ввв	2026-10-17 15:44:12.037+00	2026-10-17 15:44:12.037+00	1	1	\N	NDR	15
+17	333	2026-10-17 15:44:15.329+00	2026-10-17 15:44:15.329+00	1	1	\N	NDR	15
+18	2НДР	2026-10-17 15:54:04.573+00	2026-10-17 15:54:04.573+00	1	3	\N	NDR	5
+19	1П-100	2026-10-17 17:25:50.797+00	2026-10-17 17:55:36.215+00	1	2	ввв	P	\N
+20	2ПС-200	2026-10-17 17:25:58.375+00	2026-10-17 17:25:58.376+00	1	2	\N	PS	19
+21	1Еввыв	2026-10-17 17:26:03.765+00	2026-10-17 17:28:15.376+00	1	2	1111	NDR	20
+22	222	2026-10-17 17:28:20.62+00	2026-10-17 17:28:20.62+00	1	2	\N	NDR	20
+\.
+
+
+--
+-- Data for Name: facilities_division; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_division (id, name, created_at, updated_at, staff_planned_civilian, staff_planned_management, staff_planned_officers, staff_planned_total, staff_planned_warrant_officers, "order", deputy_head_id, head_id) FROM stdin;
+1	1 отдел СССИ	2026-02-25 08:50:39.955+00	2026-10-25 11:07:16.022+00	13	3	7	31	8	1	16	3
+2	2 отдел СССИ	2026-02-25 08:50:39.974+00	2026-10-25 11:07:16.033+00	12	7	9	35	7	2	2	8
+3	3 отделение СССИ	2026-02-25 08:50:39.982+00	2026-10-25 11:07:16.04+00	9	19	15	56	13	3	\N	\N
+20	4 отдел СССИ	2026-10-15 18:45:31.11+00	2026-10-25 11:07:16.041+00	9	11	3	36	13	4	\N	\N
+21	5 отдел СССИ	2026-10-15 18:45:31.123+00	2026-10-25 11:07:16.048+00	8	7	5	24	4	5	\N	\N
+22	6 отделение СССИ	2026-10-15 18:45:31.134+00	2026-10-25 11:07:16.054+00	12	9	6	35	8	6	\N	\N
+23	7 отделение СССИ	2026-10-15 18:45:31.138+00	2026-10-25 11:07:16.055+00	14	15	6	45	10	7	\N	\N
+24	8 отделение СССИ	2026-10-15 18:45:31.142+00	2026-10-25 11:07:16.057+00	9	7	5	24	3	8	\N	\N
+25	9 отдел СССИ	2026-10-15 18:45:31.145+00	2026-10-25 11:07:16.059+00	7	15	6	35	7	9	\N	\N
+26	10 отделение СССИ	2026-10-15 18:45:31.149+00	2026-10-25 11:07:16.06+00	12	14	11	52	15	10	\N	\N
+27	11 отделение СССИ	2026-10-15 18:45:31.152+00	2026-10-25 11:07:16.062+00	10	14	19	51	8	11	\N	\N
+28	12 отделение СССИ	2026-10-15 18:45:31.154+00	2026-10-25 11:07:16.063+00	24	20	17	78	17	12	\N	\N
+29	13 отделение СССИ	2026-10-15 18:45:31.158+00	2026-10-25 11:07:16.065+00	12	25	14	69	18	13	\N	\N
+\.
+
+
+--
+-- Data for Name: facilities_facility; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_facility (id, name, type_id, facility_class, address, subdivision_id, created_at, updated_at, division_id, acceptance_act_number, comments, commissioning_act_number, has_grounding_in_kz, has_transformer_in_kz, kz_size, opening_permission_number, rim_act_number, is_closed, inn, city, house_number, street, latitude, longitude) FROM stdin;
+1	Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя	5	1	г. Хабаровск, ул. Ленина, 54	1	2026-02-27 01:30:23.209+00	2026-10-17 16:04:24.976+00	1	11233	ASDFDF\nDSAFDF	44	t	t	5	234	323аа	t	\N	г. Хабаровск	54	ул. Ленина	48.4792290	135.0871839
+2	Станция 2 отдела	5	2	г. Хабаровск, ул. Шатова, 6	4	2026-03-23 09:08:11.131+00	2026-05-02 09:01:27.803+00	2	\N		\N	t	t	5 метров	\N	\N	t	\N	г. Хабаровск	6	ул. Шатова	48.5338906	135.0912292
+3	Приемный	3	\N	г. Николаевск-на-амуре, ул. Ленина, 12	\N	2026-04-28 10:23:24.332+00	2026-05-02 09:33:55.956+00	1	\N		\N	f	f	\N	\N	\N	f	\N	г. Николаевск-на-амуре	12	ул. Ленина	53.1396309	140.7168854
+4	Передающий	2	\N	г. Хабаровск, ул. Ленина, 30	\N	2026-04-28 10:38:10.773+00	2026-04-30 07:59:54.652+00	2	\N		\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	30	ул. Ленина	48.4712614	135.0780000
+5	Дизельная	7	\N	г. Хабаровск, ул. Тихоокеанская, 199	\N	2026-04-30 07:54:55.103+00	2026-04-30 07:59:06.717+00	2	\N		\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	199	ул. Тихоокеанская	48.5459761	135.0409705
+6	Ванино	1	\N	г. Ванино, ул. Ленина, 1	\N	2026-04-30 09:02:04.549+00	2026-07-08 11:36:45.995+00	1	\N		\N	f	f	\N	\N	\N	f	\N	г. Ванино	1	ул. Ленина	49.0994849	140.2713276
+7	ШД	6	1	г. Хабаровск, ул. Ленина, 55	\N	2026-05-02 03:51:24.67+00	2026-05-02 03:51:24.67+00	1	\N		\N	f	f	\N	\N	\N	t	\N	г. Хабаровск	55	ул. Ленина	48.4779351	135.0841304
+8	Объектосв	3	\N	г. Хабаровск, ул. Запарина, 34	\N	2026-05-02 08:27:50.622+00	2026-05-02 08:27:50.622+00	3	\N		\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	34	ул. Запарина	48.4779754	135.0624530
+9	Новый	8	\N	г. Хабаровск, ул. Ленинградская, 36	3	2026-05-02 09:36:04.694+00	2026-07-08 11:17:15.355+00	1	\N	5555	\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	36	ул. Ленинградская	48.4888808	135.0866414
+10	sDFdfs	1	\N	г. Хабаровск, ул. Запарина, 2г	\N	2026-07-08 10:03:16.143+00	2026-10-17 17:25:50.879+00	1	\N		\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	2г	ул. Запарина	48.4669943	135.0745514
+11	Запарина 2Г	5	2	г. Хабаровск, ул. Запарина, 2г	\N	2026-07-08 11:04:55.871+00	2026-07-08 11:04:55.872+00	1	\N		\N	f	f	\N	\N	\N	t	\N	г. Хабаровск	2г	ул. Запарина	48.4669943	135.0745514
+12	Вахова 8	1	\N	г. Хабаровск, ул. Вахова, 8	\N	2026-07-08 11:12:54.478+00	2026-10-17 18:40:49.555+00	2	\N		\N	f	f	\N	\N	\N	f	\N	г. Хабаровск	8	ул. Вахова	48.4345335	135.1010914
+\.
+
+
+--
+-- Data for Name: facilities_facility_communication_posts; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_facility_communication_posts (id, facility_id, communicationpost_id) FROM stdin;
+4	1	7
+5	1	2
+6	10	19
+7	12	3
+\.
+
+
+--
+-- Data for Name: facilities_facilitytype; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_facilitytype (id, name, description, created_at, updated_at, is_closed_type) FROM stdin;
+1	ЛАЗ	Линейно-аппаратный зал	2026-02-25 02:01:32.462+00	2026-10-25 11:07:13.807+00	f
+2	ПДрЦ	Передающий радиоцентр	2026-02-25 02:01:32.466+00	2026-10-25 11:07:13.81+00	f
+3	ПРЦ	Приемный радиоцентр	2026-02-25 02:01:32.469+00	2026-10-25 11:07:13.811+00	f
+4	Спутниковая станция		2026-02-25 02:01:32.471+00	2026-10-25 11:07:13.813+00	f
+5	Станция		2026-02-25 02:01:32.474+00	2026-10-25 11:07:13.814+00	t
+6	ШД		2026-02-25 02:01:32.476+00	2026-10-25 11:07:13.816+00	t
+7	Дизельная		2026-02-25 02:01:32.478+00	2026-10-25 11:07:13.818+00	f
+8	Радиорелейная станция		2026-02-25 02:01:32.48+00	2026-10-25 11:07:13.819+00	f
+\.
+
+
+--
+-- Data for Name: facilities_subdivision; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.facilities_subdivision (id, name, created_at, updated_at, division_id, staff_planned_civilian, staff_planned_management, staff_planned_officers, staff_planned_total, staff_planned_warrant_officers, "order", deputy_head_id, head_id) FROM stdin;
+1	1 отделение	2026-02-25 08:50:39.963+00	2026-10-25 11:07:16.027+00	1	5	0	2	10	3	1	\N	12
+2	2 отделение	2026-02-25 08:50:39.968+00	2026-10-25 11:07:16.029+00	1	4	2	2	12	4	2	\N	14
+3	3 отделение	2026-02-25 08:50:39.97+00	2026-10-25 11:07:16.031+00	1	4	1	3	9	1	3	\N	15
+4	1 отделение	2026-02-25 08:50:39.976+00	2026-10-25 11:07:16.035+00	2	6	7	4	18	1	1	\N	5
+5	2 отделение	2026-02-25 08:50:39.978+00	2026-10-25 11:07:16.037+00	2	6	0	5	17	6	2	\N	\N
+20	1 отделение	2026-10-15 18:45:31.116+00	2026-10-25 11:07:16.043+00	20	3	8	2	17	4	1	\N	\N
+21	2 отделение	2026-10-15 18:45:31.119+00	2026-10-25 11:07:16.045+00	20	6	3	1	19	9	2	\N	\N
+22	1 отделение	2026-10-15 18:45:31.126+00	2026-10-25 11:07:16.049+00	21	5	3	3	13	2	1	\N	\N
+23	2 отделение	2026-10-15 18:45:31.13+00	2026-10-25 11:07:16.051+00	21	3	4	2	11	2	2	\N	\N
+\.
+
+
+--
+-- Data for Name: map_fsboffice; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.map_fsboffice (id, name, address, region, phone_operator, phone_communication, fax, email, description, is_active, created_at, updated_at) FROM stdin;
+41	УФСБ России по Омской области	644099 г. Омск, ул. Ленина, д. 2	Омская область	(3812) 23-30-00	(3812) 23-30-00		omsk@fsb.ru		t	2026-02-25 02:01:31.558+00	2026-02-25 02:01:31.558+00
+1	УФСБ России по Республике Адыгея	385000 Республика Адыгея, г. Майкоп, ул. Краснооктябрьская, д. 28	Республика Адыгея	(8772) 52-85-29	(8772) 52-85-29		adugeya@fsb.ru		t	2026-02-25 02:01:31.509+00	2026-02-25 02:01:31.509+00
+2	УФСБ России по Республике Башкортостан	450000 Республика Башкортостан, г. Уфа, ул. Крупской, д. 19	Республика Башкортостан	(3472) 72-99-44	(3472) 72-99-44		ufsbrb@fsb.ru		t	2026-02-25 02:01:31.514+00	2026-02-25 02:01:31.514+00
+3	УФСБ России по Республике Бурятия	670000 Республика Бурятия, г. Улан-Удэ, ул. Сухэ-Батора, д. 11	Республика Бурятия	(3012) 21-24-69	(3012) 21-24-69	(3012) 21-05-42	buryatia@fsb.ru		t	2026-02-25 02:01:31.515+00	2026-02-25 02:01:31.515+00
+4	УФСБ России по Республике Дагестан	367000 Республика Дагестан, г. Махачкала, пр. Р. Гамзатова, д. 7	Республика Дагестан	(8722) 98-08-12	(8722) 98-08-12				t	2026-02-25 02:01:31.517+00	2026-02-25 02:01:31.517+00
+5	УФСБ России по Республике Ингушетия	386100 Республика Ингушетия, г. Магас, ул. Горчханова д. 9	Республика Ингушетия	(8734) 55-16-58	(8734) 55-16-58	(8734) 55-16-28	ingushetia@fsb.ru		t	2026-02-25 02:01:31.518+00	2026-02-25 02:01:31.518+00
+6	УФСБ России по Кабардино-Балкарской Республике	360000 КБР, г. Нальчик, пр-т Ленина, д. 4	Кабардино-Балкарская Республика	(8662) 48-16-02	(8662) 48-16-02		kbr@fsb.ru		t	2026-02-25 02:01:31.519+00	2026-02-25 02:01:31.519+00
+7	УФСБ России по Республике Калмыкия	358000 Республика Калмыкия, г. Элиста, ул. Ю. Клыкова, д. 31	Республика Калмыкия	(84722) 3-52-19	(84722) 3-52-19	4-55-15	kalm@fsb.ru		t	2026-02-25 02:01:31.52+00	2026-02-25 02:01:31.52+00
+8	УФСБ России по Карачаево-Черкесской республике	369000 КЧР, г. Черкесск, ул. Советская, д. 85	Республика Карачаево-Черкесия	(8782) 25-49-80	(8782) 25-49-80		ukchr@fsb.ru		t	2026-02-25 02:01:31.521+00	2026-02-25 02:01:31.521+00
+9	УФСБ России по Республике Марий Эл	424000 Республика Марий Эл, г. Йошкар-Ола, ул. Кремлевская, д. 3	Республика Марий Эл	(8362) 63-00-05	(8362) 63-00-05				t	2026-02-25 02:01:31.522+00	2026-02-25 02:01:31.522+00
+10	УФСБ России по Республике Мордовия	430011 Республика Мордовия, г. Саранск, ул. Ботевградская, д. 80а	Республика Мордовия	(8342) 28-28-28	(8342) 28-28-28		mordovia@fsb.ru		t	2026-02-25 02:01:31.523+00	2026-02-25 02:01:31.523+00
+11	УФСБ России по Республике САХА (Якутия)	677000 г. Якутск, ул. Дзержинского, д. 6	Республика Саха (Якутия)	(4112) 49-99-98	(4112) 49-99-98	(4112) 49-90-90	yakutia@fsb.ru		t	2026-02-25 02:01:31.525+00	2026-02-25 02:01:31.525+00
+12	УФСБ России по Республике Татарстан	420111 г. Казань, ул. Большая Красная, д. 23	Республика Татарстан	(8432) 31-45-45	(8432) 31-45-45		tatarstan@fsb.ru		t	2026-02-25 02:01:31.526+00	2026-02-25 02:01:31.526+00
+13	УФСБ России по Республике Тыва	667000 Республика Тыва, г. Кызыл, ул. Красных партизан, д. 31	Республика Тыва	(39422) 2-19-70	(39422) 2-19-70		tuva@fsb.ru		t	2026-02-25 02:01:31.527+00	2026-02-25 02:01:31.527+00
+14	УФСБ России по Удмуртской Республике	426076 Республика Удмуртия, г. Ижевск, ул. Пушкинская, д. 187	Республика Удмуртия	(3412) 60-02-00	(3412) 60-02-00	(3412) 60-02-16	udm@fsb.ru		t	2026-02-25 02:01:31.528+00	2026-02-25 02:01:31.528+00
+15	УФСБ России по Республике Хакасия	655017 Республика Хакасия, г. Абакан, ул. Щетинкина, д. 8	Республика Хакасия	(3902) 22-26-71	(3902) 22-26-71		khakasia@fsb.ru		t	2026-02-25 02:01:31.529+00	2026-02-25 02:01:31.529+00
+16	УФСБ России по Чувашской Республике	428003, г. Чебоксары, ул. Константина Иванова, д.24	Чувашская Республика	(8352) 62-15-00	(8352) 62-15-00		chuvashia@fsb.ru		t	2026-02-25 02:01:31.53+00	2026-02-25 02:01:31.53+00
+17	УФСБ России по Алтайскому краю	656015 Алтайский край, г. Барнаул, пр. Ленина, д. 30	Алтайский край	(3852) 66-74-01	(3852) 66-74-01		barnaul@fsb.ru		t	2026-02-25 02:01:31.531+00	2026-02-25 02:01:31.531+00
+18	УФСБ России по Забайкальскому краю	672000 г. Чита, ул. Ленина, д. 84	Забайкальский край	(3022) 23-90-08	(3022) 23-90-08		chita@fsb.ru		t	2026-02-25 02:01:31.532+00	2026-02-25 02:01:31.532+00
+19	УФСБ России по Камчатскому краю	683000 г. Петропавловск-Камчатский, ул. Советская, д. 34	Камчатский край	(4152) 41-25-78	(4152) 41-25-78		kamchatka@fsb.ru		t	2026-02-25 02:01:31.533+00	2026-02-25 02:01:31.533+00
+20	УФСБ России по Красноярскому краю	660017 г. Красноярск, ул. Дзержинского, д. 18	Красноярский край	(391)299-03-20	(391)299-03-20		krasnoyarsk@fsb.ru		t	2026-02-25 02:01:31.535+00	2026-07-15 10:17:23.766+00
+21	УФСБ России по Пермскому краю	614000, г. Пермь, ул. 25 Октября, д. 12	Пермский край	(342)239-39-39	(342)239-39-39		perm@fsb.ru		t	2026-02-25 02:01:31.536+00	2026-02-25 02:01:31.536+00
+22	УФСБ России по Ставропольскому краю	355035 г. Ставрополь, ул. Дзержинского, д. 110	Ставропольский край	(88652) 94-04-40	(88652) 94-04-40	(88652) 90-06-98	stavropol@fsb.ru		t	2026-02-25 02:01:31.537+00	2026-02-25 02:01:31.537+00
+23	РУФСБ России по Архангельской области	163061 г. Архангельск, Троицкий пр-т, д. 54	Архангельская область	(8182) 28-64-09	(8182) 28-64-09	(8182) 28-64-08	arkhangelsk@fsb.ru		t	2026-02-25 02:01:31.538+00	2026-02-25 02:01:31.538+00
+24	УФСБ России по Астраханской области	414000 г.Астрахань, ул.Свердлова, д. 64	Астраханская область	(8512) 44-36-88	(8512) 44-36-88		astrakhan@fsb.ru		t	2026-02-25 02:01:31.539+00	2026-02-25 02:01:31.539+00
+25	УФСБ России по Белгородской области	308000 г. Белгород, ул. Преображенская, д. 47	Белгородская область	(4722) 27-02-55	(4722) 27-02-55		belgorod@fsb.ru		t	2026-02-25 02:01:31.54+00	2026-02-25 02:01:31.54+00
+26	УФСБ России по Владимирской области	600005 г. Владимир, Октябрьский пр-т, д.38	Владимирская область	(4922) 32-48-84	(4922) 32-48-84		vladimir@fsb.ru		t	2026-02-25 02:01:31.541+00	2026-02-25 02:01:31.541+00
+27	УФСБ России по Воронежской области	394006 г. Воронеж, ул. Володарского, д. 39 "б"	Воронежская область	(473) 255-04-44	(473) 255-04-44		voronezh@fsb.ru		t	2026-02-25 02:01:31.542+00	2026-02-25 02:01:31.542+00
+28	УФСБ России по Иркутской области	644003 г. Иркутск, ул. Литвинова, д. 13	Иркутская область	(3952) 34-15-78	(3952) 34-15-78		irkutsk@fsb.ru		t	2026-02-25 02:01:31.544+00	2026-02-25 02:01:31.544+00
+29	УФСБ России по Калужской области	248001 г. Калуга, ул. Ленина, д. 72	Калужская область	(4842) 50-55-05	(4842) 50-55-05		kaluga@fsb.ru		t	2026-02-25 02:01:31.545+00	2026-02-25 02:01:31.545+00
+30	УФСБ России по Кемеровской области	650000 г. Кемерово, Советский пр., д. 65	Кемеровская область	(3842) 58-48-00	(3842) 58-48-00		kemerovo@fsb.ru		t	2026-02-25 02:01:31.546+00	2026-02-25 02:01:31.546+00
+31	УФСБ России по Костромской области	156961 г. Кострома, ул. Симановского, д. 3	Костромская область	(4942) 31-48-62	(4942) 31-48-62		kostroma@fsb.ru		t	2026-02-25 02:01:31.547+00	2026-02-25 02:01:31.547+00
+32	УФСБ России по Курской области	305001 г. Курск, ул. Добролюбова, д. 5	Курская область	(4712) 70-24-70	(4712) 70-24-70		ufsbkursk@fsb.ru		t	2026-02-25 02:01:31.548+00	2026-02-25 02:01:31.548+00
+33	УФСБ России по Липецкой области	398600 г. Липецк, ул. Советская, д. 13а	Липецкая область	(4742) 23-70-00	(4742) 23-70-00		lipetsk@fsb.ru		t	2026-02-25 02:01:31.55+00	2026-02-25 02:01:31.55+00
+34	УФСБ России по Магаданской области	685000 г. Магадан, пл. Космонавтов, д. 3А/6	Магаданская область	(4132) 69-57-00	(4132) 69-57-00		magadan@fsb.ru		t	2026-02-25 02:01:31.551+00	2026-02-25 02:01:31.551+00
+35	УФСБ России по г. Москве и Московской области*	101000 г. Москва, ул. Б. Лубянка, д. 20	Московская область	(495)625-28-19	(495)625-28-19		moscowmo@fsb.ru		t	2026-02-25 02:01:31.552+00	2026-02-25 02:01:31.552+00
+36	УФСБ России по г. Москве и Московской области	101000 г. Москва, ул. Б. Лубянка, д. 20	Москва	(495)625-28-19	(495)625-28-19		moscowmo@fsb.ru		t	2026-02-25 02:01:31.553+00	2026-02-25 02:01:31.553+00
+37	УФСБ России по Мурманской области	183038 г. Мурманск, просп. Ленина, д. 33	Мурманская область	(8152) 45-40-76	(8152) 45-40-76		murmansk@fsb.ru		t	2026-02-25 02:01:31.554+00	2026-02-25 02:01:31.554+00
+38	УФСБ России по Нижегородской области	603000 г. Нижний Новгород, ул. Малая Покровская, д. 1	Нижегородская область	(831) 439-87-50	(831) 439-87-50		ufsb-nn@fsb.ru		t	2026-02-25 02:01:31.555+00	2026-02-25 02:01:31.555+00
+39	УФСБ России по Новгородской области	173001 г. Великий Новгород, ул. Большая Санкт-Петербургская, д. 2/9	Новгородская область	(8162) 77-26-96	(8162) 77-26-96		novgorod@fsb.ru		t	2026-02-25 02:01:31.556+00	2026-02-25 02:01:31.556+00
+40	УФСБ России по Новосибирской области	630007 г. Новосибирск, ул. Коммунистическая, д. 49	Новосибирская область	(383) 269-72-69	(383) 269-72-69		novosibirsk@fsb.ru		t	2026-02-25 02:01:31.557+00	2026-02-25 02:01:31.557+00
+42	УФСБ России по Орловской области	302028 г. Орел, ул. Салтыкова-Щедрина, д. 29	Орловская область	(4862) 43-23-90	(4862) 43-23-90		orel@fsb.ru		t	2026-02-25 02:01:31.559+00	2026-02-25 02:01:31.559+00
+43	УФСБ России по Чеченской Республике	364000 г. Грозный, ул. Хусейна Исаева, д. 70	Пензенская область	(8712) 62-80-14	(8712) 62-80-14	(8712) 62-81-41	chechnya@fsb.ru		t	2026-02-25 02:01:31.56+00	2026-02-25 02:01:31.56+00
+44	УФСБ России по Пензенской области	440600 г. Пенза, ул. Московская, д. 72а	Пензенская область	(8412) 63-13-95	(8412) 63-13-95		penza@fsb.ru		t	2026-02-25 02:01:31.561+00	2026-02-25 02:01:31.561+00
+45	УФСБ России по Псковской области	180000 г. Псков, Октябрьский пр-т, д. 48	Псковская область	(8112) 72-52-00	(8112) 72-52-00	(8112) 66-91-61	pskov@fsb.ru		t	2026-02-25 02:01:31.562+00	2026-02-25 02:01:31.562+00
+46	УФСБ России по Самарской области	443099 г. Самара, ул. Пионерская, д. 24	Самарская область	(846) 339-19-50, (846) 340-03-07			samara@fsb.ru		t	2026-02-25 02:01:31.564+00	2026-02-25 02:01:31.564+00
+47	УФСБ России по Тамбовской области	392002 г. Тамбов, ул. Сергеева-Ценского, д. 26	Тамбовская область	(4752) 72-40-70	(4752) 72-40-70				t	2026-02-25 02:01:31.565+00	2026-02-25 02:01:31.565+00
+48	УФСБ России по Тульской области	300041 г. Тула, пер. Садовый, д. 1	Тульская область	(4872) 32-62-52	(4872) 32-62-52		tula@fsb.ru		t	2026-02-25 02:01:31.566+00	2026-02-25 02:01:31.566+00
+49	РУФСБ России по Тюменской области	625000 г. Тюмень, ул. Советская, д. 40	Тюменская область	(3452) 46-16-95			tyumen@fsb.ru		t	2026-02-25 02:01:31.568+00	2026-02-25 02:01:31.568+00
+50	РУФСБ России по Тюменской области*	625000 г. Тюмень, ул. Советская, д. 40	Ханты-Мансийский автономный округ	(3452) 46-16-95			tyumen@fsb.ru		t	2026-02-25 02:01:31.569+00	2026-02-25 02:01:31.569+00
+51	УФСБ России по Ульяновской области	432017 г. Ульяновск, ул. Л. Толстого, д. 20	Ульяновская область	(8422) 42-20-10			ulyanovsk@fsb.ru		t	2026-02-25 02:01:31.57+00	2026-02-25 02:01:31.57+00
+52	УФСБ России по Санкт-Петербургу и Ленинградской области	191123 г. Санкт-Петербург, Литейный пр-т., д. 4	Санкт-Петербург	(812) 438-71-10			speterburg@fsb.ru		t	2026-02-25 02:01:31.571+00	2026-02-25 02:01:31.571+00
+53	УФСБ России по Еврейской автономной области	679016 г. Биробиджан, ул. Октябрьская, д. 11	Еврейская автономная область	(42622) 2-22-03			eao@fsb.ru		t	2026-02-25 02:01:31.572+00	2026-02-25 02:01:31.572+00
+54	УФСБ России по Амурской области	675000 Амурская область, г. Благовещенск, ул. Пионерская, д. 22	Амурская область	(4162) 59-29-99	(4162) 53-56-56		amur@fsb.ru		t	2026-02-25 02:01:31.573+00	2026-02-25 02:01:31.573+00
+55	УФСБ России по Брянской области	241050 г. Брянск, ул. Горького, д. 36	Брянская область	(4832) 64-91-21	(4832) 66-35-05		bryansk@fsb.ru		t	2026-02-25 02:01:31.574+00	2026-02-25 02:01:31.574+00
+56	УФСБ России по Волгоградской области	400131 г. Волгоград, ул. Краснознаменская, д. 17	Волгоградская область	(8442) 30-10-10	(8442) 33-24-10	(8442) 37-54-03	volgograd@fsb.ru		t	2026-02-25 02:01:31.575+00	2026-02-25 02:01:31.575+00
+57	УФСБ России по Вологодской области	160000 г. Вологда, ул. Пушкинская, д. 22	Вологодская область	(8172) 21-22-44	(8172) 56-11-62		vologda@fsb.ru		t	2026-02-25 02:01:31.576+00	2026-02-25 02:01:31.576+00
+58	УФСБ России по Донецкой народной республике	г. Донецк, ул. Артема, 58	Донецкая народная республика	(8562) 55-21-21	(8562) 55-21-21	(8562) 55-21-20	ufsb91@fsb.ru		t	2026-02-25 02:01:31.577+00	2026-02-25 02:01:31.577+00
+59	УФСБ России по Запорожской области	г. Запорожье, ул. Лермонтова, 72	Запорожская область	(8561) 78-31-31	(8561) 78-31-31	(8561) 78-31-30	ufsb92@fsb.ru		t	2026-02-25 02:01:31.578+00	2026-02-25 02:01:31.578+00
+60	УФСБ России по Ивановской области	153002 г. Иваново, ул. Жиделева, д. 12	Ивановская область	(4932) 32-80-61	(4932) 37-72-07		ivanovo@fsb.ru		t	2026-02-25 02:01:31.579+00	2026-02-25 02:01:31.579+00
+61	УФСБ России по Калининградской области	236000 г. Калининград, Советский пр-т, д. 3	Калининградская область	(4012) 21-48-85	(4012) 21-48-85		kaliningrad@fsb.ru		t	2026-02-25 02:01:31.581+00	2026-02-25 02:01:31.581+00
+62	УФСБ России по Кировской области	610000 г. Киров, ул. Ленина, д. 96	Кировская область	(8332) 35-81-11	(8332) 35-82-22				t	2026-02-25 02:01:31.582+00	2026-02-25 02:01:31.582+00
+63	УФСБ России по Краснодарскому краю	350063 г. Краснодар, ул. Мира, д. 46	Краснодарский край	(861) 214-52-45	(861) 262-02-46	(861) 268-43-59	krasnodar@fsb.ru		t	2026-02-25 02:01:31.583+00	2026-02-25 02:01:31.583+00
+64	УФСБ России по Курганской области	640018 г. Курган, ул. Ленина, д. 2	Курганская область	(3522) 41-83-89	(3522) 48-24-49		kurgan@fsb.ru		t	2026-02-25 02:01:31.584+00	2026-02-25 02:01:31.584+00
+65	УФСБ России по Ленинградской области	г. Санкт-Петербург, ул. Шпалерная, 62	Ленинградская область	(812) 438-70-70	(812) 438-70-70	(812) 438-70-71	ufsb47@fsb.ru		t	2026-02-25 02:01:31.585+00	2026-02-25 02:01:31.585+00
+66	УФСБ России по Луганской народной республике	г. Луганск, ул. Советская, 81	Луганская народная республика	(8642) 50-31-31	(8642) 50-31-31	(8642) 50-31-30	ufsb93@fsb.ru		t	2026-02-25 02:01:31.586+00	2026-02-25 02:01:31.586+00
+67	УФСБ России по Ненецкому автономному округу	г. Нарьян-Мар, ул. Смидовича, 20	Ненецкий автономный округ	(81853) 4-55-55	(81853) 4-55-55	(81853) 4-55-50	ufsb83@fsb.ru		t	2026-02-25 02:01:31.587+00	2026-02-25 02:01:31.587+00
+68	УФСБ России по Оренбургской области	460000 г. Оренбург, ул. 9-го января, д. 43	Оренбургская область	(3532) 77-41-71	(3532) 78-53-07		orenburg@fsb.ru		t	2026-02-25 02:01:31.588+00	2026-02-25 02:01:31.588+00
+69	УФСБ России по Приморскому краю	690991 г. Владивосток, ул. Алеутская, д. 46	Приморский край	(423) 222-45-86	(423) 222-45-86		vladivostok@fsb.ru		t	2026-02-25 02:01:31.589+00	2026-02-25 02:01:31.589+00
+70	УФСБ России по Республике Алтай	649002 Республика Алтай, г. Горно-Алтайск, Коммунистический пр., д. 94	Республика Алтай	(38822) 4-80-00	(38822) 4-82-22		altay@fsb.ru		t	2026-02-25 02:01:31.59+00	2026-02-25 02:01:31.59+00
+71	УФСБ России по Республике Карелия	185035 г. Петрозаводск, ул. Андропова, д. 5	Республика Карелия	(8142) 78-52-03	(8142) 78-46-58		karelia@fsb.ru		t	2026-02-25 02:01:31.591+00	2026-02-25 02:01:31.591+00
+72	УФСБ России по Республике Коми	167983 Республика Коми, г. Сыктывкар, ул. Кирова, д. 38-а	Республика Коми	(8212) 21-51-28		(8212) 21-51-28	komi@fsb.ru		t	2026-02-25 02:01:31.592+00	2026-02-25 02:01:31.592+00
+73	УФСБ России по Республике Северная Осетия-Алания	362040 РСО-Алания, г. Владикавказ, ул. Мордовцева, д. 6	Республика Северная Осетия-Алания	(8672) 59-73-11		(8672) 53-41-76	sev.osetia-alania@fsb.ru		t	2026-02-25 02:01:31.593+00	2026-02-25 02:01:31.593+00
+74	УФСБ России по Республике Чечня	364000 г. Грозный, ул. Хусейна Исаева, д. 70	Республика Чечня	(8712) 62-80-14	(8712) 62-82-39	(8712) 62-81-41	chechnya@fsb.ru		t	2026-02-25 02:01:31.594+00	2026-02-25 02:01:31.594+00
+75	УФСБ России по Ростовской области	344082 г. Ростов-на-Дону, ул. Большая Садовая, д. 31	Ростовская область	(863) 249-55-44	(863) 283-10-10	(863) 269-81-96	rostov-don@fsb.ru		t	2026-02-25 02:01:31.596+00	2026-02-25 02:01:31.596+00
+76	УФСБ России по Рязанской области	390000, г. Рязань, ул. Горького, строение 69	Рязанская область	(4912) 29-62-00	(4912) 51-38-18	(4912) 51-37-67	ryazan@fsb.ru		t	2026-02-25 02:01:31.597+00	2026-02-25 02:01:31.597+00
+77	УФСБ России по Саратовской области	410012 г. Саратов, ул. Вольская, д. 77	Саратовская область	(8452) 37-30-01	(8452) 26-70-61		saratov@fsb.ru		t	2026-02-25 02:01:31.598+00	2026-02-25 02:01:31.598+00
+78	УФСБ России по Сахалинской области	693000, г. Южно-Сахалинск, ул. Сахалинская, д. 42	Сахалинская область	(4242) 72-44-41	(4242) 72-40-83		sakhalin@fsb.ru		t	2026-02-25 02:01:31.599+00	2026-02-25 02:01:31.599+00
+79	УФСБ России по Республике Крым и городу Севастополю	г. Симферополь, бульвар И. Франко, д.13	Республика Крым	(8-3652) 291-020			crimea@fsb.ru		t	2026-02-25 02:01:31.6+00	2026-02-25 02:01:31.6+00
+80	УФСБ России по Смоленской области	214000 г. Смоленск, ул. Дзержинского, д. 13-а	Смоленская область	(4812) 38-12-50	(4812) 30-23-00		smolensk@fsb.ru		t	2026-02-25 02:01:31.601+00	2026-02-25 02:01:31.601+00
+81	УФСБ России по Тверской области	170026, г.Тверь, наб. Афанасия Никитина, д.92	Тверская область	(4822) 32-13-61	(4822) 77-74-41		tver@fsb.ru		t	2026-02-25 02:01:31.602+00	2026-02-25 02:01:31.602+00
+82	УФСБ России по Томской области	634050 г. Томск, пр-т Кирова, д. 18а	Томская область	(3822) 43-37-30	(3822) 28-54-82		tomsk@fsb.ru		t	2026-02-25 02:01:31.603+00	2026-02-25 02:01:31.603+00
+83	УФСБ России по Хабаровскому краю	680000 г. Хабаровск, ул. Волочаевская, д. 144	Хабаровский край	(4212) 79-77-01	(4212) 79-79-79		khabarovsk@fsb.ru		t	2026-02-25 02:01:31.604+00	2026-02-25 02:01:31.604+00
+84	УФСБ России по Свердловской области	г. Екатеринбург, ул. Вайнера, д. 4	Свердловская область	(343) 358-63-41			sverdlovsk@fsb.ru		t	2026-02-25 02:01:31.605+00	2026-02-25 02:01:31.605+00
+85	УФСБ России по Херсонской области	г. Херсон, ул. Суворова, 32	Херсонская область	(8552) 49-31-31	(8552) 49-31-31	(8552) 49-31-30	ufsb94@fsb.ru		t	2026-02-25 02:01:31.606+00	2026-02-25 02:01:31.606+00
+86	УФСБ России по Челябинской области	454091 г. Челябинск, ул. Коммуны, д. 70	Челябинская область	(351) 263-88-56	(351) 263-88-56		chelyabinsk@fsb.ru		t	2026-02-25 02:01:31.607+00	2026-02-25 02:01:31.607+00
+87	УФСБ России по Чукотскому автономному округу	689000 Чукотский АО, г. Анадырь, ул. Отке, д. 31	Чукотский автономный округ	(427) 2-28-86	(427) 222-37-71		ufsb87@fsb.ru		t	2026-02-25 02:01:31.609+00	2026-02-25 02:01:31.609+00
+88	УФСБ России по Ямало-Ненецкому автономному округу	г. Салехард, ул. Республики, 72	Ямало-Ненецкий автономный округ	(34922) 4-55-55	(34922) 4-55-55	(34922) 4-55-50	ufsb89@fsb.ru		t	2026-02-25 02:01:31.61+00	2026-02-25 02:01:31.61+00
+89	УФСБ России по Ярославской области	150003 г. Ярославль, ул. Советская, д. 25	Ярославская область	(4852) 40-80-11	(4852) 20-00-40		yaroslavl@fsb.ru		t	2026-02-25 02:01:31.611+00	2026-02-25 02:01:31.611+00
+\.
+
+
+--
+-- Data for Name: storage_favorite; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.storage_favorite (id, created_at, file_id, folder_id, user_id) FROM stdin;
+1	2026-04-18 07:40:13.082+00	\N	3	22
+3	2026-04-18 09:51:45.646+00	\N	2	22
+4	2026-07-12 10:24:01.006+00	5	\N	1
+\.
+
+
+--
+-- Data for Name: storage_filesharelink; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.storage_filesharelink (id, token, password, expires_at, max_downloads, download_count, created_at, is_active, created_by_id, file_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: storage_storagefile; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.storage_storagefile (id, name, file, size, mime_type, created_at, updated_at, folder_id, uploaded_by_id, deleted_at, deleted_by_id, division_id, download_count, extension, file_type, is_deleted, is_pinned, last_downloaded, original_name, subdivision_id) FROM stdin;
+1	Настройка WSL и Docker.docx	storage/2026/04/06/Настройка_WSL_и_Docker.docx	228556	application/vnd.openxmlformats-officedocument.wordprocessingml.document	2026-04-06 11:15:51.191+00	2026-04-13 10:55:48.813+00	4	19	\N	\N	1	0	docx	work	f	f	\N	Настройка WSL и Docker.docx	1
+2	Настройка_WSL_и_Docker.docx	storage/2026/04/22/Настройка_WSL_и_Docker.docx	228556	application/vnd.openxmlformats-officedocument.wordprocessingml.document	2026-04-22 10:15:55.94+00	2026-07-12 10:23:49.479+00	\N	16	\N	\N	\N	0	docx	work	f	t	\N	Настройка_WSL_и_Docker.docx	\N
+3	Настройка_WSL_и_Docker.docx	storage/2026/04/22/Настройка_WSL_и_Docker_PFrotjR.docx	228556	application/vnd.openxmlformats-officedocument.wordprocessingml.document	2026-04-22 10:16:45.851+00	2026-04-23 12:12:52.267+00	1	20	\N	\N	1	0	docx	work	f	f	\N	Настройка_WSL_и_Docker.docx	2
+4	Настройка_WSL_и_Docker.docx	storage/2026/04/23/Настройка_WSL_и_Docker.docx	228556	application/vnd.openxmlformats-officedocument.wordprocessingml.document	2026-04-23 11:13:32.714+00	2026-04-24 09:57:00.427+00	2	20	\N	\N	1	0	docx	work	f	f	\N	Настройка_WSL_и_Docker.docx	2
+5	Объекты.xlsx	storage/2026/04/24/Объекты.xlsx	16864	application/vnd.openxmlformats-officedocument.spreadsheetml.sheet	2026-04-24 10:07:06.41+00	2026-07-12 10:32:13.426+00	\N	20	\N	\N	1	0	xlsx	work	f	f	\N	Объекты.xlsx	2
+6	20191016_152901.jpg	storage/2026/09/22/20191016_152901.jpg	1975399	image/jpeg	2026-09-22 13:13:57.788+00	2026-09-22 13:13:57.804+00	\N	20	\N	\N	1	0	jpg	work	f	f	\N	20191016_152901.jpg	2
+\.
+
+
+--
+-- Data for Name: storage_storagefolder; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.storage_storagefolder (id, name, created_at, updated_at, created_by_id, parent_id, color, deleted_at, deleted_by_id, division_id, folder_type, is_deleted, is_pinned, subdivision_id) FROM stdin;
+1	1 отделение	2026-04-06 10:33:32.361+00	2026-04-18 07:39:55.405+00	18	\N	#1976D2	\N	\N	1	work	f	f	1
+2	Мак	2026-04-06 11:09:36.352+00	2026-07-12 10:24:06.093+00	20	\N	#1976D2	\N	\N	1	work	f	t	2
+3	Васов	2026-04-06 11:12:27.811+00	2026-04-06 11:12:27.811+00	19	\N	#4CAF50	\N	\N	1	work	f	f	1
+4	Васов папка в папке	2026-04-06 11:15:40.349+00	2026-04-06 11:15:40.349+00	19	3	#1976D2	\N	\N	1	work	f	f	1
+5	1234Мак	2026-04-06 11:29:52.175+00	2026-04-23 11:47:27.692+00	20	7	#1976D2	\N	\N	1	work	f	f	2
+6	Папка ГАВ1	2026-04-06 12:08:58.148+00	2026-07-12 10:33:09.574+00	17	\N	#4CAF50	\N	\N	2	work	f	t	\N
+7	Мак 222	2026-04-07 12:20:09.657+00	2026-04-23 12:12:59.345+00	20	3	#4CAF50	\N	\N	1	work	f	f	2
+8	333	2026-04-23 11:51:53.508+00	2026-04-23 11:51:53.509+00	20	2	#10b981	\N	\N	1	work	f	f	2
+9	порт	2026-09-13 07:53:22.383+00	2026-09-13 07:53:22.386+00	1	6	#f59e0b	\N	\N	2	work	f	f	\N
+10	123	2026-09-22 13:14:02.492+00	2026-09-22 13:14:02.493+00	20	\N	#10b981	\N	\N	1	work	f	f	2
+11	111	2026-09-22 13:14:17.014+00	2026-10-15 21:09:36.958+00	20	\N	#3b82f6	\N	\N	1	work	f	f	2
+\.
+
+
+--
+-- Data for Name: tasks_task; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.tasks_task (id, title, category, created_at, updated_at, created_by_id, division_id, subdivision_id, is_private, assignee_id) FROM stdin;
+1	Поприветствовать	urgent	2026-02-27 01:46:58.784+00	2026-03-18 14:00:03.282+00	16	1	1	f	\N
+2	Задача 2025 если не выполнить то будет совсем как не очень а мне хотелось очень	planned	2026-02-27 02:58:43.784+00	2026-03-18 12:19:22.038+00	16	1	2	f	\N
+3	Плановая1	planned	2026-02-27 04:49:25.054+00	2026-03-18 12:15:03.085+00	16	1	2	f	\N
+4	Задача очень простая	planned	2026-02-27 08:53:48.181+00	2026-09-21 12:26:36.504+00	16	2	4	f	\N
+5	Моя задача	planned	2026-03-03 12:06:18.81+00	2026-03-03 12:06:18.81+00	16	1	\N	t	\N
+6	Ага	urgent	2026-03-03 12:07:44.723+00	2026-03-03 12:07:44.723+00	16	1	2	t	\N
+7	Еще одна111	attention	2026-03-03 12:50:03.286+00	2026-03-03 12:54:48.182+00	16	1	2	t	\N
+8	проппп	urgent	2026-03-03 12:57:10.124+00	2026-03-03 12:57:10.124+00	16	1	1	t	\N
+9	Вот привет	attention	2026-03-18 13:59:37.963+00	2026-10-14 20:27:47.892+00	16	1	1	f	\N
+10	Вот привет	planned	2026-03-23 10:06:22.094+00	2026-03-23 10:06:22.094+00	19	1	1	f	\N
+13	erretert	planned	2026-03-23 11:07:29.337+00	2026-06-08 11:34:30.355+00	19	1	\N	f	\N
+14	55555пппп	attention	2026-03-23 11:24:03.677+00	2026-03-23 11:24:03.677+00	19	1	1	f	\N
+15	моя	attention	2026-03-23 11:45:17.187+00	2026-03-23 11:45:17.187+00	19	1	1	t	\N
+16	Кухин задача	planned	2026-04-07 11:23:10.514+00	2026-04-07 11:23:10.514+00	20	1	2	f	\N
+17	Конков приват	urgent	2026-04-07 11:24:06.019+00	2026-04-07 11:24:22.347+00	22	1	\N	t	\N
+18	SDFSDF	planned	2026-06-29 11:32:52.601+00	2026-07-08 11:55:45.896+00	1	2	4	f	\N
+19	SDFSDF	attention	2026-06-29 11:35:28.931+00	2026-06-29 11:35:28.931+00	1	2	\N	t	\N
+20	фывыфвфвыфыывф	urgent	2026-07-11 08:04:21.126+00	2026-07-11 08:04:21.126+00	1	2	4	f	\N
+21	Кухин	planned	2026-07-12 07:32:38.083+00	2026-10-13 20:34:58.683+00	20	1	1	f	1
+22	guhbjnk	attention	2026-08-26 13:02:12.519+00	2026-08-26 13:02:12.519+00	17	2	5	f	\N
+23	Тетрин	planned	2026-08-30 05:59:27.563+00	2026-08-30 05:59:27.563+00	21	2	4	f	\N
+24	НОВАЯ ЗАДАЧКА	urgent	2026-10-14 20:22:26.99+00	2026-10-14 20:28:07.29+00	1	1	2	f	14
+\.
+
+
+--
+-- Data for Name: tasks_taskstep; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.tasks_taskstep (id, name, comments, start_date, end_date, is_completed, completed_at, created_at, updated_at, completed_by_id, task_id) FROM stdin;
+1	Сочинить		2026-03-02 00:00:00+00	2026-03-20 00:00:00+00	f	\N	2026-03-03 12:06:18.824+00	2026-03-03 12:06:18.824+00	\N	5
+2	1111		2026-03-29 00:00:00+00	2026-03-29 00:00:00+00	f	\N	2026-03-03 12:07:44.729+00	2026-03-03 12:07:44.729+00	\N	6
+3	3333		2026-02-24 00:00:00+00	2026-03-20 00:00:00+00	f	\N	2026-03-03 12:54:48.194+00	2026-03-03 12:54:48.194+00	\N	7
+4	123		2026-03-03 00:00:00+00	2026-03-21 00:00:00+00	f	\N	2026-03-03 12:57:10.138+00	2026-03-03 12:57:10.138+00	\N	8
+5	ааа	Прибавить задач	2026-02-05 00:00:00+00	2026-03-26 00:00:00+00	f	\N	2026-03-18 12:15:03.098+00	2026-07-12 07:47:21.204+00	\N	3
+6	Просто	ввв	2025-01-27 00:00:00+00	2025-12-28 00:00:00+00	f	\N	2026-03-18 12:19:22.04+00	2026-07-12 07:47:22.448+00	\N	2
+9	Как говорится	Мдааа эт самое	2026-02-16 00:00:00+00	2026-04-25 00:00:00+00	t	\N	2026-03-18 14:00:03.285+00	2026-03-18 14:00:03.285+00	\N	1
+10	пппп		2026-02-19 00:00:00+00	2026-02-28 00:00:00+00	f	\N	2026-03-18 14:00:03.287+00	2026-06-24 13:51:17.16+00	\N	1
+11	Воооот		2026-04-03 00:00:00+00	2026-05-02 00:00:00+00	f	\N	2026-03-18 14:00:03.288+00	2026-03-18 14:00:03.288+00	\N	1
+12	аааа		2026-03-03 00:00:00+00	2026-03-26 00:00:00+00	f	\N	2026-03-23 10:06:22.107+00	2026-03-23 10:06:22.107+00	\N	10
+14	пппп		2026-02-25 00:00:00+00	2026-03-20 00:00:00+00	f	\N	2026-03-23 11:24:03.682+00	2026-06-09 11:16:13.538+00	\N	14
+15	sdsfds		2026-03-11 00:00:00+00	2026-03-27 00:00:00+00	f	\N	2026-03-23 11:45:17.191+00	2026-03-23 11:45:17.191+00	\N	15
+16	11		2026-03-30 00:00:00+00	2026-05-23 00:00:00+00	f	\N	2026-04-07 11:23:10.52+00	2026-04-07 11:23:10.52+00	\N	16
+17	1122	ввы	2026-03-31 00:00:00+00	2026-04-18 00:00:00+00	f	\N	2026-04-07 11:24:22.351+00	2026-04-07 11:24:22.351+00	\N	17
+18	ertert	ertrt	2026-03-02 00:00:00+00	2026-03-20 00:00:00+00	t	2026-06-08 12:12:18.506+00	2026-06-08 11:34:30.36+00	2026-06-08 12:12:18.506+00	1	13
+19	фвыв		2026-06-17 00:00:00+00	2026-06-28 00:00:00+00	t	2026-06-08 12:12:24.831+00	2026-06-08 11:34:30.364+00	2026-06-08 12:12:24.831+00	1	13
+20	SDF	SDF	2026-06-16 00:00:00+00	2026-07-01 00:00:00+00	f	\N	2026-06-29 11:35:28.934+00	2026-06-29 11:35:28.934+00	\N	18
+21	SDFSDf	SDFSDF	2026-06-10 00:00:00+00	2026-07-04 00:00:00+00	f	\N	2026-07-08 11:55:45.899+00	2026-07-08 11:55:45.899+00	\N	18
+25	фывфыв	фывфыв	2026-07-09 00:00:00+00	2026-08-01 00:00:00+00	f	\N	2026-07-11 08:04:21.134+00	2026-07-11 08:04:33.382+00	\N	20
+27	567567	tgsdfg	2026-08-19 00:00:00+00	2026-09-06 00:00:00+00	f	\N	2026-08-26 13:02:12.525+00	2026-08-26 13:02:12.525+00	\N	22
+28	ячсячс		2026-08-29 00:00:00+00	2026-08-30 00:00:00+00	t	2026-09-21 11:38:01.981+00	2026-08-30 05:59:27.57+00	2026-09-21 11:38:01.981+00	1	23
+29	Сделать ее	И не кому	2026-01-26 00:00:00+00	2026-03-28 00:00:00+00	f	\N	2026-09-21 12:26:36.508+00	2026-09-21 12:26:36.508+00	\N	4
+30	ккк		2026-02-19 00:00:00+00	2026-03-28 00:00:00+00	f	\N	2026-09-21 12:26:36.514+00	2026-09-21 12:26:36.514+00	\N	4
+31	фывфыв		2026-07-11 00:00:00+00	2026-07-31 00:00:00+00	f	\N	2026-10-13 20:34:58.686+00	2026-10-13 20:34:58.686+00	\N	21
+34	ппппп	ваываыва	2026-03-19 00:00:00+00	2026-05-02 00:00:00+00	f	\N	2026-10-14 20:27:47.894+00	2026-10-14 20:27:47.894+00	\N	9
+35	аааа	пукуе	2026-10-07 00:00:00+00	2026-11-07 00:00:00+00	f	\N	2026-10-14 20:28:07.292+00	2026-10-14 20:28:07.292+00	\N	24
+\.
+
+
+--
+-- Data for Name: users_user; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.users_user (id, password, last_login, is_superuser, first_name, last_name, is_staff, is_active, date_joined, email, username, created_at, updated_at, employee_id, user_division_id, user_subdivision_id, is_global_view, two_factor_code, two_factor_enabled) FROM stdin;
+1	pbkdf2_sha256$600000$5lwb2DGJjXxuM5a8iyAhcH$sekuE7f7IMJ38AgekC2DNUG4wqBu93mKazKfetg+gNk=	2026-10-15 18:52:22.986+00	t			t	t	2026-02-25 01:33:54+00	admin@example.com	admin	2026-02-25 01:33:54.342+00	2026-02-28 15:50:40.718+00	\N	\N	\N	f	\N	f
+16	pbkdf2_sha256$600000$3W9kStwi70qD5pMy7m5Eu3$eS+HN9EAdJdUn6UXOLrbKd7SE2/M/dU71G0vWzspL9c=	2026-04-05 07:17:15.811+00	f			f	t	2026-02-25 02:02:07+00		Кравченко_И_А@	2026-02-25 02:02:07.692+00	2026-02-25 02:02:53.32+00	\N	\N	\N	f	\N	f
+17	pbkdf2_sha256$600000$t8Mx7RYGL8aY6S1iCCqZ0h$kY3JmFWj9A8UfjW0KhfBIlqQgfPkRrN8y0dTmjVNKvU=	2026-04-01 10:58:40.933+00	f			f	t	2026-03-17 01:40:42.252+00		Гавриков_А_В	2026-03-17 01:40:42.252+00	2026-07-12 11:18:05.113+00	\N	2	\N	f	\N	f
+18	pbkdf2_sha256$600000$283ScCXwdYLMWPWxRYo2da$qjKk7G4NpM8sjZD4i/N/W+NF5Jd7jwTfozhY82gHPW4=	2026-04-02 10:57:15.107+00	f			f	t	2026-03-22 05:31:58.104+00		Ютренко_Т_Г	2026-03-22 05:31:58.104+00	2026-04-05 08:52:32.406+00	\N	1	1	f	1234	t
+19	pbkdf2_sha256$600000$OC81tFvfiY2v2AWCofFnLr$Bm397do5mHbX5HHkMx6lCixVhLk75oLKytOcV/BVrDs=	2026-04-05 07:13:19.904+00	f			f	t	2026-03-22 07:39:42.644+00		Васов_А_С	2026-03-22 07:39:42.644+00	2026-03-22 07:39:55.739+00	\N	1	1	f	\N	f
+20	pbkdf2_sha256$600000$D3znXw4BDFWxBtlkioX0gO$JFZLDyoY+6rWt7SfqvApSrjpasnQgXxx3GQyvh3+ryM=	2026-04-02 12:10:06.317+00	f			f	t	2026-03-25 12:27:43.464+00		Кухин_Р_В	2026-03-25 12:27:43.464+00	2026-09-22 12:40:36.096+00	\N	1	2	f	1234	t
+21	pbkdf2_sha256$600000$AfmoPKtCkpA5lfa8dkCYNG$JcXpYUgfHIeqFQWCoumdo0ZWWoWUUOYrpqxj9n5TvWM=	2026-04-05 07:15:32.736+00	f			f	t	2026-04-05 07:15:02.341+00		Тетрин_Д_С	2026-04-05 07:15:02.341+00	2026-06-29 12:58:29.122+00	\N	2	4	f	\N	f
+22	pbkdf2_sha256$600000$UTxAYELkBgt0mpKsv04X0Y$IUTP0rK8EWvcJOG2mmE8cQ44uwswXjr9lonRF/hhAHE=	\N	f			f	t	2026-04-07 11:04:45.754+00		Конков_Е_А	2026-04-07 11:04:45.754+00	2026-09-18 12:15:21.229+00	\N	1	\N	f	1234	t
+\.
+
+
+--
+-- Data for Name: users_user_groups; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.users_user_groups (id, user_id, group_id) FROM stdin;
+1	1	1
+65	16	1
+66	17	11
+67	18	6
+68	19	7
+69	20	8
+70	21	12
+71	22	4
+\.
+
+
+--
+-- Data for Name: users_user_user_permissions; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.users_user_user_permissions (id, user_id, permission_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users_useractionlog; Type: TABLE DATA; Schema: public; Owner: django_user
+--
+
+COPY public.users_useractionlog (id, action, module, model_name, object_id, object_name, details, ip_address, user_agent, file_path, file_size, file_type, storage_location, created_at, user_id) FROM stdin;
+650	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:30.220245+00	1
+679	create	facilities	CommunicationPost	15	111	{"data": {"id": 15, "kind": "PS", "name": "111", "parent": {"id": 13, "kind": "KP", "name": "1КП-200", "kind_display": "Командно-пунктовый пост (КП)"}, "children": [], "division": 1, "created_at": "2026-10-17T15:44:08.595193Z", "updated_at": "2026-10-17T15:44:08.595296Z", "description": null, "parent_name": "1КП-200", "subdivision": 1, "kind_display": "Элемент поста связи (ПС)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "1 отделение"}, "object_id": 15, "division_id": 1, "object_name": "111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "subdivision_name": "1 отделение", "communication_post_id": 15, "communication_post_name": "111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:08.599811+00	1
+708	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:45.602554+00	1
+759	create	facilities	CommunicationPost	19	1П-100	{"data": {"id": 19, "kind": "P", "name": "1П-100", "parent": null, "children": [], "division": 1, "created_at": "2026-10-17T17:25:50.797978Z", "updated_at": "2026-10-17T17:25:50.798146Z", "description": null, "parent_name": null, "subdivision": 2, "kind_display": "Пост (П)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:50.804362+00	1
+788	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:07.029247+00	1
+842	view	candidates	Candidate	2	аааа	{"viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:23:21.771477+00	1
+865	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:22:22.074939+00	1
+651	create	facilities	CommunicationPost	14	3ПС-201	{"data": {"id": 14, "kind": "PS", "name": "3ПС-201", "parent": {"id": 4, "kind": "P", "name": "1П-200", "kind_display": "Пост связи (П)"}, "children": [], "division": 1, "created_at": "2026-10-17T15:26:35.616495Z", "updated_at": "2026-10-17T15:26:35.616606Z", "description": null, "parent_name": "1П-200", "subdivision": 3, "kind_display": "Элемент поста связи (ПС)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "3 отделение"}, "object_id": 14, "division_id": 1, "object_name": "3ПС-201", "division_name": "1 отдел СССИ", "subdivision_id": 3, "subdivision_name": "3 отделение", "communication_post_id": 14, "communication_post_name": "3ПС-201"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:35.620474+00	1
+680	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:08.705565+00	1
+709	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:45.694162+00	1
+760	update	facilities	Facility	10	Facility object (10)	{"type_id": 1, "old_data": {"id": 10, "inn": null, "city": "г. Хабаровск", "name": "sDFdfs", "type": {"id": 1, "name": "ЛАЗ", "description": "Линейно-аппаратный зал", "is_closed_type": false}, "street": "ул. Запарина", "address": "г. Хабаровск, ул. Запарина, 2г", "kz_size": null, "comments": "", "division": {"id": 1, "name": "1 отдел СССИ", "order": 1}, "latitude": "48.4669943", "is_closed": false, "longitude": "135.0745514", "created_at": "2026-07-08T10:03:16.143000Z", "updated_at": "2026-07-08T10:03:16.143000Z", "subdivision": null, "house_number": "2г", "class_display": null, "division_name": "1 отдел СССИ", "facility_class": null, "rim_act_number": null, "equipment_count": 1, "subdivision_name": null, "communication_posts": [], "has_grounding_in_kz": false, "acceptance_act_number": null, "has_transformer_in_kz": false, "commissioning_act_number": null, "opening_permission_number": null}, "is_closed": false, "object_id": 10, "type_name": "ЛАЗ", "division_id": 1, "facility_id": 10, "object_name": "Facility object (10)", "division_name": "1 отдел СССИ", "facility_name": "sDFdfs", "changed_fields": {"updated_at": {"new": "2026-10-17T17:25:50.879818Z", "old": "2026-07-08T10:03:16.143000Z"}, "communication_posts": {"new": [{"id": 19, "kind": "P", "name": "1П-100", "parent": null, "children": [], "division": 1, "created_at": "2026-10-17T17:25:50.797978Z", "updated_at": "2026-10-17T17:25:50.798146Z", "description": null, "parent_name": null, "subdivision": 2, "kind_display": "Пост (П)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}], "old": []}}, "facility_class": null, "subdivision_id": null, "subdivision_name": null}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:50.895577+00	1
+789	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:12.024122+00	1
+843	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:24:49.240536+00	1
+866	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:22:22.34076+00	1
+652	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:35.721638+00	1
+681	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:10.259682+00	1
+710	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:50.514703+00	1
+761	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:52.61655+00	1
+790	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:12.110994+00	1
+844	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:24:49.574722+00	1
+867	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:24:50.984487+00	1
+653	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:37.795744+00	1
+682	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:10.343852+00	1
+711	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:50.595092+00	1
+762	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:52.705069+00	1
+791	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:13.827264+00	1
+845	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:25:30.342388+00	1
+868	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:24:51.224311+00	1
+654	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:37.865562+00	1
+683	create	facilities	CommunicationPost	16	ввв	{"data": {"id": 16, "kind": "NDR", "name": "ввв", "parent": {"id": 15, "kind": "PS", "name": "111", "kind_display": "Элемент поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T15:44:12.037238Z", "updated_at": "2026-10-17T15:44:12.037341Z", "description": null, "parent_name": "111", "subdivision": 1, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "1 отделение"}, "object_id": 16, "division_id": 1, "object_name": "ввв", "division_name": "1 отдел СССИ", "subdivision_id": 1, "subdivision_name": "1 отделение", "communication_post_id": 16, "communication_post_name": "ввв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:12.041736+00	1
+712	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:53.903184+00	1
+763	create	facilities	CommunicationPost	20	2ПС-200	{"data": {"id": 20, "kind": "PS", "name": "2ПС-200", "parent": {"id": 19, "kind": "P", "name": "1П-100", "kind_display": "Пост (П)"}, "children": [], "division": 1, "created_at": "2026-10-17T17:25:58.375866Z", "updated_at": "2026-10-17T17:25:58.376008Z", "description": null, "parent_name": "1П-100", "subdivision": 2, "kind_display": "Поста связи (ПС)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 20, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 20, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:58.381647+00	1
+792	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:13.856617+00	1
+846	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:25:30.660514+00	1
+869	view	facilities	Division	3	3 отделение СССИ	{"order": 3, "object_id": 3, "division_id": 3, "object_name": "3 отделение СССИ", "division_name": "3 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:24:54.010844+00	1
+655	view	facilities	CommunicationPost	14	3ПС-201	{"object_id": 14, "division_id": 1, "object_name": "3ПС-201", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 14, "communication_post_name": "3ПС-201"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:49.460443+00	1
+684	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:12.148382+00	1
+713	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:01:53.934823+00	1
+735	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:20.340591+00	1
+764	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:59.539219+00	1
+793	update	facilities	CommunicationPost	21	1Еввыв	{"old_data": {"id": 21, "kind": "NDR", "name": "1Еввыв", "parent": {"id": 20, "kind": "PS", "name": "2ПС-200", "kind_display": "Поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T17:26:03.765138Z", "updated_at": "2026-10-17T17:26:03.765259Z", "description": null, "parent_name": "2ПС-200", "subdivision": 2, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "changed_fields": {"updated_at": {"new": "2026-10-17T17:28:15.376228Z", "old": "2026-10-17T17:26:03.765259Z"}, "description": {"new": "1111", "old": null}}, "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:15.380258+00	1
+818	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:13:59.391778+00	1
+847	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:26:18.571361+00	1
+870	view	facilities	Division	3	3 отделение СССИ	{"order": 3, "object_id": 3, "division_id": 3, "object_name": "3 отделение СССИ", "division_name": "3 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:24:54.130415+00	1
+656	view	facilities	CommunicationPost	14	3ПС-201	{"object_id": 14, "division_id": 1, "object_name": "3ПС-201", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 14, "communication_post_name": "3ПС-201"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:49.531756+00	1
+685	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:13.97177+00	1
+714	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция 34", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:02:29.854786+00	1
+736	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:20.431092+00	1
+765	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:59.622886+00	1
+794	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:16.163038+00	1
+819	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:13:59.604808+00	1
+848	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:26:18.771524+00	1
+871	login	auth	\N	\N	\N	{"login_type": "password"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:57:16.092198+00	1
+657	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:51.878028+00	1
+686	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:14.050547+00	1
+715	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция 34", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:02:29.910927+00	1
+737	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:39.020316+00	1
+766	create	facilities	CommunicationPost	21	1Еввыв	{"data": {"id": 21, "kind": "NDR", "name": "1Еввыв", "parent": {"id": 20, "kind": "PS", "name": "2ПС-200", "kind_display": "Поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T17:26:03.765138Z", "updated_at": "2026-10-17T17:26:03.765259Z", "description": null, "parent_name": "2ПС-200", "subdivision": 2, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:03.769627+00	1
+795	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:16.234496+00	1
+820	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:14:46.112951+00	1
+872	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:58:22.022995+00	1
+658	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:51.968172+00	1
+687	create	facilities	CommunicationPost	17	333	{"data": {"id": 17, "kind": "NDR", "name": "333", "parent": {"id": 15, "kind": "PS", "name": "111", "kind_display": "Элемент поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T15:44:15.329586Z", "updated_at": "2026-10-17T15:44:15.329693Z", "description": null, "parent_name": "111", "subdivision": 1, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "1 отделение"}, "object_id": 17, "division_id": 1, "object_name": "333", "division_name": "1 отдел СССИ", "subdivision_id": 1, "subdivision_name": "1 отделение", "communication_post_id": 17, "communication_post_name": "333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:15.334154+00	1
+716	update	facilities	Facility	1	Facility object (1)	{"type_id": 5, "old_data": {"id": 1, "inn": null, "city": "г. Хабаровск", "name": "Станция 34", "type": {"id": 5, "name": "Станция", "description": "", "is_closed_type": true}, "street": "ул. Ленина", "address": "г. Хабаровск, ул. Ленина, 54", "kz_size": "5", "comments": "ASDFDF\\nDSAFDF", "division": {"id": 1, "name": "1 отдел СССИ", "order": 1}, "latitude": "48.4792290", "is_closed": true, "longitude": "135.0871839", "created_at": "2026-02-27T01:30:23.209000Z", "updated_at": "2026-10-15T20:37:15.283360Z", "subdivision": {"id": 1, "name": "1 отделение", "order": 1}, "house_number": "54", "class_display": "1 класс", "division_name": "1 отдел СССИ", "facility_class": "1", "rim_act_number": "323аа", "equipment_count": 1, "subdivision_name": "1 отделение", "communication_posts": [{"id": 7, "kind": "P", "name": "1П111", "parent": null, "children": [{"id": 8, "kind": "PS", "name": "333", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-10-15T20:37:15.218933Z", "updated_at": "2026-10-15T20:37:15.219099Z", "description": null, "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}], "has_grounding_in_kz": true, "acceptance_act_number": "11233", "has_transformer_in_kz": true, "commissioning_act_number": "44", "opening_permission_number": "234"}, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция 34", "changed_fields": {"name": {"new": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "old": "Станция 34"}, "updated_at": {"new": "2026-10-17T16:03:19.081921Z", "old": "2026-10-15T20:37:15.283360Z"}}, "facility_class": "1", "subdivision_id": 1, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:03:19.092703+00	1
+738	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:39.049025+00	1
+767	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:06.109623+00	1
+796	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:18.844788+00	1
+821	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:14:46.3466+00	1
+873	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:58:22.341447+00	1
+659	view	facilities	CommunicationPost	5	2ПС-200	{"object_id": 5, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 5, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:54.62849+00	1
+688	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:15.443038+00	1
+717	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:03:19.126904+00	1
+739	view	facilities	CommunicationPost	8	333	{"object_id": 8, "division_id": 1, "object_name": "333", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 8, "communication_post_name": "333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:41.209462+00	1
+768	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:06.18262+00	1
+797	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:18.935353+00	1
+822	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:14:50.391576+00	1
+874	view	facilities	Division	25	9 отдел СССИ	{"order": 9, "object_id": 25, "division_id": 25, "object_name": "9 отдел СССИ", "division_name": "9 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:02:17.862566+00	1
+660	view	facilities	CommunicationPost	5	2ПС-200	{"object_id": 5, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 5, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:54.699304+00	1
+689	view	facilities	CommunicationPost	6	1 НДР - 222	{"object_id": 6, "division_id": 1, "object_name": "1 НДР - 222", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 6, "communication_post_name": "1 НДР - 222"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:45:33.891913+00	1
+718	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:03:37.822734+00	1
+740	view	facilities	CommunicationPost	8	333	{"object_id": 8, "division_id": 1, "object_name": "333", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 8, "communication_post_name": "333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:41.279279+00	1
+769	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:10.19837+00	1
+798	create	facilities	CommunicationPost	22	222	{"data": {"id": 22, "kind": "NDR", "name": "222", "parent": {"id": 20, "kind": "PS", "name": "2ПС-200", "kind_display": "Поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T17:28:20.620377Z", "updated_at": "2026-10-17T17:28:20.620580Z", "description": null, "parent_name": "2ПС-200", "subdivision": 2, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 22, "division_id": 1, "object_name": "222", "division_name": "1 отдел СССИ", "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 22, "communication_post_name": "222"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:20.626499+00	1
+823	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:14:50.638703+00	1
+875	view	facilities	Division	25	9 отдел СССИ	{"order": 9, "object_id": 25, "division_id": 25, "object_name": "9 отдел СССИ", "division_name": "9 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:02:18.008302+00	1
+661	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:29:58.833009+00	1
+690	view	facilities	CommunicationPost	6	1 НДР - 222	{"object_id": 6, "division_id": 1, "object_name": "1 НДР - 222", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 6, "communication_post_name": "1 НДР - 222"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:45:33.961387+00	1
+719	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:03:37.856921+00	1
+741	view	facilities	CommunicationPost	13	1КП-200	{"object_id": 13, "division_id": 1, "object_name": "1КП-200", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 13, "communication_post_name": "1КП-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:56.490447+00	1
+770	view	facilities	CommunicationPost	21	1Еввыв	{"object_id": 21, "division_id": 1, "object_name": "1Еввыв", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 21, "communication_post_name": "1Еввыв"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:10.223688+00	1
+799	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:46:43.493308+00	1
+824	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:15:46.674957+00	1
+876	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:02:21.558872+00	1
+662	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:29:58.91338+00	1
+691	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:47:38.868912+00	1
+720	update	facilities	CommunicationPost	2	П-100	{"old_data": {"id": 2, "kind": "P", "name": "П-100", "parent": null, "children": [{"id": 12, "kind": "PS", "name": "1ПС-100", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-07-08T12:03:50.472000Z", "updated_at": "2026-07-09T10:44:41.045000Z", "description": "", "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}, "object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "changed_fields": {"updated_at": {"new": "2026-10-17T16:04:24.937151Z", "old": "2026-07-09T10:44:41.045000Z"}}, "subdivision_id": 1, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:04:24.941148+00	1
+742	view	facilities	CommunicationPost	13	1КП-200	{"object_id": 13, "division_id": 1, "object_name": "1КП-200", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 13, "communication_post_name": "1КП-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:18:56.565896+00	1
+771	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:12.685382+00	1
+800	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:46:43.529697+00	1
+825	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:15:46.732215+00	1
+877	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:02:21.800568+00	1
+663	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:32:41.957191+00	1
+692	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:47:38.936097+00	1
+721	update	facilities	Facility	1	Facility object (1)	{"type_id": 5, "old_data": {"id": 1, "inn": null, "city": "г. Хабаровск", "name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "type": {"id": 5, "name": "Станция", "description": "", "is_closed_type": true}, "street": "ул. Ленина", "address": "г. Хабаровск, ул. Ленина, 54", "kz_size": "5", "comments": "ASDFDF\\nDSAFDF", "division": {"id": 1, "name": "1 отдел СССИ", "order": 1}, "latitude": "48.4792290", "is_closed": true, "longitude": "135.0871839", "created_at": "2026-02-27T01:30:23.209000Z", "updated_at": "2026-10-17T16:03:19.081921Z", "subdivision": {"id": 1, "name": "1 отделение", "order": 1}, "house_number": "54", "class_display": "1 класс", "division_name": "1 отдел СССИ", "facility_class": "1", "rim_act_number": "323аа", "equipment_count": 1, "subdivision_name": "1 отделение", "communication_posts": [{"id": 7, "kind": "P", "name": "1П111", "parent": null, "children": [{"id": 8, "kind": "PS", "name": "333", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-10-15T20:37:15.218933Z", "updated_at": "2026-10-15T20:37:15.219099Z", "description": null, "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}], "has_grounding_in_kz": true, "acceptance_act_number": "11233", "has_transformer_in_kz": true, "commissioning_act_number": "44", "opening_permission_number": "234"}, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "changed_fields": {"updated_at": {"new": "2026-10-17T16:04:24.976577Z", "old": "2026-10-17T16:03:19.081921Z"}, "communication_posts": {"new": [{"id": 7, "kind": "P", "name": "1П111", "parent": null, "children": [{"id": 8, "kind": "PS", "name": "333", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-10-15T20:37:15.218933Z", "updated_at": "2026-10-15T20:37:15.219099Z", "description": null, "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}, {"id": 2, "kind": "P", "name": "П-100", "parent": null, "children": [{"id": 12, "kind": "PS", "name": "1ПС-100", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-07-08T12:03:50.472000Z", "updated_at": "2026-10-17T16:04:24.937151Z", "description": "", "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}], "old": [{"id": 7, "kind": "P", "name": "1П111", "parent": null, "children": [{"id": 8, "kind": "PS", "name": "333", "kind_display": "Элемент поста связи (ПС)"}], "division": 1, "created_at": "2026-10-15T20:37:15.218933Z", "updated_at": "2026-10-15T20:37:15.219099Z", "description": null, "parent_name": null, "subdivision": 1, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "1 отделение"}]}}, "facility_class": "1", "subdivision_id": 1, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:04:24.993856+00	1
+743	view	facilities	CommunicationPost	13	1КП-200	{"object_id": 13, "division_id": 1, "object_name": "1КП-200", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 13, "communication_post_name": "1КП-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:19:25.537326+00	1
+772	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:12.805791+00	1
+801	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:46:58.291136+00	1
+826	delete	facilities	Division	4	4 отдел	{"order": 4, "object_id": 4, "division_id": 4, "object_name": "4 отдел", "deleted_data": {"id": 4, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "4 отдел", "order": 4, "created_at": "2026-02-25T08:50:39.984000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.224156Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [{"id": 6, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "1 отделение", "order": 1, "division": 4, "created_at": "2026-02-25T08:50:39.986000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.226709Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "civilian_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 31, "staff_planned_civilian": 7, "staff_planned_officers": 12, "warrant_officers_count": 0, "staff_planned_management": 6, "staff_planned_warrant_officers": 6}, {"id": 7, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "2 отделение", "order": 2, "division": 4, "created_at": "2026-02-25T08:50:39.989000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.229151Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "civilian_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 42, "staff_planned_civilian": 12, "staff_planned_officers": 15, "warrant_officers_count": 0, "staff_planned_management": 6, "staff_planned_warrant_officers": 9}], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 73, "staff_planned_civilian": 19, "staff_planned_officers": 27, "warrant_officers_count": 0, "staff_planned_management": 12, "staff_planned_warrant_officers": 15}, "division_name": "4 отдел"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:24.863179+00	1
+849	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 17:54:17.082217+00	1
+878	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:07:58.885343+00	1
+919	login	auth	\N	\N	\N	{"login_type": "password"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:12:35.539871+00	1
+664	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:32:42.040658+00	1
+693	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:48:39.558673+00	1
+722	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:05:09.739921+00	1
+744	view	facilities	CommunicationPost	13	1КП-200	{"object_id": 13, "division_id": 1, "object_name": "1КП-200", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 13, "communication_post_name": "1КП-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:19:25.572206+00	1
+773	view	facilities	CommunicationPost	20	2ПС-200	{"object_id": 20, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 20, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:15.690278+00	1
+802	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:46:58.365156+00	1
+827	delete	facilities	Division	5	5 отдел	{"order": 5, "object_id": 5, "division_id": 5, "object_name": "5 отдел", "deleted_data": {"id": 5, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "5 отдел", "order": 5, "created_at": "2026-02-25T08:50:39.992000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.233241Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [{"id": 8, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "1 отделение", "order": 1, "division": 5, "created_at": "2026-02-25T08:50:39.995000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.235710Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "civilian_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 30, "staff_planned_civilian": 7, "staff_planned_officers": 9, "warrant_officers_count": 0, "staff_planned_management": 4, "staff_planned_warrant_officers": 10}, {"id": 9, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "2 отделение", "order": 2, "division": 5, "created_at": "2026-02-25T08:50:39.997000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.238625Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "civilian_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 33, "staff_planned_civilian": 9, "staff_planned_officers": 4, "warrant_officers_count": 0, "staff_planned_management": 14, "staff_planned_warrant_officers": 6}], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 63, "staff_planned_civilian": 16, "staff_planned_officers": 13, "warrant_officers_count": 0, "staff_planned_management": 18, "staff_planned_warrant_officers": 16}, "division_name": "5 отдел"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:27.820569+00	1
+850	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 17:54:17.36925+00	1
+879	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:07:59.205995+00	1
+920	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:12:50.224066+00	1
+665	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:33.718776+00	1
+694	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:48:39.628528+00	1
+723	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:05:09.769017+00	1
+745	view	facilities	CommunicationPost	15	111	{"object_id": 15, "division_id": 1, "object_name": "111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 15, "communication_post_name": "111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:19:36.699289+00	1
+774	view	facilities	CommunicationPost	20	2ПС-200	{"object_id": 20, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 20, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:15.763435+00	1
+803	view	facilities	CommunicationPost	3	П-500	{"object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "subdivision_id": 5, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:55:25.22201+00	1
+881	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:11:48.303475+00	1
+922	view	facilities	Facility	9	Facility object (9)	{"type_id": 8, "is_closed": false, "object_id": 9, "type_name": "Радиорелейная станция", "division_id": 1, "facility_id": 9, "object_name": "Facility object (9)", "division_name": "1 отдел СССИ", "facility_name": "Новый", "facility_class": null, "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:13:35.604974+00	1
+828	delete	facilities	Division	6	6 отделение	{"order": 6, "object_id": 6, "division_id": 6, "object_name": "6 отделение", "deleted_data": {"id": 6, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "6 отделение", "order": 6, "created_at": "2026-02-25T08:50:40.001000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.242138Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 61, "staff_planned_civilian": 7, "staff_planned_officers": 14, "warrant_officers_count": 0, "staff_planned_management": 19, "staff_planned_warrant_officers": 21}, "division_name": "6 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:30.25483+00	1
+851	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 17:55:03.475053+00	1
+880	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:11:47.95205+00	1
+921	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:12:50.37632+00	1
+666	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:33.795225+00	1
+695	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:52:16.7006+00	1
+724	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:07:40.303822+00	1
+746	view	facilities	CommunicationPost	15	111	{"object_id": 15, "division_id": 1, "object_name": "111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 15, "communication_post_name": "111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:19:36.778068+00	1
+775	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:19.65939+00	1
+804	view	facilities	CommunicationPost	3	П-500	{"object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "subdivision_id": 5, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:55:25.297165+00	1
+829	delete	facilities	Division	7	7 отделение	{"order": 7, "object_id": 7, "division_id": 7, "object_name": "7 отделение", "deleted_data": {"id": 7, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "7 отделение", "order": 7, "created_at": "2026-02-25T08:50:40.003000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.244442Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 61, "staff_planned_civilian": 20, "staff_planned_officers": 12, "warrant_officers_count": 0, "staff_planned_management": 15, "staff_planned_warrant_officers": 14}, "division_name": "7 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:32.849216+00	1
+852	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 17:55:03.650392+00	1
+667	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:38.170572+00	1
+696	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:52:16.725057+00	1
+725	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:07:45.280439+00	1
+747	view	facilities	CommunicationPost	15	111	{"object_id": 15, "division_id": 1, "object_name": "111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 15, "communication_post_name": "111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:22:19.276837+00	1
+776	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:19.746209+00	1
+805	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:55:34.40804+00	1
+830	delete	facilities	Division	8	8 отделение	{"order": 8, "object_id": 8, "division_id": 8, "object_name": "8 отделение", "deleted_data": {"id": 8, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "8 отделение", "order": 8, "created_at": "2026-02-25T08:50:40.005000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.246794Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 69, "staff_planned_civilian": 18, "staff_planned_officers": 14, "warrant_officers_count": 0, "staff_planned_management": 13, "staff_planned_warrant_officers": 24}, "division_name": "8 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:35.086591+00	1
+853	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:15.476152+00	1
+882	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:19:31.94898+00	1
+923	view	facilities	Facility	9	Facility object (9)	{"type_id": 8, "is_closed": false, "object_id": 9, "type_name": "Радиорелейная станция", "division_id": 1, "facility_id": 9, "object_name": "Facility object (9)", "division_name": "1 отдел СССИ", "facility_name": "Новый", "facility_class": null, "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:13:35.68397+00	1
+668	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:38.285927+00	1
+697	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:52:23.684751+00	1
+726	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:09:33.488299+00	1
+748	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:24:57.481213+00	1
+777	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:24.697252+00	1
+806	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:55:34.478994+00	1
+831	delete	facilities	Division	9	9 отдел	{"order": 9, "object_id": 9, "division_id": 9, "object_name": "9 отдел", "deleted_data": {"id": 9, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "9 отдел", "order": 9, "created_at": "2026-02-25T08:50:40.007000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.249021Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 46, "staff_planned_civilian": 3, "staff_planned_officers": 14, "warrant_officers_count": 0, "staff_planned_management": 13, "staff_planned_warrant_officers": 16}, "division_name": "9 отдел"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:37.660657+00	1
+854	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:15.838075+00	1
+883	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:19:32.223375+00	1
+924	view	storage	UserStorageInfo	\N	user_storage_info	{"info_type": "user_storage"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 11:23:54.466845+00	1
+669	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:51.584209+00	1
+698	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:52:23.709451+00	1
+727	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:09:33.515435+00	1
+749	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:24:57.555152+00	1
+778	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:24.781075+00	1
+807	update	facilities	CommunicationPost	19	1П-100	{"old_data": {"id": 19, "kind": "P", "name": "1П-100", "parent": null, "children": [{"id": 20, "kind": "PS", "name": "2ПС-200", "kind_display": "Поста связи (ПС)"}], "division": 1, "created_at": "2026-10-17T17:25:50.797978Z", "updated_at": "2026-10-17T17:25:50.798146Z", "description": null, "parent_name": null, "subdivision": 2, "kind_display": "Пост (П)", "division_name": "1 отдел СССИ", "children_count": 1, "subdivision_name": "2 отделение"}, "object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "changed_fields": {"updated_at": {"new": "2026-10-17T17:55:36.215096Z", "old": "2026-10-17T17:25:50.798146Z"}, "description": {"new": "ввв", "old": null}}, "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:55:36.219654+00	1
+885	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:19:51.951374+00	1
+926	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:19:44.950444+00	1
+832	delete	facilities	Division	10	10 отделение	{"order": 10, "object_id": 10, "division_id": 10, "object_name": "10 отделение", "deleted_data": {"id": 10, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "10 отделение", "order": 10, "created_at": "2026-02-25T08:50:40.009000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.252126Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 32, "staff_planned_civilian": 7, "staff_planned_officers": 10, "warrant_officers_count": 0, "staff_planned_management": 7, "staff_planned_warrant_officers": 8}, "division_name": "10 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:39.972632+00	1
+855	view	facilities	Division	24	8 отделение СССИ	{"order": 8, "object_id": 24, "division_id": 24, "object_name": "8 отделение СССИ", "division_name": "8 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:17.619865+00	1
+884	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:19:51.672274+00	1
+925	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:19:44.690405+00	1
+670	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:37:51.670951+00	1
+699	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:54:01.407224+00	1
+728	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:13:32.437018+00	1
+750	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:03.098941+00	1
+779	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:29.517969+00	1
+808	view	facilities	CommunicationPost	3	П-500	{"object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "subdivision_id": 5, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:40:44.678792+00	1
+833	delete	facilities	Division	11	11 отделение	{"order": 11, "object_id": 11, "division_id": 11, "object_name": "11 отделение", "deleted_data": {"id": 11, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "11 отделение", "order": 11, "created_at": "2026-02-25T08:50:40.011000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.254422Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 69, "staff_planned_civilian": 13, "staff_planned_officers": 13, "warrant_officers_count": 0, "staff_planned_management": 21, "staff_planned_warrant_officers": 22}, "division_name": "11 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:42.186101+00	1
+856	view	facilities	Division	24	8 отделение СССИ	{"order": 8, "object_id": 24, "division_id": 24, "object_name": "8 отделение СССИ", "division_name": "8 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:17.744031+00	1
+671	view	facilities	CommunicationPost	1	П-333	{"object_id": 1, "division_id": 1, "object_name": "П-333", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 1, "communication_post_name": "П-333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:38:04.721543+00	1
+700	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:54:01.498126+00	1
+729	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:13:32.470441+00	1
+751	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:03.130103+00	1
+780	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:26:29.589825+00	1
+809	view	facilities	CommunicationPost	3	П-500	{"object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "subdivision_id": 5, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:40:44.759386+00	1
+834	delete	facilities	Division	12	12 отделение	{"order": 12, "object_id": 12, "division_id": 12, "object_name": "12 отделение", "deleted_data": {"id": 12, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "12 отделение", "order": 12, "created_at": "2026-02-25T08:50:40.013000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.256303Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 34, "staff_planned_civilian": 1, "staff_planned_officers": 11, "warrant_officers_count": 0, "staff_planned_management": 10, "staff_planned_warrant_officers": 12}, "division_name": "12 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:44.556014+00	1
+857	view	facilities	Division	23	7 отделение СССИ	{"order": 7, "object_id": 23, "division_id": 23, "object_name": "7 отделение СССИ", "division_name": "7 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:48.758413+00	1
+886	create	schedule	ScheduleEvent	189	Вопросов Антон Владимирович — 2026-10-02	{"date": "2026-10-02", "comment": "", "event_type": "duty", "employee_id": 3}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:22:23.745365+00	1
+927	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:29:34.150401+00	1
+672	view	facilities	CommunicationPost	1	П-333	{"object_id": 1, "division_id": 1, "object_name": "П-333", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 1, "communication_post_name": "П-333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:38:04.791051+00	1
+701	create	facilities	CommunicationPost	18	2НДР	{"data": {"id": 18, "kind": "NDR", "name": "2НДР", "parent": {"id": 5, "kind": "PS", "name": "2ПС-200", "kind_display": "Элемент поста связи (ПС)"}, "children": [], "division": 1, "created_at": "2026-10-17T15:54:04.573086Z", "updated_at": "2026-10-17T15:54:04.573214Z", "description": null, "parent_name": "2ПС-200", "subdivision": 3, "kind_display": "Номер дежурного расчёта (НДР)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "3 отделение"}, "object_id": 18, "division_id": 1, "object_name": "2НДР", "division_name": "1 отдел СССИ", "subdivision_id": 3, "subdivision_name": "3 отделение", "communication_post_id": 18, "communication_post_name": "2НДР"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:54:04.578209+00	1
+730	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:30:54.31874+00	1
+752	view	facilities	CommunicationPost	12	1ПС-100	{"object_id": 12, "division_id": 1, "object_name": "1ПС-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 12, "communication_post_name": "1ПС-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:09.604237+00	1
+781	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:27:55.707146+00	1
+810	view	facilities	CommunicationPost	3	П-500	{"object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "subdivision_id": 5, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:40:44.830047+00	1
+835	delete	facilities	Division	13	13 отделение	{"order": 13, "object_id": 13, "division_id": 13, "object_name": "13 отделение", "deleted_data": {"id": 13, "head": {"id": 7, "rank": "Полковник", "position": "Главный руководитель", "full_name": "Портов Самсон Самсонович1", "work_phone": "5554", "personal_phone": "555"}, "name": "13 отделение", "order": 13, "created_at": "2026-02-25T08:50:40.016000Z", "facilities": [], "updated_at": "2026-10-14T16:44:58.258732Z", "deputy_head": {"id": 17, "rank": "Подполковник", "position": "Заместитель главного руководителя", "full_name": "Алекс Алексов", "work_phone": "888", "personal_phone": "777"}, "tasks_count": 0, "subdivisions": [], "civilian_count": 0, "networks_count": 0, "officers_count": 0, "employees_count": 0, "equipment_count": 0, "facilities_count": 0, "management_count": 0, "staff_planned_total": 37, "staff_planned_civilian": 10, "staff_planned_officers": 7, "warrant_officers_count": 0, "staff_planned_management": 11, "staff_planned_warrant_officers": 9}, "division_name": "13 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:17:47.043388+00	1
+858	view	facilities	Division	23	7 отделение СССИ	{"order": 7, "object_id": 23, "division_id": 23, "object_name": "7 отделение СССИ", "division_name": "7 отделение СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:48.908684+00	1
+887	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:22:29.194513+00	1
+928	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:29:34.471659+00	1
+673	delete	facilities	CommunicationPost	1	П-333	{"object_id": 1, "division_id": 1, "object_name": "П-333", "deleted_data": {"id": 1, "kind": "P", "name": "П-333", "parent": null, "children": [], "division": 1, "created_at": "2026-07-08T11:36:26.758000Z", "updated_at": "2026-07-09T10:54:10.236000Z", "description": "НДР-100\\nНДР-200", "parent_name": null, "subdivision": 2, "kind_display": "Пост связи (П)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "division_name": "1 отдел СССИ", "subdivision_id": 2, "subdivision_name": "2 отделение", "communication_post_id": 1, "communication_post_name": "П-333"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:38:06.31763+00	1
+702	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:54:04.701043+00	1
+731	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:30:54.397278+00	1
+753	view	facilities	CommunicationPost	12	1ПС-100	{"object_id": 12, "division_id": 1, "object_name": "1ПС-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 12, "communication_post_name": "1ПС-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:09.673261+00	1
+782	view	facilities	CommunicationPost	19	1П-100	{"object_id": 19, "division_id": 1, "object_name": "1П-100", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 19, "communication_post_name": "1П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:27:55.740194+00	1
+646	view	facilities	CommunicationPost	4	1П-200	{"object_id": 4, "division_id": 1, "object_name": "1П-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 4, "communication_post_name": "1П-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:00.441985+00	1
+811	update	facilities	CommunicationPost	3	П-500	{"old_data": {"id": 3, "kind": "P", "name": "П-500", "parent": null, "children": [], "division": 2, "created_at": "2026-07-09T10:53:08.278000Z", "updated_at": "2026-07-09T10:53:17.729000Z", "description": "Привет Пока", "parent_name": null, "subdivision": 5, "kind_display": "Пост (П)", "division_name": "2 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}, "object_id": 3, "division_id": 2, "object_name": "П-500", "division_name": "2 отдел СССИ", "changed_fields": {"updated_at": {"new": "2026-10-17T18:40:49.475427Z", "old": "2026-07-09T10:53:17.729000Z"}}, "subdivision_id": 5, "subdivision_name": "2 отделение", "communication_post_id": 3, "communication_post_name": "П-500"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:40:49.480909+00	1
+836	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:20:14.326394+00	1
+859	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:51.199268+00	1
+888	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 19:22:29.533407+00	1
+929	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:50:48.13131+00	1
+674	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:38:06.423274+00	1
+703	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:56:57.815588+00	1
+732	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:30:54.470254+00	1
+754	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:23.057678+00	1
+783	view	facilities	CommunicationPost	20	2ПС-200	{"object_id": 20, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 20, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:27:59.354711+00	1
+812	update	facilities	Facility	12	Facility object (12)	{"type_id": 1, "old_data": {"id": 12, "inn": null, "city": "г. Хабаровск", "name": "Вахова 8", "type": {"id": 1, "name": "ЛАЗ", "description": "Линейно-аппаратный зал", "is_closed_type": false}, "street": "ул. Вахова", "address": "г. Хабаровск, ул. Вахова, 8", "kz_size": null, "comments": "", "division": {"id": 2, "name": "2 отдел СССИ", "order": 2}, "latitude": "48.4345335", "is_closed": false, "longitude": "135.1010914", "created_at": "2026-07-08T11:12:54.478000Z", "updated_at": "2026-07-08T11:12:54.478000Z", "subdivision": null, "house_number": "8", "class_display": null, "division_name": "2 отдел СССИ", "facility_class": null, "rim_act_number": null, "equipment_count": 1, "subdivision_name": null, "communication_posts": [], "has_grounding_in_kz": false, "acceptance_act_number": null, "has_transformer_in_kz": false, "commissioning_act_number": null, "opening_permission_number": null}, "is_closed": false, "object_id": 12, "type_name": "ЛАЗ", "division_id": 2, "facility_id": 12, "object_name": "Facility object (12)", "division_name": "2 отдел СССИ", "facility_name": "Вахова 8", "changed_fields": {"updated_at": {"new": "2026-10-17T18:40:49.555108Z", "old": "2026-07-08T11:12:54.478000Z"}, "communication_posts": {"new": [{"id": 3, "kind": "P", "name": "П-500", "parent": null, "children": [], "division": 2, "created_at": "2026-07-09T10:53:08.278000Z", "updated_at": "2026-10-17T18:40:49.475427Z", "description": "Привет Пока", "parent_name": null, "subdivision": 5, "kind_display": "Пост (П)", "division_name": "2 отдел СССИ", "children_count": 0, "subdivision_name": "2 отделение"}], "old": []}}, "facility_class": null, "subdivision_id": null, "subdivision_name": null}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:40:49.569724+00	1
+837	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:20:14.616735+00	1
+860	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:51.459894+00	1
+930	view	networks	CommunicationNetwork	1	Сеть АОДf	{"model": "CommunicationNetwork", "object_id": 1, "network_id": 1, "object_name": "Сеть АОДf", "network_name": "Сеть АОДf", "network_class": "2", "security_level": "secret", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 17:50:48.491525+00	1
+675	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:43:54.993899+00	1
+704	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:56:57.850089+00	1
+733	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:34:10.302377+00	1
+755	view	facilities	CommunicationPost	7	1П111	{"object_id": 7, "division_id": 1, "object_name": "1П111", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 7, "communication_post_name": "1П111"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:23.093026+00	1
+784	view	facilities	CommunicationPost	20	2ПС-200	{"object_id": 20, "division_id": 1, "object_name": "2ПС-200", "division_name": "1 отдел СССИ", "subdivision_id": 2, "viewed_details": true, "subdivision_name": "2 отделение", "communication_post_id": 20, "communication_post_name": "2ПС-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:27:59.383817+00	1
+813	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:41:02.984572+00	1
+838	view	storage	UserStorageInfo	\N	user_storage_info	{"info_type": "user_storage"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:21:26.496712+00	1
+861	view	facilities	Division	20	4 отдел СССИ	{"order": 4, "object_id": 20, "division_id": 20, "object_name": "4 отдел СССИ", "division_name": "4 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:53.757115+00	1
+647	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:26.192469+00	1
+676	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:43:55.096924+00	1
+705	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:58:10.618357+00	1
+734	view	facilities	CommunicationPost	2	П-100	{"object_id": 2, "division_id": 1, "object_name": "П-100", "division_name": "1 отдел СССИ", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение", "communication_post_id": 2, "communication_post_name": "П-100"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 16:34:10.330108+00	1
+756	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:26.238461+00	1
+785	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:03.550625+00	1
+814	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:41:03.045871+00	1
+839	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:23:05.762131+00	1
+862	view	facilities	Division	20	4 отдел СССИ	{"order": 4, "object_id": 20, "division_id": 20, "object_name": "4 отдел СССИ", "division_name": "4 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:13:53.910872+00	1
+648	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:26.265585+00	1
+677	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:06.768814+00	1
+706	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:58:10.700743+00	1
+757	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:26.363839+00	1
+786	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:03.636342+00	1
+815	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:42:54.98558+00	1
+840	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:23:06.018813+00	1
+863	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:17:57.237273+00	1
+649	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:30.144583+00	1
+678	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:44:06.848029+00	1
+707	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:59:04.373882+00	1
+758	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:25:47.059855+00	1
+787	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 17:28:06.94461+00	1
+816	view	facilities	Facility	1	Facility object (1)	{"type_id": 5, "is_closed": true, "object_id": 1, "type_name": "Станция", "division_id": 1, "facility_id": 1, "object_name": "Facility object (1)", "division_name": "1 отдел СССИ", "facility_name": "Станция специальной связи функционирующая в интересах отдела морских и туземных боевых дроидов для защиты конституционного строя", "facility_class": "1", "subdivision_id": 1, "viewed_details": true, "subdivision_name": "1 отделение"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 18:42:55.05164+00	1
+841	view	candidates	Candidate	2	аааа	{"viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:23:21.737667+00	1
+864	view	facilities	Division	2	2 отдел СССИ	{"order": 2, "object_id": 2, "division_id": 2, "object_name": "2 отдел СССИ", "division_name": "2 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-22 18:17:57.508783+00	1
+630	login	auth	\N	\N	\N	{"login_type": "password"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:24:22.851016+00	1
+631	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:24:34.202639+00	1
+632	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:24:34.279833+00	1
+633	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:08.445359+00	1
+634	create	facilities	CommunicationPost	13	1КП-200	{"data": {"id": 13, "kind": "KP", "name": "1КП-200", "parent": null, "children": [], "division": 1, "created_at": "2026-10-17T15:25:11.471350Z", "updated_at": "2026-10-17T15:25:11.471494Z", "description": null, "parent_name": null, "subdivision": 1, "kind_display": "Командно-пунктовый пост (КП)", "division_name": "1 отдел СССИ", "children_count": 0, "subdivision_name": "1 отделение"}, "object_id": 13, "division_id": 1, "object_name": "1КП-200", "division_name": "1 отдел СССИ", "subdivision_id": 1, "subdivision_name": "1 отделение", "communication_post_id": 13, "communication_post_name": "1КП-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:11.476988+00	1
+635	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:18.733387+00	1
+636	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:18.950856+00	1
+637	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:20.47736+00	1
+638	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:20.559385+00	1
+639	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:23.432493+00	1
+640	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:23.522489+00	1
+641	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:49.223921+00	1
+602	delete	system	UserActionLog	\N	\N	{"module": "all_modules", "period": "1y", "date_to": "2026-10-15 21:12:16.087179+00:00", "date_from": "2025-10-15 21:12:16.087179+00:00", "deleted_count": 539}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-15 21:12:16.093816+00	1
+642	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:49.296044+00	1
+643	view	facilities	CommunicationPost	4	1П-200	{"object_id": 4, "division_id": 1, "object_name": "1П-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 4, "communication_post_name": "1П-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:55.734874+00	1
+644	view	facilities	CommunicationPost	4	1П-200	{"object_id": 4, "division_id": 1, "object_name": "1П-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 4, "communication_post_name": "1П-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:25:55.799606+00	1
+645	view	facilities	CommunicationPost	4	1П-200	{"object_id": 4, "division_id": 1, "object_name": "1П-200", "division_name": "1 отдел СССИ", "subdivision_id": 3, "viewed_details": true, "subdivision_name": "3 отделение", "communication_post_id": 4, "communication_post_name": "1П-200"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-17 15:26:00.414246+00	1
+817	login	auth	\N	\N	\N	{"login_type": "password"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-21 18:13:52.088684+00	1
+931	view	storage	UserStorageInfo	\N	user_storage_info	{"info_type": "user_storage"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:23.691291+00	1
+932	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:34.246614+00	1
+933	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:34.605201+00	1
+934	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:36.191835+00	1
+935	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:36.277146+00	1
+936	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:36.993338+00	1
+937	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:37.252738+00	1
+938	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:39.405998+00	1
+939	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:39.682967+00	1
+940	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:41.667972+00	1
+941	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:41.967728+00	1
+942	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:44.417889+00	1
+943	view	facilities	Division	1	1 отдел СССИ	{"order": 1, "object_id": 1, "division_id": 1, "object_name": "1 отдел СССИ", "division_name": "1 отдел СССИ", "viewed_details": true}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:15:44.702326+00	1
+944	restore	system	Database	\N	\N	{"size": 213433, "filename": "backup_2026-10-25T19-00-54.json"}	172.18.0.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36	\N	\N	\N	\N	2026-10-25 19:17:06.185458+00	1
+\.
+
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.auth_group_id_seq', 12, true);
+
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
+
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 160, true);
+
+
+--
+-- Name: candidates_candidate_number_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.candidates_candidate_number_seq', 3, true);
+
+
+--
+-- Name: candidates_candidatestage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.candidates_candidatestage_id_seq', 99, true);
+
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.django_admin_log_id_seq', 6, true);
+
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 40, true);
+
+
+--
+-- Name: employees_employee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.employees_employee_id_seq', 23, true);
+
+
+--
+-- Name: employees_scheduleevent_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.employees_scheduleevent_id_seq', 189, true);
+
+
+--
+-- Name: employees_shaequipmentconclusion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.employees_shaequipmentconclusion_id_seq', 11, true);
+
+
+--
+-- Name: employees_shaworkerdetails_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.employees_shaworkerdetails_id_seq', 6, true);
+
+
+--
+-- Name: equipment_equipment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.equipment_equipment_id_seq', 13, true);
+
+
+--
+-- Name: equipment_equipmentcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.equipment_equipmentcategory_id_seq', 16, true);
+
+
+--
+-- Name: equipment_interestorgan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.equipment_interestorgan_id_seq', 2, true);
+
+
+--
+-- Name: equipment_productstructure_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.equipment_productstructure_id_seq', 1, false);
+
+
+--
+-- Name: facilities_communicationpost_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_communicationpost_id_seq', 22, true);
+
+
+--
+-- Name: facilities_division_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_division_id_seq', 29, true);
+
+
+--
+-- Name: facilities_facility_communication_posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_facility_communication_posts_id_seq', 7, true);
+
+
+--
+-- Name: facilities_facility_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_facility_id_seq', 12, true);
+
+
+--
+-- Name: facilities_facilitytype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_facilitytype_id_seq', 8, true);
+
+
+--
+-- Name: facilities_subdivision_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.facilities_subdivision_id_seq', 23, true);
+
+
+--
+-- Name: map_fsboffice_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.map_fsboffice_id_seq', 89, true);
+
+
+--
+-- Name: storage_favorite_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.storage_favorite_id_seq', 4, true);
+
+
+--
+-- Name: storage_filesharelink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.storage_filesharelink_id_seq', 1, false);
+
+
+--
+-- Name: storage_storagefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.storage_storagefile_id_seq', 6, true);
+
+
+--
+-- Name: storage_storagefolder_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.storage_storagefolder_id_seq', 11, true);
+
+
+--
+-- Name: tasks_task_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.tasks_task_id_seq', 24, true);
+
+
+--
+-- Name: tasks_taskstep_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.tasks_taskstep_id_seq', 35, true);
+
+
+--
+-- Name: users_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.users_user_groups_id_seq', 202, true);
+
+
+--
+-- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.users_user_id_seq', 22, true);
+
+
+--
+-- Name: users_user_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.users_user_user_permissions_id_seq', 1, false);
+
+
+--
+-- Name: users_useractionlog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: django_user
+--
+
+SELECT pg_catalog.setval('public.users_useractionlog_id_seq', 944, true);
+
+
+--
+-- Name: auth_group auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group
+    ADD CONSTRAINT auth_group_name_key UNIQUE (name);
+
+
+--
+-- Name: auth_group_permissions auth_group_permissions_group_id_permission_id_0cd325b0_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_group_id_permission_id_0cd325b0_uniq UNIQUE (group_id, permission_id);
+
+
+--
+-- Name: auth_group_permissions auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_group auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group
+    ADD CONSTRAINT auth_group_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_permission auth_permission_content_type_id_codename_01ab375a_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_permission
+    ADD CONSTRAINT auth_permission_content_type_id_codename_01ab375a_uniq UNIQUE (content_type_id, codename);
+
+
+--
+-- Name: auth_permission auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_permission
+    ADD CONSTRAINT auth_permission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: candidates_candidate candidates_candidate_hired_employee_id_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidate
+    ADD CONSTRAINT candidates_candidate_hired_employee_id_key UNIQUE (hired_employee_id);
+
+
+--
+-- Name: candidates_candidate candidates_candidate_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidate
+    ADD CONSTRAINT candidates_candidate_pkey PRIMARY KEY (number);
+
+
+--
+-- Name: candidates_candidatestage candidates_candidatestage_candidate_id_stage_type_a4c40a3f_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidatestage
+    ADD CONSTRAINT candidates_candidatestage_candidate_id_stage_type_a4c40a3f_uniq UNIQUE (candidate_id, stage_type);
+
+
+--
+-- Name: candidates_candidatestage candidates_candidatestage_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidatestage
+    ADD CONSTRAINT candidates_candidatestage_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_admin_log
+    ADD CONSTRAINT django_admin_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_content_type django_content_type_app_label_model_76bd3d3b_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_content_type
+    ADD CONSTRAINT django_content_type_app_label_model_76bd3d3b_uniq UNIQUE (app_label, model);
+
+
+--
+-- Name: django_content_type django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_content_type
+    ADD CONSTRAINT django_content_type_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_session django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_session
+    ADD CONSTRAINT django_session_pkey PRIMARY KEY (session_key);
+
+
+--
+-- Name: employees_employee employees_employee_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_employee
+    ADD CONSTRAINT employees_employee_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employees_scheduleevent employees_scheduleevent_employee_id_date_c6469dc8_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_scheduleevent
+    ADD CONSTRAINT employees_scheduleevent_employee_id_date_c6469dc8_uniq UNIQUE (employee_id, date);
+
+
+--
+-- Name: employees_scheduleevent employees_scheduleevent_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_scheduleevent
+    ADD CONSTRAINT employees_scheduleevent_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employees_shaequipmentconclusion employees_shaequipmentconclusion_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_shaequipmentconclusion
+    ADD CONSTRAINT employees_shaequipmentconclusion_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employees_shaworkerdetails employees_shaworkerdetails_employee_id_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_shaworkerdetails
+    ADD CONSTRAINT employees_shaworkerdetails_employee_id_key UNIQUE (employee_id);
+
+
+--
+-- Name: employees_shaworkerdetails employees_shaworkerdetails_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_shaworkerdetails
+    ADD CONSTRAINT employees_shaworkerdetails_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: equipment_equipment equipment_equipment_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: equipment_equipmentcategory equipment_equipmentcategory_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipmentcategory
+    ADD CONSTRAINT equipment_equipmentcategory_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: equipment_equipmentcategory equipment_equipmentcategory_value_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipmentcategory
+    ADD CONSTRAINT equipment_equipmentcategory_value_key UNIQUE (value);
+
+
+--
+-- Name: equipment_interestorgan equipment_interestorgan_name_91902492_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_interestorgan
+    ADD CONSTRAINT equipment_interestorgan_name_91902492_uniq UNIQUE (name);
+
+
+--
+-- Name: equipment_interestorgan equipment_interestorgan_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_interestorgan
+    ADD CONSTRAINT equipment_interestorgan_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: equipment_productstructure equipment_productstructure_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_productstructure
+    ADD CONSTRAINT equipment_productstructure_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_communicationpost facilities_communicationpost_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_communicationpost
+    ADD CONSTRAINT facilities_communicationpost_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_division facilities_division_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_division
+    ADD CONSTRAINT facilities_division_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_facility_communication_posts facilities_facility_comm_facility_id_communicatio_c15475b3_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility_communication_posts
+    ADD CONSTRAINT facilities_facility_comm_facility_id_communicatio_c15475b3_uniq UNIQUE (facility_id, communicationpost_id);
+
+
+--
+-- Name: facilities_facility_communication_posts facilities_facility_communication_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility_communication_posts
+    ADD CONSTRAINT facilities_facility_communication_posts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_facility facilities_facility_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility
+    ADD CONSTRAINT facilities_facility_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_facilitytype facilities_facilitytype_name_45e24638_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facilitytype
+    ADD CONSTRAINT facilities_facilitytype_name_45e24638_uniq UNIQUE (name);
+
+
+--
+-- Name: facilities_facilitytype facilities_facilitytype_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facilitytype
+    ADD CONSTRAINT facilities_facilitytype_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: facilities_subdivision facilities_subdivision_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_subdivision
+    ADD CONSTRAINT facilities_subdivision_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: map_fsboffice map_fsboffice_name_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.map_fsboffice
+    ADD CONSTRAINT map_fsboffice_name_key UNIQUE (name);
+
+
+--
+-- Name: map_fsboffice map_fsboffice_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.map_fsboffice
+    ADD CONSTRAINT map_fsboffice_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: storage_favorite storage_favorite_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: storage_favorite storage_favorite_user_id_file_id_5f52eeb7_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_user_id_file_id_5f52eeb7_uniq UNIQUE (user_id, file_id);
+
+
+--
+-- Name: storage_favorite storage_favorite_user_id_folder_id_903bc41c_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_user_id_folder_id_903bc41c_uniq UNIQUE (user_id, folder_id);
+
+
+--
+-- Name: storage_filesharelink storage_filesharelink_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_filesharelink
+    ADD CONSTRAINT storage_filesharelink_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: storage_filesharelink storage_filesharelink_token_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_filesharelink
+    ADD CONSTRAINT storage_filesharelink_token_key UNIQUE (token);
+
+
+--
+-- Name: storage_storagefile storage_storagefile_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: storage_storagefolder storage_storagefolder_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolder_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tasks_task tasks_task_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_task
+    ADD CONSTRAINT tasks_task_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tasks_taskstep tasks_taskstep_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_taskstep
+    ADD CONSTRAINT tasks_taskstep_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_user users_user_employee_id_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_employee_id_key UNIQUE (employee_id);
+
+
+--
+-- Name: users_user_groups users_user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_groups
+    ADD CONSTRAINT users_user_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_user_groups users_user_groups_user_id_group_id_b88eab82_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_groups
+    ADD CONSTRAINT users_user_groups_user_id_group_id_b88eab82_uniq UNIQUE (user_id, group_id);
+
+
+--
+-- Name: users_user users_user_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_user_user_permissions users_user_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_user_permissions
+    ADD CONSTRAINT users_user_user_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users_user_user_permissions users_user_user_permissions_user_id_permission_id_43338c45_uniq; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_user_permissions
+    ADD CONSTRAINT users_user_user_permissions_user_id_permission_id_43338c45_uniq UNIQUE (user_id, permission_id);
+
+
+--
+-- Name: users_user users_user_username_key; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_username_key UNIQUE (username);
+
+
+--
+-- Name: users_useractionlog users_useractionlog_pkey; Type: CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_useractionlog
+    ADD CONSTRAINT users_useractionlog_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX auth_group_name_a6ea08ec_like ON public.auth_group USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: auth_group_permissions_group_id_b120cbf9; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX auth_group_permissions_group_id_b120cbf9 ON public.auth_group_permissions USING btree (group_id);
+
+
+--
+-- Name: auth_group_permissions_permission_id_84c5c92e; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX auth_group_permissions_permission_id_84c5c92e ON public.auth_group_permissions USING btree (permission_id);
+
+
+--
+-- Name: auth_permission_content_type_id_2f476e4b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX auth_permission_content_type_id_2f476e4b ON public.auth_permission USING btree (content_type_id);
+
+
+--
+-- Name: cand_division_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX cand_division_idx ON public.candidates_candidate USING btree (division_id);
+
+
+--
+-- Name: cand_fullname_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX cand_fullname_idx ON public.candidates_candidate USING btree (full_name);
+
+
+--
+-- Name: cand_status_changed_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX cand_status_changed_idx ON public.candidates_candidate USING btree (status_changed_at);
+
+
+--
+-- Name: cand_status_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX cand_status_idx ON public.candidates_candidate USING btree (status);
+
+
+--
+-- Name: candidates__candida_571bf3_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates__candida_571bf3_idx ON public.candidates_candidatestage USING btree (candidate_id, "order");
+
+
+--
+-- Name: candidates__phase_d8e4a7_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates__phase_d8e4a7_idx ON public.candidates_candidatestage USING btree (phase);
+
+
+--
+-- Name: candidates_candidate_curator_id_a0432b3d; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidate_curator_id_a0432b3d ON public.candidates_candidate USING btree (curator_id);
+
+
+--
+-- Name: candidates_candidate_division_id_94b03957; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidate_division_id_94b03957 ON public.candidates_candidate USING btree (division_id);
+
+
+--
+-- Name: candidates_candidate_status_68e94dd5; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidate_status_68e94dd5 ON public.candidates_candidate USING btree (status);
+
+
+--
+-- Name: candidates_candidate_status_68e94dd5_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidate_status_68e94dd5_like ON public.candidates_candidate USING btree (status varchar_pattern_ops);
+
+
+--
+-- Name: candidates_candidate_status_changed_at_4b0e8ca2; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidate_status_changed_at_4b0e8ca2 ON public.candidates_candidate USING btree (status_changed_at);
+
+
+--
+-- Name: candidates_candidatestage_candidate_id_91a0cd0a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX candidates_candidatestage_candidate_id_91a0cd0a ON public.candidates_candidatestage USING btree (candidate_id);
+
+
+--
+-- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX django_admin_log_content_type_id_c4bce8eb ON public.django_admin_log USING btree (content_type_id);
+
+
+--
+-- Name: django_admin_log_user_id_c564eba6; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX django_admin_log_user_id_c564eba6 ON public.django_admin_log USING btree (user_id);
+
+
+--
+-- Name: django_session_expire_date_a5c62663; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX django_session_expire_date_a5c62663 ON public.django_session USING btree (expire_date);
+
+
+--
+-- Name: django_session_session_key_c0390e0f_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX django_session_session_key_c0390e0f_like ON public.django_session USING btree (session_key varchar_pattern_ops);
+
+
+--
+-- Name: employees_employee_division_id_db7916b5; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX employees_employee_division_id_db7916b5 ON public.employees_employee USING btree (division_id);
+
+
+--
+-- Name: employees_employee_subdivision_id_c1a9f1f1; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX employees_employee_subdivision_id_c1a9f1f1 ON public.employees_employee USING btree (subdivision_id);
+
+
+--
+-- Name: employees_scheduleevent_employee_id_af2e721a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX employees_scheduleevent_employee_id_af2e721a ON public.employees_scheduleevent USING btree (employee_id);
+
+
+--
+-- Name: employees_shaequipmentconclusion_sha_worker_id_72c2f927; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX employees_shaequipmentconclusion_sha_worker_id_72c2f927 ON public.employees_shaequipmentconclusion USING btree (sha_worker_id);
+
+
+--
+-- Name: equipment_e_assigne_96ad0d_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_assigne_96ad0d_idx ON public.equipment_equipment USING btree (assigned_to_id);
+
+
+--
+-- Name: equipment_e_divisio_5df752_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_divisio_5df752_idx ON public.equipment_equipment USING btree (division_id);
+
+
+--
+-- Name: equipment_e_facilit_0c19b7_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_facilit_0c19b7_idx ON public.equipment_equipment USING btree (facility_id);
+
+
+--
+-- Name: equipment_e_is_clos_3bd0f6_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_is_clos_3bd0f6_idx ON public.equipment_equipment USING btree (is_closed);
+
+
+--
+-- Name: equipment_e_is_netw_0cdd4e_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_is_netw_0cdd4e_idx ON public.equipment_equipment USING btree (is_network);
+
+
+--
+-- Name: equipment_e_status_fb8540_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_status_fb8540_idx ON public.equipment_equipment USING btree (status);
+
+
+--
+-- Name: equipment_e_subdivi_788d4f_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_e_subdivi_788d4f_idx ON public.equipment_equipment USING btree (subdivision_id);
+
+
+--
+-- Name: equipment_equipment_assigned_to_id_cb2d5df1; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_assigned_to_id_cb2d5df1 ON public.equipment_equipment USING btree (assigned_to_id);
+
+
+--
+-- Name: equipment_equipment_category_id_74d7bc5a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_category_id_74d7bc5a ON public.equipment_equipment USING btree (category_id);
+
+
+--
+-- Name: equipment_equipment_division_id_b20fe9c5; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_division_id_b20fe9c5 ON public.equipment_equipment USING btree (division_id);
+
+
+--
+-- Name: equipment_equipment_facility_id_e56a1dbd; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_facility_id_e56a1dbd ON public.equipment_equipment USING btree (facility_id);
+
+
+--
+-- Name: equipment_equipment_interest_organ_id_923c954d; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_interest_organ_id_923c954d ON public.equipment_equipment USING btree (interest_organ_id);
+
+
+--
+-- Name: equipment_equipment_subdivision_id_a799a471; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipment_subdivision_id_a799a471 ON public.equipment_equipment USING btree (subdivision_id);
+
+
+--
+-- Name: equipment_equipmentcategory_value_8019b619_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_equipmentcategory_value_8019b619_like ON public.equipment_equipmentcategory USING btree (value varchar_pattern_ops);
+
+
+--
+-- Name: equipment_interestorgan_name_91902492_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_interestorgan_name_91902492_like ON public.equipment_interestorgan USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: equipment_productstructure_equipment_id_eaa13b5d; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX equipment_productstructure_equipment_id_eaa13b5d ON public.equipment_productstructure USING btree (equipment_id);
+
+
+--
+-- Name: facilities__divisio_ba02d8_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities__divisio_ba02d8_idx ON public.facilities_communicationpost USING btree (division_id, kind);
+
+
+--
+-- Name: facilities__kind_623231_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities__kind_623231_idx ON public.facilities_communicationpost USING btree (kind, parent_id);
+
+
+--
+-- Name: facilities_communicationpost_division_id_648a327c; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_communicationpost_division_id_648a327c ON public.facilities_communicationpost USING btree (division_id);
+
+
+--
+-- Name: facilities_communicationpost_kind_343c9ac2; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_communicationpost_kind_343c9ac2 ON public.facilities_communicationpost USING btree (kind);
+
+
+--
+-- Name: facilities_communicationpost_kind_343c9ac2_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_communicationpost_kind_343c9ac2_like ON public.facilities_communicationpost USING btree (kind varchar_pattern_ops);
+
+
+--
+-- Name: facilities_communicationpost_parent_id_dec8fa98; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_communicationpost_parent_id_dec8fa98 ON public.facilities_communicationpost USING btree (parent_id);
+
+
+--
+-- Name: facilities_communicationpost_subdivision_id_30d388d1; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_communicationpost_subdivision_id_30d388d1 ON public.facilities_communicationpost USING btree (subdivision_id);
+
+
+--
+-- Name: facilities_division_deputy_head_id_5f88cfd5; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_division_deputy_head_id_5f88cfd5 ON public.facilities_division USING btree (deputy_head_id);
+
+
+--
+-- Name: facilities_division_head_id_0c8ffd0e; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_division_head_id_0c8ffd0e ON public.facilities_division USING btree (head_id);
+
+
+--
+-- Name: facilities_facility_commun_communicationpost_id_3c6cd418; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facility_commun_communicationpost_id_3c6cd418 ON public.facilities_facility_communication_posts USING btree (communicationpost_id);
+
+
+--
+-- Name: facilities_facility_communication_posts_facility_id_0d0107f8; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facility_communication_posts_facility_id_0d0107f8 ON public.facilities_facility_communication_posts USING btree (facility_id);
+
+
+--
+-- Name: facilities_facility_division_id_501c5e12; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facility_division_id_501c5e12 ON public.facilities_facility USING btree (division_id);
+
+
+--
+-- Name: facilities_facility_subdivision_id_158d5d1b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facility_subdivision_id_158d5d1b ON public.facilities_facility USING btree (subdivision_id);
+
+
+--
+-- Name: facilities_facility_type_id_68ebb505; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facility_type_id_68ebb505 ON public.facilities_facility USING btree (type_id);
+
+
+--
+-- Name: facilities_facilitytype_name_45e24638_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_facilitytype_name_45e24638_like ON public.facilities_facilitytype USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: facilities_subdivision_deputy_head_id_2c404cd8; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_subdivision_deputy_head_id_2c404cd8 ON public.facilities_subdivision USING btree (deputy_head_id);
+
+
+--
+-- Name: facilities_subdivision_division_id_1d559b2b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_subdivision_division_id_1d559b2b ON public.facilities_subdivision USING btree (division_id);
+
+
+--
+-- Name: facilities_subdivision_head_id_9f87ff80; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX facilities_subdivision_head_id_9f87ff80 ON public.facilities_subdivision USING btree (head_id);
+
+
+--
+-- Name: map_fsboffi_is_acti_8f3df3_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX map_fsboffi_is_acti_8f3df3_idx ON public.map_fsboffice USING btree (is_active);
+
+
+--
+-- Name: map_fsboffi_region_ffc9ff_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX map_fsboffi_region_ffc9ff_idx ON public.map_fsboffice USING btree (region);
+
+
+--
+-- Name: map_fsboffice_name_ffd99535_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX map_fsboffice_name_ffd99535_like ON public.map_fsboffice USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: map_fsboffice_region_a526f75a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX map_fsboffice_region_a526f75a ON public.map_fsboffice USING btree (region);
+
+
+--
+-- Name: map_fsboffice_region_a526f75a_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX map_fsboffice_region_a526f75a_like ON public.map_fsboffice USING btree (region varchar_pattern_ops);
+
+
+--
+-- Name: storage_favorite_file_id_69802b8f; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_favorite_file_id_69802b8f ON public.storage_favorite USING btree (file_id);
+
+
+--
+-- Name: storage_favorite_folder_id_2198433a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_favorite_folder_id_2198433a ON public.storage_favorite USING btree (folder_id);
+
+
+--
+-- Name: storage_favorite_user_id_f661bae6; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_favorite_user_id_f661bae6 ON public.storage_favorite USING btree (user_id);
+
+
+--
+-- Name: storage_filesharelink_created_by_id_cfeeb423; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_filesharelink_created_by_id_cfeeb423 ON public.storage_filesharelink USING btree (created_by_id);
+
+
+--
+-- Name: storage_filesharelink_file_id_76cb254e; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_filesharelink_file_id_76cb254e ON public.storage_filesharelink USING btree (file_id);
+
+
+--
+-- Name: storage_filesharelink_token_7eb84956_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_filesharelink_token_7eb84956_like ON public.storage_filesharelink USING btree (token varchar_pattern_ops);
+
+
+--
+-- Name: storage_sto_divisio_00729d_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_sto_divisio_00729d_idx ON public.storage_storagefile USING btree (division_id, subdivision_id);
+
+
+--
+-- Name: storage_sto_divisio_84a260_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_sto_divisio_84a260_idx ON public.storage_storagefolder USING btree (division_id, subdivision_id);
+
+
+--
+-- Name: storage_sto_file_ty_4dfc51_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_sto_file_ty_4dfc51_idx ON public.storage_storagefile USING btree (file_type, is_deleted);
+
+
+--
+-- Name: storage_sto_folder__a1d93c_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_sto_folder__a1d93c_idx ON public.storage_storagefolder USING btree (folder_type, is_deleted);
+
+
+--
+-- Name: storage_sto_mime_ty_685888_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_sto_mime_ty_685888_idx ON public.storage_storagefile USING btree (mime_type);
+
+
+--
+-- Name: storage_storagefile_deleted_by_id_cf9296c5; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefile_deleted_by_id_cf9296c5 ON public.storage_storagefile USING btree (deleted_by_id);
+
+
+--
+-- Name: storage_storagefile_division_id_fef3c36b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefile_division_id_fef3c36b ON public.storage_storagefile USING btree (division_id);
+
+
+--
+-- Name: storage_storagefile_folder_id_46842828; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefile_folder_id_46842828 ON public.storage_storagefile USING btree (folder_id);
+
+
+--
+-- Name: storage_storagefile_subdivision_id_14738815; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefile_subdivision_id_14738815 ON public.storage_storagefile USING btree (subdivision_id);
+
+
+--
+-- Name: storage_storagefile_uploaded_by_id_c001db46; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefile_uploaded_by_id_c001db46 ON public.storage_storagefile USING btree (uploaded_by_id);
+
+
+--
+-- Name: storage_storagefolder_created_by_id_bdad0bab; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefolder_created_by_id_bdad0bab ON public.storage_storagefolder USING btree (created_by_id);
+
+
+--
+-- Name: storage_storagefolder_deleted_by_id_3063b2c7; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefolder_deleted_by_id_3063b2c7 ON public.storage_storagefolder USING btree (deleted_by_id);
+
+
+--
+-- Name: storage_storagefolder_division_id_eadabe7b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefolder_division_id_eadabe7b ON public.storage_storagefolder USING btree (division_id);
+
+
+--
+-- Name: storage_storagefolder_parent_id_c73486cb; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefolder_parent_id_c73486cb ON public.storage_storagefolder USING btree (parent_id);
+
+
+--
+-- Name: storage_storagefolder_subdivision_id_d09e9e34; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX storage_storagefolder_subdivision_id_d09e9e34 ON public.storage_storagefolder USING btree (subdivision_id);
+
+
+--
+-- Name: tasks_task_assignee_id_2c3ca866; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_task_assignee_id_2c3ca866 ON public.tasks_task USING btree (assignee_id);
+
+
+--
+-- Name: tasks_task_created_by_id_1345568a; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_task_created_by_id_1345568a ON public.tasks_task USING btree (created_by_id);
+
+
+--
+-- Name: tasks_task_division_id_084e8718; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_task_division_id_084e8718 ON public.tasks_task USING btree (division_id);
+
+
+--
+-- Name: tasks_task_subdivision_id_4224f1b9; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_task_subdivision_id_4224f1b9 ON public.tasks_task USING btree (subdivision_id);
+
+
+--
+-- Name: tasks_taskstep_completed_by_id_e8d591a1; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_taskstep_completed_by_id_e8d591a1 ON public.tasks_taskstep USING btree (completed_by_id);
+
+
+--
+-- Name: tasks_taskstep_task_id_0369112b; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX tasks_taskstep_task_id_0369112b ON public.tasks_taskstep USING btree (task_id);
+
+
+--
+-- Name: users_user_groups_group_id_9afc8d0e; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_groups_group_id_9afc8d0e ON public.users_user_groups USING btree (group_id);
+
+
+--
+-- Name: users_user_groups_user_id_5f6f5a90; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_groups_user_id_5f6f5a90 ON public.users_user_groups USING btree (user_id);
+
+
+--
+-- Name: users_user_user_division_id_19c9f005; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_user_division_id_19c9f005 ON public.users_user USING btree (user_division_id);
+
+
+--
+-- Name: users_user_user_permissions_permission_id_0b93982e; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_user_permissions_permission_id_0b93982e ON public.users_user_user_permissions USING btree (permission_id);
+
+
+--
+-- Name: users_user_user_permissions_user_id_20aca447; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_user_permissions_user_id_20aca447 ON public.users_user_user_permissions USING btree (user_id);
+
+
+--
+-- Name: users_user_user_subdivision_id_4743a0dc; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_user_subdivision_id_4743a0dc ON public.users_user USING btree (user_subdivision_id);
+
+
+--
+-- Name: users_user_username_06e46fe6_like; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_user_username_06e46fe6_like ON public.users_user USING btree (username varchar_pattern_ops);
+
+
+--
+-- Name: users_usera_action_68a535_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_usera_action_68a535_idx ON public.users_useractionlog USING btree (action, created_at);
+
+
+--
+-- Name: users_usera_file_ty_16b2ba_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_usera_file_ty_16b2ba_idx ON public.users_useractionlog USING btree (file_type);
+
+
+--
+-- Name: users_usera_module_41ae74_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_usera_module_41ae74_idx ON public.users_useractionlog USING btree (module, created_at);
+
+
+--
+-- Name: users_usera_storage_4de976_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_usera_storage_4de976_idx ON public.users_useractionlog USING btree (storage_location);
+
+
+--
+-- Name: users_usera_user_id_835fca_idx; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_usera_user_id_835fca_idx ON public.users_useractionlog USING btree (user_id, created_at);
+
+
+--
+-- Name: users_useractionlog_user_id_ea366a60; Type: INDEX; Schema: public; Owner: django_user
+--
+
+CREATE INDEX users_useractionlog_user_id_ea366a60 ON public.users_useractionlog USING btree (user_id);
+
+
+--
+-- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group_permissions
+    ADD CONSTRAINT auth_group_permissio_permission_id_84c5c92e_fk_auth_perm FOREIGN KEY (permission_id) REFERENCES public.auth_permission(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: auth_group_permissions auth_group_permissions_group_id_b120cbf9_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_group_id_b120cbf9_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES public.auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: auth_permission auth_permission_content_type_id_2f476e4b_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.auth_permission
+    ADD CONSTRAINT auth_permission_content_type_id_2f476e4b_fk_django_co FOREIGN KEY (content_type_id) REFERENCES public.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: candidates_candidatestage candidates_candidate_candidate_id_91a0cd0a_fk_candidate; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidatestage
+    ADD CONSTRAINT candidates_candidate_candidate_id_91a0cd0a_fk_candidate FOREIGN KEY (candidate_id) REFERENCES public.candidates_candidate(number) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: candidates_candidate candidates_candidate_curator_id_a0432b3d_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidate
+    ADD CONSTRAINT candidates_candidate_curator_id_a0432b3d_fk_employees FOREIGN KEY (curator_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: candidates_candidate candidates_candidate_division_id_94b03957_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidate
+    ADD CONSTRAINT candidates_candidate_division_id_94b03957_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: candidates_candidate candidates_candidate_hired_employee_id_b8804bf9_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.candidates_candidate
+    ADD CONSTRAINT candidates_candidate_hired_employee_id_b8804bf9_fk_employees FOREIGN KEY (hired_employee_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_admin_log
+    ADD CONSTRAINT django_admin_log_content_type_id_c4bce8eb_fk_django_co FOREIGN KEY (content_type_id) REFERENCES public.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: django_admin_log django_admin_log_user_id_c564eba6_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.django_admin_log
+    ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_users_user_id FOREIGN KEY (user_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: employees_employee employees_employee_division_id_db7916b5_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_employee
+    ADD CONSTRAINT employees_employee_division_id_db7916b5_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: employees_employee employees_employee_subdivision_id_c1a9f1f1_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_employee
+    ADD CONSTRAINT employees_employee_subdivision_id_c1a9f1f1_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: employees_scheduleevent employees_scheduleev_employee_id_af2e721a_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_scheduleevent
+    ADD CONSTRAINT employees_scheduleev_employee_id_af2e721a_fk_employees FOREIGN KEY (employee_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: employees_shaequipmentconclusion employees_shaequipme_sha_worker_id_72c2f927_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_shaequipmentconclusion
+    ADD CONSTRAINT employees_shaequipme_sha_worker_id_72c2f927_fk_employees FOREIGN KEY (sha_worker_id) REFERENCES public.employees_shaworkerdetails(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: employees_shaworkerdetails employees_shaworkerd_employee_id_352e2a12_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.employees_shaworkerdetails
+    ADD CONSTRAINT employees_shaworkerd_employee_id_352e2a12_fk_employees FOREIGN KEY (employee_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_assigned_to_id_cb2d5df1_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_assigned_to_id_cb2d5df1_fk_employees FOREIGN KEY (assigned_to_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_category_id_74d7bc5a_fk_equipment; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_category_id_74d7bc5a_fk_equipment FOREIGN KEY (category_id) REFERENCES public.equipment_equipmentcategory(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_division_id_b20fe9c5_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_division_id_b20fe9c5_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_facility_id_e56a1dbd_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_facility_id_e56a1dbd_fk_facilitie FOREIGN KEY (facility_id) REFERENCES public.facilities_facility(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_interest_organ_id_923c954d_fk_equipment; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_interest_organ_id_923c954d_fk_equipment FOREIGN KEY (interest_organ_id) REFERENCES public.equipment_interestorgan(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_equipment equipment_equipment_subdivision_id_a799a471_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_equipment
+    ADD CONSTRAINT equipment_equipment_subdivision_id_a799a471_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: equipment_productstructure equipment_productstr_equipment_id_eaa13b5d_fk_equipment; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.equipment_productstructure
+    ADD CONSTRAINT equipment_productstr_equipment_id_eaa13b5d_fk_equipment FOREIGN KEY (equipment_id) REFERENCES public.equipment_equipment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_communicationpost facilities_communica_division_id_648a327c_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_communicationpost
+    ADD CONSTRAINT facilities_communica_division_id_648a327c_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_communicationpost facilities_communica_parent_id_dec8fa98_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_communicationpost
+    ADD CONSTRAINT facilities_communica_parent_id_dec8fa98_fk_facilitie FOREIGN KEY (parent_id) REFERENCES public.facilities_communicationpost(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_communicationpost facilities_communica_subdivision_id_30d388d1_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_communicationpost
+    ADD CONSTRAINT facilities_communica_subdivision_id_30d388d1_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_division facilities_division_deputy_head_id_5f88cfd5_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_division
+    ADD CONSTRAINT facilities_division_deputy_head_id_5f88cfd5_fk_employees FOREIGN KEY (deputy_head_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_division facilities_division_head_id_0c8ffd0e_fk_employees_employee_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_division
+    ADD CONSTRAINT facilities_division_head_id_0c8ffd0e_fk_employees_employee_id FOREIGN KEY (head_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_facility_communication_posts facilities_facility__communicationpost_id_3c6cd418_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility_communication_posts
+    ADD CONSTRAINT facilities_facility__communicationpost_id_3c6cd418_fk_facilitie FOREIGN KEY (communicationpost_id) REFERENCES public.facilities_communicationpost(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_facility_communication_posts facilities_facility__facility_id_0d0107f8_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility_communication_posts
+    ADD CONSTRAINT facilities_facility__facility_id_0d0107f8_fk_facilitie FOREIGN KEY (facility_id) REFERENCES public.facilities_facility(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_facility facilities_facility_division_id_501c5e12_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility
+    ADD CONSTRAINT facilities_facility_division_id_501c5e12_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_facility facilities_facility_subdivision_id_158d5d1b_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility
+    ADD CONSTRAINT facilities_facility_subdivision_id_158d5d1b_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_facility facilities_facility_type_id_68ebb505_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_facility
+    ADD CONSTRAINT facilities_facility_type_id_68ebb505_fk_facilitie FOREIGN KEY (type_id) REFERENCES public.facilities_facilitytype(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_subdivision facilities_subdivisi_deputy_head_id_2c404cd8_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_subdivision
+    ADD CONSTRAINT facilities_subdivisi_deputy_head_id_2c404cd8_fk_employees FOREIGN KEY (deputy_head_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_subdivision facilities_subdivisi_division_id_1d559b2b_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_subdivision
+    ADD CONSTRAINT facilities_subdivisi_division_id_1d559b2b_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: facilities_subdivision facilities_subdivisi_head_id_9f87ff80_fk_employees; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.facilities_subdivision
+    ADD CONSTRAINT facilities_subdivisi_head_id_9f87ff80_fk_employees FOREIGN KEY (head_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_favorite storage_favorite_file_id_69802b8f_fk_storage_storagefile_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_file_id_69802b8f_fk_storage_storagefile_id FOREIGN KEY (file_id) REFERENCES public.storage_storagefile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_favorite storage_favorite_folder_id_2198433a_fk_storage_storagefolder_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_folder_id_2198433a_fk_storage_storagefolder_id FOREIGN KEY (folder_id) REFERENCES public.storage_storagefolder(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_favorite storage_favorite_user_id_f661bae6_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_favorite
+    ADD CONSTRAINT storage_favorite_user_id_f661bae6_fk_users_user_id FOREIGN KEY (user_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_filesharelink storage_filesharelin_file_id_76cb254e_fk_storage_s; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_filesharelink
+    ADD CONSTRAINT storage_filesharelin_file_id_76cb254e_fk_storage_s FOREIGN KEY (file_id) REFERENCES public.storage_storagefile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_filesharelink storage_filesharelink_created_by_id_cfeeb423_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_filesharelink
+    ADD CONSTRAINT storage_filesharelink_created_by_id_cfeeb423_fk_users_user_id FOREIGN KEY (created_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefile storage_storagefile_deleted_by_id_cf9296c5_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_deleted_by_id_cf9296c5_fk_users_user_id FOREIGN KEY (deleted_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefile storage_storagefile_division_id_fef3c36b_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_division_id_fef3c36b_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefile storage_storagefile_folder_id_46842828_fk_storage_s; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_folder_id_46842828_fk_storage_s FOREIGN KEY (folder_id) REFERENCES public.storage_storagefolder(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefile storage_storagefile_subdivision_id_14738815_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_subdivision_id_14738815_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefile storage_storagefile_uploaded_by_id_c001db46_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefile
+    ADD CONSTRAINT storage_storagefile_uploaded_by_id_c001db46_fk_users_user_id FOREIGN KEY (uploaded_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefolder storage_storagefolde_division_id_eadabe7b_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolde_division_id_eadabe7b_fk_facilitie FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefolder storage_storagefolde_parent_id_c73486cb_fk_storage_s; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolde_parent_id_c73486cb_fk_storage_s FOREIGN KEY (parent_id) REFERENCES public.storage_storagefolder(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefolder storage_storagefolde_subdivision_id_d09e9e34_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolde_subdivision_id_d09e9e34_fk_facilitie FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefolder storage_storagefolder_created_by_id_bdad0bab_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolder_created_by_id_bdad0bab_fk_users_user_id FOREIGN KEY (created_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: storage_storagefolder storage_storagefolder_deleted_by_id_3063b2c7_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.storage_storagefolder
+    ADD CONSTRAINT storage_storagefolder_deleted_by_id_3063b2c7_fk_users_user_id FOREIGN KEY (deleted_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_task tasks_task_assignee_id_2c3ca866_fk_employees_employee_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_task
+    ADD CONSTRAINT tasks_task_assignee_id_2c3ca866_fk_employees_employee_id FOREIGN KEY (assignee_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_task tasks_task_created_by_id_1345568a_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_task
+    ADD CONSTRAINT tasks_task_created_by_id_1345568a_fk_users_user_id FOREIGN KEY (created_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_task tasks_task_division_id_084e8718_fk_facilities_division_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_task
+    ADD CONSTRAINT tasks_task_division_id_084e8718_fk_facilities_division_id FOREIGN KEY (division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_task tasks_task_subdivision_id_4224f1b9_fk_facilities_subdivision_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_task
+    ADD CONSTRAINT tasks_task_subdivision_id_4224f1b9_fk_facilities_subdivision_id FOREIGN KEY (subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_taskstep tasks_taskstep_completed_by_id_e8d591a1_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_taskstep
+    ADD CONSTRAINT tasks_taskstep_completed_by_id_e8d591a1_fk_users_user_id FOREIGN KEY (completed_by_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tasks_taskstep tasks_taskstep_task_id_0369112b_fk_tasks_task_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.tasks_taskstep
+    ADD CONSTRAINT tasks_taskstep_task_id_0369112b_fk_tasks_task_id FOREIGN KEY (task_id) REFERENCES public.tasks_task(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user users_user_employee_id_c8435634_fk_employees_employee_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_employee_id_c8435634_fk_employees_employee_id FOREIGN KEY (employee_id) REFERENCES public.employees_employee(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user_groups users_user_groups_group_id_9afc8d0e_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_groups
+    ADD CONSTRAINT users_user_groups_group_id_9afc8d0e_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES public.auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user_groups users_user_groups_user_id_5f6f5a90_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_groups
+    ADD CONSTRAINT users_user_groups_user_id_5f6f5a90_fk_users_user_id FOREIGN KEY (user_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user users_user_user_division_id_19c9f005_fk_facilities_division_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_user_division_id_19c9f005_fk_facilities_division_id FOREIGN KEY (user_division_id) REFERENCES public.facilities_division(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user_user_permissions users_user_user_perm_permission_id_0b93982e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_user_permissions
+    ADD CONSTRAINT users_user_user_perm_permission_id_0b93982e_fk_auth_perm FOREIGN KEY (permission_id) REFERENCES public.auth_permission(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user_user_permissions users_user_user_permissions_user_id_20aca447_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user_user_permissions
+    ADD CONSTRAINT users_user_user_permissions_user_id_20aca447_fk_users_user_id FOREIGN KEY (user_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_user users_user_user_subdivision_id_4743a0dc_fk_facilitie; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_user
+    ADD CONSTRAINT users_user_user_subdivision_id_4743a0dc_fk_facilitie FOREIGN KEY (user_subdivision_id) REFERENCES public.facilities_subdivision(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_useractionlog users_useractionlog_user_id_ea366a60_fk_users_user_id; Type: FK CONSTRAINT; Schema: public; Owner: django_user
+--
+
+ALTER TABLE ONLY public.users_useractionlog
+    ADD CONSTRAINT users_useractionlog_user_id_ea366a60_fk_users_user_id FOREIGN KEY (user_id) REFERENCES public.users_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: django_user
+--
+
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

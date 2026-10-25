@@ -68,7 +68,7 @@
     background-color: #3182ce;
 }
 
-/* Вкладки */
+/* Верхние вкладки */
 .facilities-tabs-container {
     background: white;
     border-radius: 1rem;
@@ -81,8 +81,6 @@
     overflow-x: auto;
     scrollbar-width: thin;
     position: relative;
-    /* ВАЖНО: вместо border-bottom используем inset box-shadow,
-       иначе он клипается из-за overflow-x: auto */
     box-shadow: inset 0 -1.5px 0 0 #e5e7eb;
 }
 
@@ -127,10 +125,8 @@
     background-color: rgba(241, 245, 249, 0.3);
 }
 
-/* Плавающий индикатор активной вкладки */
 .facilities-tab-indicator {
     position: absolute;
-    /* Прижимаем к низу padding-box, чтобы overflow-x: auto его не срезал */
     bottom: 0;
     height: 2px;
     background-color: #2563eb;
@@ -176,7 +172,7 @@
     margin: 0;
 }
 
-/* Блок счётчика с переключателем режимов (аналог personnel-list-count-chip) */
+/* Блок счётчика с переключателем режимов */
 .facilities-count-chip {
     width: 100%;
     display: flex;
@@ -201,7 +197,6 @@
     cursor: default;
 }
 
-/* Переключатель режимов — вкладки без фона и границ (как в персонале) */
 .facilities-view-mode-toggle {
     flex: 1;
     display: flex;
@@ -237,7 +232,6 @@
     border-bottom-color: #cbd5e1;
 }
 
-/* Центральная часть со статистикой */
 .facilities-count-center {
     flex: 1;
     display: flex;
@@ -257,7 +251,6 @@
     font-size: 1rem;
 }
 
-/* Правая часть (пустая для баланса) */
 .facilities-count-right {
     flex: 1;
 }
@@ -294,7 +287,6 @@
     overflow: visible;
 }
 
-/* Карта внутри правой колонки */
 .facilities-map-overlay {
     position: relative;
     width: 100%;
@@ -328,7 +320,7 @@
     content: "Загрузка карты...";
 }
 
-/* Остальные вспомогательные стили */
+/* Вспомогательные */
 .facilities-error-message {
     color: #ef4444;
     padding: 1rem;
@@ -364,7 +356,136 @@
     width: 1.25rem;
 }
 
-/* Адаптивность */
+/* ===== Вкладки подразделений (grouped) ===== */
+.facilities-division-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.05rem;
+    margin-bottom: 0.1rem;
+    padding: 0.2rem 0.4rem;
+    background: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.facilities-division-tab {
+    padding: 0.28rem 0.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    border-radius: 4px;
+}
+
+.facilities-division-tab:hover {
+    color: #1e293b;
+    background-color: rgba(241, 245, 249, 0.7);
+}
+
+.facilities-division-tab.active {
+    color: #2563eb;
+    background-color: rgba(219, 234, 254, 0.45);
+}
+
+.facilities-division-tab-count {
+    font-size: 0.7rem;
+    padding: 0.02rem 0.28rem;
+    background: #e2e8f0;
+    border-radius: 0.35rem;
+    font-weight: 400;
+    color: #475569;
+}
+
+.facilities-division-tab.active .facilities-division-tab-count {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.facilities-division-tabs-indicator {
+    position: absolute;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    pointer-events: none;
+    transition:
+        left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* ===== Вкладки отделений (grouped) ===== */
+.facilities-subdivision-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.05rem;
+    margin-bottom: 0.75rem;
+    padding: 0.2rem 0.4rem;
+    background: white;
+}
+
+.facilities-subdivision-tab {
+    padding: 0.24rem 0.45rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    border-radius: 4px;
+}
+
+.facilities-subdivision-tab:hover {
+    color: #1e293b;
+    background-color: rgba(241, 245, 249, 0.7);
+}
+
+.facilities-subdivision-tab.active {
+    color: #2563eb;
+    background-color: rgba(219, 234, 254, 0.45);
+}
+
+.facilities-subdivision-tab-count {
+    font-size: 0.6rem;
+    padding: 0.01rem 0.26rem;
+    background: #e2e8f0;
+    border-radius: 0.3rem;
+    font-weight: 400;
+    color: #475569;
+}
+
+.facilities-subdivision-tab.active .facilities-subdivision-tab-count {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.facilities-subdivision-tabs-indicator {
+    position: absolute;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    pointer-events: none;
+    transition:
+        left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* ===== Адаптивность ===== */
 @media (max-width: 1024px) {
     .facilities-two-columns {
         flex-direction: column;
@@ -433,7 +554,6 @@
 
     .facilities-count-right {
         display: none;
-        /* на мобильных пустой блок не нужен */
     }
 
     .facilities-search-container {
@@ -448,4 +568,6 @@
     .facilities-map-overlay {
         min-height: 300px;
     }
+
+    /* Вкладки переносятся автоматически, без горизонтального скролла */
 }

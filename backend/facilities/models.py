@@ -1,5 +1,5 @@
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.forms import ValidationError
 from django.utils import timezone
 
 
@@ -186,7 +186,55 @@ class FacilityType(models.Model):
 
 
 class CommunicationPost(models.Model):
+    """
+    Иерархия постов связи:  P / KP  →  PS  →  NDR
+
+    Посты принадлежат подразделению. Объект ссылается на них через M2M
+    (см. Facility.communication_posts). Родитель, ПС и НДР обязаны быть
+    в одном подразделении.
+    """
+    POST_KIND_P = 'P'
+    POST_KIND_KP = 'KP'
+    POST_KIND_PS = 'PS'
+    POST_KIND_NDR = 'NDR'
+
+    POST_KIND_CHOICES = [
+        (POST_KIND_P, 'Пост (П)'),
+        (POST_KIND_KP, 'Командно-пунктовый пост (КП)'),
+        (POST_KIND_PS, 'Пост связи (ПС)'),
+        (POST_KIND_NDR, 'Номер дежурного расчёта (НДР)'),
+    ]
+
+    ALLOWED_CHILDREN = {
+        POST_KIND_P: (POST_KIND_PS,),
+        POST_KIND_KP: (POST_KIND_PS,),
+        POST_KIND_PS: (POST_KIND_NDR,),
+        POST_KIND_NDR: (),
+    }
+
+    ALLOWED_PARENTS = {
+        POST_KIND_P: (),
+        POST_KIND_KP: (),
+        POST_KIND_PS: (POST_KIND_P, POST_KIND_KP),
+        POST_KIND_NDR: (POST_KIND_PS,),
+    }
+
     name = models.CharField(max_length=100, verbose_name='Наименование поста связи')
+    kind = models.CharField(
+        max_length=3,
+        choices=POST_KIND_CHOICES,
+        default=POST_KIND_P,
+        verbose_name='Тип поста связи',
+        db_index=True,
+    )
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children',
+        verbose_name='Родительский пост связи',
+    )
     division = models.ForeignKey(
         Division,
         on_delete=models.CASCADE,
@@ -208,10 +256,79 @@ class CommunicationPost(models.Model):
     class Meta:
         verbose_name = "Пост связи"
         verbose_name_plural = "Посты связи"
-        ordering = ['name']
+        ordering = ['kind', 'name']
+        indexes = [
+            models.Index(fields=['kind', 'parent']),
+            models.Index(fields=['division', 'kind']),
+        ]
 
     def __str__(self):
         return self.name
+
+    # ---------- Валидация ----------
+    def clean(self):
+        super().clean()
+
+        # Сам себя родителем быть не может
+        if self.parent_id is not None and self.pk is not None and self.parent_id == self.pk:
+            raise ValidationError({'parent': 'Пост не может быть родителем сам себе.'})
+
+        if self.parent is not None:
+            # Тип родителя допустим для нашего типа
+            allowed = self.ALLOWED_PARENTS.get(self.kind, ())
+            if self.parent.kind not in allowed:
+                raise ValidationError({
+                    'parent': (
+                        f'Для поста типа «{self.get_kind_display()}» недопустим '
+                        f'родитель типа «{self.parent.get_kind_display()}».'
+                    )
+                })
+
+            # Родитель — из того же подразделения
+            if self.division_id and self.parent.division_id != self.division_id:
+                raise ValidationError({
+                    'parent': 'Родительский пост должен принадлежать тому же подразделению.'
+                })
+
+            # Проверка циклов
+            ancestor = self.parent
+            while ancestor is not None:
+                if self.pk is not None and ancestor.pk == self.pk:
+                    raise ValidationError({'parent': 'Обнаружена циклическая ссылка в иерархии постов.'})
+                ancestor = ancestor.parent
+        else:
+            if self.kind not in (self.POST_KIND_P, self.POST_KIND_KP):
+                raise ValidationError({
+                    'parent': f'Пост типа «{self.get_kind_display()}» должен иметь родительский пост.'
+                })
+
+    # ---------- Хелперы ----------
+    @property
+    def is_root(self):
+        return self.parent_id is None
+
+    def get_ancestors(self):
+        result = []
+        ancestor = self.parent
+        while ancestor is not None:
+            result.append(ancestor)
+            ancestor = ancestor.parent
+        return result
+
+    def get_descendants(self, include_self=False):
+        result = [self] if include_self else []
+        for child in self.children.all():
+            result.append(child)
+            result.extend(child.get_descendants())
+        return result
+
+    def get_full_path(self):
+        parts = [self.name]
+        ancestor = self.parent
+        while ancestor is not None:
+            parts.insert(0, ancestor.name)
+            ancestor = ancestor.parent
+        return ' / '.join(parts)
 
 
 class Facility(models.Model):
@@ -259,20 +376,8 @@ class Facility(models.Model):
     has_transformer_in_kz = models.BooleanField(default=False, verbose_name='ТП в пределах КЗ')
     has_grounding_in_kz = models.BooleanField(default=False, verbose_name='Контур заземления в пределах КЗ')
 
-    latitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
-        null=True,
-        blank=True,
-        verbose_name='Широта'
-    )
-    longitude = models.DecimalField(
-        max_digits=10,
-        decimal_places=7,
-        null=True,
-        blank=True,
-        verbose_name='Долгота'
-    )
+    latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Широта')
+    longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name='Долгота')
 
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

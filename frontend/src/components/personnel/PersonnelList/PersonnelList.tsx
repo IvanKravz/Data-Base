@@ -1,5 +1,5 @@
 // PersonnelList.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import { List, FolderTree, Users, UserCog, Shield, Briefcase, User, Package, Key, Filter } from 'lucide-react';
@@ -45,6 +45,11 @@ interface StaffCounts {
   civilian: number;
 }
 
+type DivisionTabKey = string | 'all';
+type SubdivisionTabKey = string | 'all' | 'no-subdivision';
+
+type MainFilterType = 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha';
+
 export function PersonnelList({
   selectedDivision = 'all',
   selectedCategory = 'all',
@@ -68,7 +73,7 @@ export function PersonnelList({
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha'>('all');
+  const [activeFilter, setActiveFilter] = useState<MainFilterType>('all');
   const [showShaFilters, setShowShaFilters] = useState(false);
   const [showOfficerFilters, setShowOfficerFilters] = useState(false);
   const [selectedOfficerFilter, setSelectedOfficerFilter] = useState<'all' | 'with_management' | 'without_management'>('all');
@@ -76,7 +81,17 @@ export function PersonnelList({
   const [searchParams] = useSearchParams();
   const collapsedStorageKey = `personnel_collapsed_${division?.id || 'global'}_${subdivisionId || 'none'}`;
 
-  // Состояния для поиска и расширенных фильтров
+  // Активные вкладки в grouped-режиме
+  const [activeDivisionTab, setActiveDivisionTab] = useState<DivisionTabKey>('all');
+  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<SubdivisionTabKey>('all');
+
+  // Refs + индикатор под вкладками
+  const divisionTabsRef = useRef<HTMLDivElement>(null);
+  const subdivisionTabsRef = useRef<HTMLDivElement>(null);
+  const [divisionIndicatorStyle, setDivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
+  const [subdivisionIndicatorStyle, setSubdivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
+
+  // Поиск и расширенные фильтры
   const [searchTerm, setSearchTerm] = useState('');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<PersonnelAdvancedSearchFilters>({
@@ -91,11 +106,9 @@ export function PersonnelList({
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  // Право на редактирование (change) — управляет колонкой «Действия» и кнопкой удаления
   const hasEditPermission = useMemo(() =>
     permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
 
-  // Право на просмотр (view) — управляет переходом на детальную страницу по клику
   const hasViewPermission = useMemo(() =>
     permissions?.models?.Employee?.includes('view') ?? false, [permissions]);
 
@@ -104,7 +117,11 @@ export function PersonnelList({
   const [internalLoading, setInternalLoading] = useState(true);
   const isGlobalView = !division;
 
-  // Склонение для слова "сотрудник"
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
+    const saved = localStorage.getItem('personnel_view_mode');
+    return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
+  });
+
   const getPersonnelDeclension = (count: number): string => {
     const lastDigit = count % 10;
     const lastTwoDigits = count % 100;
@@ -152,11 +169,6 @@ export function PersonnelList({
     setViewMode(mode);
     localStorage.setItem('personnel_view_mode', mode);
   };
-
-  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
-    const saved = localStorage.getItem('personnel_view_mode');
-    return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
-  });
 
   const sortEmployeesByPriority = (employees: Employee[]): Employee[] => {
     return [...employees].sort((a, b) => {
@@ -211,9 +223,15 @@ export function PersonnelList({
     fetchData();
   }, [division, token, externalPersonnel, dispatch]);
 
-  // Фильтрация по категориям и дополнительным фильтрам (офицеры/ША)
-  const categoryFilteredPersonnel = useMemo(() => {
-    const filtered = basePersonnel.filter(person => {
+  // ============ ФИЛЬТРАЦИЯ ============
+
+  // Применяет все «независимые» фильтры: категория + поиск + расширенные.
+  // Используется и для таблицы, и для подсчёта на вкладках, чтобы цифры всегда
+  // сходились: «N» на вкладке == числу строк в таблице при её выборе.
+  const applyAllFilters = useCallback((items: Employee[]): Employee[] => {
+    let filtered = items;
+
+    filtered = filtered.filter(person => {
       let matchesCategory = true;
       switch (activeFilter) {
         case 'management': matchesCategory = person.category === 'management'; break;
@@ -233,14 +251,7 @@ export function PersonnelList({
       }
       return matchesCategory;
     });
-    return sortEmployeesByPriority(filtered);
-  }, [basePersonnel, activeFilter, selectedOfficerFilter, selectedAccessClass]);
 
-  // Фильтрация по поисковому запросу и расширенным фильтрам
-  const filteredPersonnel = useMemo(() => {
-    let filtered = categoryFilteredPersonnel;
-
-    // Поиск по тексту
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(person =>
@@ -254,7 +265,6 @@ export function PersonnelList({
       );
     }
 
-    // Расширенные фильтры
     if (advancedFilters.ranks.length) {
       filtered = filtered.filter(person => advancedFilters.ranks.some(r => person.rank?.toLowerCase().includes(r.toLowerCase())));
     }
@@ -275,40 +285,284 @@ export function PersonnelList({
     }
 
     return filtered;
-  }, [categoryFilteredPersonnel, searchTerm, advancedFilters]);
+  }, [activeFilter, selectedOfficerFilter, selectedAccessClass, searchTerm, advancedFilters]);
 
-  const getStaffCount = (staffType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha') => {
-    if (isGlobalView) {
+  // Всё, что попадёт в таблицу БЕЗ ограничения по вкладке.
+  const fullyFilteredPersonnel = useMemo(
+    () => applyAllFilters(basePersonnel),
+    [basePersonnel, applyAllFilters]
+  );
+
+  // Скоуп-данные (только по вкладке, без фильтров) — используются для «По списку» / «По штату».
+  const scopedPersonnel = useMemo(() => {
+    let filtered = basePersonnel;
+
+    if (viewMode === 'flat') {
+      if (subdivisionId) {
+        filtered = filtered.filter(p => String(p.subdivision?.id) === String(subdivisionId));
+      }
+      return filtered;
+    }
+
+    if (activeDivisionTab !== 'all') {
+      filtered = filtered.filter(p => String(p.division?.id) === String(activeDivisionTab));
+    }
+    if (activeSubdivisionTab === 'no-subdivision') {
+      filtered = filtered.filter(p => !p.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      filtered = filtered.filter(p => String(p.subdivision?.id) === String(activeSubdivisionTab));
+    }
+    return filtered;
+  }, [basePersonnel, viewMode, subdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  // Итог — то, что реально видит пользователь в таблице.
+  // Берём fullyFilteredPersonnel (уже после всех фильтров) и накладываем вкладку.
+  const filteredPersonnel = useMemo(() => {
+    if (viewMode === 'flat') {
+      if (subdivisionId) {
+        return fullyFilteredPersonnel.filter(p => String(p.subdivision?.id) === String(subdivisionId));
+      }
+      return fullyFilteredPersonnel;
+    }
+
+    let filtered = fullyFilteredPersonnel;
+    if (activeDivisionTab !== 'all') {
+      filtered = filtered.filter(p => String(p.division?.id) === String(activeDivisionTab));
+    }
+    if (activeSubdivisionTab === 'no-subdivision') {
+      filtered = filtered.filter(p => !p.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      filtered = filtered.filter(p => String(p.subdivision?.id) === String(activeSubdivisionTab));
+    }
+    return filtered;
+  }, [fullyFilteredPersonnel, viewMode, subdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  // ============ ВКЛАДКИ ============
+
+  // Дивизионы — строим по basePersonnel (чтобы все дивизионы присутствовали),
+  // а count берём из fullyFilteredPersonnel (совпадает с таблицей).
+  const divisionTabs = useMemo(() => {
+    if (viewMode !== 'grouped' || division) return [];
+    const map = new Map<string, { id: string; name: string; count: number; order: number }>();
+    basePersonnel.forEach(p => {
+      if (!p.division?.id) return;
+      const id = String(p.division.id);
+      if (!map.has(id)) {
+        map.set(id, { id, name: p.division.name, count: 0, order: (p.division as any).order ?? 9999 });
+      }
+    });
+    fullyFilteredPersonnel.forEach(p => {
+      if (!p.division?.id) return;
+      const entry = map.get(String(p.division.id));
+      if (entry) entry.count++;
+    });
+    const tabs = Array.from(map.values()).sort((a, b) => a.order - b.order);
+    // Вкладки подразделений имеют смысл только если их ≥ 2 — иначе 'all' не нужен.
+    if (tabs.length < 2) return [];
+    tabs.unshift({ id: 'all', name: 'Все подразделения', count: fullyFilteredPersonnel.length, order: 0 });
+    return tabs;
+  }, [viewMode, division, basePersonnel, fullyFilteredPersonnel]);
+
+  // Отделения — только в рамках выбранного дивизиона.
+  const subdivisionTabs = useMemo(() => {
+    if (viewMode !== 'grouped') return [];
+
+    const scopeDivision = division
+      || (activeDivisionTab !== 'all'
+        ? allDivisions.find(d => String(d.id) === String(activeDivisionTab))
+        : null);
+
+    if (!scopeDivision) return [];
+
+    // count — из fullyFilteredPersonnel (совпадает с таблицей)
+    const divisionFiltered = fullyFilteredPersonnel.filter(
+      p => String(p.division?.id) === String(scopeDivision.id)
+    );
+
+    const countMap = new Map<string, number>();
+    divisionFiltered.forEach(p => {
+      if (p.subdivision?.id) {
+        const key = String(p.subdivision.id);
+        countMap.set(key, (countMap.get(key) || 0) + 1);
+      }
+    });
+
+    const subs = ((scopeDivision.subdivisions || []) as any[])
+      .map(s => ({
+        id: String(s.id),
+        name: s.name,
+        count: countMap.get(String(s.id)) || 0,
+        order: s.order ?? 9999,
+      }))
+      .filter(s => s.count > 0)
+      .sort((a, b) => a.order - b.order);
+
+    const noSubCount = divisionFiltered.filter(p => !p.subdivision?.id).length;
+    if (noSubCount > 0) {
+      subs.push({ id: 'no-subdivision', name: 'Без отделения', count: noSubCount, order: 99999 });
+    }
+
+    // Вкладки отделений имеют смысл только если осмысленных вариантов ≥ 2
+    // (например, 1 отделение + «Без отделения», или 2+ отделения).
+    if (subs.length < 2) return [];
+
+    return [
+      { id: 'all', name: 'Все отделения', count: divisionFiltered.length, order: 0 },
+      ...subs,
+    ];
+  }, [viewMode, division, activeDivisionTab, allDivisions, fullyFilteredPersonnel]);
+
+  const showDivisionTabs = viewMode === 'grouped' && !division && divisionTabs.length > 1;
+  const showSubdivisionTabs = viewMode === 'grouped'
+    && subdivisionTabs.length > 1
+    && (division || activeDivisionTab !== 'all');
+
+  // Синхронизация с URL: если задан subdivisionId, сразу открываем правильный
+  // дивизион/отделение в grouped-режиме.
+  useEffect(() => {
+    if (!subdivisionId) return;
+    if (viewMode !== 'grouped') return;
+    const divisions = division ? [division] : allDivisions;
+    for (const d of divisions) {
+      const sub = ((d.subdivisions as any[]) || []).find(
+        (s: any) => String(s.id) === String(subdivisionId)
+      );
+      if (sub) {
+        setActiveDivisionTab(String(d.id));
+        setActiveSubdivisionTab(String(subdivisionId));
+        return;
+      }
+    }
+  }, [subdivisionId, viewMode, division, allDivisions]);
+
+  // Если активной вкладки отделения больше нет в списке — сбрасываем на «все».
+  useEffect(() => {
+    if (activeSubdivisionTab === 'all') return;
+    const exists = subdivisionTabs.some(t => t.id === activeSubdivisionTab);
+    if (!exists) setActiveSubdivisionTab('all');
+  }, [subdivisionTabs, activeSubdivisionTab]);
+
+  // ============ ИНДИКАТОРЫ ВКЛАДОК ============
+
+  useLayoutEffect(() => {
+    if (!divisionTabsRef.current) return;
+    const activeBtn = divisionTabsRef.current.querySelector('.personnel-list-division-tab.active') as HTMLElement | null;
+    if (activeBtn) {
+      setDivisionIndicatorStyle({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+        top: activeBtn.offsetTop + activeBtn.offsetHeight - 2,
+      });
+    } else {
+      setDivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+    }
+  }, [activeDivisionTab, divisionTabs, showDivisionTabs]);
+
+  useLayoutEffect(() => {
+    if (!subdivisionTabsRef.current) return;
+    const activeBtn = subdivisionTabsRef.current.querySelector('.personnel-list-subdivision-tab.active') as HTMLElement | null;
+    if (activeBtn) {
+      setSubdivisionIndicatorStyle({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+        top: activeBtn.offsetTop + activeBtn.offsetHeight - 2,
+      });
+    } else {
+      setSubdivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+    }
+  }, [activeSubdivisionTab, subdivisionTabs, showSubdivisionTabs]);
+
+  // Пересчёт индикатора при ресайзе
+  useEffect(() => {
+    const onResize = () => {
+      if (divisionTabsRef.current) {
+        const btn = divisionTabsRef.current.querySelector('.personnel-list-division-tab.active') as HTMLElement | null;
+        if (btn) setDivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+      if (subdivisionTabsRef.current) {
+        const btn = subdivisionTabsRef.current.querySelector('.personnel-list-subdivision-tab.active') as HTMLElement | null;
+        if (btn) setSubdivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // ============ ШТАТ / СПИСОК ============
+
+  const effectiveStaffScope = useMemo(() => {
+    if (viewMode === 'flat') {
+      if (division) {
+        const sub = subdivisionId
+          ? division.subdivisions?.find((s: any) => String(s.id) === String(subdivisionId))
+          : null;
+        return { division, subdivision: sub || null, isGlobal: false };
+      }
+      return { division: null as Division | null, subdivision: null as any, isGlobal: true };
+    }
+
+    if (division) {
+      let sub: any = null;
+      if (activeSubdivisionTab !== 'all' && activeSubdivisionTab !== 'no-subdivision') {
+        sub = division.subdivisions?.find((s: any) => String(s.id) === String(activeSubdivisionTab)) || null;
+      }
+      return { division, subdivision: sub, isGlobal: false };
+    }
+
+    if (activeDivisionTab !== 'all') {
+      const div = allDivisions.find(d => String(d.id) === String(activeDivisionTab)) || null;
+      if (!div) return { division: null as Division | null, subdivision: null as any, isGlobal: true };
+      let sub: any = null;
+      if (activeSubdivisionTab !== 'all' && activeSubdivisionTab !== 'no-subdivision') {
+        sub = div.subdivisions?.find((s: any) => String(s.id) === String(activeSubdivisionTab)) || null;
+      }
+      return { division: div, subdivision: sub, isGlobal: false };
+    }
+
+    return { division: null as Division | null, subdivision: null as any, isGlobal: true };
+  }, [viewMode, division, subdivisionId, activeDivisionTab, activeSubdivisionTab, allDivisions]);
+
+  const getStaffCount = (staffType: MainFilterType) => {
+    const { division: d, subdivision: s, isGlobal } = effectiveStaffScope;
+
+    if (isGlobal) {
       const counts = {
-        all: { staffCount: globalStaffCounts.all, actualCount: basePersonnel.length },
-        management: { staffCount: globalStaffCounts.management, actualCount: basePersonnel.filter(p => p.category === 'management').length },
-        officers: { staffCount: globalStaffCounts.officers, actualCount: basePersonnel.filter(p => p.category === 'officer' || p.category === 'management').length },
-        warrantOfficers: { staffCount: globalStaffCounts.warrant_officers, actualCount: basePersonnel.filter(p => p.category === 'warrant_officer').length },
-        civilian: { staffCount: globalStaffCounts.civilian, actualCount: basePersonnel.filter(p => p.category === 'civilian').length },
-        mol: { staffCount: 0, actualCount: basePersonnel.filter(p => p.is_material_responsible).length },
-        sha: { staffCount: 0, actualCount: basePersonnel.filter(p => p.is_sha_worker).length }
+        all: { staffCount: globalStaffCounts.all, actualCount: scopedPersonnel.length },
+        management: { staffCount: globalStaffCounts.management, actualCount: scopedPersonnel.filter(p => p.category === 'management').length },
+        officers: { staffCount: globalStaffCounts.officers, actualCount: scopedPersonnel.filter(p => p.category === 'officer' || p.category === 'management').length },
+        warrantOfficers: { staffCount: globalStaffCounts.warrant_officers, actualCount: scopedPersonnel.filter(p => p.category === 'warrant_officer').length },
+        civilian: { staffCount: globalStaffCounts.civilian, actualCount: scopedPersonnel.filter(p => p.category === 'civilian').length },
+        mol: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_material_responsible).length },
+        sha: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_sha_worker).length }
       };
       return counts[staffType];
     }
-    if (!division) return { staffCount: 0, actualCount: 0 };
-    const filtered = subdivisionId ? basePersonnel.filter(p => p.subdivision?.id == subdivisionId) : basePersonnel;
-    const selectedSub = subdivisionId && division.subdivisions ? division.subdivisions.find(s => s.id == subdivisionId) : null;
+
+    if (!d) return { staffCount: 0, actualCount: 0 };
+
     const counts = {
-      all: { staffCount: selectedSub?.staff_planned_total || division.staff_planned_total || 0, actualCount: filtered.length },
-      management: { staffCount: selectedSub?.staff_planned_management || division.staff_planned_management || 0, actualCount: filtered.filter(p => p.category === 'management').length },
-      officers: { staffCount: selectedSub?.staff_planned_officers || division.staff_planned_officers || 0, actualCount: filtered.filter(p => p.category === 'officer' || p.category === 'management').length },
-      warrantOfficers: { staffCount: selectedSub?.staff_planned_warrant_officers || division.staff_planned_warrant_officers || 0, actualCount: filtered.filter(p => p.category === 'warrant_officer').length },
-      civilian: { staffCount: selectedSub?.staff_planned_civilian || division.staff_planned_civilian || 0, actualCount: filtered.filter(p => p.category === 'civilian').length },
-      mol: { staffCount: 0, actualCount: filtered.filter(p => p.is_material_responsible).length },
-      sha: { staffCount: 0, actualCount: filtered.filter(p => p.is_sha_worker).length }
+      all: { staffCount: (s?.staff_planned_total) || d.staff_planned_total || 0, actualCount: scopedPersonnel.length },
+      management: { staffCount: (s?.staff_planned_management) || d.staff_planned_management || 0, actualCount: scopedPersonnel.filter(p => p.category === 'management').length },
+      officers: { staffCount: (s?.staff_planned_officers) || d.staff_planned_officers || 0, actualCount: scopedPersonnel.filter(p => p.category === 'officer' || p.category === 'management').length },
+      warrantOfficers: { staffCount: (s?.staff_planned_warrant_officers) || d.staff_planned_warrant_officers || 0, actualCount: scopedPersonnel.filter(p => p.category === 'warrant_officer').length },
+      civilian: { staffCount: (s?.staff_planned_civilian) || d.staff_planned_civilian || 0, actualCount: scopedPersonnel.filter(p => p.category === 'civilian').length },
+      mol: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_material_responsible).length },
+      sha: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_sha_worker).length }
     };
     return counts[staffType];
   };
 
-  const renderMainFilter = (
-    filterType: 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha',
-    label: string
-  ) => {
+  // ============ UI ХЕЛПЕРЫ ============
+
+  const renderMainFilter = (filterType: MainFilterType, label: string) => {
     const { staffCount, actualCount } = getStaffCount(filterType);
     return (
       <button
@@ -343,12 +597,8 @@ export function PersonnelList({
       dispatch(deletePersonAsync({ token, id: personToDelete }))
         .unwrap()
         .then(() => {
-          // обновляем локальное состояние
           setAllPersonnel(prev => sortEmployeesByPriority(prev.filter(p => p.id !== personToDelete)));
-          // если передан колбэк – вызываем его, чтобы родитель обновил свои данные
-          if (onDeleteSuccess) {
-            onDeleteSuccess(personToDelete);
-          }
+          if (onDeleteSuccess) onDeleteSuccess(personToDelete);
           setShowDeleteModal(false);
           setPersonToDelete(null);
         })
@@ -358,7 +608,7 @@ export function PersonnelList({
 
   const handlePersonClick = (person: Employee) => {
     navigate(`/personnel/${person.id}`, {
-      state: { from: location.pathname + location.search, divisionId, subdivisionId, activeFilter, searchTerm }
+      state: { from: window.location.pathname + window.location.search, divisionId, subdivisionId, activeFilter, searchTerm }
     });
   };
 
@@ -395,7 +645,6 @@ export function PersonnelList({
 
   const staffData = getStaffCount(activeFilter);
   const isFiltersVisible = showOfficerFilters || showShaFilters;
-  // Фиксированная максимальная высота, достаточная для двух групп фильтров (горизонтальное расположение)
   const maxFilterHeight = isFiltersVisible ? '160px' : '0';
 
   if (internalLoading) return <div className="personnel-list-loading">Загрузка сотрудников...</div>;
@@ -417,7 +666,7 @@ export function PersonnelList({
           </div>
         </div>
 
-        {/* Дополнительные фильтры (офицеры / ША) с плавной анимацией высоты */}
+        {/* Дополнительные фильтры (офицеры / ША) */}
         <div
           className="personnel-list-additional-filters"
           style={{
@@ -552,7 +801,7 @@ export function PersonnelList({
           </div>
         )}
 
-        {/* Блок счётчика с переключателем режимов в виде вкладок */}
+        {/* Блок счётчика с переключателем режимов */}
         <div className="personnel-list-count-chip">
           <div className="personnel-list-view-mode-toggle">
             <button className={`personnel-list-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`} onClick={() => handleViewModeChange('flat')}>
@@ -578,6 +827,58 @@ export function PersonnelList({
           </div>
         </div>
 
+        {/* Вкладки подразделений (grouped) */}
+        {showDivisionTabs && (
+          <div className="personnel-list-division-tabs" ref={divisionTabsRef}>
+            {divisionTabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`personnel-list-division-tab ${activeDivisionTab === tab.id ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveDivisionTab(tab.id);
+                  setActiveSubdivisionTab('all');
+                }}
+              >
+                <span>{tab.name}</span>
+                <span className="personnel-list-division-tab-count">{tab.count}</span>
+              </button>
+            ))}
+            <div
+              className="personnel-list-division-tabs-indicator"
+              style={{
+                left: `${divisionIndicatorStyle.left}px`,
+                width: `${divisionIndicatorStyle.width}px`,
+                top: `${divisionIndicatorStyle.top}px`,
+              }}
+            />
+          </div>
+        )}
+
+        {/* Вкладки отделений (grouped) */}
+        {showSubdivisionTabs && (
+          <div className="personnel-list-subdivision-tabs" ref={subdivisionTabsRef}>
+            {subdivisionTabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`personnel-list-subdivision-tab ${activeSubdivisionTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveSubdivisionTab(tab.id)}
+              >
+                <span>{tab.name}</span>
+                <span className="personnel-list-subdivision-tab-count">{tab.count}</span>
+              </button>
+            ))}
+            <div
+              className="personnel-list-subdivision-tabs-indicator"
+              style={{
+                left: `${subdivisionIndicatorStyle.left}px`,
+                width: `${subdivisionIndicatorStyle.width}px`,
+                top: `${subdivisionIndicatorStyle.top}px`,
+              }}
+            />
+          </div>
+        )}
+
+        {/* TableView всегда в flat-режиме — группировка вынесена в вкладки */}
         <TableView
           divisionName={selectedDivision}
           personnel={filteredPersonnel}
@@ -585,7 +886,7 @@ export function PersonnelList({
           onDelete={handleDelete}
           hasEditPermission={hasEditPermission}
           hasViewPermission={hasViewPermission}
-          viewMode={viewMode}
+          viewMode="flat"
           storageKey={collapsedStorageKey}
           searchTerm={searchTerm}
         />

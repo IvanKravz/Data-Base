@@ -26,10 +26,13 @@ interface TasksFiltersProps {
   onEndDateChange: (date: string | null) => void;
   showOnlyMine: boolean;
   onToggleMine: () => void;
-
-  // НОВОЕ: фильтр по ответственному исполнителю
   selectedAssigneeId: number | null;
   onAssigneeChange: (assigneeId: number | null) => void;
+
+  // НОВОЕ: отдельный источник задач для списка исполнителей.
+  // Зависит от активной вкладки в TasksList (отделение/подотделение),
+  // но НЕ от поиска/категории/дат — иначе фильтр исполнителей сужал бы сам себя.
+  assigneeSourceTasks: Task[];
 }
 
 export function TasksFilters({
@@ -48,6 +51,7 @@ export function TasksFilters({
   onToggleMine,
   selectedAssigneeId,
   onAssigneeChange,
+  assigneeSourceTasks,
 }: TasksFiltersProps) {
   const startDateObj = startDate ? parseISO(startDate) : undefined;
   const endDateObj = endDate ? parseISO(endDate) : undefined;
@@ -91,9 +95,10 @@ export function TasksFilters({
           />
         </div>
 
-        {/* НОВОЕ: фильтр по ответственному исполнителю */}
+        {/* Список исполнителей строится по assigneeSourceTasks —
+            задачам активной вкладки отделения/подотделения из TasksList */}
         <TaskAssigneeFilter
-          tasks={tasks}
+          tasks={assigneeSourceTasks}
           selectedAssigneeId={selectedAssigneeId}
           onAssigneeChange={onAssigneeChange}
         />

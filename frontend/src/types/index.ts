@@ -1,11 +1,18 @@
 // types/index.ts
+
+// ============================================================
+// Пользователи
+// ============================================================
 export interface User {
   id: string;
   username: string;
   roles: string[];
+  division_info?: { id: string; name: string } | null;
   permissions: {
     canEditEquipmentBasicInfo?: boolean;
     canEditEquipmentFullInfo?: boolean;
+    models?: Record<string, string[]>;
+    filters?: Record<string, any>;
   };
 }
 
@@ -50,6 +57,9 @@ export interface Employee {
   description?: string;
 }
 
+// ============================================================
+// Оборудование
+// ============================================================
 export interface EquipmentCategory {
   value: string;
   name: string;
@@ -64,6 +74,14 @@ export interface DisposalInfo {
   comments: string;
 }
 
+export interface ProductStructure {
+  id: string;
+  name: string;
+  model?: string;
+  serial_number?: string;
+  note?: string;
+}
+
 export interface Equipment {
   id: number;
   name: string;
@@ -75,25 +93,10 @@ export interface Equipment {
   inventory_number: string;
   manufacturing_date: string | null;
   exploitation_date: string | null;
-  division: {
-    id: number;
-    name: string;
-    order?: number;
-  } | null;
-  subdivision: {
-    id: number;
-    name: string;
-    order?: number;
-  } | null;
-  facility: {
-    id: number;
-    name: string;
-  } | null;
-  assigned_to: {
-    id: number;
-    full_name: string;
-    position?: string;
-  } | null;
+  division: { id: number; name: string; order?: number } | null;
+  subdivision: { id: number; name: string; order?: number } | null;
+  facility: { id: number; name: string } | null;
+  assigned_to: { id: number; full_name: string; position?: string } | null;
   comments: string | null;
   disposal_act_number: string | null;
   disposal_act_date: string | null;
@@ -103,11 +106,7 @@ export interface Equipment {
   created_at: string;
   updated_at: string;
   service_life: string | null;
-  interest_organ: {
-    id: number;
-    name: string;
-    created_at: string;
-  } | null;
+  interest_organ: { id: number; name: string; created_at: string } | null;
   secret_level: 'OV' | 'SS' | 'SECRET' | 'DSP' | null;
   secret_level_display?: string;
   is_free_use: boolean;
@@ -116,9 +115,9 @@ export interface Equipment {
   category_display?: string;
   status_display?: string;
   product_structures: ProductStructure[];
-  network_interfaces: NetworkInterface[];
+  network_interfaces: any[];
   vlans: VLAN[];
-  ip_addresses: IPAddress[];
+  ip_addresses: any[];
   routing_table: any[];
   acls: any[];
   network_interfaces_count: number;
@@ -130,181 +129,14 @@ export interface Equipment {
   assigned_to_id?: number;
   interest_organ_id?: number;
 
-  // === СЗИ ===
-  /** Является ли техника средством защиты информации (категория szi) */
   is_szi?: boolean;
-  /** Номер сертификата СЗИ */
   szi_certificate_number?: string | null;
-  /** Дата сертификата СЗИ */
   szi_certificate_date?: string | null;
 }
 
 export interface ClosedEquipmentCategory {
   id: number;
   name: string;
-}
-
-export interface Division {
-  id: string;
-  name: string;
-  subdivisions: { id: string; name: string; order?: number }[];
-  facilities: {
-    id: string;
-    name: string;
-    type: {
-      id: string;
-      name: string;
-      description?: string;
-    };
-    type_display: string;
-    facility_class: string;
-    class_display: string;
-    employees_count: number;
-    equipment_count: number;
-    facilities_count: number;
-    tasks_count: number;
-    networks_count: number;
-  }[];
-  employees_count?: number;
-  equipment_count?: number;
-  facilities_count?: number;
-  networks_count?: number;
-  order?: number;
-}
-
-export interface Facility {
-  id: string;
-  name: string;
-  type: {
-    name: string;
-    description: string;
-  };
-  class: '1' | '2';
-  address: string;
-  division: string;
-  division_name: string;
-  subdivision_name: string;
-  subdivision?: string;
-  facility_class?: string | null;
-  comments?: string;
-  acceptance_act_number?: string | null;
-  rim_act_number?: string | null;
-  commissioning_act_number?: string | null;
-  opening_permission_number?: string | null;
-  communication_posts: Array<{
-    name: string;
-    division: number;
-    subdivision: number;
-  }>;
-  communication_post_ids?: number;
-  type_id?: number;
-  kz_size?: string | null;
-  has_transformer_in_kz?: boolean;
-  has_grounding_in_kz?: boolean;
-  inn?: string;
-  is_closed?: boolean;
-  latitude?: number | null;
-  longitude?: number | null;
-}
-
-export interface CommunicationPost {
-  id: string;
-  name: string;
-  division: string;
-  division_name: string;
-  subdivision?: string;
-  subdivision_name?: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Network {
-  id: number;
-  name: string;
-  description?: string;
-  network_class: string;
-  security_level: 'public' | 'confidential' | 'secret' | 'top_secret';
-  divisions: Division[];
-  subdivisions: Subdivision[];
-  facilities: Facility[];
-  equipment: Equipment[];
-  created_at: string;
-  updated_at: string;
-  ip_range: string;
-  bandwidth: string;
-  throughput?: number;
-  protocol: 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
-}
-
-export interface Subdivision {
-  id: string;
-  name: string;
-  order?: number;
-}
-
-export interface VLAN {
-  id: string;
-  vlan_id: number;
-  name: string;
-  description: string;
-  created_at: string;
-}
-
-export interface NetworkInterface {
-  id: string;
-  equipment: Equipment;
-  name: string;
-  interface_type: string;
-  physical_type: string | null;
-  port_number: number | null;
-  slot: number | null;
-  module: number | null;
-  enabled: boolean;
-  mac_address: string;
-  mtu: number;
-  speed: string | null;
-  vlan: VLAN | null;
-  is_trunk: boolean;
-  native_vlan: VLAN | null;
-  connected_to: NetworkInterface | null;
-}
-
-export interface IPAddress {
-  id: string;
-  interface: NetworkInterface;
-  address: string;
-  netmask: string;
-  version: string;
-  is_primary: boolean;
-  gateway: string | null;
-  dns_servers: string | null;
-  description: string | null;
-}
-
-export interface IPRange {
-  id: string;
-  network: string;
-  description: string;
-  vlan: VLAN | null;
-  devices: Equipment[];
-  created_at: string;
-}
-
-export interface NetworkDirection {
-  from_membership: number;
-  to_membership: number;
-  bandwidth?: number;
-  latency?: number;
-  description?: string;
-}
-
-export interface ProductStructure {
-  id: string;
-  name: string;
-  model?: string;
-  serial_number?: string;
-  note?: string;
 }
 
 export interface EquipmentFieldPermissions {
@@ -328,10 +160,280 @@ export interface EquipmentFieldPermissions {
   canEditDocuments: boolean;
   canEditIdentification: boolean;
   canEditIsNetwork: boolean;
-  /** Может ли пользователь редактировать поля СЗИ (сертификат, дата) */
   canEditSzi: boolean;
 }
 
+// ============================================================
+// Подразделения, объекты, посты связи
+// ============================================================
+export interface Division {
+  id: string;
+  name: string;
+  subdivisions: Subdivision[];
+  facilities: Facility[];
+  employees_count?: number;
+  equipment_count?: number;
+  facilities_count?: number;
+  networks_count?: number;
+  order?: number;
+}
+
+export interface Subdivision {
+  id: string;
+  name: string;
+  order?: number;
+}
+
+export type CommunicationPostKind = 'P' | 'KP' | 'PS' | 'NDR';
+
+export interface CommunicationPostRef {
+  id: string;
+  name: string;
+  kind: CommunicationPostKind;
+  kind_display?: string;
+}
+
+export interface CommunicationPost {
+  id: string;
+  name: string;
+  kind: CommunicationPostKind;
+  kind_display?: string;
+
+  division: string;
+  division_name?: string;
+  subdivision?: string | null;
+  subdivision_name?: string | null;
+
+  parent?: CommunicationPostRef | null;
+  parent_name?: string | null;
+  parent_id?: string | number | null;
+
+  children?: CommunicationPostRef[];
+  children_count?: number;
+  full_path?: string;
+
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Facility {
+  id: string;
+  name: string;
+  type: { name: string; description: string };
+  class: '1' | '2';
+  address: string;
+  division: string;
+  division_name: string;
+  subdivision_name: string;
+  subdivision?: string;
+  facility_class?: string | null;
+  comments?: string;
+  acceptance_act_number?: string | null;
+  rim_act_number?: string | null;
+  commissioning_act_number?: string | null;
+  opening_permission_number?: string | null;
+
+  communication_posts: CommunicationPost[];
+  communication_post_ids?: number[];
+
+  type_id?: number;
+  kz_size?: string | null;
+  has_transformer_in_kz?: boolean;
+  has_grounding_in_kz?: boolean;
+  inn?: string;
+  is_closed?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+// ============================================================
+// Сети связи
+// ============================================================
+export type SecurityLevel = 'public' | 'confidential' | 'secret' | 'top_secret';
+export type NetworkClass = '1' | '2';
+export type Protocol = 'TCP/IP' | 'UDP' | 'MPLS' | 'Other';
+
+export interface NetworkMembership {
+  id: string;
+  network: string;
+  division: { id: string; name: string };
+  facility: { id: string; name: string };
+  equipment: { id: string; name: string; serial_number?: string };
+}
+
+export interface CommunicationNetwork {
+  id: string;
+  name: string;
+  description: string;
+  network_class: NetworkClass | null;
+  security_level: SecurityLevel;
+  ip_range: string;
+  throughput: number | null;
+  protocol: Protocol;
+  created_at: string;
+  updated_at: string;
+  memberships?: NetworkMembership[];
+}
+
+/** Алиас для обратной совместимости — старый код импортирует `Network` */
+export type Network = CommunicationNetwork;
+
+// ============================================================
+// VLAN
+// ============================================================
+export interface VLAN {
+  id: string;
+  vlan_id: number;
+  name: string;
+  description: string;
+  created_at: string;
+}
+
+// ============================================================
+// Сетевой интерфейс (единственное объявление!)
+// ============================================================
+export type InterfaceType =
+  | 'physical' | 'bond' | 'bridge' | 'vlan' | 'loopback'
+  | 'port-channel' | 'tunnel' | 'virtual' | 'other';
+
+export type PhysicalPortType =
+  | 'rj45' | 'sfp' | 'sfp+' | 'qsfp' | 'console' | 'usb';
+
+export type PortMode = 'access' | 'trunk' | 'general' | 'hybrid';
+
+export interface NetworkInterface {
+  id: string;
+  equipment: string;
+  equipment_name: string;
+  name: string;
+  interface_type: InterfaceType;
+  physical_type: PhysicalPortType | null;
+  port_number: number | null;
+  slot: number | null;
+  module: number | null;
+  enabled: boolean;
+  mode: PortMode;
+  mac_address: string;
+  mtu: number;
+  speed: string;
+  access_vlan: string | null;
+  access_vlan_name?: string | null;
+  is_trunk: boolean;
+  native_vlan: string | null;
+  native_vlan_name?: string | null;
+  connected_to: string | null;
+  connected_to_name?: string | null;
+  connected_to_equipment_name?: string | null;
+  vlan_configurations?: any[];
+  ip_addresses?: IPAddress[];
+}
+
+export type NetworkInterfaceInput = Omit<
+  NetworkInterface,
+  | 'id'
+  | 'equipment_name'
+  | 'access_vlan_name'
+  | 'native_vlan_name'
+  | 'connected_to_name'
+  | 'connected_to_equipment_name'
+  | 'vlan_configurations'
+  | 'ip_addresses'
+>;
+
+// ============================================================
+// Подсети
+// ============================================================
+export interface Subnet {
+  id: string;
+  network: string;
+  network_name?: string;
+  vlan: string | null;
+  vlan_name?: string | null;
+  vlan_id_num?: number | null;
+  parent: string | null;
+
+  network_address: string;
+  prefix_length: number;
+
+  cidr: string;
+  netmask: string;
+  broadcast: string;
+  first_host: string;
+  last_host: string;
+  host_count: number;
+
+  used_count: number;
+  reserved_count: number;
+  free_count: number;
+  children_count: number;
+
+  purpose: string;
+  gateway: string | null;
+  description: string;
+  dhcp_enabled: boolean;
+  dhcp_pool_start: string | null;
+  dhcp_pool_end: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
+// IP-адреса (единственное объявление!)
+// ============================================================
+export type IPStatus = 'free' | 'reserved' | 'in_use' | 'deprecated';
+
+export interface IPAddress {
+  id: string;
+  subnet: string;
+  subnet_cidr?: string;
+  network_id?: number | null;
+  address: string;
+  status: IPStatus;
+  is_primary: boolean;
+  hostname: string;
+  purpose: string;
+  assigned_to: string;
+  description: string;
+  interface: string | null;
+  interface_name?: string | null;
+  equipment_id?: string | null;
+  equipment_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubnetHost {
+  address: string;
+  ip_id: string | null;
+  status: IPStatus;
+  hostname: string;
+  purpose: string;
+  assigned_to: string;
+  description: string;
+  is_primary: boolean;
+  interface_id: string | null;
+  interface_name: string | null;
+  equipment_name: string | null;
+}
+
+// ============================================================
+// Направления
+// ============================================================
+export interface NetworkDirection {
+  id?: string;
+  network?: string;
+  from_membership: number;
+  to_membership: number;
+  bandwidth?: number;
+  latency?: number;
+  description?: string;
+}
+
+// ============================================================
+// Auth / прочее (как у вас было)
+// ============================================================
 export interface LoginResponse {
   access: string;
   refresh: string;
@@ -391,4 +493,28 @@ export interface ScheduleEvent {
   date: string;
   event_type: string;
   comment?: string;
+}
+
+// ============================================================
+// Wizard: свободные подсети
+// ============================================================
+
+export interface AvailableSlot {
+  network_address: string;
+  prefix_length: number;
+  cidr: string;
+  parent_cidr: string;
+}
+
+export type AvailableSlotsHint =
+  | 'no_ip_range'
+  | 'invalid_ip_range'
+  | 'parent_too_small';
+
+export interface AvailableSlotsResponse {
+  results: AvailableSlot[];
+  parent_cidr?: string;
+  requested_prefix?: number;
+  hint?: AvailableSlotsHint;
+  detail?: string;
 }

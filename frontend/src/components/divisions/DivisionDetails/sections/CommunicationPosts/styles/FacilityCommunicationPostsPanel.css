@@ -1,0 +1,437 @@
+/* =========================================================
+   Панель «Посты связи»
+   ========================================================= */
+
+.facility-posts-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ---- Тулбар ---- */
+.facility-posts-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 2px;
+    flex-wrap: wrap;
+}
+
+.facility-posts-toolbar__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.facility-posts-toolbar__count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.facility-posts-toolbar__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.facility-posts-toolbar__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.facility-posts-toolbar__add:hover:not(:disabled) {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.facility-posts-toolbar__pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.facility-posts-toolbar__pdf:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+.facility-posts-toolbar__pdf:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ---- Загрузка / ошибка / пустое состояние ---- */
+.facility-posts-loading,
+.facility-posts-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 24px;
+    color: #475569;
+    font-size: 0.9rem;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.facility-posts-loading__spin {
+    animation: facilityPostsSpin 0.9s linear infinite;
+    color: #2563eb;
+}
+
+@keyframes facilityPostsSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.facility-posts-error {
+    justify-content: space-between;
+    color: #b91c1c;
+    background: #fef2f2;
+}
+
+.facility-posts-error__retry {
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.facility-posts-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 24px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    color: #64748b;
+    text-align: center;
+}
+
+.facility-posts-empty h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.facility-posts-empty p {
+    margin: 0;
+    font-size: 0.875rem;
+    max-width: 420px;
+    line-height: 1.45;
+}
+
+.facility-posts-empty__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.facility-posts-empty__btn:hover {
+    background: #1d4ed8;
+}
+
+/* =========================================================
+   Сетка карточек
+   ========================================================= */
+.facility-posts-cards {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+@media (max-width: 1600px) {
+    .facility-posts-cards {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1280px) {
+    .facility-posts-cards {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .facility-posts-cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .facility-posts-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .facility-posts-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================================
+   Карточка поста
+   ========================================================= */
+.post-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    transition: box-shadow 0.15s ease;
+    min-width: 0;
+}
+
+.post-card:hover {
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/* ---- Заголовок: название центрировано, вся шапка кликабельна ---- */
+.post-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.post-card__header--clickable {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.post-card__header--clickable:hover {
+    background: linear-gradient(180deg, #eef4fb 0%, #f7fafd 100%);
+}
+
+.post-card__header--clickable:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #2563eb;
+}
+
+.post-card__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+    width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- Адрес привязанного объекта (без рамки, без фона) ---- */
+.post-card__facility {
+    padding: 8px 8px;
+    font-size: 0.7rem;
+    color: #475569;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.post-card__facility-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    max-width: 100%;
+    flex-wrap: wrap;
+    line-height: 1.3;
+}
+
+.post-card__facility-icon {
+    color: #0891b2;
+    flex-shrink: 0;
+}
+
+.post-card__facility-name {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.post-card__facility-address {
+    color: #64748b;
+    word-break: break-word;
+}
+
+.post-card__facility-empty {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* ---- Построчная сетка: [ПС] | [НДР этого ПС] ---- */
+.post-card__rows {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #e2e8f0;
+}
+
+.post-card__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: 0;
+}
+
+/* Разделитель между строками (кроме шапки колонок) */
+.post-card__row:not(.post-card__row--header) {
+    border-top: 1px solid #e2e8f0;
+}
+
+.post-card__row--header {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.post-card__cell {
+    padding: 8px 10px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+/* Колонка НДР — тот же фон, что и у ПС */
+.post-card__cell--ndr {
+    border-left: 1px solid #e2e8f0;
+    background: #ffffff;
+}
+
+.post-card__cell-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #121212;
+    text-align: center;
+    width: 100%;
+}
+
+/* ---- Строка ПС / НДР ---- */
+.post-node-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    transition: background 0.12s ease;
+    position: relative;
+    min-width: 0;
+}
+
+.post-node-row--clickable {
+    cursor: pointer;
+}
+
+.post-node-row--clickable:hover {
+    background: #f1f5f9;
+}
+
+.post-node-row--clickable:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #2563eb inset;
+}
+
+.post-node-row__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    text-align: center;
+}
+
+/* ---- Кнопка «+ Добавить …» (пунктирная) ---- */
+.post-card__add-dashed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 3px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 0;
+}
+
+.post-card__add-dashed:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+/* Внутри узких карточек складываем ПС/НДР вертикально */
+@media (max-width: 1600px) {
+    .post-card__row:not(.post-card__row--header) {
+        grid-template-columns: 1fr;
+    }
+
+    .post-card__row:not(.post-card__row--header) .post-card__cell--ndr {
+        border-left: none;
+        border-top: 1px dashed #e2e8f0;
+    }
+}

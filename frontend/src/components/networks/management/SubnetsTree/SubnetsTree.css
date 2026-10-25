@@ -1,0 +1,166 @@
+/* src/components/networks/management/SubnetsTree/SubnetsTree.css */
+
+.st-container {
+    padding: 6px 0;
+}
+
+.st-node {}
+
+.st-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 10px 8px 0;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+    position: relative;
+}
+
+.st-row:hover {
+    background: #f8fafc;
+}
+
+.st-row:hover .st-actions {
+    opacity: 1;
+}
+
+.st-row-selected {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+}
+
+.st-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    color: #94a3b8;
+    flex-shrink: 0;
+    width: 20px;
+}
+
+.st-toggle-icon {
+    transition: transform 0.15s;
+}
+
+.st-toggle-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.st-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.st-cidr {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.st-full-badge {
+    font-family: system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 8px;
+    text-transform: lowercase;
+}
+
+.st-meta {
+    display: flex;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: #64748b;
+    flex-wrap: wrap;
+}
+
+.st-vlan {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.st-purpose {
+    color: #0f766e;
+}
+
+.st-usage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.st-usage-bar {
+    flex: 1;
+    height: 5px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.st-usage-fill {
+    height: 100%;
+    background: #22c55e;
+    transition: width 0.2s, background 0.2s;
+}
+
+.st-usage-full {
+    background: #ef4444;
+}
+
+.st-usage-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.st-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s;
+    flex-shrink: 0;
+}
+
+.st-row-selected .st-actions {
+    opacity: 1;
+}
+
+.st-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 3px;
+    color: #94a3b8;
+    border-radius: 3px;
+    display: inline-flex;
+}
+
+.st-actions button:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.st-actions button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.st-empty {
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.88rem;
+}

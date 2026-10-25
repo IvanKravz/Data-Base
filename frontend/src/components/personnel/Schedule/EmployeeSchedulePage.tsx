@@ -1,10 +1,11 @@
 // components/EmployeeSchedulePage/EmployeeSchedulePage.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { employeesApi } from '../../../api/employees';
 import { divisionsApi } from '../../../api';
 import { Employee, ScheduleEvent } from '../../../types';
 import { useAppPermissions } from '../../../api/utils/AppPermissionsContext';
+import { SearchBar } from '../../common/SearchBar';
 import ScheduleHeader from './components/ScheduleHeader/ScheduleHeader';
 import ScheduleControls from './components/ScheduleControls/ScheduleControls';
 import ScheduleTable from './components/ScheduleTable/ScheduleTable';
@@ -12,6 +13,7 @@ import ScheduleModal from './components/ScheduleModal/ScheduleModal';
 import ScheduleContextMenu from './components/ScheduleContextMenu/ScheduleContextMenu';
 import ScheduleLoading from './components/ScheduleLoading/ScheduleLoading';
 import StatusSummary from './components/StatusSummary/StatusSummary';
+import ScheduleTabs, { ScheduleTab } from './components/ScheduleTabs/ScheduleTabs';
 import { EVENT_COLORS, EVENT_LABELS, EVENT_SHORT_LABELS } from '../config/scheduleEvents';
 import './EmployeeSchedule.css';
 
@@ -91,18 +93,25 @@ export function EmployeeSchedulePage() {
   const [selectedReportDate, setSelectedReportDate] = useState<Date | null>(new Date());
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  // === Режим отображения таблицы (Список / По подразделениям) ===
+  // === Поиск сотрудников (ФИО / звание / должность) ===
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
+  // === Режим отображения ===
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
     const saved = localStorage.getItem('schedule_view_mode');
     return saved === 'flat' || saved === 'grouped' ? saved : 'flat';
   });
+
+  // === Активные вкладки (grouped) ===
+  const [activeDivisionTab, setActiveDivisionTab] = useState<string>('all');
+  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<string>('all');
 
   const handleViewModeChange = (mode: 'flat' | 'grouped') => {
     setViewMode(mode);
     localStorage.setItem('schedule_view_mode', mode);
   };
 
-  // === Названия подразделения и отделения (по API, если пришли не с карточки) ===
+  // === Названия подразделения/отделения (по API) ===
   useEffect(() => {
     if (!divisionIdFromUrl) {
       setDivisionName(null);
@@ -220,6 +229,193 @@ export function EmployeeSchedulePage() {
     return events.find((e) => e.employee === employeeId && e.date === dateStr);
   };
 
+  // === Фильтр по поисковому запросу (ФИО / звание / должность) ===
+  const matchesSearch = useCallback(
+    (e: Employee) => {
+      const q = searchTerm.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        e.full_name.toLowerCase().includes(q) ||
+        (e.rank?.toLowerCase().includes(q) ?? false) ||
+        (e.position?.toLowerCase().includes(q) ?? false)
+      );
+    },
+    [searchTerm],
+  );
+
+  // === Фильтр по статусу (карточки StatusSummary) ===
+  const matchesStatus = useCallback(
+    (e: Employee) => {
+      if (filterStatus === null) return true;
+
+      if (selectedReportDate) {
+        const event = getEventFor(e.id, selectedReportDate);
+        if (filterStatus === 'available') return !event;
+        return event?.event_type === filterStatus;
+      }
+      if (filterStatus === 'available') {
+        return !events.some((ev) => ev.employee === e.id);
+      }
+      return events.some((ev) => ev.employee === e.id && ev.event_type === filterStatus);
+    },
+    // getEventFor зависит от events, поэтому events в зависимостях
+    [filterStatus, selectedReportDate, events],
+  );
+
+  // === Синхронизация вкладки отделения с URL ===
+  useEffect(() => {
+    if (subdivisionIdFromUrl) {
+      setActiveSubdivisionTab(String(subdivisionIdFromUrl));
+    }
+  }, [subdivisionIdFromUrl]);
+
+  // === Скоуп-данные по активным вкладкам (без поиска и без фильтра статуса) ===
+  // Используются для StatusSummary: цифры в карточках должны соответствовать
+  // выбранной вкладке, но не зависеть от поиска/клика по самому статусу.
+  const scopedEmployees = useMemo(() => {
+    if (viewMode !== 'grouped') return employeesFilteredByDivision;
+
+    let result = employeesFilteredByDivision;
+
+    if (!divisionIdNum && activeDivisionTab !== 'all') {
+      result = result.filter((e) => String(e.division?.id) === activeDivisionTab);
+    }
+
+    if (activeSubdivisionTab === 'no-subdivision') {
+      result = result.filter((e) => !e.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      result = result.filter((e) => String(e.subdivision?.id) === activeSubdivisionTab);
+    }
+
+    return result;
+  }, [employeesFilteredByDivision, viewMode, divisionIdNum, activeDivisionTab, activeSubdivisionTab]);
+
+  // === Данные для счётчиков на вкладках: поиск + фильтр статуса ===
+  // Считаем от базового набора (без вкладок), чтобы счётчик на вкладке
+  // «Подразделение X» == числу строк в таблице при клике на неё.
+  const statusFilteredEmployees = useMemo(() => {
+    return employeesFilteredByDivision.filter(matchesSearch).filter(matchesStatus);
+  }, [employeesFilteredByDivision, matchesSearch, matchesStatus]);
+
+  // === То, что попадёт в таблицу: скоуп по вкладкам + поиск + фильтр статуса ===
+  const filteredEmployees = useMemo(() => {
+    return scopedEmployees.filter(matchesSearch).filter(matchesStatus);
+  }, [scopedEmployees, matchesSearch, matchesStatus]);
+
+  // === Вкладки подразделений (первый уровень) ===
+  const divisionTabs = useMemo<ScheduleTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+    if (divisionIdNum) return []; // URL жёстко задал подразделение
+
+    const map = new Map<string, ScheduleTab>();
+    statusFilteredEmployees.forEach((e) => {
+      if (!e.division?.id) return;
+      const id = String(e.division.id);
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          name: e.division.name,
+          count: 0,
+          order: (e.division as any).order ?? 9999,
+        });
+      }
+      map.get(id)!.count++;
+    });
+
+    const tabs = Array.from(map.values()).sort((a, b) => a.order - b.order);
+    // Вкладки подразделений имеют смысл только если их ≥ 2.
+    if (tabs.length < 2) return [];
+    tabs.unshift({
+      id: 'all',
+      name: 'Все подразделения',
+      count: statusFilteredEmployees.length,
+      order: 0,
+    });
+    return tabs;
+  }, [viewMode, divisionIdNum, statusFilteredEmployees]);
+
+  // === Вкладки отделений (второй уровень) ===
+  const subdivisionTabs = useMemo<ScheduleTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+
+    const scopeDivisionId = divisionIdNum
+      ? String(divisionIdNum)
+      : activeDivisionTab !== 'all'
+        ? activeDivisionTab
+        : null;
+
+    if (!scopeDivisionId) return [];
+
+    const divisionFiltered = statusFilteredEmployees.filter(
+      (e) => String(e.division?.id) === scopeDivisionId,
+    );
+
+    // Собираем только те отделения, в которых есть сотрудники
+    // (у Employee.subdivision нет полного справочника отделений).
+    const subsMap = new Map<string, ScheduleTab>();
+    divisionFiltered.forEach((e) => {
+      if (!e.subdivision?.id) return;
+      const id = String(e.subdivision.id);
+      if (!subsMap.has(id)) {
+        subsMap.set(id, {
+          id,
+          name: e.subdivision.name,
+          count: 0,
+          order: (e.subdivision as any).order ?? 9999,
+        });
+      }
+      subsMap.get(id)!.count++;
+    });
+
+    const subs = Array.from(subsMap.values()).sort((a, b) => a.order - b.order);
+
+    const noSubCount = divisionFiltered.filter((e) => !e.subdivision?.id).length;
+    if (noSubCount > 0) {
+      subs.push({
+        id: 'no-subdivision',
+        name: 'Без отделения',
+        count: noSubCount,
+        order: 99999,
+      });
+    }
+
+    // Если в подразделении одно реальное отделение (или только «Без отделения»),
+    // вкладки скрываем — переключаться некуда.
+    if (subs.length < 2) return [];
+
+    return [
+      {
+        id: 'all',
+        name: 'Все отделения',
+        count: divisionFiltered.length,
+        order: 0,
+      },
+      ...subs,
+    ];
+  }, [viewMode, divisionIdNum, activeDivisionTab, statusFilteredEmployees]);
+
+  const showDivisionTabs = viewMode === 'grouped' && divisionTabs.length > 1;
+  const showSubdivisionTabs = viewMode === 'grouped' && subdivisionTabs.length > 1;
+
+  // === Защита: если активной вкладки отделения больше нет — сбрасываем ===
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeSubdivisionTab === 'all') return;
+    if (!subdivisionTabs.some((t) => t.id === activeSubdivisionTab)) {
+      setActiveSubdivisionTab('all');
+    }
+  }, [viewMode, subdivisionTabs, activeSubdivisionTab]);
+
+  // === Защита для активной вкладки подразделения ===
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeDivisionTab === 'all') return;
+    if (divisionIdNum) return; // вкладки подразделений не показываются
+    if (!divisionTabs.some((t) => t.id === activeDivisionTab)) {
+      setActiveDivisionTab('all');
+    }
+  }, [viewMode, divisionTabs, activeDivisionTab, divisionIdNum]);
+
   const hasEventsInRange = useMemo(() => {
     if (!bulkRange || bulkRange.type !== 'dates') return false;
     if (bulkRange.employeeId && bulkRange.startDate && bulkRange.endDate) {
@@ -233,22 +429,6 @@ export function EmployeeSchedulePage() {
     }
     return false;
   }, [bulkRange, events, currentYear, currentMonth]);
-
-  const filteredEmployees = useMemo(() => {
-    const base = employeesFilteredByDivision;
-    if (filterStatus === null) return base;
-
-    return base.filter((emp) => {
-      if (selectedReportDate) {
-        const event = getEventFor(emp.id, selectedReportDate);
-        if (filterStatus === 'available') return !event;
-        return event?.event_type === filterStatus;
-      } else {
-        if (filterStatus === 'available') return !events.some((e) => e.employee === emp.id);
-        return events.some((e) => e.employee === emp.id && e.event_type === filterStatus);
-      }
-    });
-  }, [employeesFilteredByDivision, events, filterStatus, selectedReportDate, currentYear, currentMonth]);
 
   const isInRange = (empId: number, date: Date): boolean => {
     if (!rangeStart) return false;
@@ -591,16 +771,7 @@ export function EmployeeSchedulePage() {
     navigate(-1);
   };
 
-  // === Подзаголовок шапки ===
-  // Приоритет:
-  //  1) URL содержит division → «Подразделение [· Отделение]».
-  //     Отделение берём по порядку:
-  //       a) из URL, если оно там есть;
-  //       b) иначе из фактического списка сотрудников, если все из одного отделения;
-  //       c) иначе из данных пользователя, если его подразделение совпадает с URL.
-  //  2) URL без division → подразделение/отделение пользователя или «Все подразделения».
   const headerSubtitle = useMemo(() => {
-    // ----- Случай 1: URL содержит division -----
     if (divisionIdFromUrl) {
       const parts: string[] = [];
       parts.push(divisionName ?? 'Загрузка...');
@@ -608,10 +779,8 @@ export function EmployeeSchedulePage() {
       let subLabel: string | null = null;
 
       if (subdivisionIdFromUrl) {
-        // (a) Отделение явно в URL
         subLabel = subdivisionName ?? 'Загрузка...';
       } else if (!loadingEmployees && employees.length > 0) {
-        // (b) Вычисляем по фактическому списку сотрудников
         const subIds = new Set<number>();
         let firstSubName: string | null = null;
         for (const emp of employees) {
@@ -626,8 +795,6 @@ export function EmployeeSchedulePage() {
           subLabel = firstSubName;
         }
       } else if (!loadingEmployees && employees.length === 0) {
-        // (c) Список пуст → fallback на отделение пользователя,
-        //      если его подразделение совпадает с открытым
         const currentUser = getCurrentUser();
         const uDivId = currentUser?.division_info?.id;
         const uSubName: string | null =
@@ -642,7 +809,6 @@ export function EmployeeSchedulePage() {
       return parts.join(' · ');
     }
 
-    // ----- Случай 2: URL без division -----
     if (loadingEmployees) return 'Загрузка...';
 
     const currentUser = getCurrentUser();
@@ -670,7 +836,6 @@ export function EmployeeSchedulePage() {
       }
     }
 
-    // Список пуст → данные пользователя
     if (divisionIds.size === 0) {
       if (uDivisionName && uSubdivisionName) {
         return `${uDivisionName} · ${uSubdivisionName}`;
@@ -679,7 +844,6 @@ export function EmployeeSchedulePage() {
       return 'Все подразделения';
     }
 
-    // Один дивизион
     if (divisionIds.size === 1) {
       const divName = firstDivisionName ?? uDivisionName ?? 'Подразделение';
       if (subdivisionIds.size === 1) {
@@ -689,7 +853,6 @@ export function EmployeeSchedulePage() {
       return divName;
     }
 
-    // Несколько дивизионов
     return 'Все подразделения';
   }, [
     divisionIdFromUrl,
@@ -701,11 +864,14 @@ export function EmployeeSchedulePage() {
     getCurrentUser,
   ]);
 
-  // Уникальный ключ для хранения свёрнутости в разрезе подразделения/отделения
-  const storageKey = useMemo(
-    () => `${divisionIdFromUrl || 'all'}_${subdivisionIdFromUrl || 'none'}`,
-    [divisionIdFromUrl, subdivisionIdFromUrl],
-  );
+  const handleDivisionChange = useCallback((id: string) => {
+    setActiveDivisionTab(id);
+    setActiveSubdivisionTab('all');
+  }, []);
+
+  const handleSubdivisionChange = useCallback((id: string) => {
+    setActiveSubdivisionTab(id);
+  }, []);
 
   return (
     <div className="schedule-container page-fade-in" onClick={closeContextMenu}>
@@ -726,7 +892,7 @@ export function EmployeeSchedulePage() {
       />
 
       <StatusSummary
-        employees={employeesFilteredByDivision}
+        employees={scopedEmployees}
         events={events}
         selectedDate={selectedReportDate}
         filterStatus={filterStatus}
@@ -737,6 +903,26 @@ export function EmployeeSchedulePage() {
         currentMonth={currentMonth}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+      />
+
+      {/* Поиск сотрудников */}
+      <div className="schedule-search-container">
+        <SearchBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          placeholder="Поиск по ФИО, званию, должности..."
+        />
+      </div>
+
+      <ScheduleTabs
+        divisionTabs={divisionTabs}
+        subdivisionTabs={subdivisionTabs}
+        activeDivisionTab={activeDivisionTab}
+        activeSubdivisionTab={activeSubdivisionTab}
+        onDivisionChange={handleDivisionChange}
+        onSubdivisionChange={handleSubdivisionChange}
+        showDivisionTabs={showDivisionTabs}
+        showSubdivisionTabs={showSubdivisionTabs}
       />
 
       {loadingEmployees || loadingEvents ? (
@@ -758,8 +944,6 @@ export function EmployeeSchedulePage() {
           eventColors={EVENT_COLORS}
           eventLabels={EVENT_LABELS}
           eventShortLabels={EVENT_SHORT_LABELS}
-          viewMode={viewMode}
-          storageKey={storageKey}
         />
       )}
 

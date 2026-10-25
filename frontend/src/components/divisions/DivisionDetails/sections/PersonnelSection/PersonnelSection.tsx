@@ -85,8 +85,8 @@ export function PersonnelSection() {
         const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
         const data = await divisionsApi.getDivisionById(userDivisionId, stableToken);
         setDivision(data);
-        if (targetSubdivisionId) {
-          const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === targetSubdivisionId.toString());
+        if (stableSubdivisionId) {
+          const subdivision = data.subdivisions?.find((s: any) => s.id.toString() === stableSubdivisionId.toString());
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
@@ -94,7 +94,11 @@ export function PersonnelSection() {
         const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
         const filtered = allPersonnel.filter(person => {
           const matchesDivision = person.division?.id?.toString() === userDivisionId.toString();
-          if (targetSubdivisionId) return matchesDivision && person.subdivision?.id?.toString() === targetSubdivisionId.toString();
+          // Non-chief ограничен своим отделением — сохраняем жёсткий фильтр.
+          // Chief видит все отделения своего подразделения (вкладки переключают отделения).
+          if (!isChief && targetSubdivisionId) {
+            return matchesDivision && person.subdivision?.id?.toString() === targetSubdivisionId.toString();
+          }
           return matchesDivision;
         });
         setPersonnel(filtered);
@@ -110,11 +114,11 @@ export function PersonnelSection() {
           setSubdivisionName('');
         }
         const allPersonnel = await employeesApi.getPersonnel(stableToken, {});
-        const filtered = allPersonnel.filter(person => {
-          const matchesDivision = person.division?.id?.toString() === id.toString();
-          if (stableSubdivisionId) return matchesDivision && person.subdivision?.id?.toString() === stableSubdivisionId.toString();
-          return matchesDivision;
-        });
+        // URL-scoped к подразделению — фильтруем только по нему.
+        // Конкретное отделение выбирается во вкладках PersonnelList (или по subdivisionId в flat).
+        const filtered = allPersonnel.filter(person =>
+          person.division?.id?.toString() === id.toString()
+        );
         setPersonnel(filtered);
       }
     } catch (err) {
@@ -123,18 +127,11 @@ export function PersonnelSection() {
     } finally {
       setLoading(false);
     }
-  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
+  }, [stableToken, isGlobalView, isExploitationUser, isChief, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const filterBySubdivision = useCallback((items: any[]) => {
-    if (isExploitationUser && !id) return items;
-    if (isGlobalView) return items;
-    if (!stableSubdivisionId) return items;
-    return items.filter(item => item.subdivision?.id?.toString() === stableSubdivisionId.toString());
-  }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
   const filterPersonnel = useCallback((items: any[]) => {
     let filtered = items;
@@ -175,10 +172,11 @@ export function PersonnelSection() {
     return filtered;
   }, [searchTerm, advancedFilters]);
 
+  // Отдаём в PersonnelList все данные подразделения (или все, если global).
+  // Скоуп по отделению теперь рулится вкладками/`subdivisionId` внутри PersonnelList.
   const displayedPersonnel = useMemo(() => {
-    const bySubdivision = filterBySubdivision(personnel);
-    return filterPersonnel(bySubdivision);
-  }, [personnel, filterBySubdivision, filterPersonnel]);
+    return filterPersonnel(personnel);
+  }, [personnel, filterPersonnel]);
 
   const handleBack = useCallback(() => {
     if (location.state?.fromDivisionList) {

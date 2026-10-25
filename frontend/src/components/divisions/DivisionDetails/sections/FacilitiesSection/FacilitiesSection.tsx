@@ -9,15 +9,13 @@ import {
   FolderOpen,
   FolderClosed,
   SatelliteDish,
-  Map,
+  Map as MapIcon,
   List,
   FolderTree,
   Building2
 } from 'lucide-react';
-import { facilitiesApi, communicationPostsApi, authApi, divisionsApi } from '../../../../../api';
+import { facilitiesApi, authApi, divisionsApi } from '../../../../../api';
 import { FacilityList } from '../../../../facilities/FacilityList';
-import { CommunicationPostsList } from '../CommunicationPosts/CommunicationPostsList';
-import { AddCommunicationPostForm } from '../CommunicationPosts/AddCommunicationPostForm';
 import { FacilityTypeFilter } from '../../../../facilities/FacilityTypeFilter';
 import { Facility } from '../../../../../types';
 import { ExportButton } from '../../../../common/ExportButton';
@@ -27,14 +25,23 @@ import './FacilitiesSection.css';
 import { ConfirmationModal } from '../../../../modals/ConfirmationModal';
 import { isExploitationChief, isExploitationEmployee } from '../../../../../api/utils/permissions';
 
+import { FacilityCommunicationPostsPanel } from '../CommunicationPosts/FacilityCommunicationPostsPanel';
+
 const LazyMapView = lazy(() => import('../../../../map/MapView/MapView'));
 
 const TAB_ICONS = {
-  'all': <Map className="facilities-tab-icon" size={16} />,
+  'all': <MapIcon className="facilities-tab-icon" size={16} />,
   'open': <FolderOpen className="facilities-tab-icon" size={16} />,
   'closed': <FolderClosed className="facilities-tab-icon" size={16} />,
   'posts': <SatelliteDish className="facilities-tab-icon" size={16} />
 };
+
+interface DivisionTab {
+  id: string;
+  name: string;
+  count: number;
+  order: number;
+}
 
 export function FacilitiesSection() {
   const navigate = useNavigate();
@@ -50,8 +57,7 @@ export function FacilitiesSection() {
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'closed' | 'posts'>('all');
 
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [communicationPosts, setCommunicationPosts] = useState([]);
-  const [division, setDivision] = useState(null);
+  const [division, setDivision] = useState<any>(null);
   const [subdivisionName, setSubdivisionName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,16 +65,17 @@ export function FacilitiesSection() {
   const [mapSearchTerm, setMapSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [facilityToDelete, setFacilityToDelete] = useState<string | null>(null);
-  const [showAddPostModal, setShowAddPostModal] = useState(false);
 
   const [viewMode, setViewMode] = useState<'flat' | 'grouped'>(() => {
     const saved = localStorage.getItem('facility_view_mode');
     return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
   });
 
+  const [activeDivisionTab, setActiveDivisionTab] = useState<string>('all');
+  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<string>('all');
+
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ===== Анимированный индикатор активной вкладки =====
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; visible: boolean }>({
@@ -76,6 +83,11 @@ export function FacilitiesSection() {
     width: 0,
     visible: false,
   });
+
+  const divisionTabsRef = useRef<HTMLDivElement | null>(null);
+  const subdivisionTabsRef = useRef<HTMLDivElement | null>(null);
+  const [divisionIndicatorStyle, setDivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
+  const [subdivisionIndicatorStyle, setSubdivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
 
   const stableToken = useMemo(() => token, [token]);
   const stableSubdivisionId = useMemo(() => searchParams.get('subdivision'), [searchParams]);
@@ -90,10 +102,10 @@ export function FacilitiesSection() {
   const isChief = useMemo(() => isExploitationChief(), []);
   const isGlobalView = useMemo(() => !id && !isExploitationUser, [id, isExploitationUser]);
 
-  const userDivisionId = useMemo(() => user?.division_info?.id ?? null, [user]);
+  const userDivisionId = useMemo(() => (user as any)?.division_info?.id ?? null, [user]);
   const userSubdivisionId = useMemo(() => {
-    if (!user?.division_info || isChief) return null;
-    return user.division_info.subdivision?.id ?? null;
+    if (!(user as any)?.division_info || isChief) return null;
+    return (user as any).division_info.subdivision?.id ?? null;
   }, [user, isChief]);
 
   const canViewCommunicationPosts = useMemo(() =>
@@ -102,8 +114,16 @@ export function FacilitiesSection() {
     permissions?.models?.Facility?.includes('add') ?? false, [permissions]);
   const canCreateCommunicationPosts = useMemo(() =>
     permissions?.models?.CommunicationPost?.includes('add') ?? false, [permissions]);
+  const canEditCommunicationPosts = useMemo(() =>
+    permissions?.models?.CommunicationPost?.includes('change') ?? false, [permissions]);
   const canDeleteCommunicationPosts = useMemo(() =>
     permissions?.models?.CommunicationPost?.includes('delete') ?? false, [permissions]);
+
+  const effectiveDivisionId = useMemo<string | undefined>(() => {
+    if (id) return id;
+    if (isExploitationUser && userDivisionId) return String(userDivisionId);
+    return undefined;
+  }, [id, isExploitationUser, userDivisionId]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     setSearchParams(prev => {
@@ -176,12 +196,6 @@ export function FacilitiesSection() {
       if (isGlobalView) {
         const allFacilities = await facilitiesApi.getFacilities({ token: stableToken });
         setFacilities(allFacilities);
-        if (canViewCommunicationPosts) {
-          const posts = await communicationPostsApi.getCommunicationPosts({ token: stableToken });
-          setCommunicationPosts(posts);
-        } else {
-          setCommunicationPosts([]);
-        }
         authApi.updateGlobalView(true);
       } else if (isExploitationUser) {
         authApi.updateGlobalView(false);
@@ -191,48 +205,34 @@ export function FacilitiesSection() {
         }
         const targetSubdivisionId = stableSubdivisionId || userSubdivisionId;
         const [allFacilities, div] = await Promise.all([
-          facilitiesApi.getFacilities({ token: stableToken, division: userDivisionId }),
-          divisionsApi.getDivisionById(userDivisionId, stableToken)
+          facilitiesApi.getFacilities({ token: stableToken, division: String(userDivisionId) }),
+          divisionsApi.getDivisionById(String(userDivisionId), stableToken),
         ]);
-        let posts = [];
-        if (canViewCommunicationPosts) {
-          posts = await communicationPostsApi.getCommunicationPosts({
-            token: stableToken,
-            division: userDivisionId,
-            subdivision: targetSubdivisionId || undefined
-          });
-        }
         if (targetSubdivisionId) {
-          const subdivision = div.subdivisions?.find(s => s.id.toString() === targetSubdivisionId.toString());
+          const subdivision = div?.subdivisions?.find(
+            (s: any) => s.id.toString() === targetSubdivisionId.toString(),
+          );
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
         setFacilities(allFacilities);
-        setCommunicationPosts(posts);
         setDivision(div);
       } else {
         authApi.updateGlobalView(false);
         const [allFacilities, div] = await Promise.all([
           facilitiesApi.getFacilities({ token: stableToken, division: id }),
-          divisionsApi.getDivisionById(id, stableToken)
+          divisionsApi.getDivisionById(id!, stableToken),
         ]);
-        let posts = [];
-        if (canViewCommunicationPosts) {
-          posts = await communicationPostsApi.getCommunicationPosts({
-            token: stableToken,
-            division: id,
-            subdivision: stableSubdivisionId || undefined
-          });
-        }
         if (stableSubdivisionId) {
-          const subdivision = div.subdivisions?.find(s => s.id.toString() === stableSubdivisionId.toString());
+          const subdivision = div?.subdivisions?.find(
+            (s: any) => s.id.toString() === stableSubdivisionId.toString(),
+          );
           setSubdivisionName(subdivision?.name || '');
         } else {
           setSubdivisionName('');
         }
         setFacilities(allFacilities);
-        setCommunicationPosts(posts);
         setDivision(div);
       }
     } catch (err) {
@@ -241,7 +241,7 @@ export function FacilitiesSection() {
     } finally {
       setLoading(false);
     }
-  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId, canViewCommunicationPosts]);
+  }, [stableToken, isGlobalView, isExploitationUser, userDivisionId, userSubdivisionId, id, stableSubdivisionId]);
 
   useEffect(() => {
     fetchData();
@@ -251,36 +251,231 @@ export function FacilitiesSection() {
     if (isExploitationUser && !id) return items;
     if (isGlobalView) return items;
     if (!stableSubdivisionId) return items;
-    return items.filter(item => item.subdivision?.id?.toString() === stableSubdivisionId.toString());
+    return items.filter(item => item?.subdivision?.id?.toString() === stableSubdivisionId.toString());
   }, [isExploitationUser, id, isGlobalView, stableSubdivisionId]);
 
-  const filteredBySubdivisionFacilities = useMemo(() => filterBySubdivision(facilities), [facilities, filterBySubdivision]);
-  const filteredBySubdivisionPosts = useMemo(() => filterBySubdivision(communicationPosts), [communicationPosts, filterBySubdivision]);
+  const filteredBySubdivisionFacilities = useMemo(
+    () => filterBySubdivision(facilities),
+    [facilities, filterBySubdivision],
+  );
 
-  const facilityTypes = useMemo(() => {
-    const uniqueTypeIds = Array.from(new Set(filteredBySubdivisionFacilities.map(f => f.type.id)));
-    return uniqueTypeIds.map(id => {
-      const type = filteredBySubdivisionFacilities.find(f => f.type.id === id)?.type;
-      return type!;
-    }).filter(Boolean);
+  const statusTypeClassFiltered = useMemo(() => {
+    let result = filteredBySubdivisionFacilities;
+    if (activeTab === 'open') result = result.filter(f => !f.is_closed);
+    else if (activeTab === 'closed') result = result.filter(f => f.is_closed);
+    if (filterType !== 'all') result = result.filter(f => f.type?.id === filterType);
+    if (facilityClassFilter !== 'all') result = result.filter(f => f.facility_class === facilityClassFilter);
+    return result;
+  }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
+
+  const matchesSearch = useCallback((f: Facility): boolean => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase().trim();
+    return (
+      (f.name ?? '').toLowerCase().includes(q) ||
+      (f.address ?? '').toLowerCase().includes(q) ||
+      (f.type?.name ? f.type.name.toLowerCase().includes(q) : false) ||
+      (f.facility_class ? `${f.facility_class} класс`.includes(q) : false) ||
+      (f.division_name ? f.division_name.toLowerCase().includes(q) : false) ||
+      (f.subdivision_name ? f.subdivision_name.toLowerCase().includes(q) : false)
+    );
+  }, [searchTerm]);
+
+  const filteredWithoutTabs = useMemo(
+    () => statusTypeClassFiltered.filter(matchesSearch),
+    [statusTypeClassFiltered, matchesSearch],
+  );
+
+  const divisionTabs = useMemo<DivisionTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+    if (!isGlobalView) return [];
+    if (stableSubdivisionId) return [];
+
+    const map = new Map<string, DivisionTab>();
+    filteredWithoutTabs.forEach(f => {
+      if (!f.division?.id) return;
+      const divId = String(f.division.id);
+      if (!map.has(divId)) {
+        map.set(divId, {
+          id: divId,
+          name: f.division_name || f.division?.name || 'Подразделение',
+          count: 0,
+          order: (f.division as any)?.order ?? 9999,
+        });
+      }
+      map.get(divId)!.count++;
+    });
+
+    const tabs = Array.from(map.values()).sort((a, b) => a.order - b.order);
+    if (tabs.length < 2) return [];
+    tabs.unshift({
+      id: 'all',
+      name: 'Все подразделения',
+      count: filteredWithoutTabs.length,
+      order: 0,
+    });
+    return tabs;
+  }, [viewMode, isGlobalView, stableSubdivisionId, filteredWithoutTabs]);
+
+  const subdivisionTabs = useMemo<DivisionTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+    if (stableSubdivisionId) return [];
+
+    const scopeDivisionId = id
+      ? String(id)
+      : isExploitationUser
+        ? (userDivisionId ? String(userDivisionId) : null)
+        : activeDivisionTab !== 'all'
+          ? activeDivisionTab
+          : null;
+
+    if (!scopeDivisionId) return [];
+
+    const divisionFiltered = filteredWithoutTabs.filter(
+      f => String(f.division?.id) === scopeDivisionId,
+    );
+
+    const subsMap = new Map<string, DivisionTab>();
+    divisionFiltered.forEach(f => {
+      if (!f.subdivision?.id) return;
+      const subId = String(f.subdivision.id);
+      if (!subsMap.has(subId)) {
+        subsMap.set(subId, {
+          id: subId,
+          name: f.subdivision_name || f.subdivision?.name || 'Отделение',
+          count: 0,
+          order: (f.subdivision as any)?.order ?? 9999,
+        });
+      }
+      subsMap.get(subId)!.count++;
+    });
+
+    const subs = Array.from(subsMap.values()).sort((a, b) => a.order - b.order);
+
+    const noSubCount = divisionFiltered.filter(f => !f.subdivision?.id).length;
+    if (noSubCount > 0) {
+      subs.push({
+        id: 'no-subdivision',
+        name: 'Без отделения',
+        count: noSubCount,
+        order: 99999,
+      });
+    }
+
+    if (subs.length < 2) return [];
+
+    return [
+      {
+        id: 'all',
+        name: 'Все отделения',
+        count: divisionFiltered.length,
+        order: 0,
+      },
+      ...subs,
+    ];
+  }, [viewMode, stableSubdivisionId, id, isExploitationUser, userDivisionId, activeDivisionTab, filteredWithoutTabs]);
+
+  const showDivisionTabs = viewMode === 'grouped' && divisionTabs.length > 1;
+  const showSubdivisionTabs = viewMode === 'grouped' && subdivisionTabs.length > 1;
+
+  useEffect(() => {
+    if (stableSubdivisionId) setActiveSubdivisionTab(String(stableSubdivisionId));
+  }, [stableSubdivisionId]);
+
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeSubdivisionTab === 'all') return;
+    if (!subdivisionTabs.some(t => t.id === activeSubdivisionTab)) {
+      setActiveSubdivisionTab('all');
+    }
+  }, [viewMode, subdivisionTabs, activeSubdivisionTab]);
+
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeDivisionTab === 'all') return;
+    if (!divisionTabs.some(t => t.id === activeDivisionTab)) {
+      setActiveDivisionTab('all');
+    }
+  }, [viewMode, divisionTabs, activeDivisionTab]);
+
+  const filteredBySearch = useMemo(() => {
+    if (viewMode !== 'grouped') return filteredWithoutTabs;
+
+    let result = filteredWithoutTabs;
+
+    if (isGlobalView && !stableSubdivisionId && activeDivisionTab !== 'all') {
+      result = result.filter(f => String(f.division?.id) === activeDivisionTab);
+    }
+
+    if (activeSubdivisionTab === 'no-subdivision') {
+      result = result.filter(f => !f.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      result = result.filter(f => String(f.subdivision?.id) === activeSubdivisionTab);
+    }
+
+    return result;
+  }, [filteredWithoutTabs, viewMode, isGlobalView, stableSubdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  const typeFilterSource = useMemo(() => {
+    let result = filteredBySubdivisionFacilities;
+    if (activeTab === 'open') result = result.filter(f => !f.is_closed);
+    else if (activeTab === 'closed') result = result.filter(f => f.is_closed);
+
+    result = result.filter(matchesSearch);
+
+    if (viewMode === 'grouped') {
+      if (isGlobalView && !stableSubdivisionId && activeDivisionTab !== 'all') {
+        result = result.filter(f => String(f.division?.id) === activeDivisionTab);
+      }
+      if (activeSubdivisionTab === 'no-subdivision') {
+        result = result.filter(f => !f.subdivision?.id);
+      } else if (activeSubdivisionTab !== 'all') {
+        result = result.filter(f => String(f.subdivision?.id) === activeSubdivisionTab);
+      }
+    }
+
+    return result;
+  }, [filteredBySubdivisionFacilities, activeTab, matchesSearch, viewMode, isGlobalView, stableSubdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  const mapFacilities = useMemo(() => {
+    if (viewMode !== 'grouped') return statusTypeClassFiltered;
+
+    let result = statusTypeClassFiltered;
+    if (isGlobalView && !stableSubdivisionId && activeDivisionTab !== 'all') {
+      result = result.filter(f => String(f.division?.id) === activeDivisionTab);
+    }
+    if (activeSubdivisionTab === 'no-subdivision') {
+      result = result.filter(f => !f.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      result = result.filter(f => String(f.subdivision?.id) === activeSubdivisionTab);
+    }
+    return result;
+  }, [statusTypeClassFiltered, viewMode, isGlobalView, stableSubdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  const allFacilityTypes = useMemo(() => {
+    const uniqueTypeIds = Array.from(
+      new Set(filteredBySubdivisionFacilities.map(f => f.type?.id).filter(v => v != null)),
+    );
+    return uniqueTypeIds
+      .map(typeId => filteredBySubdivisionFacilities.find(f => f.type?.id === typeId)?.type)
+      .filter(Boolean) as any[];
   }, [filteredBySubdivisionFacilities]);
 
   const selectedTypeName = useMemo(() => {
     if (filterType === 'all') return null;
-    const type = facilityTypes.find(t => t.id === filterType);
+    const type = allFacilityTypes.find(t => t.id === filterType);
     if (!type) return null;
-    const isShd = type.name.toLowerCase().includes('шд');
+    const isShd = (type.name || '').toLowerCase().includes('шд');
     if (isShd && facilityClassFilter !== 'all') {
       return `ШД (${facilityClassFilter} класс)`;
     }
     return type.name;
-  }, [filterType, facilityClassFilter, facilityTypes]);
+  }, [filterType, facilityClassFilter, allFacilityTypes]);
 
   const hasAllFacilities = filteredBySubdivisionFacilities.length > 0;
   const hasOpenFacilities = filteredBySubdivisionFacilities.some(f => !f.is_closed);
   const hasClosedFacilities = filteredBySubdivisionFacilities.some(f => f.is_closed);
 
-  // Ключ состава видимых вкладок — для пересчёта индикатора
   const visibleTabsKey = useMemo(() => {
     const tabs: string[] = [];
     if (hasAllFacilities) tabs.push('all');
@@ -290,7 +485,6 @@ export function FacilitiesSection() {
     return tabs.join(',');
   }, [hasAllFacilities, hasOpenFacilities, hasClosedFacilities, canViewCommunicationPosts]);
 
-  // Позиционирование индикатора под активной вкладкой
   useLayoutEffect(() => {
     const updateIndicator = () => {
       const container = tabsRef.current;
@@ -304,7 +498,6 @@ export function FacilitiesSection() {
       const containerRect = container.getBoundingClientRect();
       const btnRect = activeBtn.getBoundingClientRect();
 
-      // Пропускаем, если layout ещё не посчитан (нулевые размеры)
       if (btnRect.width === 0 && containerRect.width === 0) return;
 
       setIndicatorStyle({
@@ -314,7 +507,6 @@ export function FacilitiesSection() {
       });
     };
 
-    // Сразу + на следующем кадре, чтобы поймать первый корректный layout
     updateIndicator();
     const raf = requestAnimationFrame(updateIndicator);
 
@@ -323,8 +515,6 @@ export function FacilitiesSection() {
       return () => cancelAnimationFrame(raf);
     }
 
-    // Реагируем на любые изменения размеров контейнера/кнопок:
-    // подгрузка шрифтов, появление скроллбара, изменение состава вкладок и т.д.
     const ro = new ResizeObserver(() => updateIndicator());
     ro.observe(container);
     Object.values(tabRefs.current).forEach(btn => {
@@ -334,7 +524,6 @@ export function FacilitiesSection() {
     container.addEventListener('scroll', updateIndicator, { passive: true });
     window.addEventListener('resize', updateIndicator);
 
-    // Страховочные пересчёты после первого layout
     const t1 = window.setTimeout(updateIndicator, 50);
     const t2 = window.setTimeout(updateIndicator, 200);
 
@@ -346,43 +535,61 @@ export function FacilitiesSection() {
       container.removeEventListener('scroll', updateIndicator);
       window.removeEventListener('resize', updateIndicator);
     };
-    // loading в зависимостях — чтобы пересчитать индикатор ровно в момент,
-    // когда вкладки впервые появляются в DOM после завершения загрузки
   }, [activeTab, visibleTabsKey, loading]);
 
-  const displayFacilities = useMemo(() => {
-    let result = filteredBySubdivisionFacilities;
-    if (activeTab === 'open') result = result.filter(f => !f.is_closed);
-    else if (activeTab === 'closed') result = result.filter(f => f.is_closed);
-    if (filterType !== 'all') result = result.filter(f => f.type.id === filterType);
-    if (facilityClassFilter !== 'all') result = result.filter(f => f.facility_class === facilityClassFilter);
-    return result;
-  }, [filteredBySubdivisionFacilities, activeTab, filterType, facilityClassFilter]);
+  useLayoutEffect(() => {
+    if (!divisionTabsRef.current) return;
+    const btn = divisionTabsRef.current.querySelector('.facilities-division-tab.active') as HTMLElement | null;
+    if (btn) setDivisionIndicatorStyle({
+      left: btn.offsetLeft,
+      width: btn.offsetWidth,
+      top: btn.offsetTop + btn.offsetHeight - 2,
+    });
+    else setDivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+  }, [activeDivisionTab, divisionTabs, showDivisionTabs]);
 
-  const filteredBySearch = useMemo(() => {
-    if (!searchTerm.trim()) return displayFacilities;
-    const searchLower = searchTerm.toLowerCase().trim();
-    return displayFacilities.filter(facility =>
-      facility.name.toLowerCase().includes(searchLower) ||
-      facility.address.toLowerCase().includes(searchLower) ||
-      (facility.type?.name && facility.type.name.toLowerCase().includes(searchLower)) ||
-      (facility.facility_class && `${facility.facility_class} класс`.includes(searchLower)) ||
-      facility.division_name?.toLowerCase().includes(searchLower) ||
-      facility.subdivision_name?.toLowerCase().includes(searchLower)
-    );
-  }, [displayFacilities, searchTerm]);
+  useLayoutEffect(() => {
+    if (!subdivisionTabsRef.current) return;
+    const btn = subdivisionTabsRef.current.querySelector('.facilities-subdivision-tab.active') as HTMLElement | null;
+    if (btn) setSubdivisionIndicatorStyle({
+      left: btn.offsetLeft,
+      width: btn.offsetWidth,
+      top: btn.offsetTop + btn.offsetHeight - 2,
+    });
+    else setSubdivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+  }, [activeSubdivisionTab, subdivisionTabs, showSubdivisionTabs]);
 
-  const mapFacilities = useMemo(() =>
-    filteredBySubdivisionFacilities.filter(facility => {
-      const matchesType = filterType === 'all' || facility.type.id === filterType;
-      const matchesClass = facilityClassFilter === 'all' || facility.facility_class === facilityClassFilter;
-      let matchesStatus = true;
-      if (activeTab === 'open') matchesStatus = !facility.is_closed;
-      else if (activeTab === 'closed') matchesStatus = facility.is_closed;
-      return matchesType && matchesClass && matchesStatus;
-    }),
-    [filteredBySubdivisionFacilities, filterType, facilityClassFilter, activeTab]
-  );
+  useEffect(() => {
+    const onResize = () => {
+      if (divisionTabsRef.current) {
+        const btn = divisionTabsRef.current.querySelector('.facilities-division-tab.active') as HTMLElement | null;
+        if (btn) setDivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+      if (subdivisionTabsRef.current) {
+        const btn = subdivisionTabsRef.current.querySelector('.facilities-subdivision-tab.active') as HTMLElement | null;
+        if (btn) setSubdivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleDivisionChange = useCallback((divId: string) => {
+    setActiveDivisionTab(divId);
+    setActiveSubdivisionTab('all');
+  }, []);
+
+  const handleSubdivisionChange = useCallback((subId: string) => {
+    setActiveSubdivisionTab(subId);
+  }, []);
 
   const getDeclension = (count: number): string => {
     const lastDigit = count % 10;
@@ -395,10 +602,6 @@ export function FacilitiesSection() {
 
   const handleFacilityDeleted = useCallback((deletedId: string) => {
     setFacilities(prev => prev.filter(f => f.id !== deletedId));
-  }, []);
-
-  const handlePostDeleted = useCallback((deletedId: string) => {
-    setCommunicationPosts(prev => prev.filter(p => p.id !== deletedId));
   }, []);
 
   const handleBack = useCallback(() => {
@@ -423,14 +626,6 @@ export function FacilitiesSection() {
     else navigate(`/divisions/${id}/facilities/new${stableSubdivisionId ? `?subdivision=${stableSubdivisionId}` : ''}`, { state });
   }, [isGlobalView, isExploitationUser, navigate, id, stableSubdivisionId, activeTab]);
 
-  const handleAddPost = useCallback(() => {
-    setShowAddPostModal(true);
-  }, []);
-
-  const handleAddPostSaved = useCallback(() => {
-    fetchData();
-  }, [fetchData]);
-
   const handleLocateFacility = useCallback((facility: Facility) => {
     setMapSearchTerm('');
     setTimeout(() => setMapSearchTerm(facility.name), 10);
@@ -440,8 +635,8 @@ export function FacilitiesSection() {
     }, 100);
   }, []);
 
-  const handleDeleteInitiated = useCallback((id: string) => {
-    setFacilityToDelete(id);
+  const handleDeleteInitiated = useCallback((facilityId: string) => {
+    setFacilityToDelete(facilityId);
     setShowDeleteModal(true);
   }, []);
 
@@ -450,8 +645,8 @@ export function FacilitiesSection() {
       try {
         await facilitiesApi.deleteFacility(facilityToDelete);
         handleFacilityDeleted(facilityToDelete);
-      } catch (error) {
-        console.error('Ошибка при удалении объекта:', error);
+      } catch (deleteError) {
+        console.error('Ошибка при удалении объекта:', deleteError);
       } finally {
         setShowDeleteModal(false);
         setFacilityToDelete(null);
@@ -470,7 +665,7 @@ export function FacilitiesSection() {
 
   const getHeaderTitle = () => {
     if (isExploitationUser && !id) {
-      const divisionName = user?.division_info?.name || 'Ваше подразделение';
+      const divisionName = (user as any)?.division_info?.name || 'Ваше подразделение';
       return `Объекты: ${divisionName}`;
     }
     if (isGlobalView) return 'Объекты: Все подразделения';
@@ -503,20 +698,11 @@ export function FacilitiesSection() {
         </div>
 
         <div className="facilities-add-buttons">
-          {activeTab === 'posts' ? (
-            canCreateCommunicationPosts && (
-              <button onClick={handleAddPost} className="facilities-add-button">
-                <Plus size={18} />
-                <span>Добавить пост связи</span>
-              </button>
-            )
-          ) : (
-            canCreateFacilities && (
-              <button onClick={handleAddFacility} className="facilities-add-button">
-                <Plus size={18} />
-                <span>Добавить объект</span>
-              </button>
-            )
+          {activeTab !== 'posts' && canCreateFacilities && (
+            <button onClick={handleAddFacility} className="facilities-add-button">
+              <Plus size={18} />
+              <span>Добавить объект</span>
+            </button>
           )}
         </div>
       </div>
@@ -574,17 +760,21 @@ export function FacilitiesSection() {
 
         <div className="facilities-content">
           {activeTab === 'posts' ? (
-            <CommunicationPostsList
-              posts={filteredBySubdivisionPosts}
-              onPostDeleted={handlePostDeleted}
-              onPostUpdated={fetchData}
-              isGlobalView={isGlobalView}
+            <FacilityCommunicationPostsPanel
+              token={token!}
+              divisionId={effectiveDivisionId}
+              subdivisionId={stableSubdivisionId || undefined}
+              canAdd={canCreateCommunicationPosts}
+              canEdit={canEditCommunicationPosts}
+              canDelete={canDeleteCommunicationPosts}
+              onChanged={fetchData}
+              title="Посты связи"
             />
           ) : (
             <>
               <div className="facilities-actions-row1">
                 <FacilityTypeFilter
-                  facilities={filteredBySubdivisionFacilities}
+                  facilities={typeFilterSource}
                   selectedType={filterType}
                   onTypeChange={handleTypeChange}
                   selectedClass={facilityClassFilter}
@@ -631,11 +821,59 @@ export function FacilitiesSection() {
                 <div className="facilities-count-right"></div>
               </div>
 
+              {showDivisionTabs && (
+                <div className="facilities-division-tabs" ref={divisionTabsRef}>
+                  {divisionTabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      className={`facilities-division-tab ${activeDivisionTab === tab.id ? 'active' : ''}`}
+                      onClick={() => handleDivisionChange(tab.id)}
+                    >
+                      <span>{tab.name}</span>
+                      <span className="facilities-division-tab-count">{tab.count}</span>
+                    </button>
+                  ))}
+                  <div
+                    className="facilities-division-tabs-indicator"
+                    style={{
+                      left: `${divisionIndicatorStyle.left}px`,
+                      width: `${divisionIndicatorStyle.width}px`,
+                      top: `${divisionIndicatorStyle.top}px`,
+                    }}
+                  />
+                </div>
+              )}
+
+              {showSubdivisionTabs && (
+                <div className="facilities-subdivision-tabs" ref={subdivisionTabsRef}>
+                  {subdivisionTabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      className={`facilities-subdivision-tab ${activeSubdivisionTab === tab.id ? 'active' : ''}`}
+                      onClick={() => handleSubdivisionChange(tab.id)}
+                    >
+                      <span>{tab.name}</span>
+                      <span className="facilities-subdivision-tab-count">{tab.count}</span>
+                    </button>
+                  ))}
+                  <div
+                    className="facilities-subdivision-tabs-indicator"
+                    style={{
+                      left: `${subdivisionIndicatorStyle.left}px`,
+                      width: `${subdivisionIndicatorStyle.width}px`,
+                      top: `${subdivisionIndicatorStyle.top}px`,
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="facilities-two-columns">
                 <div className="facilities-left-column">
                   <FacilityList
                     facilities={filteredBySearch}
-                    viewMode={viewMode}
+                    viewMode="flat"
                     onDelete={handleDeleteInitiated}
                     onLocate={handleLocateFacility}
                     divisionId={id}
@@ -671,15 +909,6 @@ export function FacilitiesSection() {
           message="Вы уверены, что хотите удалить этот объект? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
-        />
-      )}
-
-      {showAddPostModal && (
-        <AddCommunicationPostForm
-          onClose={() => setShowAddPostModal(false)}
-          onSaved={handleAddPostSaved}
-          divisionId={id || undefined}
-          subdivisionId={stableSubdivisionId || undefined}
         />
       )}
     </div>

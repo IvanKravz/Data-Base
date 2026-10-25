@@ -248,6 +248,11 @@
     font-size: 0.9rem;
 }
 
+/* ===== Контейнер поиска сотрудников ===== */
+.schedule-search-container {
+    margin-bottom: 12px;
+}
+
 /* ===== Анимация появления страницы ===== */
 @keyframes fadeIn {
     from {

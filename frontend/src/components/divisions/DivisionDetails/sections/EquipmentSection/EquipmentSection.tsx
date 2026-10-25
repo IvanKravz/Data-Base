@@ -28,6 +28,13 @@ interface AdvancedSearchFilters {
   interestOrgans: Array<{ id: string; name: string }>;
 }
 
+interface EquipmentTab {
+  id: string;
+  name: string;
+  count: number;
+  order: number;
+}
+
 export function EquipmentSection() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,12 +53,9 @@ export function EquipmentSection() {
     return (saved === 'flat' || saved === 'grouped') ? saved : 'flat';
   });
 
-  // Ключ для сохранения состояния свёрнутых блоков в sessionStorage
-  const storageKey = useMemo(() => {
-    const base = id ? `division_${id}` : 'global';
-    const sub = subdivisionId ? `_sub_${subdivisionId}` : '';
-    return `equipment_${base}${sub}`;
-  }, [id, subdivisionId]);
+  // Активные вкладки (grouped)
+  const [activeDivisionTab, setActiveDivisionTab] = useState<string>('all');
+  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<string>('all');
 
   const getEquipmentDeclension = (count: number): string => {
     const lastDigit = count % 10;
@@ -78,6 +82,12 @@ export function EquipmentSection() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({});
+
+  // Refs + индикаторы для вкладок подразделения/отделения
+  const divisionTabsRef = useRef<HTMLDivElement>(null);
+  const subdivisionTabsRef = useRef<HTMLDivElement>(null);
+  const [divisionIndicatorStyle, setDivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
+  const [subdivisionIndicatorStyle, setSubdivisionIndicatorStyle] = useState({ left: 0, width: 0, top: 0 });
 
   const [division, setDivision] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -217,18 +227,18 @@ export function EquipmentSection() {
     return openCategories.filter((cat: any) => openEquipment.some((item: any) => item.category?.value === cat.value));
   }, [categories, openEquipment]);
 
+  // ===== 1. Набор по активной категории (activeTab) =====
   const statusButtonsEquipment = useMemo(() => {
     if (activeTab === 'closed') return closedEquipment;
     if (activeTab === 'all') return [...openEquipment, ...closedEquipment];
     return openEquipment.filter((item: any) => item.category?.value === activeTab);
   }, [activeTab, openEquipment, closedEquipment]);
 
-  const filteredEquipment = useMemo(() => {
+  // ===== 2. Только поиск + advanced (без статуса и вкладок) =====
+  const searchAndAdvancedFiltered = useMemo(() => {
     return statusButtonsEquipment.filter((item: any) => {
-      // На общей странице техники списанные не показываем.
       if (item.status === 'disposed') return false;
 
-      const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
       const matchesBasicSearch = searchTerm === '' ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -246,9 +256,209 @@ export function EquipmentSection() {
         (!advancedFilters.manufacturingDateTo || item.manufacturing_date <= advancedFilters.manufacturingDateTo) &&
         (!advancedFilters.exploitationDateFrom || item.exploitation_date >= advancedFilters.exploitationDateFrom) &&
         (!advancedFilters.exploitationDateTo || item.exploitation_date <= advancedFilters.exploitationDateTo);
-      return matchesStatus && matchesBasicSearch && matchesAdvancedSearch;
+
+      return matchesBasicSearch && matchesAdvancedSearch;
     });
-  }, [statusButtonsEquipment, selectedStatus, searchTerm, advancedFilters]);
+  }, [statusButtonsEquipment, searchTerm, advancedFilters]);
+
+  // ===== 3. Только активная вкладка (без статуса) =====
+  const tabsFilteredBase = useMemo(() => {
+    if (viewMode !== 'grouped') return searchAndAdvancedFiltered;
+
+    let result = searchAndAdvancedFiltered;
+
+    if (isGlobalView && !stableSubdivisionId && activeDivisionTab !== 'all') {
+      result = result.filter((e: any) => String(e.division?.id) === activeDivisionTab);
+    }
+
+    if (activeSubdivisionTab === 'no-subdivision') {
+      result = result.filter((e: any) => !e.subdivision?.id);
+    } else if (activeSubdivisionTab !== 'all') {
+      result = result.filter((e: any) => String(e.subdivision?.id) === activeSubdivisionTab);
+    }
+
+    return result;
+  }, [searchAndAdvancedFiltered, viewMode, isGlobalView, stableSubdivisionId, activeDivisionTab, activeSubdivisionTab]);
+
+  // ===== 4. Финальный список для таблицы (с учётом статуса) =====
+  const filteredEquipment = useMemo(() => {
+    if (selectedStatus === 'all') return tabsFilteredBase;
+    return tabsFilteredBase.filter((item: any) => item.status === selectedStatus);
+  }, [tabsFilteredBase, selectedStatus]);
+
+  // ============ ВКЛАДКИ ПОДРАЗДЕЛЕНИЙ / ОТДЕЛЕНИЙ ============
+
+  const divisionTabs = useMemo<EquipmentTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+    if (!isGlobalView) return [];
+    if (stableSubdivisionId) return [];
+
+    const map = new Map<string, EquipmentTab>();
+    searchAndAdvancedFiltered.forEach((e: any) => {
+      if (!e.division?.id) return;
+      const divId = String(e.division.id);
+      if (!map.has(divId)) {
+        map.set(divId, {
+          id: divId,
+          name: e.division.name,
+          count: 0,
+          order: e.division.order ?? 9999,
+        });
+      }
+      map.get(divId)!.count++;
+    });
+
+    const tabs = Array.from(map.values()).sort((a, b) => a.order - b.order);
+    if (tabs.length < 2) return [];
+    tabs.unshift({
+      id: 'all',
+      name: 'Все подразделения',
+      count: searchAndAdvancedFiltered.length,
+      order: 0,
+    });
+    return tabs;
+  }, [viewMode, isGlobalView, stableSubdivisionId, searchAndAdvancedFiltered]);
+
+  const subdivisionTabs = useMemo<EquipmentTab[]>(() => {
+    if (viewMode !== 'grouped') return [];
+    if (stableSubdivisionId) return [];
+
+    const scopeDivisionId = id
+      ? String(id)
+      : isExploitationUser
+        ? (userDivisionId ? String(userDivisionId) : null)
+        : activeDivisionTab !== 'all'
+          ? activeDivisionTab
+          : null;
+
+    if (!scopeDivisionId) return [];
+
+    const divisionFiltered = searchAndAdvancedFiltered.filter(
+      (e: any) => String(e.division?.id) === scopeDivisionId,
+    );
+
+    const subsMap = new Map<string, EquipmentTab>();
+    divisionFiltered.forEach((e: any) => {
+      if (!e.subdivision?.id) return;
+      const subId = String(e.subdivision.id);
+      if (!subsMap.has(subId)) {
+        subsMap.set(subId, {
+          id: subId,
+          name: e.subdivision.name,
+          count: 0,
+          order: e.subdivision.order ?? 9999,
+        });
+      }
+      subsMap.get(subId)!.count++;
+    });
+
+    const subs = Array.from(subsMap.values()).sort((a, b) => a.order - b.order);
+
+    const noSubCount = divisionFiltered.filter((e: any) => !e.subdivision?.id).length;
+    if (noSubCount > 0) {
+      subs.push({
+        id: 'no-subdivision',
+        name: 'Без отделения',
+        count: noSubCount,
+        order: 99999,
+      });
+    }
+
+    if (subs.length < 2) return [];
+
+    return [
+      {
+        id: 'all',
+        name: 'Все отделения',
+        count: divisionFiltered.length,
+        order: 0,
+      },
+      ...subs,
+    ];
+  }, [viewMode, stableSubdivisionId, id, isExploitationUser, userDivisionId, activeDivisionTab, searchAndAdvancedFiltered]);
+
+  const showDivisionTabs = viewMode === 'grouped' && divisionTabs.length > 1;
+  const showSubdivisionTabs = viewMode === 'grouped' && subdivisionTabs.length > 1;
+
+  // Синхронизация вкладки отделения с URL
+  useEffect(() => {
+    if (subdivisionId) setActiveSubdivisionTab(String(subdivisionId));
+  }, [subdivisionId]);
+
+  // Защита: активной вкладки отделения больше нет — сбрасываем
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeSubdivisionTab === 'all') return;
+    if (!subdivisionTabs.some(t => t.id === activeSubdivisionTab)) {
+      setActiveSubdivisionTab('all');
+    }
+  }, [viewMode, subdivisionTabs, activeSubdivisionTab]);
+
+  // Защита: активной вкладки подразделения больше нет — сбрасываем
+  useEffect(() => {
+    if (viewMode !== 'grouped') return;
+    if (activeDivisionTab === 'all') return;
+    if (!divisionTabs.some(t => t.id === activeDivisionTab)) {
+      setActiveDivisionTab('all');
+    }
+  }, [viewMode, divisionTabs, activeDivisionTab]);
+
+  // Индикаторы вкладок (top для корректной работы при flex-wrap)
+  useEffect(() => {
+    if (!divisionTabsRef.current) return;
+    const btn = divisionTabsRef.current.querySelector('.equipment-division-tab.active') as HTMLElement | null;
+    if (btn) setDivisionIndicatorStyle({
+      left: btn.offsetLeft,
+      width: btn.offsetWidth,
+      top: btn.offsetTop + btn.offsetHeight - 2,
+    });
+    else setDivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+  }, [activeDivisionTab, divisionTabs, showDivisionTabs]);
+
+  useEffect(() => {
+    if (!subdivisionTabsRef.current) return;
+    const btn = subdivisionTabsRef.current.querySelector('.equipment-subdivision-tab.active') as HTMLElement | null;
+    if (btn) setSubdivisionIndicatorStyle({
+      left: btn.offsetLeft,
+      width: btn.offsetWidth,
+      top: btn.offsetTop + btn.offsetHeight - 2,
+    });
+    else setSubdivisionIndicatorStyle({ left: 0, width: 0, top: 0 });
+  }, [activeSubdivisionTab, subdivisionTabs, showSubdivisionTabs]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (divisionTabsRef.current) {
+        const btn = divisionTabsRef.current.querySelector('.equipment-division-tab.active') as HTMLElement | null;
+        if (btn) setDivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+      if (subdivisionTabsRef.current) {
+        const btn = subdivisionTabsRef.current.querySelector('.equipment-subdivision-tab.active') as HTMLElement | null;
+        if (btn) setSubdivisionIndicatorStyle({
+          left: btn.offsetLeft,
+          width: btn.offsetWidth,
+          top: btn.offsetTop + btn.offsetHeight - 2,
+        });
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleDivisionChange = useCallback((divId: string) => {
+    setActiveDivisionTab(divId);
+    setActiveSubdivisionTab('all');
+  }, []);
+
+  const handleSubdivisionChange = useCallback((subId: string) => {
+    setActiveSubdivisionTab(subId);
+  }, []);
+
+  // ============ ПРОЧИЕ ОБРАБОТЧИКИ ============
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -320,7 +530,6 @@ export function EquipmentSection() {
     }
   };
 
-  // === Обработчик списания техники ===
   const handleDisposeEquipment = async (equipmentId: string, disposalInfo: any) => {
     if (!stableToken) {
       console.error('Нет токена для списания техники');
@@ -329,7 +538,6 @@ export function EquipmentSection() {
     try {
       const updated = await equipmentApi.disposeEquipment(stableToken, equipmentId, disposalInfo);
 
-      // Обновляем элемент в Redux — перекрываем поля обновлённой записью с бэкенда
       const nextList = (equipment as any[]).map((item: any) =>
         item.id === equipmentId ? { ...item, ...updated } : item,
       );
@@ -448,7 +656,7 @@ export function EquipmentSection() {
           <div className="equipment-actions-row1">
             <div className="equipment-status-buttons-wrapper">
               <StatusButtons
-                equipment={statusButtonsEquipment}
+                equipment={tabsFilteredBase}
                 selectedStatus={selectedStatus}
                 onStatusChange={setSelectedStatus}
               />
@@ -494,6 +702,56 @@ export function EquipmentSection() {
             <div className="equipment-count-right"></div>
           </div>
 
+          {/* Вкладки подразделений (grouped) */}
+          {showDivisionTabs && (
+            <div className="equipment-division-tabs" ref={divisionTabsRef}>
+              {divisionTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`equipment-division-tab ${activeDivisionTab === tab.id ? 'active' : ''}`}
+                  onClick={() => handleDivisionChange(tab.id)}
+                >
+                  <span>{tab.name}</span>
+                  <span className="equipment-division-tab-count">{tab.count}</span>
+                </button>
+              ))}
+              <div
+                className="equipment-division-tabs-indicator"
+                style={{
+                  left: `${divisionIndicatorStyle.left}px`,
+                  width: `${divisionIndicatorStyle.width}px`,
+                  top: `${divisionIndicatorStyle.top}px`,
+                }}
+              />
+            </div>
+          )}
+
+          {/* Вкладки отделений (grouped) */}
+          {showSubdivisionTabs && (
+            <div className="equipment-subdivision-tabs" ref={subdivisionTabsRef}>
+              {subdivisionTabs.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`equipment-subdivision-tab ${activeSubdivisionTab === tab.id ? 'active' : ''}`}
+                  onClick={() => handleSubdivisionChange(tab.id)}
+                >
+                  <span>{tab.name}</span>
+                  <span className="equipment-subdivision-tab-count">{tab.count}</span>
+                </button>
+              ))}
+              <div
+                className="equipment-subdivision-tabs-indicator"
+                style={{
+                  left: `${subdivisionIndicatorStyle.left}px`,
+                  width: `${subdivisionIndicatorStyle.width}px`,
+                  top: `${subdivisionIndicatorStyle.top}px`,
+                }}
+              />
+            </div>
+          )}
+
           <EquipmentList
             equipment={filteredEquipment}
             onDeleteEquipment={handleDeleteEquipment}
@@ -501,9 +759,7 @@ export function EquipmentSection() {
             divisionId={id}
             subdivisionId={stableSubdivisionId ?? undefined}
             activeTab={activeTab}
-            viewMode={viewMode}
             searchTerm={searchTerm}
-            storageKey={storageKey}
           />
         </div>
       </div>

@@ -93,7 +93,7 @@
   opacity: 0.9;
 }
 
-/* Блок счётчика с переключателем режимов в виде вкладок */
+/* Блок счётчика с переключателем режимов */
 .personnel-list-count-chip {
   width: 100%;
   display: flex;
@@ -119,7 +119,7 @@
   cursor: default;
 }
 
-/* Переключатель режимов — вкладки без фона и границ */
+/* Переключатель режимов */
 .personnel-list-view-mode-toggle {
   display: flex;
   gap: 0.25rem;
@@ -158,7 +158,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  /* margin-right: auto; */
 }
 
 .personnel-list-count-icon {
@@ -358,7 +357,137 @@
   margin: 1rem;
 }
 
-/* Адаптивность */
+/* ===== Вкладки подразделений (grouped) ===== */
+.personnel-list-division-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.05rem;
+  margin-bottom: 0.1rem;
+  padding: 0.2rem 0.4rem;
+  background: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.personnel-list-division-tab {
+  padding: 0.28rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.personnel-list-division-tab:hover {
+  color: #1e293b;
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.personnel-list-division-tab.active {
+  color: #2563eb;
+  background-color: rgba(219, 234, 254, 0.45);
+}
+
+.personnel-list-division-tab-count {
+  font-size: 0.7rem;
+  padding: 0.02rem 0.28rem;
+  background: #e2e8f0;
+  border-radius: 0.35rem;
+  font-weight: 400;
+  color: #475569;
+}
+
+.personnel-list-division-tab.active .personnel-list-division-tab-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.personnel-list-division-tabs-indicator {
+  position: absolute;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px;
+  pointer-events: none;
+  transition:
+    left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* ===== Вкладки отделений (grouped) ===== */
+.personnel-list-subdivision-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.05rem;
+  margin-bottom: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  background: white;
+}
+
+.personnel-list-subdivision-tab {
+  padding: 0.24rem 0.45rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.personnel-list-subdivision-tab:hover {
+  color: #1e293b;
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.personnel-list-subdivision-tab.active {
+  color: #2563eb;
+  background-color: rgba(219, 234, 254, 0.45);
+}
+
+.personnel-list-subdivision-tab-count {
+  font-size: 0.7rem;
+  padding: 0.01rem 0.26rem;
+  background: #e2e8f0;
+  border-radius: 0.3rem;
+  font-weight: 400;
+  color: #475569;
+}
+
+.personnel-list-subdivision-tab.active .personnel-list-subdivision-tab-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.personnel-list-subdivision-tabs-indicator {
+  position: absolute;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px;
+  pointer-events: none;
+  transition:
+    left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+/* ===== Адаптивность ===== */
+
 @media (max-width: 1024px) {
   .personnel-list-main-filters {
     gap: 0.5rem;
@@ -404,7 +533,6 @@
     order: 3;
   }
 
-  /* Адаптивность дополнительных фильтров */
   .personnel-list-additional-filters {
     flex-direction: column;
     align-items: stretch;
@@ -425,4 +553,5 @@
     flex-direction: column;
     align-items: stretch;
   }
+
 }

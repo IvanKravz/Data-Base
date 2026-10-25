@@ -1,0 +1,96 @@
+/* src/components/networks/management/SubnetsManagement/SubnetsManagement.css */
+
+.subnets-ipam {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    height: calc(100vh - 260px);
+    min-height: 480px;
+}
+
+.subnets-ipam-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.subnets-ipam-search {
+    flex: 1;
+}
+
+.subnets-ipam-search input {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.subnets-ipam-body {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.subnets-ipam-tree {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow-y: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.subnets-ipam-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow-y: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+}
+
+.subnets-ipam-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #94a3b8;
+    gap: 16px;
+}
+
+/* Кнопка «Мастер» */
+.btn-secondary.btn-wizard {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-secondary.btn-wizard:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 900px) {
+    .subnets-ipam-body {
+        grid-template-columns: 1fr;
+    }
+
+    .subnets-ipam {
+        height: auto;
+    }
+}

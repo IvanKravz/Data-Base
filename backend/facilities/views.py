@@ -1,17 +1,25 @@
-# facilities/views.py
 from django.forms import ValidationError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Prefetch
 from .models import CommunicationPost, Division, FacilityType, Subdivision, Facility
-from .serializers import CommunicationPostSerializer, DivisionSerializer, FacilityTypeSerializer, SubdivisionSerializer, FacilitySerializer, FacilityStatsSerializer
+from .serializers import (
+    CommunicationPostSerializer,
+    CommunicationPostTreeSerializer,
+    DivisionSerializer,
+    FacilityTypeSerializer,
+    SubdivisionSerializer,
+    FacilitySerializer,
+    FacilityStatsSerializer,
+)
 from .mixins import DivisionAccessMixin, BaseViewSetMixin
-from users.permissions import RoleBasedPermission 
+from users.permissions import RoleBasedPermission
 from rest_framework.exceptions import PermissionDenied
 from users.logging import log_facility_create, log_facility_update, log_facility_delete, log_facility_view
 from users.mixins import RoleBasedFilterMixin
+
 
 class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Division.objects.all().prefetch_related(
@@ -23,30 +31,25 @@ class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        return super().get_queryset()  # миксин уже фильтрует по правам
+        return super().get_queryset()
 
     @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
-        # Проверяем доступ к подразделению
         division = self.get_object()
         user = request.user
-        
-        # Разрешаем доступ только если пользователь имеет права на это подразделение
-        if not (user.is_superuser or 
+        if not (user.is_superuser or
                 (hasattr(user, 'has_role') and user.has_role('admin')) or
                 (hasattr(user, 'has_role') and user.has_role('leader')) or
                 (hasattr(user, 'has_role') and user.has_role('deputy_director'))):
             user_division = getattr(user, 'division', None)
             if user_division and division.id != user_division.id:
                 raise PermissionDenied('Нет доступа к этому подразделению')
-                
+
         return Response({
             'users_count': division.users.count(),
             'equipment_count': division.equipment.count(),
             'tasks_count': division.tasks.count(),
-            'tasks_completed': division.tasks.filter(
-                steps__is_completed=True
-            ).distinct().count(),
+            'tasks_completed': division.tasks.filter(steps__is_completed=True).distinct().count(),
             'staff_completion': round((division.staff_actual / division.staff_planned) * 100, 2) if division.staff_planned > 0 else 0,
             'management_count': division.get_management_count(),
             'officers_count': division.get_officers_count(),
@@ -56,7 +59,7 @@ class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
             'subdivisions': SubdivisionSerializer(division.subdivisions.all(), many=True).data,
             'facilities': FacilitySerializer(division.facilities.all(), many=True).data
         })
-    
+
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == 201:
@@ -87,30 +90,36 @@ class DivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
         log_facility_view(request.user, instance, request=request)
         return response
 
+    def _get_changed_fields(self, old_data, new_data):
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {'old': old_data[key], 'new': new_data[key]}
+        return changed
+
+
 class SubdivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, DivisionAccessMixin, viewsets.ModelViewSet):
-    queryset = Subdivision.objects.all().prefetch_related(
-        'employees', 'equipment', 'facilities', 'tasks'
-    )
+    queryset = Subdivision.objects.all().prefetch_related('employees', 'equipment', 'facilities', 'tasks')
     serializer_class = SubdivisionSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        queryset = super().get_queryset() 
+        queryset = super().get_queryset()
         division_id = self.request.query_params.get('division')
         if division_id and self._can_see_all_divisions():
             queryset = queryset.filter(division_id=division_id)
         return queryset
-    
+
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == 201:
-            instance = Subdivision.objects.get(id=response.data['id'])   # ✅
+            instance = Subdivision.objects.get(id=response.data['id'])
             log_facility_create(request.user, instance, request=request, details={'data': response.data})
         return response
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        old_data = SubdivisionSerializer(instance).data   # ✅
+        old_data = SubdivisionSerializer(instance).data
         response = super().update(request, *args, **kwargs)
         if response.status_code in [200, 201]:
             log_facility_update(request.user, instance, request=request, old_data=old_data,
@@ -119,7 +128,7 @@ class SubdivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, DivisionAccessM
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        subdiv_data = SubdivisionSerializer(instance).data   # ✅
+        subdiv_data = SubdivisionSerializer(instance).data
         response = super().destroy(request, *args, **kwargs)
         if response.status_code == 204:
             log_facility_delete(request.user, instance, request=request, details={'deleted_data': subdiv_data})
@@ -131,6 +140,13 @@ class SubdivisionViewSet(RoleBasedFilterMixin, BaseViewSetMixin, DivisionAccessM
         log_facility_view(request.user, instance, request=request)
         return response
 
+    def _get_changed_fields(self, old_data, new_data):
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {'old': old_data[key], 'new': new_data[key]}
+        return changed
+
 
 class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
     queryset = Facility.objects.all()
@@ -138,9 +154,7 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        queryset = super().get_queryset()  # применяет фильтрацию по правам
-
-        # Фильтры из запроса – применяем только если пользователь может видеть все подразделения
+        queryset = super().get_queryset()
         if self._can_see_all_divisions():
             division = self.request.query_params.get('division')
             if division:
@@ -151,7 +165,6 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
             if subdivision:
                 queryset = queryset.filter(subdivision=subdivision)
 
-        # Остальные фильтры (безопасны)
         facility_type = self.request.query_params.get('type')
         if facility_type:
             queryset = queryset.filter(type=facility_type)
@@ -175,43 +188,33 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
             queryset = queryset.filter(is_closed=is_closed == 'true')
 
         return queryset
-    
+
     def perform_create(self, serializer):
         user = self.request.user
         division = serializer.validated_data.get('division')
-        
-        # Проверяем, может ли пользователь создавать объекты в этом подразделении
         if not (user.is_superuser or (hasattr(user, 'has_role') and user.has_role('admin'))):
             user_division = getattr(user, 'division', None)
             if user_division and division != user_division:
                 raise PermissionDenied('Вы можете создавать объекты только в своем подразделении')
-                
         serializer.save()
 
     def perform_update(self, serializer):
         user = self.request.user
         division = serializer.validated_data.get('division')
-        
-        # Проверяем, может ли пользователь изменять объекты в этом подразделении
         if not (user.is_superuser or (hasattr(user, 'has_role') and user.has_role('admin'))):
             user_division = getattr(user, 'division', None)
             if user_division and division != user_division:
                 raise PermissionDenied('Вы можете изменять объекты только в своем подразделении')
-                
         serializer.save()
 
-    # Дополнительная проверка при получении объекта
     def get_object(self):
         obj = super().get_object()
         user = self.request.user
-        
-        # Дополнительная проверка для ролей эксплуатации
-        if ((hasattr(user, 'has_role') and 
+        if ((hasattr(user, 'has_role') and
              (user.has_role('exploitation_chief') or user.has_role('exploitation_employee')))):
             user_division = getattr(user, 'division', None)
             if user_division and obj.division and user_division.id != obj.division.id:
                 raise PermissionDenied('Нет доступа к этому объекту')
-                
         return obj
 
     @action(detail=False, methods=['get'])
@@ -230,36 +233,34 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     def comments(self, request, pk=None):
         self.check_view_only_restrictions()
         facility = self.get_object()
-        facility.comments = request.data.get('comments', '')
+        old_comments = facility.comments
+        new_comments = request.data.get('comments', '')
+        facility.comments = new_comments
         facility.save()
+        log_facility_update(
+            user=request.user, instance=facility, request=request,
+            details={'field': 'comments', 'old_value': old_comments, 'new_value': new_comments}
+        )
         serializer = self.get_serializer(facility)
         return Response(serializer.data)
-    
+
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         if response.status_code == status.HTTP_201_CREATED:
             try:
                 instance = Facility.objects.get(id=response.data['id'])
-                log_facility_create(
-                    user=request.user,
-                    instance=instance,
-                    request=request,
-                    details={'data': response.data}
-                )
+                log_facility_create(user=request.user, instance=instance, request=request, details={'data': response.data})
             except Facility.DoesNotExist:
                 pass
         return response
-    
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        old_data = FacilitySerializer(instance).data  # или просто сериализовать
-        
+        old_data = FacilitySerializer(instance).data
         response = super().update(request, *args, **kwargs)
         if response.status_code in [status.HTTP_200_OK, status.HTTP_201_CREATED]:
             log_facility_update(
-                user=request.user,
-                instance=instance,
-                request=request,
+                user=request.user, instance=instance, request=request,
                 old_data=old_data,
                 details={'changed_fields': self._get_changed_fields(old_data, response.data)}
             )
@@ -268,103 +269,119 @@ class FacilityViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelView
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         facility_data = FacilitySerializer(instance).data
-        
         response = super().destroy(request, *args, **kwargs)
         if response.status_code == status.HTTP_204_NO_CONTENT:
-            log_facility_delete(
-                user=request.user,
-                instance=instance,
-                request=request,
-                details={'deleted_data': facility_data}
-            )
+            log_facility_delete(user=request.user, instance=instance, request=request, details={'deleted_data': facility_data})
         return response
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         response = super().retrieve(request, *args, **kwargs)
-        log_facility_view(
-            user=request.user,
-            instance=instance,
-            request=request
-        )
+        log_facility_view(user=request.user, instance=instance, request=request)
         return response
 
-    @action(detail=True, methods=['patch'])
-    def comments(self, request, pk=None):
-        self.check_view_only_restrictions()
-        facility = self.get_object()
-        old_comments = facility.comments
-        new_comments = request.data.get('comments', '')
-        facility.comments = new_comments
-        facility.save()
-        log_facility_update(
-            user=request.user,
-            instance=facility,
-            request=request,
-            details={
-                'field': 'comments',
-                'old_value': old_comments,
-                'new_value': new_comments
-            }
-        )
-        serializer = self.get_serializer(facility)
-        return Response(serializer.data)
-    
     def _get_changed_fields(self, old_data, new_data):
-        """Вспомогательный метод для определения изменённых полей"""
         changed = {}
         for key in old_data:
             if key in new_data and old_data[key] != new_data[key]:
-                changed[key] = {
-                    'old': old_data[key],
-                    'new': new_data[key]
-                }
+                changed[key] = {'old': old_data[key], 'new': new_data[key]}
         return changed
 
 
 class CommunicationPostViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.ModelViewSet):
-    queryset = CommunicationPost.objects.all()
+    queryset = CommunicationPost.objects.all().select_related('division', 'subdivision', 'parent')
     serializer_class = CommunicationPostSerializer
     permission_classes = [IsAuthenticated, RoleBasedPermission]
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('name')
+        queryset = super().get_queryset().order_by('kind', 'name')
 
         if self._can_see_all_divisions():
             division = self.request.query_params.get('division')
             if division:
                 queryset = queryset.filter(division_id=division)
 
-            facility_id = self.request.query_params.get('facility')
-            if facility_id:
-                # Дополнительная логика при необходимости
-                pass
+        # Фильтр по типу поста
+        kind = self.request.query_params.get('kind')
+        if kind:
+            kinds = [k.strip() for k in kind.split(',') if k.strip()]
+            if kinds:
+                queryset = queryset.filter(kind__in=kinds)
+
+        # Фильтр по родителю
+        parent = self.request.query_params.get('parent')
+        if parent:
+            if parent == 'null':
+                queryset = queryset.filter(parent__isnull=True)
+            else:
+                queryset = queryset.filter(parent_id=parent)
+
+        # Только "корневые" (без родителя)
+        root = self.request.query_params.get('root')
+        if root == 'true':
+            queryset = queryset.filter(parent__isnull=True)
+
+        # Только "листья" (без детей)
+        leaves = self.request.query_params.get('leaves')
+        if leaves == 'true':
+            queryset = queryset.filter(children__isnull=True)
 
         return queryset
 
     def get_object(self):
         obj = super().get_object()
         user = self.request.user
-        
-        # Дополнительная проверка для ролей эксплуатации
-        if ((hasattr(user, 'has_role') and 
+        if ((hasattr(user, 'has_role') and
              (user.has_role('exploitation_chief') or user.has_role('exploitation_employee')))):
             user_division = getattr(user, 'division', None)
             if user_division and obj.division and user_division.id != obj.division.id:
                 raise PermissionDenied('Нет доступа к этому объекту')
-                
         return obj
-    
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        if response.status_code == 201:
-            instance = CommunicationPost.objects.get(id=response.data['id'])
-            log_facility_create(
-                user=request.user,
-                instance=instance,
-                request=request,
-                details={'data': response.data}
+
+    @action(detail=False, methods=['get'])
+    def tree(self, request):
+        """Возвращает иерархическое дерево постов связи (P/KP → PS → NDR)."""
+        queryset = self.get_queryset().filter(parent__isnull=True)
+        # Префетчим всех потомков
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                'children',
+                queryset=CommunicationPost.objects.prefetch_related(
+                    Prefetch(
+                        'children',
+                        queryset=CommunicationPost.objects.all().order_by('name'),
+                    )
+                ).order_by('name'),
             )
+        )
+        serializer = CommunicationPostTreeSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def parents(self, request):
+        """
+        Возвращает список потенциальных родителей для указанного kind.
+        /communication-posts/parents/?kind=PS&division=1
+        """
+        kind = request.query_params.get('kind', '')
+        division = request.query_params.get('division')
+        allowed = CommunicationPost.ALLOWED_PARENTS.get(kind, ())
+        if not allowed:
+            return Response([])
+        qs = CommunicationPost.objects.filter(kind__in=allowed).order_by('name')
+        if division:
+            qs = qs.filter(division_id=division)
+        return Response(CommunicationPostSerializer(qs, many=True).data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Дополнительно вызываем model.clean() для валидации иерархии
+        instance = serializer.Meta.model(**serializer.validated_data) if False else None
+        self.perform_create(serializer)
+        response = Response(serializer.data, status=status.HTTP_201_CREATED)
+        instance = serializer.instance
+        log_facility_create(user=request.user, instance=instance, request=request, details={'data': response.data})
         return response
 
     def update(self, request, *args, **kwargs):
@@ -373,9 +390,7 @@ class CommunicationPostViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.
         response = super().update(request, *args, **kwargs)
         if response.status_code in [200, 201]:
             log_facility_update(
-                user=request.user,
-                instance=instance,
-                request=request,
+                user=request.user, instance=instance, request=request,
                 old_data=old_data,
                 details={'changed_fields': self._get_changed_fields(old_data, response.data)}
             )
@@ -383,26 +398,24 @@ class CommunicationPostViewSet(RoleBasedFilterMixin, BaseViewSetMixin, viewsets.
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        post_data = CommunicationPostSerializer(instance).data   # ✅ исправлено
+        post_data = CommunicationPostSerializer(instance).data
         response = super().destroy(request, *args, **kwargs)
         if response.status_code == 204:
-            log_facility_delete(
-                user=request.user,
-                instance=instance,
-                request=request,
-                details={'deleted_data': post_data}            # ✅ исправлено
-            )
+            log_facility_delete(user=request.user, instance=instance, request=request, details={'deleted_data': post_data})
         return response
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         response = super().retrieve(request, *args, **kwargs)
-        log_facility_view(
-            user=request.user,
-            instance=instance,
-            request=request
-        )
+        log_facility_view(user=request.user, instance=instance, request=request)
         return response
+
+    def _get_changed_fields(self, old_data, new_data):
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {'old': old_data[key], 'new': new_data[key]}
+        return changed
 
 
 class FacilityTypeViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
@@ -414,12 +427,7 @@ class FacilityTypeViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
         response = super().create(request, *args, **kwargs)
         if response.status_code == 201:
             instance = FacilityType.objects.get(id=response.data['id'])
-            log_facility_create(
-                user=request.user,
-                instance=instance,
-                request=request,
-                details={'data': response.data}
-            )
+            log_facility_create(user=request.user, instance=instance, request=request, details={'data': response.data})
         return response
 
     def update(self, request, *args, **kwargs):
@@ -428,9 +436,7 @@ class FacilityTypeViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
         response = super().update(request, *args, **kwargs)
         if response.status_code in [200, 201]:
             log_facility_update(
-                user=request.user,
-                instance=instance,
-                request=request,
+                user=request.user, instance=instance, request=request,
                 old_data=old_data,
                 details={'changed_fields': self._get_changed_fields(old_data, response.data)}
             )
@@ -438,23 +444,21 @@ class FacilityTypeViewSet(BaseViewSetMixin, viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        type_data = FacilityTypeSerializer(instance).data      # ✅ исправлено
+        type_data = FacilityTypeSerializer(instance).data
         response = super().destroy(request, *args, **kwargs)
         if response.status_code == 204:
-            log_facility_delete(
-                user=request.user,
-                instance=instance,
-                request=request,
-                details={'deleted_data': type_data}           # ✅ исправлено
-            )
+            log_facility_delete(user=request.user, instance=instance, request=request, details={'deleted_data': type_data})
         return response
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         response = super().retrieve(request, *args, **kwargs)
-        log_facility_view(
-            user=request.user,
-            instance=instance,
-            request=request
-        )
+        log_facility_view(user=request.user, instance=instance, request=request)
         return response
+
+    def _get_changed_fields(self, old_data, new_data):
+        changed = {}
+        for key in old_data:
+            if key in new_data and old_data[key] != new_data[key]:
+                changed[key] = {'old': old_data[key], 'new': new_data[key]}
+        return changed

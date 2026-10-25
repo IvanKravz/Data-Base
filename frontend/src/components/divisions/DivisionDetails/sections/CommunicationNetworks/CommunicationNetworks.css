@@ -1,3 +1,10 @@
+/* ============================================================
+   CommunicationNetworks.css
+   Полная версия: layout, вкладки (flex-wrap + плавный индикатор),
+   адаптивность, мобильные режимы, touch-устройства.
+   ============================================================ */
+
+/* ===== Контейнер страницы ===== */
 .communication-networks-container {
     display: grid;
     grid-template-columns: 1fr 350px;
@@ -42,12 +49,186 @@
     text-align: center;
 }
 
-/* Анимация появления страниц */
+/* ============================================================
+   Вкладки подразделений (networks)
+   ============================================================ */
+.cn-division-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.1rem;
+    margin-bottom: 0.1rem;
+    padding: 0.25rem 0.5rem;
+    background: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+    /* overflow НЕ ставим: при flex-wrap нужен перенос, а не скролл */
+}
+
+.cn-division-tab {
+    padding: 0.35rem 0.6rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    border-radius: 4px;
+}
+
+.cn-division-tab:hover {
+    color: #1e293b;
+    background-color: rgba(241, 245, 249, 0.7);
+}
+
+.cn-division-tab.active {
+    color: #2563eb;
+    background-color: rgba(219, 234, 254, 0.45);
+}
+
+.cn-division-tab-count {
+    font-size: 0.7rem;
+    padding: 0.05rem 0.35rem;
+    background: #e2e8f0;
+    border-radius: 0.4rem;
+    font-weight: 400;
+    color: #475569;
+}
+
+.cn-division-tab.active .cn-division-tab-count {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Индикатор: absolute + top из JS (корректно при flex-wrap на несколько строк) */
+.cn-division-tabs-indicator {
+    position: absolute;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    pointer-events: none;
+    transition:
+        left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* ============================================================
+   Вкладки отделений (networks)
+   ============================================================ */
+.cn-subdivision-tabs {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    background: white;
+}
+
+.cn-subdivision-tab {
+    padding: 0.3rem 0.55rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    border-radius: 4px;
+}
+
+.cn-subdivision-tab:hover {
+    color: #1e293b;
+    background-color: rgba(241, 245, 249, 0.7);
+}
+
+.cn-subdivision-tab.active {
+    color: #2563eb;
+    background-color: rgba(219, 234, 254, 0.45);
+}
+
+.cn-subdivision-tab-count {
+    font-size: 0.68rem;
+    padding: 0.02rem 0.3rem;
+    background: #e2e8f0;
+    border-radius: 0.35rem;
+    font-weight: 400;
+    color: #475569;
+}
+
+.cn-subdivision-tab.active .cn-subdivision-tab-count {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.cn-subdivision-tabs-indicator {
+    position: absolute;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+    pointer-events: none;
+    transition:
+        left 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        width 250ms cubic-bezier(0.4, 0, 0.2, 1),
+        top 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+}
+
+/* ===== Переключатель вида (Список / По подразделениям) ===== */
+.cn-view-mode-toggle {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.cn-view-mode-btn {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+}
+
+.cn-view-mode-btn.active {
+    color: #1e40af;
+    border-bottom-color: #1e40af;
+}
+
+.cn-view-mode-btn:hover:not(.active) {
+    color: #1e293b;
+    border-bottom-color: #cbd5e1;
+}
+
+/* ============================================================
+   Анимация появления страницы
+   ============================================================ */
 @keyframes fadeIn {
     from {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -58,19 +239,24 @@
     animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* Остальные медиа-запросы сохранены без изменений */
+/* ============================================================
+   Адаптивность
+   ============================================================ */
+
+/* Большие экраны / маленькие десктопы */
 @media (max-width: 1200px) {
     .communication-networks-container {
         grid-template-columns: 1fr 320px;
         gap: 20px;
     }
+
     .network-details-sidebar {
         width: 320px;
         padding: 16px;
     }
 }
 
-/* Большие мобильные и маленькие планшеты */
+/* Планшеты и большие мобильные */
 @media (max-width: 992px) {
     .communication-networks-container {
         grid-template-columns: 1fr;
@@ -85,12 +271,11 @@
         max-height: none;
         margin-top: 0;
         order: 2;
-        /* Помещаем сайдбар после основного контента */
+        /* Сайдбар после основного контента */
     }
 
     .communication-networks-main {
         order: 1;
-        /* Основной контент идет первым */
     }
 
     .networks-content {
@@ -118,6 +303,16 @@
         margin: 16px;
         padding: 16px;
     }
+
+    .cn-division-tab {
+        font-size: 0.78rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    .cn-subdivision-tab {
+        font-size: 0.74rem;
+        padding: 0.28rem 0.5rem;
+    }
 }
 
 /* Маленькие мобильные */
@@ -143,6 +338,27 @@
         padding: 12px;
         font-size: 14px;
     }
+
+    .cn-division-tabs,
+    .cn-subdivision-tabs {
+        padding: 0.2rem 0.35rem;
+        gap: 0.1rem;
+    }
+
+    .cn-division-tab {
+        font-size: 0.74rem;
+        padding: 0.28rem 0.45rem;
+    }
+
+    .cn-subdivision-tab {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.4rem;
+    }
+
+    .cn-division-tab-count,
+    .cn-subdivision-tab-count {
+        font-size: 0.64rem;
+    }
 }
 
 /* Очень маленькие мобильные */
@@ -159,23 +375,28 @@
     .networks-content {
         gap: 6px;
     }
+
+    .cn-division-tab,
+    .cn-subdivision-tab {
+        font-size: 0.68rem;
+        padding: 0.22rem 0.4rem;
+    }
 }
 
-/* Высокие экраны */
+/* Высокие экраны (планшет в портрете) */
 @media (min-height: 800px) and (max-width: 992px) {
     .network-details-sidebar {
         max-height: 60vh;
     }
 }
 
-/* Очень высокие экраны */
 @media (min-height: 1000px) and (max-width: 992px) {
     .network-details-sidebar {
         max-height: 50vh;
     }
 }
 
-/* Поддержка ландшафтного режима на мобильных */
+/* Ландшафт на мобильных */
 @media (max-height: 500px) and (orientation: landscape) {
     .communication-networks-container {
         grid-template-columns: 1fr 300px;
@@ -186,14 +407,26 @@
     }
 }
 
-/* Улучшенная поддержка touch устройств */
+/* Touch-устройства */
 @media (hover: none) and (pointer: coarse) {
     .network-details-sidebar {
         padding: 16px 12px;
     }
 
-    /* Увеличиваем область клика для touch устройств */
+    /* Увеличиваем тач-зону у вкладок — но не до 44px, иначе вкладки не влезут */
+    .cn-division-tab,
+    .cn-subdivision-tab {
+        min-height: 32px;
+    }
+
     .networks-content * {
+        /* Не форсируем 44px для всего — только для интерактивных элементов таблицы */
+        min-height: 0;
+    }
+
+    .networks-content button,
+    .networks-content a,
+    .networks-content .nt-row {
         min-height: 44px;
     }
 }

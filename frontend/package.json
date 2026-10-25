@@ -23,6 +23,8 @@
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.1",
     "framer-motion": "^12.23.24",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "maplibre-gl": "^5.5.0",

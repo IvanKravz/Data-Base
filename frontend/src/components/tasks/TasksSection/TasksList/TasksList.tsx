@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { TaskItem } from '../TaskItem/TaskItem';
 import { Task } from '../../../../types/tasks';
 import './TasksList.css';
@@ -8,6 +8,14 @@ interface TasksListProps {
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   onToggleStep: (taskId: string, stepId: string, isCompleted: boolean) => void;
+
+  // НОВОЕ: контролируемое состояние активной вкладки.
+  // Живёт в родителе (DivisionTasksSection), чтобы фильтр исполнителей
+  // мог ориентироваться на выбранное отделение/подотделение.
+  activeDivisionId: string | null;
+  activeSubdivisionTab: SubdivisionTabKey;
+  onDivisionChange: (divisionId: string) => void;
+  onSubdivisionChange: (key: SubdivisionTabKey) => void;
 }
 
 interface GroupedTasks {
@@ -23,17 +31,18 @@ interface GroupedTasks {
   };
 }
 
-type SubdivisionTabKey = string | 'no-subdivision' | 'all';
+export type SubdivisionTabKey = string | 'no-subdivision' | 'all';
 
 export function TasksList({
   tasks,
   onEditTask,
   onDeleteTask,
   onToggleStep,
+  activeDivisionId,
+  activeSubdivisionTab,
+  onDivisionChange,
+  onSubdivisionChange,
 }: TasksListProps) {
-  const [activeDivisionId, setActiveDivisionId] = useState<string | null>(null);
-  const [activeSubdivisionTab, setActiveSubdivisionTab] = useState<SubdivisionTabKey>('all');
-
   const divisionTabsRef = useRef<HTMLDivElement>(null);
   const subdivisionTabsRef = useRef<HTMLDivElement>(null);
 
@@ -119,13 +128,14 @@ export function TasksList({
     return sub ? sub.tasks : [];
   }, [activeGroup, activeSubdivisionTab]);
 
-  // 6. Инициализация активного подразделения при первом рендере
+  // 6. Инициализация активного подразделения при первом рендере.
+  // Раньше это делалось через локальный setState — теперь сообщаем родителю.
   useEffect(() => {
     if (divisionIds.length > 0 && !activeDivisionId) {
-      setActiveDivisionId(divisionIds[0]);
-      setActiveSubdivisionTab('all');
+      onDivisionChange(divisionIds[0]);
+      onSubdivisionChange('all');
     }
-  }, [divisionIds, activeDivisionId]);
+  }, [divisionIds, activeDivisionId, onDivisionChange, onSubdivisionChange]);
 
   // 7. Обновление индикатора для вкладок подразделений
   useEffect(() => {
@@ -147,10 +157,10 @@ export function TasksList({
     }
   }, [activeSubdivisionTab, activeDivisionId, subdivisionTabs]);
 
-  // Обработчик смены подразделения
+  // Обработчик смены подразделения.
+  // Сброс подотделения на 'all' делает родитель (handleDivisionTabChange).
   const handleDivisionChange = (divisionId: string) => {
-    setActiveDivisionId(divisionId);
-    setActiveSubdivisionTab('all');
+    onDivisionChange(divisionId);
   };
 
   if (tasks.length === 0) {
@@ -197,7 +207,7 @@ export function TasksList({
             <button
               key={tab.key}
               className={`tasks-subdivision-tab ${activeSubdivisionTab === tab.key ? 'tasks-subdivision-tab-active' : ''}`}
-              onClick={() => setActiveSubdivisionTab(tab.key)}
+              onClick={() => onSubdivisionChange(tab.key)}
             >
               <span>{tab.label}</span>
               <span className="tasks-subdivision-tab-count">{tab.count}</span>

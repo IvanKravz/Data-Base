@@ -6,6 +6,16 @@ import { Facility } from '../types';
 const facilityCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
 
+/**
+ * Приводит ответ DRF к массиву.
+ * DRF может вернуть как чистый массив, так и страницу {count, next, previous, results}.
+ */
+const toArray = <T,>(data: any): T[] => {
+  if (Array.isArray(data)) return data as T[];
+  if (data && Array.isArray(data.results)) return data.results as T[];
+  return [];
+};
+
 export const facilitiesApi = {
   // Get all facilities with optional filters
   getFacilities: async (params?: {
@@ -41,19 +51,21 @@ export const facilitiesApi = {
       ...(typeof params?.is_closed !== 'undefined' && { is_closed: params.is_closed }),
     };
 
-    const { data } = await api.get<{ results: Facility[] }>('/facilities/', {
+    const { data } = await api.get('/facilities/', {
       params: queryParams,
       headers: params?.token ? {
         Authorization: `Bearer ${params.token}`,
       } : undefined
     });
 
+    const list = toArray<Facility>(data);
+
     facilityCache.set(cacheKey, {
-      data,
+      data: list,
       timestamp: Date.now()
     });
 
-    return data;
+    return list;
   },
 
   // Get facility by ID
@@ -76,11 +88,10 @@ export const facilitiesApi = {
   // Update existing facility
   updateFacility: async (id: string, facilityData: Partial<Facility>, token: string) => {
     try {
-      // Формируем правильный запрос – отправляем communication_post_ids
       const { data } = await api.patch(`/facilities/${id}/`, {
         ...facilityData,
         type: facilityData.type_id,
-        communication_post_ids: facilityData.communication_post_ids, // исправлено!
+        communication_post_ids: facilityData.communication_post_ids,
         facility_class: facilityData.facility_class,
         division: facilityData.division_id,
         subdivision: facilityData.subdivision_id
@@ -110,7 +121,7 @@ export const facilitiesApi = {
         Authorization: `Bearer ${token}`,
       } : undefined
     });
-    return data;
+    return toArray(data);
   },
 
   // Get facility equipment
@@ -143,22 +154,62 @@ export const facilitiesApi = {
   }
 };
 
+// ============================================================
+// Посты связи
+// ============================================================
+
+export type CommunicationPostKind = 'P' | 'KP' | 'PS' | 'NDR';
+
+export interface CommunicationPostPayload {
+  name: string;
+  kind?: CommunicationPostKind;
+  /** ID родительского поста. На бэкенд уходит как `parent_id`. */
+  parent?: number | null;
+  division: number;
+  subdivision?: number | null;
+  description?: string;
+}
+
 export const communicationPostsApi = {
   getCommunicationPosts: async (params?: {
     token?: string;
     division?: string;
-    // subdivision?: string;
+    kind?: CommunicationPostKind | CommunicationPostKind[];
+    parent?: string | 'null';
+    root?: boolean;
+    leaves?: boolean;
+    search?: string;
   }) => {
+    const queryParams: Record<string, any> = {};
+    if (params?.division) queryParams.division = params.division;
+    if (params?.kind) {
+      queryParams.kind = Array.isArray(params.kind) ? params.kind.join(',') : params.kind;
+    }
+    if (params?.parent) queryParams.parent = params.parent;
+    if (params?.root) queryParams.root = 'true';
+    if (params?.leaves) queryParams.leaves = 'true';
+    if (params?.search) queryParams.search = params.search;
+
     const { data } = await api.get('facilities/communication-posts/', {
-      params: {
-        division: params?.division,
-        // subdivision: params?.subdivision
-      },
+      params: queryParams,
       headers: params?.token ? {
         Authorization: `Bearer ${params.token}`,
       } : undefined
     });
-    return data;
+    return toArray(data);
+  },
+
+  getCommunicationPostsTree: async (params?: {
+    token?: string;
+    division?: string;
+  }) => {
+    const { data } = await api.get('facilities/communication-posts/tree/', {
+      params: params?.division ? { division: params.division } : {},
+      headers: params?.token ? {
+        Authorization: `Bearer ${params.token}`,
+      } : undefined
+    });
+    return toArray(data);
   },
 
   getCommunicationPost: async (id: string, token?: string | null) => {
@@ -168,13 +219,33 @@ export const communicationPostsApi = {
     return data;
   },
 
-  createCommunicationPost: async (postData: {
-    name: string;
-    division: string;
-    subdivision?: string;
-    description?: string;
-  }, token: string) => {
-    const { data } = await api.post('facilities/communication-posts/', postData, {
+  createCommunicationPost: async (
+    postData: {
+      name: string;
+      kind?: CommunicationPostKind;
+      parent?: number | null;
+      division: number;
+      subdivision?: number | null;
+      description?: string;
+    },
+    token: string
+  ) => {
+    // ⚠️ Бэкенд-сериализатор ожидает `parent_id`, а не `parent`.
+    //    Поле `parent` — read-only (вложенный объект).
+    const payload: Record<string, any> = {
+      name: postData.name,
+      division: postData.division,
+      parent_id: postData.parent ?? null,
+    };
+    if (postData.kind) payload.kind = postData.kind;
+    if (typeof postData.subdivision !== 'undefined') {
+      payload.subdivision = postData.subdivision ?? null;
+    }
+    if (typeof postData.description !== 'undefined' && postData.description !== '') {
+      payload.description = postData.description;
+    }
+
+    const { data } = await api.post('facilities/communication-posts/', payload, {
       headers: {
         'Authorization': `Bearer ${token}`,
       }
@@ -186,13 +257,26 @@ export const communicationPostsApi = {
     id: string,
     postData: {
       name: string;
-      division: string;
-      subdivision?: string;
+      kind?: CommunicationPostKind;
+      parent?: number | null;
+      division: number;
+      subdivision?: number | null;
       description?: string;
     },
     token?: string | null
   ) => {
-    const { data } = await api.patch(`facilities/communication-posts/${id}/`, postData, {
+    const payload: Record<string, any> = {
+      name: postData.name,
+      division: postData.division,
+      parent_id: postData.parent ?? null,
+      subdivision: postData.subdivision ?? null,
+    };
+    if (postData.kind) payload.kind = postData.kind;
+    if (typeof postData.description !== 'undefined') {
+      payload.description = postData.description;
+    }
+
+    const { data } = await api.patch(`facilities/communication-posts/${id}/`, payload, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     return data;

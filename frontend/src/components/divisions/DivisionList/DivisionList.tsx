@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Plug, Building2, ListTodo, ChevronDown, ChevronUp, Phone, Smartphone, Map } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Users,
+  Plug,
+  Building2,
+  ListTodo,
+  RadioTower,
+  Map as MapIcon,
+  ChevronDown,
+  Phone,
+  Smartphone,
+  ArrowRight,
+  Activity,
+  Search,
+} from 'lucide-react';
 import { Division, Employee } from '../../../types';
 import { useNavigate } from 'react-router-dom';
 import { divisionsApi } from '../../../api/divisions';
 import { employeesApi } from '../../../api/employees';
-import './style.css';
-import '../DivisionDetails/sections/DivisionLeadership/DivisionLeadership.css';
 import { MapCountry } from '../../map/MapCountry/MapCountry';
 import { useAppPermissions } from '../../../api/utils/AppPermissionsContext';
+import './style.css';
+import '../DivisionDetails/sections/DivisionLeadership/DivisionLeadership.css';
 import '../DivisionDetails/sections/style.css';
 
 interface DivisionListProps {
@@ -16,8 +29,8 @@ interface DivisionListProps {
 
 const isVisibleForDivision = (
   canAccess: boolean,
-  filters: { division_id?: number; subdivision_id?: number } | null,
-  divisionId: number
+  filters: any,
+  divisionId: number,
 ): boolean => {
   if (!canAccess) return false;
   if (!filters) return true;
@@ -26,25 +39,38 @@ const isVisibleForDivision = (
   return true;
 };
 
+const safeNumber = (value: unknown): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
 export function DivisionList({ onSelectDivision }: DivisionListProps) {
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
+
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState('');
 
   const [chief, setChief] = useState<Employee | null>(null);
   const [deputies, setDeputies] = useState<Employee[]>([]);
   const [loadingLeadership, setLoadingLeadership] = useState(true);
 
   const {
-    canAccessPersonnel, canAccessEquipment, canAccessFacilities,
+    canAccessPersonnel,
+    canAccessEquipment,
+    canAccessFacilities,
     canAccessTasks,
-    personnelFilters, equipmentFilters, facilitiesFilters, taskFilters
+    canAccessNetworks,
+    personnelFilters,
+    equipmentFilters,
+    facilitiesFilters,
+    taskFilters,
+    networksFilters,
   } = useAppPermissions();
 
-  // Состояние видимости карты с сохранением в localStorage
+  // ── Видимость карты с сохранением в localStorage ────────────────
   const [showMap, setShowMap] = useState<boolean>(() => {
     const stored = localStorage.getItem('map_visible_divisionlist');
     return stored !== null ? JSON.parse(stored) : true;
@@ -54,9 +80,9 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     localStorage.setItem('map_visible_divisionlist', JSON.stringify(showMap));
   }, [showMap]);
 
-  const toggleMap = () => setShowMap(prev => !prev);
+  const toggleMap = () => setShowMap((prev) => !prev);
 
-  // Загрузка подразделений
+  // ── Загрузка подразделений ──────────────────────────────────────
   useEffect(() => {
     const fetchDivisions = async () => {
       try {
@@ -72,7 +98,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     fetchDivisions();
   }, [token]);
 
-  // Загрузка руководителей (главный и заместители)
+  // ── Загрузка руководства ────────────────────────────────────────
   useEffect(() => {
     const fetchLeadership = async () => {
       if (!token) {
@@ -80,13 +106,12 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         return;
       }
       try {
-        // Загружаем всех сотрудников
         const allEmployees = await employeesApi.getPersonnel(token);
-
-        // Фильтруем на клиенте по должности
-        const chiefData = allEmployees.find(emp => emp.position === 'Главный руководитель') || null;
-        const deputyData = allEmployees.filter(emp => emp.position === 'Заместитель главного руководителя');
-
+        const chiefData =
+          allEmployees.find((emp) => emp.position === 'Главный руководитель') ?? null;
+        const deputyData = allEmployees.filter(
+          (emp) => emp.position === 'Заместитель главного руководителя',
+        );
         setChief(chiefData);
         setDeputies(deputyData);
       } catch (err) {
@@ -98,23 +123,66 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
     fetchLeadership();
   }, [token]);
 
-  const toggleExpand = (id: number) => {
-    setExpandedIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
+  // ── Агрегат по службе ───────────────────────────────────────────
+  const aggregate = useMemo(() => {
+    const compute = (
+      canAccess: boolean,
+      filters: any,
+      field: keyof Division,
+    ): number | null => {
+      if (!canAccess) return null;
+      let total = 0;
+      for (const d of divisions) {
+        if (!isVisibleForDivision(true, filters, d.id)) continue;
+        total += safeNumber((d as any)[field]);
       }
-      return newSet;
-    });
-  };
+      return total;
+    };
 
-  const handleMetricClick = (divisionId: number, section: string) => {
-    navigate(`/divisions/${divisionId}/${section}`, { state: { fromDivisionList: true } });
-  };
+    return {
+      employees: compute(canAccessPersonnel(), personnelFilters, 'employees_count'),
+      equipment: compute(canAccessEquipment(), equipmentFilters, 'equipment_count'),
+      facilities: compute(canAccessFacilities(), facilitiesFilters, 'facilities_count'),
+      networks: compute(canAccessNetworks(), networksFilters, 'networks_count'),
+      tasks: compute(canAccessTasks(), taskFilters, 'tasks_count'),
+    };
+  }, [
+    divisions,
+    canAccessPersonnel,
+    canAccessEquipment,
+    canAccessFacilities,
+    canAccessTasks,
+    canAccessNetworks,
+    personnelFilters,
+    equipmentFilters,
+    facilitiesFilters,
+    taskFilters,
+    networksFilters,
+  ]);
 
-  const handleTitleClick = (division: Division) => {
+  const kpiCards = useMemo(
+    () =>
+      (
+        [
+          { key: 'employees', label: 'Сотрудники', icon: Users, color: '#4d5edb', visible: canAccessPersonnel() },
+          { key: 'equipment', label: 'Техника', icon: Plug, color: '#10b981', visible: canAccessEquipment() },
+          { key: 'facilities', label: 'Объекты', icon: Building2, color: '#888676', visible: canAccessFacilities() },
+          { key: 'networks', label: 'Сети связи', icon: RadioTower, color: '#70b3d0', visible: canAccessNetworks() },
+          { key: 'tasks', label: 'Задачи', icon: ListTodo, color: '#f97316', visible: canAccessTasks() },
+        ] as const
+      ).filter((c) => c.visible),
+    [canAccessPersonnel, canAccessEquipment, canAccessFacilities, canAccessNetworks, canAccessTasks],
+  );
+
+  // ── Поиск по названию ───────────────────────────────────────────
+  const filteredDivisions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return divisions;
+    return divisions.filter((d) => d.name.toLowerCase().includes(q));
+  }, [divisions, search]);
+
+  // ── Навигация ───────────────────────────────────────────────────
+  const openDivision = (division: Division) => {
     onSelectDivision(division);
     navigate(`/divisions/${division.id}`);
   };
@@ -137,29 +205,25 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
                 <Smartphone size={14} /> Личный: {leader.personal_phone}
               </span>
             )}
-            {!leader.work_phone && !leader.personal_phone && (
-              <span>—</span>
-            )}
+            {!leader.work_phone && !leader.personal_phone && <span>—</span>}
           </div>
         </div>
       </div>
     );
   };
 
-  if (loading) return <div className="loading-divisions">Загрузка подразделений...</div>;
-  if (error) return <div className="loading-divisions">{error}</div>;
-
-  const chunkSize = Math.ceil(divisions.length / 3);
-  const divisionChunks: Division[][] = [];
-  for (let i = 0; i < divisions.length; i += chunkSize) {
-    divisionChunks.push(divisions.slice(i, i + chunkSize));
+  if (loading) {
+    return <div className="loading-divisions">Загрузка подразделений…</div>;
+  }
+  if (error) {
+    return <div className="loading-divisions">{error}</div>;
   }
 
   const hasLeadership = !!(chief || deputies.length > 0);
 
   return (
     <>
-      {/* Блок руководства над списком */}
+      {/* 1. Руководство службы */}
       {!loadingLeadership && hasLeadership && (
         <div className="leadership-section">
           <div className="division-subheader-hh">
@@ -167,9 +231,9 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
             <span>Руководство</span>
           </div>
           <div className="leadership-cards">
-            {chief && renderLeaderCard(chief, 'Главный руководитель')}
+            {renderLeaderCard(chief, 'Главный руководитель')}
             {deputies.map((deputy, index) => (
-              <React.Fragment key={deputy.id || index}>
+              <React.Fragment key={deputy.id ?? index}>
                 {renderLeaderCard(deputy, 'Заместитель главного руководителя')}
               </React.Fragment>
             ))}
@@ -177,121 +241,130 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
         </div>
       )}
 
-      <div className="division-subheader">
-        <Building2 className="subheader-icon subheader-icon--purple" size={22} />
-        <span>Подразделения</span>
-      </div>
+      {/* 2. Сводка по службе */}
+      {kpiCards.length > 0 && (
+        <section className="service-overview">
+          <div className="division-subheader">
+            <Activity className="subheader-icon subheader-icon--blue" size={22} />
+            <span>Сводка по службе</span>
+          </div>
+          <div className="service-kpi-grid">
+            {kpiCards.map(({ key, label, icon: Icon, color }) => {
+              const value = aggregate[key];
+              return (
+                <div key={key} className="service-kpi-card">
+                  <div
+                    className="service-kpi-card__icon"
+                    style={{ backgroundColor: `${color}1f`, color }}
+                  >
+                    <Icon size={22} />
+                  </div>
+                  <div className="service-kpi-card__body">
+                    <div className="service-kpi-card__value">
+                      {value !== null ? value.toLocaleString('ru-RU') : '—'}
+                    </div>
+                    <div className="service-kpi-card__label">{label}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-      <div className="tables-wrapper">
-        <div className="tables-grid">
-          {divisionChunks.map((chunk, chunkIndex) => (
-            <div className="table-column" key={chunkIndex}>
-              <table className="division-table">
-                <tbody>
-                  {chunk.map((division) => {
-                    const isExpanded = expandedIds.has(division.id);
-                    const showPersonnel = isVisibleForDivision(canAccessPersonnel(), personnelFilters, division.id);
-                    const showEquipment = isVisibleForDivision(canAccessEquipment(), equipmentFilters, division.id);
-                    const showFacilities = isVisibleForDivision(canAccessFacilities(), facilitiesFilters, division.id);
-                    const showTasks = isVisibleForDivision(canAccessTasks(), taskFilters, division.id);
-                    const hasAnyVisible = showPersonnel || showEquipment || showFacilities || showTasks;
-                    const hasHead = !!division.head;
-
-                    return (
-                      <React.Fragment key={division.id}>
-                        <tr className={`table-row ${isExpanded ? 'expanded' : ''}`}>
-                          <td className="name-cell" onClick={() => handleTitleClick(division)}>
-                            {division.name}
-                          </td>
-                          <td className="toggle-cell">
-                            {(hasAnyVisible || hasHead) && (
-                              <button
-                                className="chevron-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleExpand(division.id);
-                                }}
-                                aria-label={isExpanded ? 'Свернуть' : 'Развернуть'}
-                              >
-                                {isExpanded ? <ChevronUp size={25} /> : <ChevronDown size={25} />}
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-
-                        <tr className={`expanded-row ${isExpanded ? 'expanded' : ''}`}>
-                          <td colSpan={2}>
-                            <div className="expanded-metrics-wrapper">
-                              {hasHead && (
-                                <div className="expanded-leadership-text">
-                                  <span className="leader-label">Начальник отдела:</span>
-                                  <div className="expanded-leader-item">
-                                    <div className="leader-name-row">
-                                      <span className="leader-fullname">{division.head.full_name}</span>
-                                    </div>
-                                    <div className="leader-contacts-row">
-                                      {division.head.work_phone && (
-                                        <span className="leader-contact">
-                                          <Phone size={14} className="leader-contact-icon" />
-                                          {division.head.work_phone}
-                                        </span>
-                                      )}
-                                      {division.head.personal_phone && (
-                                        <span className="leader-contact">
-                                          <Smartphone size={14} className="leader-contact-icon" />
-                                          {division.head.personal_phone}
-                                        </span>
-                                      )}
-                                      {!division.head.work_phone && !division.head.personal_phone && (
-                                        <span className="leader-contact">—</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {hasAnyVisible && (
-                                <div className="expanded-metrics-row">
-                                  {showPersonnel && (
-                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'personnel')}>
-                                      <Users className="metric-icon metric-icon--blue" />
-                                      <span>Сотрудники: {division.employees_count}</span>
-                                    </div>
-                                  )}
-                                  {showEquipment && (
-                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'equipment')}>
-                                      <Plug className="metric-icon metric-icon--green" />
-                                      <span>Техника: {division.equipment_count}</span>
-                                    </div>
-                                  )}
-                                  {showFacilities && (
-                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'facilities')}>
-                                      <Building2 className="metric-icon metric-icon--purple" />
-                                      <span>Объекты: {division.facilities_count}</span>
-                                    </div>
-                                  )}
-                                  {showTasks && (
-                                    <div className="metric-item" onClick={() => handleMetricClick(division.id, 'tasks')}>
-                                      <ListTodo className="metric-icon metric-icon--orange" />
-                                      <span>Задачи: {division.tasks_count}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ))}
+      {/* 3. Подразделения — карточки + поиск */}
+      <section className="divisions-section">
+        <div className="divisions-section__head">
+          <div className="division-subheader divisions-section__title">
+            <Building2 className="subheader-icon subheader-icon--purple" size={22} />
+            <span>Подразделения</span>
+          </div>
+          <div className="divisions-search">
+            <Search size={16} className="divisions-search__icon" />
+            <input
+              type="search"
+              className="divisions-search__input"
+              placeholder="Поиск по названию…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Поиск подразделений"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Блок карты с заголовком и шевроном */}
+        {filteredDivisions.length === 0 ? (
+          <div className="divisions-empty">Ничего не найдено</div>
+        ) : (
+          <div className="divisions-cards-grid">
+            {filteredDivisions.map((division) => (
+              <article
+                key={division.id}
+                className="division-overview-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => openDivision(division)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openDivision(division);
+                  }
+                }}
+                aria-label={`Подразделение ${division.name}${
+                  division.head ? `, начальник ${division.head.full_name}` : ''
+                }`}
+              >
+                <header className="division-overview-card__head">
+                  <h3
+                    className="division-overview-card__title"
+                    title={division.name}
+                  >
+                    {division.name}
+                  </h3>
+                  <ArrowRight size={16} className="division-overview-card__arrow" />
+                </header>
+
+                {/* Раскрывается при hover/focus */}
+                <div className="division-overview-card__leader">
+                  <span className="division-overview-card__leader-label">
+                    Начальник
+                  </span>
+
+                  {division.head ? (
+                    <>
+                      <span
+                        className="division-overview-card__leader-name"
+                        title={division.head.full_name}
+                      >
+                        {division.head.full_name}
+                      </span>
+                      <div className="division-overview-card__contacts">
+                        {division.head.work_phone && (
+                          <span>
+                            <Phone size={12} /> {division.head.work_phone}
+                          </span>
+                        )}
+                        {division.head.personal_phone && (
+                          <span>
+                            <Smartphone size={12} /> {division.head.personal_phone}
+                          </span>
+                        )}
+                        {!division.head.work_phone &&
+                          !division.head.personal_phone && <span>—</span>}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="division-overview-card__leader-empty">
+                      Не назначен
+                    </span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 4. Карта */}
       <div className="map-country animate-fadeInUp">
         <div className="map-section-header">
           <div className={`map-header-left ${showMap ? 'expanded' : ''}`}>
@@ -302,7 +375,7 @@ export function DivisionList({ onSelectDivision }: DivisionListProps) {
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && toggleMap()}
             >
-              <Map className="subheader-icon subheader-icon--green" size={22} />
+              <MapIcon className="subheader-icon subheader-icon--green" size={22} />
               <span>Территориальные органы ФСБ России</span>
             </h3>
             <button

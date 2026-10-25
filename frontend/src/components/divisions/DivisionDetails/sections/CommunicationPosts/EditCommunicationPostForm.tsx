@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { X, Check, ChevronDown } from 'lucide-react';
-import { communicationPostsApi, divisionsApi } from '../../../../../api';
-import './CommunicationPosts.css';
+// components/divisions/DivisionDetails/sections/CommunicationPosts/EditCommunicationPostForm.tsx
+import React, { useEffect, useState } from 'react';
+import { X, Check, Lock, Trash2, CornerDownRight } from 'lucide-react';
+import { communicationPostsApi } from '../../../../../api';
+import type { CommunicationPost, CommunicationPostKind } from '../../../../../types';
+import { getKindMeta } from './communicationPostKind';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { PostSelect } from './PostSelect';
+import {
+  loadFacilitiesForDivision,
+  setFacilityPostLink,
+  findFacilityForPost,
+  type FacilityOption,
+} from './postFacilityHelpers';
+import './styles/CommunicationPosts.css';
 
 interface EditCommunicationPostFormProps {
   postId: string;
@@ -9,54 +20,39 @@ interface EditCommunicationPostFormProps {
   onSaved: () => void;
 }
 
-export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditCommunicationPostFormProps) {
-  const token = localStorage.getItem('accessToken');
+export function EditCommunicationPostForm({
+  postId,
+  onClose,
+  onSaved,
+}: EditCommunicationPostFormProps) {
+  const token = localStorage.getItem('accessToken') || '';
 
+  const [post, setPost] = useState<CommunicationPost | null>(null);
   const [name, setName] = useState('');
-  const [division, setDivision] = useState<string>('');
-  const [subdivisionId, setSubdivisionId] = useState<string>('');
   const [description, setDescription] = useState('');
-  const [divisions, setDivisions] = useState<any[]>([]);
-  const [subdivisions, setSubdivisions] = useState<any[]>([]);
-  const [isDivisionsOpen, setIsDivisionsOpen] = useState(false);
-  const [isSubdivisionsOpen, setIsSubdivisionsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const [facilities, setFacilities] = useState<FacilityOption[]>([]);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const [originalFacilityId, setOriginalFacilityId] = useState<string>('');
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
+
   const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Загружаем данные поста
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const post = await communicationPostsApi.getCommunicationPost(postId, token);
-        console.log('Загружен пост для редактирования:', post);
-
-        setName(post.name);
-
-        // Извлекаем ID подразделения (может быть число или объект с id)
-        let divisionId = '';
-        if (post.division && typeof post.division === 'object' && 'id' in post.division) {
-          divisionId = String(post.division.id);
-        } else if (post.division) {
-          divisionId = String(post.division);
-        }
-        setDivision(divisionId);
-
-        // Извлекаем ID отделения
-        let subId = '';
-        if (post.subdivision && typeof post.subdivision === 'object' && 'id' in post.subdivision) {
-          subId = String(post.subdivision.id);
-        } else if (post.subdivision) {
-          subId = String(post.subdivision);
-        }
-        setSubdivisionId(subId);
-
-        setDescription(post.description || '');
-
-        console.log('Установлены значения:', { divisionId, subId });
+        const data = await communicationPostsApi.getCommunicationPost(postId, token);
+        setPost(data);
+        setName(data.name);
+        setDescription(data.description || '');
       } catch (err) {
-        setError('Не удалось загрузить данные поста');
         console.error(err);
+        setError('Не удалось загрузить данные поста');
       } finally {
         setInitialLoading(false);
       }
@@ -64,86 +60,124 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
     fetchPost();
   }, [postId, token]);
 
-  // Загружаем все подразделения для выпадающего списка
   useEffect(() => {
-    const fetchDivisions = async () => {
-      try {
-        const data = await divisionsApi.getDivisions(token);
-        setDivisions(data);
-        console.log('Загружены подразделения:', data);
-      } catch (err) {
-        console.error('Ошибка при загрузке подразделений:', err);
-      }
-    };
-    fetchDivisions();
-  }, [token]);
-
-  // При изменении выбранного подразделения загружаем его отделения
-  useEffect(() => {
-    const fetchSubdivisions = async () => {
-      if (!division) {
-        setSubdivisions([]);
-        return;
-      }
-      try {
-        const data = await divisionsApi.getDivisionById(division, token);
-        setSubdivisions(data.subdivisions || []);
-        console.log(`Загружены отделения для division ${division}:`, data.subdivisions);
-      } catch (err) {
-        console.error('Ошибка при загрузке отделений:', err);
-      }
-    };
-    fetchSubdivisions();
-  }, [division, token]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    if (!division) {
-      setError('Пожалуйста, выберите подразделение');
-      setLoading(false);
+    if (!post) return;
+    if (post.parent) {
+      setFacilities([]);
+      setOriginalFacilityId('');
+      setSelectedFacilityId('');
       return;
     }
 
-    // Преобразуем ID в числа (сервер ожидает числовые значения)
+    let cancelled = false;
+    setFacilitiesLoading(true);
+    loadFacilitiesForDivision(
+      token,
+      String(post.division),
+      post.subdivision ? String(post.subdivision) : null,
+    )
+      .then(list => {
+        if (cancelled) return;
+        setFacilities(list);
+        const found = findFacilityForPost(list, String(post.id));
+        setOriginalFacilityId(found?.id || '');
+        setSelectedFacilityId(found?.id || '');
+      })
+      .catch(e => {
+        if (cancelled) return;
+        console.error(e);
+        setFacilities([]);
+      })
+      .finally(() => { if (!cancelled) setFacilitiesLoading(false); });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post?.id, token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) return;
+    setLoading(true);
+    setError('');
+
+    if (!name.trim()) { setError('Введите название'); setLoading(false); return; }
+
     const payload = {
-      name,
-      division: parseInt(division, 10),
-      subdivision: subdivisionId ? parseInt(subdivisionId, 10) : undefined,
-      description,
+      name: name.trim(),
+      kind: post.kind as CommunicationPostKind,
+      parent: post.parent?.id ? parseInt(String(post.parent.id), 10) : null,
+      division: parseInt(String(post.division), 10),
+      subdivision: post.subdivision ? parseInt(String(post.subdivision), 10) : null,
+      description: description.trim() || undefined,
     };
-    console.log('Отправляем данные на обновление:', payload);
 
     try {
       await communicationPostsApi.updateCommunicationPost(postId, payload, token);
-      console.log('Обновление успешно');
+
+      if (!post.parent && originalFacilityId !== selectedFacilityId) {
+        if (originalFacilityId) {
+          const original = facilities.find(f => f.id === originalFacilityId);
+          if (original) {
+            try {
+              await setFacilityPostLink(
+                token, originalFacilityId, String(post.id), 'remove', original.postIds,
+              );
+            } catch (unlinkErr) {
+              console.error('Failed to unlink post from old facility:', unlinkErr);
+            }
+          }
+        }
+        if (selectedFacilityId) {
+          const next = facilities.find(f => f.id === selectedFacilityId);
+          if (next) {
+            try {
+              await setFacilityPostLink(
+                token, selectedFacilityId, String(post.id), 'add', next.postIds,
+              );
+            } catch (linkErr) {
+              console.error('Failed to link post to facility:', linkErr);
+            }
+          }
+        }
+      }
+
       onSaved();
       onClose();
     } catch (err: any) {
-      console.error('Ошибка при обновлении:', err);
+      const data = err?.response?.data;
       let msg = 'Не удалось обновить пост связи';
-      if (err.response) {
-        console.log('Ответ сервера с ошибкой:', err.response.data);
-        if (err.response.data && typeof err.response.data === 'object') {
-          if (err.response.data.detail) {
-            msg = err.response.data.detail;
-          } else {
-            const errors = Object.entries(err.response.data)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join('; ');
-            if (errors) msg = errors;
-          }
-        } else if (typeof err.response.data === 'string') {
-          msg = err.response.data;
-        }
-      } else if (err.message) {
-        msg = err.message;
-      }
+      if (data && typeof data === 'object') {
+        if (data.detail) msg = data.detail;
+        else msg = Object.entries(data)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join('; ');
+      } else if (typeof data === 'string') msg = data;
+      else if (err.message) msg = err.message;
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!post) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await communicationPostsApi.deleteCommunicationPost(postId, token);
+      setShowDeleteConfirm(false);
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      console.error('Failed to delete post:', err);
+      const data = err?.response?.data;
+      let msg = 'Не удалось удалить пост связи';
+      if (data && typeof data === 'object' && data.detail) msg = data.detail;
+      else if (typeof data === 'string') msg = data;
+      else if (err.message) msg = err.message;
+      setError(msg);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -153,9 +187,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
         <div className="add-post-modal-container">
           <div className="add-post-modal-header">
             <h2 className="add-post-modal-title">Загрузка...</h2>
-            <button onClick={onClose} className="add-post-modal-close-btn">
-              <X size={24} />
-            </button>
+            <button onClick={onClose} className="add-post-modal-close-btn"><X size={20} /></button>
           </div>
           <div className="add-post-form" style={{ padding: '2rem', textAlign: 'center' }}>
             Загрузка данных поста...
@@ -165,104 +197,126 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
     );
   }
 
+  if (!post) {
+    return (
+      <div className="add-post-modal-overlay">
+        <div className="add-post-modal-container">
+          <div className="add-post-modal-header">
+            <h2 className="add-post-modal-title">Ошибка</h2>
+            <button onClick={onClose} className="add-post-modal-close-btn"><X size={20} /></button>
+          </div>
+          <div className="add-post-form" style={{ padding: '2rem' }}>
+            {error || 'Пост не найден'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const childrenCount = post.children_count ?? post.children?.length ?? 0;
+  const isRootPost = !post.parent;
+  const facilityChanged = originalFacilityId !== selectedFacilityId;
+  const postKindMeta = getKindMeta(post.kind);
+  const parentKindMeta = post.parent ? getKindMeta(post.parent.kind) : null;
+
   return (
     <div className="add-post-modal-overlay">
       <div className="add-post-modal-container">
         <div className="add-post-modal-header">
-          <h2 className="add-post-modal-title">Редактировать пост связи</h2>
-          <button onClick={onClose} className="add-post-modal-close-btn">
-            <X size={24} />
-          </button>
+          <div className="add-post-modal-header-titles">
+            <h2 className="add-post-modal-title">Редактировать пост</h2>
+            {post.parent && (
+              <div className="add-post-modal-parent">
+                <CornerDownRight
+                  size={14}
+                  className="add-post-modal-parent__icon"
+                />
+                <span className="add-post-modal-parent__type">
+                  {parentKindMeta?.full || '—'}
+                </span>
+                <span className="add-post-modal-parent__sep">·</span>
+                <span
+                  className="add-post-modal-parent__name"
+                  title={post.parent.name}
+                >
+                  {post.parent.name}
+                </span>
+              </div>
+            )}
+          </div>
+          <button onClick={onClose} className="add-post-modal-close-btn"><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="add-post-form">
           <div className="add-post-form-group">
-            <label htmlFor="name" className="add-post-form-label">Наименование *</label>
+            <label className="add-post-form-label">Тип поста</label>
+            <div className="add-post-type-fixed">
+              <span className="add-post-type-fixed__value">
+                {postKindMeta?.full || '—'}
+              </span>
+            </div>
+            <div className="add-post-form-hint">
+              Тип поста нельзя изменить после создания
+            </div>
+          </div>
+
+          <div className="add-post-form-group">
+            <label htmlFor="name" className="add-post-form-label">Название *</label>
             <input
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               className="add-post-form-input"
+              autoFocus
               required
             />
           </div>
 
-          <div className="add-post-form-group">
-            <label className="add-post-form-label">Подразделение *</label>
-            <div className="add-post-select-container">
-              <div
-                className="add-post-select-display"
-                onClick={() => setIsDivisionsOpen(!isDivisionsOpen)}
-              >
-                <span>
-                  {divisions.find(d => d.id.toString() === division)?.name || 'Выберите подразделение'}
+          {/* Подразделение — только для корневых постов.
+              Для ПС / НДР наследуется от родителя (не показываем). */}
+          {isRootPost && (
+            <div className="add-post-form-group">
+              <label className="add-post-form-label">Подразделение</label>
+              <div className="add-post-select-display add-post-select-display--disabled">
+                <span className="add-post-select-display__value">
+                  {post.division_name || '—'}
                 </span>
-                <ChevronDown
-                  className={`h-5 w-5 text-gray-400 transition-transform ${isDivisionsOpen ? 'transform rotate-180' : ''}`}
-                />
+                <Lock size={16} className="add-post-select-display__icon" />
               </div>
-              {isDivisionsOpen && (
-                <div className="add-post-select-options">
-                  {divisions.map((div) => (
-                    <div
-                      key={div.id}
-                      className="add-post-select-option"
-                      onClick={() => {
-                        setDivision(div.id.toString());
-                        setSubdivisionId('');
-                        setIsDivisionsOpen(false);
-                      }}
-                    >
-                      {div.name}
-                    </div>
-                  ))}
+            </div>
+          )}
+
+          {isRootPost && (
+            <div className="add-post-form-group">
+              <label className="add-post-form-label">Объект</label>
+              <PostSelect
+                id="facility"
+                value={selectedFacilityId}
+                onChange={v => setSelectedFacilityId(v)}
+                options={facilities.map(f => ({
+                  value: f.id,
+                  label: f.typeName || f.name,
+                  description: f.address || undefined,
+                }))}
+                emptyOption={{ value: '', label: '— Не привязан к объекту —' }}
+                loading={facilitiesLoading}
+                loadingText="Загрузка объектов..."
+                emptyText="В подразделении поста нет объектов"
+                searchable
+                searchPlaceholder="Поиск по типу или адресу..."
+                noResultsText="Объекты не найдены"
+              />
+              {!facilitiesLoading && facilities.length === 0 && (
+                <div className="add-post-form-hint">
+                  В подразделении поста нет объектов
                 </div>
               )}
-            </div>
-          </div>
-
-          {subdivisions.length > 0 && (
-            <div className="add-post-form-group">
-              <label className="add-post-form-label">Отделение</label>
-              <div className="add-post-select-container">
-                <div
-                  className="add-post-select-display"
-                  onClick={() => setIsSubdivisionsOpen(!isSubdivisionsOpen)}
-                >
-                  <span>
-                    {subdivisions.find(s => s.id.toString() === subdivisionId)?.name || 'Не выбрано'}
-                  </span>
-                  <ChevronDown
-                    className={`h-5 w-5 text-gray-400 transition-transform ${isSubdivisionsOpen ? 'transform rotate-180' : ''}`}
-                  />
+              {!facilitiesLoading && facilities.length > 0 && facilityChanged && (
+                <div className="add-post-form-hint">
+                  Привязка будет изменена после сохранения
                 </div>
-                {isSubdivisionsOpen && (
-                  <div className="add-post-select-options">
-                    <div
-                      className="add-post-select-option"
-                      onClick={() => {
-                        setSubdivisionId('');
-                        setIsSubdivisionsOpen(false);
-                      }}
-                    >
-                      Не выбрано
-                    </div>
-                    {subdivisions.map((sub) => (
-                      <div
-                        key={sub.id}
-                        className="add-post-select-option"
-                        onClick={() => {
-                          setSubdivisionId(sub.id.toString());
-                          setIsSubdivisionsOpen(false);
-                        }}
-                      >
-                        {sub.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
 
@@ -271,7 +325,7 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
             <textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               rows={3}
               className="add-post-form-input add-post-form-textarea"
             />
@@ -280,28 +334,51 @@ export function EditCommunicationPostForm({ postId, onClose, onSaved }: EditComm
           {error && <div className="add-post-form-error">{error}</div>}
 
           <div className="add-post-form-actions">
-            <button type="button" onClick={onClose} className="add-post-form-cancel-btn" disabled={loading}>
+            <button
+              type="button"
+              className="add-post-form-delete-btn"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={loading || deleting}
+              title="Удалить пост"
+            >
+              <Trash2 size={16} />
+              <span>Удалить</span>
+            </button>
+
+            <div className="add-post-form-actions-spacer" />
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="add-post-form-cancel-btn"
+              disabled={loading || deleting}
+            >
               Отмена
             </button>
-            <button type="submit" className="add-post-form-submit-btn" disabled={loading || !name || !division}>
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Сохранение...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  Сохранить
-                </>
-              )}
+            <button
+              type="submit"
+              className="add-post-form-submit-btn"
+              disabled={loading || deleting || !name.trim()}
+            >
+              {loading ? 'Сохранение...' : (<><Check size={16} /> Сохранить</>)}
             </button>
           </div>
         </form>
       </div>
+
+      {showDeleteConfirm && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Удаление поста связи"
+          message={
+            childrenCount > 0
+              ? `Удалить «${post.name}»? Все вложенные элементы также будут удалены.`
+              : `Удалить «${post.name}»?`
+          }
+        />
+      )}
     </div>
   );
 }

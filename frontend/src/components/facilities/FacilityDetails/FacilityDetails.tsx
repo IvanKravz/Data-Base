@@ -1,6 +1,8 @@
 // FacilityDetails.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Pencil, Trash2, Info, FileText, Ruler, MessageSquare, Package, Save, X, Tag } from 'lucide-react';
+import {
+  Pencil, Trash2, Info, FileText, Ruler, MessageSquare, Package, Save, X, Tag,
+} from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Facility } from '../../../types';
@@ -18,12 +20,19 @@ import { KzInfoCard } from './sections/KzInfoCard';
 import { CommentsCard } from './sections/CommentsCard';
 import { AssignedEquipment } from './sections/AssignedEquipment';
 
-// Секции для редактирования (переиспользуем из EditFacilityPage)
+// Секции для редактирования
 import { EditFacilityPage, EditFacilityPageRef } from '../forms/EditFacilityPage/EditFacilityPage';
 
 import './FacilityForm.css';
 
-type TabId = 'main' | 'classification' | 'documentation' | 'kz' | 'comments' | 'equipment';
+// ← Вкладка «Посты связи» удалена из карточки объекта.
+type TabId =
+  | 'main'
+  | 'classification'
+  | 'documentation'
+  | 'kz'
+  | 'comments'
+  | 'equipment';
 
 export function FacilityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +64,6 @@ export function FacilityDetails() {
   const isGlobalView = authApi.getGlobalView();
   const canEditFacility = canEdit('facilities');
 
-  // Ref для получения данных из дочерней формы
   const editFormRef = useRef<EditFacilityPageRef>(null);
 
   // Загрузка данных объекта
@@ -76,7 +84,7 @@ export function FacilityDetails() {
     fetchFacility();
   }, [id, token]);
 
-  // Загрузка количества техники на объекте
+  // Загрузка количества техники
   useEffect(() => {
     const fetchEquipmentCount = async () => {
       if (!id || !token) return;
@@ -100,7 +108,7 @@ export function FacilityDetails() {
         const [divisionsData, facilityTypesData, communicationPostsData] = await Promise.all([
           divisionsApi.getDivisions({ token }),
           facilitiesApi.getFacilityTypes(token).catch(() => []),
-          communicationPostsApi.getCommunicationPosts({ token }).catch(() => [])
+          communicationPostsApi.getCommunicationPosts({ token }).catch(() => []),
         ]);
         setDivisions(divisionsData);
         setFacilityTypes(facilityTypesData);
@@ -122,57 +130,6 @@ export function FacilityDetails() {
     }
   }, [location.state]);
 
-  // === НАВИГАЦИЯ НАЗАД (ПОЛНАЯ ВЕРСИЯ) ===
-  const handleBack = () => {
-    if (isEditing) {
-      handleCancelEdit();
-      return;
-    }
-    const state = location.state;
-    const currentSearchParams = new URLSearchParams(location.search);
-    const typeFilter = currentSearchParams.get('type');
-    const classFilter = currentSearchParams.get('class');
-
-    if (state?.from === 'map-view' && state?.returnPath) {
-      navigate(state.returnPath);
-      return;
-    }
-
-    if (state?.from === 'facilities-section') {
-      let backUrl = state.divisionId
-        ? `/divisions/${state.divisionId}/facilities`
-        : `/facilities`;
-      const params = new URLSearchParams();
-      if (state.activeTab && state.activeTab !== 'all') params.append('tab', state.activeTab);
-      if (state.subdivisionId) params.append('subdivision', state.subdivisionId);
-      if (state.filterType && state.filterType !== 'all') params.append('type', state.filterType.toString());
-      if (state.facilityClassFilter && state.facilityClassFilter !== 'all') params.append('class', state.facilityClassFilter);
-      const queryString = params.toString();
-      if (queryString) backUrl += `?${queryString}`;
-      navigate(backUrl, { state: { activeTab: state.activeTab, filterType: state.filterType, facilityClassFilter: state.facilityClassFilter, viewType: state.viewType, subdivisionId: state.subdivisionId, divisionId: state.divisionId } });
-    } else if (isGlobalView || !facility?.division?.id) {
-      let backUrl = `/facilities`;
-      const params = new URLSearchParams();
-      if (typeFilter) params.append('type', typeFilter);
-      if (classFilter) params.append('class', classFilter);
-      const queryString = params.toString();
-      if (queryString) backUrl += `?${queryString}`;
-      navigate(backUrl);
-    } else if (facility?.division?.id) {
-      let backUrl = `/divisions/${facility.division.id}/facilities`;
-      const params = new URLSearchParams();
-      if (facility.subdivision?.id) params.append('subdivision', facility.subdivision.id);
-      if (typeFilter) params.append('type', typeFilter);
-      if (classFilter) params.append('class', classFilter);
-      const queryString = params.toString();
-      if (queryString) backUrl += `?${queryString}`;
-      navigate(backUrl);
-    } else {
-      navigate(-1);
-    }
-  };
-
-  // === РЕДАКТИРОВАНИЕ НА МЕСТЕ ===
   const handleEditStart = () => {
     if (!facility) return;
     setEditFormData({ ...facility });
@@ -194,7 +151,7 @@ export function FacilityDetails() {
       const dataToSend = {
         ...formData,
         type_id: formData.type?.id || null,
-        communication_post_ids: formData.communication_posts?.map(p => p.id) || [],
+        communication_post_ids: formData.communication_posts?.map((p: any) => p.id) || [],
         facility_class: formData.facility_class || null,
         division_id: formData.division?.id || null,
         subdivision_id: formData.subdivision?.id || null,
@@ -206,7 +163,7 @@ export function FacilityDetails() {
       setIsEditing(false);
       setEditFormData(null);
       setActiveTab(previousTab);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating facility:', err);
       setError('Не удалось сохранить изменения');
     } finally {
@@ -220,14 +177,14 @@ export function FacilityDetails() {
     setActiveTab(previousTab);
   };
 
-  // === УДАЛЕНИЕ ===
   const handleDelete = () => setShowDeleteModal(true);
+
   const handleConfirmDelete = async () => {
     if (!facility?.id) return;
     try {
       await facilitiesApi.deleteFacility(facility.id);
       dispatch(deleteFacility(facility.id));
-      const state = location.state;
+      const state = location.state as any;
       if (state?.from === 'map-view' && state?.returnPath) {
         navigate(state.returnPath);
         return;
@@ -240,11 +197,11 @@ export function FacilityDetails() {
         const queryString = params.toString();
         if (queryString) backUrl += `?${queryString}`;
         navigate(backUrl);
-      } else if (isGlobalView || !facility?.division?.id) {
+      } else if (isGlobalView || !(facility as any)?.division?.id) {
         navigate('/facilities');
-      } else if (facility?.division?.id) {
-        let backUrl = `/divisions/${facility.division.id}/facilities`;
-        if (facility.subdivision?.id) backUrl += `?subdivision=${facility.subdivision.id}`;
+      } else if ((facility as any)?.division?.id) {
+        let backUrl = `/divisions/${(facility as any).division.id}/facilities`;
+        if ((facility as any).subdivision?.id) backUrl += `?subdivision=${(facility as any).subdivision.id}`;
         navigate(backUrl);
       } else {
         navigate(-1);
@@ -255,13 +212,11 @@ export function FacilityDetails() {
     }
   };
 
-  // Определение видимости вкладок
+  // Видимость вкладок
   const showDocumentationTab = facility?.is_closed;
   const showKzTab = facility?.is_closed;
-  // Вкладка Комментарии показывается всегда в режиме редактирования, иначе только если есть комментарии
   const showCommentsTab = isEditing || (facility?.comments && facility.comments.trim() !== '');
   const showEquipmentTab = (equipmentCount ?? 0) > 0;
-  // Вкладка Классификация показывается только в режиме редактирования
   const showClassificationTab = isEditing;
 
   const allTabs: { id: TabId; label: string; icon: React.ReactNode; show: boolean }[] = [
@@ -300,9 +255,6 @@ export function FacilityDetails() {
         return <CommentsCard facility={facility} searchTerm={searchTerm} />;
       case 'equipment':
         return <AssignedEquipment facility={facility} searchTerm={searchTerm} />;
-      // Вкладка classification не имеет отдельного компонента для просмотра,
-      // поэтому при просмотре она не показывается (show: false), а при редактировании
-      // её содержимое рендерится через EditFacilityPage.
       default:
         return null;
     }
@@ -316,7 +268,7 @@ export function FacilityDetails() {
     <div className="facility-details-container">
       <div className="facility-details-layout">
         <div className="facility-details-sidebar">
-          <FacilitySidebar facility={facility} onBack={handleBack} />
+          <FacilitySidebar facility={facility} onBack={() => navigate(-1)} />
         </div>
 
         <div className="facility-details-main">
@@ -389,7 +341,7 @@ export function FacilityDetails() {
                 <EditFacilityPage
                   ref={editFormRef}
                   initialData={editFormData || facility}
-                  onSubmit={() => {}} // не используется, кнопки в родителе
+                  onSubmit={() => {}}
                   onCancel={handleCancelEdit}
                   isEditing={true}
                   divisions={divisions}
@@ -399,7 +351,7 @@ export function FacilityDetails() {
                   hideSidebar={true}
                   hideActions={true}
                   hideTabs={true}
-                  initialTab={activeTab}
+                  initialTab={activeTab as any}
                 />
               )}
             </div>

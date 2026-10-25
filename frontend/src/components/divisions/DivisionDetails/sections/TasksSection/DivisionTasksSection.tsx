@@ -9,7 +9,7 @@ import { tasksApi } from '../../../../../api/tasks';
 import { divisionsApi } from '../../../../../api/divisions';
 import { TasksHeader } from '../../../../tasks/TasksSection/TasksHeader';
 import { TasksFilters } from '../../../../tasks/TasksSection/TasksFilters';
-import { TasksList } from '../../../../tasks/TasksSection/TasksList/TasksList';
+import { TasksList, SubdivisionTabKey } from '../../../../tasks/TasksSection/TasksList/TasksList';
 import { TasksCalendarView } from '../../../../tasks/TasksSection/TasksCalendarView';
 import { TasksCalendarSidebar } from '../../../../tasks/TasksSection/TasksCalendarSidebar';
 import { CreateTaskModal } from '../../../../tasks/CreateTaskModal';
@@ -39,7 +39,6 @@ const toDateOnly = (value: string | Date | null | undefined): string => {
   if (value instanceof Date) {
     return format(value, 'yyyy-MM-dd');
   }
-  // Первые 10 символов ISO-строки всегда 'yyyy-MM-dd'.
   return String(value).slice(0, 10);
 };
 
@@ -57,8 +56,14 @@ export function DivisionTasksSection() {
   const [subdivisionName, setSubdivisionName] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // НОВОЕ: фильтр по ответственному исполнителю
+  // Фильтр по ответственному исполнителю
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | null>(null);
+
+  // НОВОЕ: поднятое состояние активной вкладки из TasksList.
+  // Нужно, чтобы фильтр исполнителей мог ориентироваться на выбранное отделение/подотделение.
+  const [activeDivisionId, setActiveDivisionId] = useState<string | null>(null);
+  const [activeSubdivisionTab, setActiveSubdivisionTab] =
+    useState<SubdivisionTabKey>('all');
 
   const [highlightedRange, setHighlightedRange] = useState<{
     start: Date;
@@ -276,9 +281,6 @@ export function DivisionTasksSection() {
       let dateMatch = true;
       if (startDate || endDate) {
         dateMatch = task.steps.some(step => {
-          // Приводим даты шага к 'yyyy-MM-dd' — API может вернуть
-          // '2026-03-15T00:00:00Z', а startDate/endDate — всегда '2026-03-15'.
-          // Сырое строковое сравнение между разными форматами ломается.
           const stepStart = toDateOnly(step.start_date);
           const stepEnd = toDateOnly(step.end_date);
           if (!stepStart || !stepEnd) return false;
@@ -293,8 +295,6 @@ export function DivisionTasksSection() {
       const mineMatch =
         !showOnlyMine || (task.is_private && task.created_by?.id === currentUserId);
 
-      // НОВОЕ: фильтр по ответственному исполнителю.
-      // null = «Все исполнители» (без фильтрации).
       const assigneeMatch =
         selectedAssigneeId === null || task.assignee?.id === selectedAssigneeId;
 
@@ -311,6 +311,36 @@ export function DivisionTasksSection() {
     currentUserId,
     selectedAssigneeId,
   ]);
+
+  // НОВОЕ: задачи, на основе которых строится список исполнителей.
+  // Берём СЫРЫЕ tasks (а не filteredTasks), чтобы поиск/категория/даты
+  // не сужали список исполнителей (иначе возникает циклическая зависимость
+  // с самим selectedAssigneeId). Фильтруем только по активной вкладке
+  // отделения/подотделения из TasksList.
+  const assigneeSourceTasks = useMemo(() => {
+    if (!activeDivisionId) return tasks;
+    return tasks.filter(task => {
+      // id подразделения из задачи — number (из DivisionSerializer),
+      // activeDivisionId — string (из Object.keys в TasksList). Приводим к строке.
+      const divId = String(task.division?.id ?? 'no-division');
+      if (divId !== String(activeDivisionId)) return false;
+
+      if (activeSubdivisionTab === 'all') return true;
+      if (activeSubdivisionTab === 'no-subdivision') return !task.subdivision?.id;
+      return String(task.subdivision?.id) === String(activeSubdivisionTab);
+    });
+  }, [tasks, activeDivisionId, activeSubdivisionTab]);
+
+  // НОВОЕ: обработчики смены вкладок в TasksList.
+  // При смене отделения сбрасываем подотделение на «Все задачи».
+  const handleDivisionTabChange = useCallback((divisionId: string) => {
+    setActiveDivisionId(divisionId);
+    setActiveSubdivisionTab('all');
+  }, []);
+
+  const handleSubdivisionTabChange = useCallback((key: SubdivisionTabKey) => {
+    setActiveSubdivisionTab(key);
+  }, []);
 
   const handleDeleteTask = async (taskId: string) => {
     if (window.confirm('Вы уверены, что хотите удалить задачу?')) {
@@ -415,14 +445,12 @@ export function DivisionTasksSection() {
     setCalendarState(prev => ({ ...prev, ...newState }));
   };
 
-  /** Клик по конкретному дню в основном календаре → синхронизируем фильтр */
   const handleCalendarDateSelect = useCallback((date: Date) => {
     const iso = format(date, 'yyyy-MM-dd');
     setStartDate(iso);
     setEndDate(iso);
   }, []);
 
-  /** Изменение startDate из фильтра → двигаем основной календарь на эту дату */
   const handleStartDateChange = useCallback((date: string | null) => {
     setStartDate(date);
     if (date) {
@@ -430,12 +458,10 @@ export function DivisionTasksSection() {
     }
   }, []);
 
-  /** Изменение endDate — не двигаем календарь, только обновляем фильтр */
   const handleEndDateChange = useCallback((date: string | null) => {
     setEndDate(date);
   }, []);
 
-  /** Диапазон фильтра для визуальной подсветки в основном календаре */
   const filterRange = useMemo(() => {
     if (!startDate && !endDate) return null;
     const start = parseISO(startDate || endDate!);
@@ -464,7 +490,6 @@ export function DivisionTasksSection() {
       setEndDate(null);
       setShowOnlyMine(false);
       setSelectedAssigneeId(null);
-      // calendarState не трогаем — вид и текущий месяц навигации остаются
     };
 
     return (
@@ -503,6 +528,10 @@ export function DivisionTasksSection() {
           onEditTask={handleEditTask}
           onDeleteTask={handleDeleteTask}
           onToggleStep={toggleTaskStep}
+          activeDivisionId={activeDivisionId}
+          activeSubdivisionTab={activeSubdivisionTab}
+          onDivisionChange={handleDivisionTabChange}
+          onSubdivisionChange={handleSubdivisionTabChange}
         />
       );
     }
@@ -583,6 +612,7 @@ export function DivisionTasksSection() {
           <div className="tasks-filters-section">
             <TasksFilters
               tasks={tasks}
+              assigneeSourceTasks={assigneeSourceTasks}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedCategory={selectedCategory}

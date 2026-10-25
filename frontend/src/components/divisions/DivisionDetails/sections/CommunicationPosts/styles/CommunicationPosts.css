@@ -1,0 +1,1301 @@
+/* =========================================================
+   Контейнер
+   ========================================================= */
+.communication-posts-container {
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: visible;
+}
+
+.communication-posts-content {
+    padding: 0;
+    overflow: visible;
+}
+
+/* =========================================================
+   Табы подразделений
+   ========================================================= */
+.communication-tabs {
+    display: flex;
+    gap: 0;
+    flex-wrap: nowrap;
+    margin-bottom: 24px;
+    background: #f1f5f9;
+    border-radius: 2px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    position: relative;
+    padding: 4px;
+}
+
+.communication-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.communication-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.communication-tab {
+    padding: 8px 18px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.communication-tab:hover {
+    color: #0f172a;
+    background: #e2e8f0;
+}
+
+.communication-tab--active {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.communication-tabs-indicator {
+    position: absolute;
+    bottom: 4px;
+    height: 3px;
+    border-radius: 3px;
+    background: #2563eb;
+    transition: left 0.3s ease, width 0.3s ease;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* =========================================================
+   Тулбар (заголовок + кнопка создания)
+   ========================================================= */
+.communication-posts-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 2px;
+}
+
+.communication-posts-toolbar__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.communication-posts-toolbar__count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.communication-posts-toolbar__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: #2563eb;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.communication-posts-toolbar__add:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   Дерево постов
+   ========================================================= */
+.post-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.post-node {
+    display: flex;
+    flex-direction: column;
+}
+
+.post-node__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 4px;
+    border-radius: 6px;
+    transition: background 0.12s ease;
+}
+
+.post-node__row:hover {
+    background: #f1f5f9;
+}
+
+.post-node__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: #64748b;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.post-node__toggle:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.post-node__toggle--empty {
+    cursor: default;
+}
+
+.post-node__dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #cbd5e1;
+}
+
+.post-node__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    flex-shrink: 0;
+    max-width: 340px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.post-node__counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.post-node__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #64748b;
+    padding: 1px 6px;
+    background: #f8fafc;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.post-node__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.post-node__row:hover .post-node__actions {
+    opacity: 1;
+}
+
+.post-node__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.post-node__action:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.post-node__action--add {
+    color: #2563eb;
+}
+
+.post-node__action--add:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.post-node__action--danger:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.post-node__action-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+}
+
+.post-node__description {
+    font-size: 0.75rem;
+    color: #64748b;
+    padding: 0 10px 6px 4px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.post-node__children {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.post-node__children::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 4px;
+    width: 1px;
+    background: #e2e8f0;
+    pointer-events: none;
+}
+
+/* =========================================================
+   Мини-карточка
+   ========================================================= */
+.communication-posts-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    overflow: visible;
+}
+
+.mini-post-card {
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: stretch;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1;
+}
+
+.mini-post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    z-index: 2;
+}
+
+.mini-post-card--expanded {
+    z-index: 20;
+}
+
+.mini-post-card__content {
+    flex: 1;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-width: 0;
+    position: relative;
+    overflow: visible;
+}
+
+.mini-post-card__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    gap: 6px;
+}
+
+.mini-post-card__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.3;
+    margin: 0;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding-right: 4px;
+}
+
+.mini-post-card__right-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.mini-post-card__actions {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.mini-post-card__action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.mini-post-card__action-btn:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.mini-post-card__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    color: #64748b;
+    transition: transform 0.2s, background 0.2s;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.mini-post-card__chevron:hover {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+.mini-post-card__body {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: #ffffff;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    padding: 0 12px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.mini-post-card__body--expanded {
+    max-height: 300px;
+    opacity: 1;
+    pointer-events: auto;
+    padding: 8px 12px 12px;
+    overflow: visible;
+}
+
+.mini-post-card__description {
+    font-size: 0.875rem;
+    color: #3c3c3c;
+    line-height: 1.4;
+    margin: 0 0 5px 0;
+    word-break: break-word;
+}
+
+.mini-post-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.mini-post-card__meta svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   Информация о поиске
+   ========================================================= */
+.search-results-info {
+    padding: 8px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.875rem;
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.search-results-info span {
+    color: #64748b;
+    font-weight: normal;
+}
+
+/* =========================================================
+   Пустое сообщение
+   ========================================================= */
+.communication-posts-empty-message {
+    color: #64748b;
+    text-align: center;
+    padding: 3rem 1rem;
+    font-size: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed #e2e8f0;
+}
+
+/* =========================================================
+   Модалка добавления / редактирования поста
+   ========================================================= */
+.add-post-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.add-post-modal-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    max-width: 30rem;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.add-post-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.add-post-modal-header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.add-post-modal-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* ─── Информативный блок о родителе ─── */
+.add-post-modal-parent {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8rem;
+    color: #64748b;
+    min-width: 0;
+    max-width: 100%;
+    width: fit-content;
+}
+
+.add-post-modal-parent__icon {
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.add-post-modal-parent__type {
+    color: #475569;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.add-post-modal-parent__sep {
+    color: #cbd5e1;
+    flex-shrink: 0;
+}
+
+.add-post-modal-parent__name {
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+}
+
+.add-post-modal-close-btn {
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+
+.add-post-modal-close-btn:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+.add-post-form {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.add-post-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.add-post-form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.add-post-form-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.add-post-form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.add-post-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-post-form-textarea {
+    min-height: 6rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.add-post-form-error {
+    color: #ef4444;
+    font-size: 0.875rem;
+}
+
+.add-post-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 1rem;
+}
+
+.add-post-form-cancel-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: white;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.add-post-form-cancel-btn:hover:not(:disabled) {
+    background-color: #f9fafb;
+}
+
+.add-post-form-cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.add-post-form-submit-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    background-color: #3b82f6;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.add-post-form-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.add-post-form-submit-btn:hover:not(:disabled) {
+    background-color: #2563eb;
+}
+
+/* =========================================================
+   Фиксированный тип поста (read-only) — нейтральный, без
+   цветовой поддержки и без kind-badge__short
+   ========================================================= */
+.add-post-type-fixed {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.add-post-type-fixed__value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   Кастомный выпадающий селект (PostSelect)
+   ========================================================= */
+.add-post-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.add-post-select-display {
+    width: 100%;
+    min-height: 2.375rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    line-height: 1.4;
+    background: #ffffff;
+    color: #0f172a;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease,
+        background 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.add-post-select-display:hover:not(:disabled):not(.add-post-select-display--disabled) {
+    border-color: #9ca3af;
+}
+
+.add-post-select-display:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.add-post-select-display--open {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.add-post-select-display:disabled,
+.add-post-select-display--disabled,
+.add-post-select-disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+.add-post-select-display__value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    color: inherit;
+    min-width: 0;
+}
+
+.add-post-select-display__label {
+    font-weight: 500;
+    color: inherit;
+}
+
+.add-post-select-display__sep {
+    color: #cbd5e1;
+    font-weight: 400;
+}
+
+.add-post-select-display__desc {
+    color: #64748b;
+    font-weight: 400;
+}
+
+.add-post-select-display__value--placeholder {
+    color: #9ca3af;
+}
+
+.add-post-select-display__value--placeholder .add-post-select-display__label {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.add-post-select-display__icon {
+    color: #64748b;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.add-post-select-display--open .add-post-select-display__icon {
+    transform: rotate(180deg);
+    color: #2563eb;
+}
+
+.add-post-select-display--disabled .add-post-select-display__icon {
+    color: #9ca3af;
+}
+
+/* ─── Внешний контейнер выпадающего списка ─── */
+.add-post-select-options {
+    max-height: 17rem;
+    overflow: hidden;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12),
+        0 4px 8px rgba(15, 23, 42, 0.06);
+    z-index: 200;
+    animation: addPostSelectFadeIn 0.12s ease;
+}
+
+@keyframes addPostSelectFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ─── Единственный скролл-контейнер ─── */
+.add-post-select-scroll {
+    max-height: 15rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.add-post-select-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.add-post-select-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.add-post-select-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+
+.add-post-select-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ─── Sticky header: только поиск ─── */
+.add-post-select-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #ffffff;
+}
+
+.add-post-select-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.add-post-select-search__icon {
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.add-post-select-search__input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: #0f172a;
+    font-family: inherit;
+    padding: 2px 0;
+    line-height: 1.4;
+}
+
+.add-post-select-search__input::placeholder {
+    color: #94a3b8;
+}
+
+.add-post-select-search__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.add-post-select-search__clear:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* ─── Контент списка ─── */
+.add-post-select-list-content {
+    padding: 4px;
+}
+
+/* ─── Опция ─── */
+.add-post-select-option {
+    padding: 8px 10px;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.1s ease, color 0.1s ease;
+    text-align: left;
+    user-select: none;
+    line-height: 1.35;
+}
+
+.add-post-select-option__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.add-post-select-option__label {
+    font-weight: 500;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.add-post-select-option__desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.35;
+}
+
+.add-post-select-option:hover {
+    background-color: #eff6ff;
+    color: #1e40af;
+}
+
+.add-post-select-option:hover .add-post-select-option__desc {
+    color: #3b82f6;
+}
+
+.add-post-select-option--selected {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.add-post-select-option--selected .add-post-select-option__label {
+    font-weight: 600;
+}
+
+.add-post-select-option--selected .add-post-select-option__desc {
+    color: #2563eb;
+}
+
+.add-post-select-option--selected:hover {
+    background-color: #bfdbfe;
+}
+
+.add-post-select-option--empty {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.add-post-select-option--empty .add-post-select-option__label {
+    font-weight: 400;
+}
+
+.add-post-select-option--empty-first {
+    margin-bottom: 4px;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 0.375rem 0.375rem 0 0;
+    padding-bottom: 8px;
+}
+
+.add-post-select-option--empty.add-post-select-option--selected {
+    color: #64748b;
+    background-color: #f1f5f9;
+}
+
+.add-post-select-option--empty.add-post-select-option--selected .add-post-select-option__label {
+    color: #64748b;
+}
+
+.add-post-select-option__check {
+    color: #2563eb;
+    flex-shrink: 0;
+}
+
+.add-post-select-option--empty .add-post-select-option__check {
+    color: #64748b;
+}
+
+.add-post-select-options__empty {
+    padding: 12px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+/* =========================================================
+   Модалка подтверждения удаления
+   ========================================================= */
+.delete-confirmation-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.delete-confirmation-modal-container {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 28rem;
+    width: 100%;
+}
+
+.delete-confirmation-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.delete-confirmation-modal-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-confirmation-modal-icon {
+    height: 1.25rem;
+    width: 1.25rem;
+    color: #f59e0b;
+}
+
+.delete-confirmation-modal-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+}
+
+.delete-confirmation-modal-close-btn {
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+.delete-confirmation-modal-close-btn:hover {
+    color: #374151;
+    background: #f3f4f6;
+}
+
+.delete-confirmation-modal-body {
+    padding: 1rem;
+}
+
+.delete-confirmation-modal-message {
+    color: #374151;
+    line-height: 1.5;
+}
+
+.delete-confirmation-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.delete-confirmation-modal-cancel-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    background-color: white;
+    cursor: pointer;
+}
+
+.delete-confirmation-modal-cancel-btn:hover {
+    background-color: #f9fafb;
+}
+
+.delete-confirmation-modal-confirm-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    background-color: #dc2626;
+    cursor: pointer;
+}
+
+.delete-confirmation-modal-confirm-btn:hover {
+    background-color: #b91c1c;
+}
+
+/* =========================================================
+   ProfessionalSelect — выравнивание внутри формы постов
+   ========================================================= */
+.add-post-form .ps-field {
+    margin-bottom: 2px;
+}
+
+/* =========================================================
+   Нативный <select> в форме поста
+   (оставлен для обратной совместимости)
+   ========================================================= */
+select.add-post-form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+    cursor: pointer;
+    height: auto;
+    line-height: 1.4;
+}
+
+select.add-post-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* =========================================================
+   Радио-группа для выбора типа корневого поста
+   ========================================================= */
+.add-post-radio-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.add-post-radio {
+    flex: 1 1 200px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    user-select: none;
+}
+
+.add-post-radio:hover {
+    border-color: #9ca3af;
+}
+
+.add-post-radio input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.add-post-radio__dot {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease;
+}
+
+.add-post-radio__dot::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.add-post-radio--active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.add-post-radio--active .add-post-radio__dot {
+    border-color: #2563eb;
+}
+
+.add-post-radio--active .add-post-radio__dot::after {
+    background: #2563eb;
+}
+
+.add-post-radio__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #0f172a;
+}
+
+/* =========================================================
+   Кнопка «Удалить» в форме редактирования
+   ========================================================= */
+.add-post-form-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.add-post-form-delete-btn:hover:not(:disabled) {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+
+.add-post-form-delete-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.add-post-form-actions-spacer {
+    flex: 1;
+}
