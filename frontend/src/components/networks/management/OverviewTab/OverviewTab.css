@@ -1,0 +1,447 @@
+/* src/components/networks/management/OverviewTab/OverviewTab.css */
+
+.ov {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ================= Стат-карточки ================= */
+
+.ov-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.ov-stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.ov-stat:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+.ov-stat:active {
+    transform: translateY(0);
+}
+
+.ov-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ov-stat-icon-vlan {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.ov-stat-icon-ifaces {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.ov-stat-icon-subnets {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.ov-stat-icon-ips {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.ov-stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ov-stat-label {
+    font-size: 0.72rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+}
+
+.ov-stat-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.ov-stat-sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* ================= Основной блок ================= */
+
+.ov-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ov-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ov-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fafbfc;
+}
+
+.ov-card-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ov-problems-count {
+    margin-left: 4px;
+    padding: 1px 8px;
+    background: #fef2f2;
+    color: #dc2626;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.ov-card-link {
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.ov-card-link:hover {
+    background: #eff6ff;
+}
+
+.ov-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.88rem;
+}
+
+.ov-empty-link {
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: inherit;
+    padding: 0;
+}
+
+.ov-empty-ok {
+    color: #16a34a;
+}
+
+/* ================= Список подсетей ================= */
+
+.ov-subnet-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.ov-subnet-row {
+    margin: 0;
+}
+
+.ov-subnet-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    font-family: inherit;
+    transition: all 0.12s;
+}
+
+.ov-subnet-btn:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.ov-subnet-info {
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ov-subnet-cidr {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.ov-subnet-vlan {
+    font-size: 0.72rem;
+    color: #7c3aed;
+}
+
+.ov-subnet-usage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.ov-subnet-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ov-subnet-fill {
+    height: 100%;
+    transition: width 0.25s;
+}
+
+.ov-subnet-fill-ok {
+    background: #22c55e;
+}
+
+.ov-subnet-fill-mid {
+    background: #3b82f6;
+}
+
+.ov-subnet-fill-warn {
+    background: #f59e0b;
+}
+
+.ov-subnet-fill-critical {
+    background: #ef4444;
+}
+
+.ov-subnet-count {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ================= Проблемы ================= */
+
+.ov-problems {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.ov-problem-btn {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+    padding: 8px 10px;
+    background: white;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: all 0.12s;
+}
+
+.ov-problem-btn:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.ov-problem-btn:disabled {
+    cursor: default;
+}
+
+.ov-problem-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+.ov-problem-subnet_high_usage .ov-problem-icon,
+.ov-problem-ip_no_owner .ov-problem-icon {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.ov-problem-subnet_no_gateway .ov-problem-icon,
+.ov-problem-vlan_empty .ov-problem-icon {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.ov-problem-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ov-problem-title {
+    font-size: 0.84rem;
+    color: #1e293b;
+    font-weight: 500;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ov-problem-sub {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.ov-problems-more {
+    padding: 8px 16px 12px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    text-align: center;
+}
+
+/* ================= Быстрые действия ================= */
+
+.ov-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px 16px 4px;
+}
+
+.ov-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.ov-quick-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.ov-quick-hint {
+    padding: 0 16px 14px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+/* ================= Адаптивность ================= */
+
+@media (max-width: 1100px) {
+    .ov-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .ov-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .ov {
+        padding: 12px;
+        gap: 14px;
+    }
+
+    .ov-stats {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .ov-stat {
+        padding: 10px 12px;
+    }
+
+    .ov-stat-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .ov-quick-grid {
+        grid-template-columns: 1fr 1fr;
+        padding: 12px 12px 4px;
+    }
+
+    .ov-subnet-info {
+        min-width: 100px;
+    }
+}

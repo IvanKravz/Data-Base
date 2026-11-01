@@ -1,15 +1,12 @@
 // src/components/networks/management/IPAddressManagement/IPAddressManagement.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { IPAddress, IPStatus, Subnet } from '../../../types';
+import { IPAddress, IPStatus, Subnet, SubnetHost } from '../../../types';
 import '../ManagementPanel.css';
 import { networksApi } from '../../../api/networksApi';
+import QuickAddIPModal from '../modals/QuickAddIPModal';
 
 interface IPAddressManagementProps {
   token: string | null;
-  /**
-   * Колбэк для перехода на вкладку «Подсети» с фокусом на конкретной подсети.
-   * Передаётся из NetworkTabs. Если не передан — кнопка «Открыть в подсетях» скрыта.
-   */
   onNavigateToSubnets?: (subnetId: string) => void;
 }
 
@@ -29,10 +26,11 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Фильтры
   const [subnetFilter, setSubnetFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<IPStatus | ''>('');
   const [search, setSearch] = useState('');
+
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -72,7 +70,6 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
     });
   }, [ipAddresses, subnetFilter, statusFilter, search]);
 
-  /** Переход на вкладку «Подсети» с фокусом на нужной подсети */
   const handleGoToSubnet = (ip: IPAddress) => {
     if (!onNavigateToSubnets) return;
     if (!ip.subnet) {
@@ -94,12 +91,26 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
     }
   };
 
+  const handleQuickAdd = async (subnetId: string, hostData: Partial<SubnetHost>) => {
+    if (!token) return;
+    await networksApi.saveSubnetHosts(token, subnetId, [hostData]);
+    setAddModalOpen(false);
+    fetchData();
+  };
+
   if (loading) return <div className="loading">Загрузка…</div>;
 
   return (
     <div className="management-panel">
       <div className="panel-header">
         <div className="ip-filters">
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setAddModalOpen(true)}
+          >
+            + Добавить IP-адрес
+          </button>
           <input
             className="ip-filter-input"
             placeholder="Поиск по IP / hostname / кому…"
@@ -138,6 +149,7 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: 54 }}>№</th>
               <th>IP-адрес</th>
               <th>Подсеть</th>
               <th>Статус</th>
@@ -149,11 +161,12 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
             </tr>
           </thead>
           <tbody>
-            {filtered.map(ip => (
+            {filtered.map((ip, idx) => (
               <tr key={ip.id}>
+                <td className="data-cell-num">{idx + 1}</td>
                 <td><code>{ip.address}</code></td>
                 <td>{ip.subnet_cidr || '—'}</td>
-                <td>
+                <td className="data-cell-center">
                   <span className={`ip-status ip-status-${ip.status}`}>
                     {STATUS_LABEL[ip.status]}
                   </span>
@@ -164,7 +177,7 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
                 <td>
                   {ip.interface_name ? `${ip.equipment_name} / ${ip.interface_name}` : '—'}
                 </td>
-                <td>
+                <td className="data-cell-center">
                   {onNavigateToSubnets && (
                     <button
                       className="btn-edit"
@@ -182,9 +195,9 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="nt-empty-state">
+                <td colSpan={9} className="nt-empty-state">
                   {ipAddresses.length === 0
-                    ? 'Нет занятых IP-адресов. Создайте подсеть во вкладке «Подсети».'
+                    ? 'Нет занятых IP-адресов. Нажмите «+ Добавить IP-адрес» или создайте подсеть.'
                     : 'Ничего не найдено по фильтрам.'}
                 </td>
               </tr>
@@ -192,6 +205,15 @@ const IPAddressManagement: React.FC<IPAddressManagementProps> = ({
           </tbody>
         </table>
       </div>
+
+      {addModalOpen && (
+        <QuickAddIPModal
+          token={token!}
+          subnets={subnets}
+          onSave={handleQuickAdd}
+          onClose={() => setAddModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,3 +1,9 @@
+/* src/components/networks/management/ManagementPanel.css */
+
+/* ============================================================
+   Контейнер панели управления
+   ============================================================ */
+
 .management-panel {
     padding: 20px;
     animation: fadeInUp 0.4s ease-out;
@@ -5,9 +11,11 @@
 
 .panel-header {
     display: flex;
-    justify-content: end;
+    justify-content: flex-end;
     align-items: center;
     margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .panel-header h2 {
@@ -15,46 +23,78 @@
     color: #333;
 }
 
+/* ============================================================
+   Контейнер таблицы (общая рамка вокруг)
+   ============================================================ */
+
 .table-container {
     overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
+
+/* ============================================================
+   Таблица данных
+   ============================================================ */
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
     background: white;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .data-table th,
 .data-table td {
-    padding: 12px 15px;
+    padding: 10px 14px;
     text-align: left;
-    border-bottom: 1px solid #e0e0e0;
+    border: 1px solid #e5e7eb;
+    vertical-align: middle;
 }
 
 .data-table th {
-    background-color: #f8f9fa;
+    background-color: #eef3f8;
     font-weight: 600;
-    color: #495057;
+    color: #374151;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .data-table tr:hover {
-    background-color: #f8f9fa;
+    background-color: #f8fafc;
 }
+
+/* Ячейка с номером по порядку */
+.data-table td.data-cell-num {
+    width: 54px;
+    text-align: center;
+    color: #64748b;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Ячейка с центрированным содержимым */
+.data-table td.data-cell-center {
+    text-align: center;
+}
+
+/* ============================================================
+   Кнопки
+   ============================================================ */
 
 .btn-primary,
 .btn-edit,
 .btn-delete {
-    padding: 8px 12px;
+    padding: 7px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    margin-right: 5px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
 }
 
 .btn-primary {
@@ -62,15 +102,37 @@
     color: white;
 }
 
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+.btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .btn-edit {
     background-color: #ffc107;
     color: #212529;
+    margin-right: 5px;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
 }
 
 .btn-delete {
     background-color: #dc3545;
     color: white;
 }
+
+.btn-delete:hover {
+    background-color: #bb2d3b;
+}
+
+/* ============================================================
+   Состояния загрузки / ошибок
+   ============================================================ */
 
 .loading {
     text-align: center;
@@ -86,12 +148,16 @@
     margin: 20px 0;
 }
 
-/* Дополнение в ManagementPanel.css */
+/* ============================================================
+   Фильтры на вкладке «IP-адреса»
+   ============================================================ */
+
 .ip-filters {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
     width: 100%;
+    align-items: center;
 }
 
 .ip-filter-input,
@@ -100,6 +166,8 @@
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     font-size: 0.9rem;
+    font-family: inherit;
+    background: white;
 }
 
 .ip-filter-input {
@@ -107,12 +175,24 @@
     min-width: 220px;
 }
 
+.ip-filter-input:focus,
+.ip-filter-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ============================================================
+   Бейджи статусов IP-адреса
+   ============================================================ */
+
 .ip-status {
     display: inline-block;
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .ip-status-free {
@@ -133,4 +213,78 @@
 .ip-status-deprecated {
     background: #f8fafc;
     color: #64748b;
+}
+
+/* ============================================================
+   Пустое состояние таблицы
+   ============================================================ */
+
+.nt-empty-state {
+    text-align: center;
+    padding: 28px 20px;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.88rem;
+}
+
+/* ============================================================
+   Анимация
+   ============================================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   Адаптивность
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .management-panel {
+        padding: 14px;
+    }
+
+    .panel-header {
+        justify-content: stretch;
+    }
+
+    .ip-filter-input {
+        min-width: 100%;
+    }
+
+    .ip-filter-select {
+        flex: 1;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+    }
+
+    .btn-primary,
+    .btn-edit,
+    .btn-delete {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .management-panel {
+        padding: 10px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 6px 8px;
+    }
 }

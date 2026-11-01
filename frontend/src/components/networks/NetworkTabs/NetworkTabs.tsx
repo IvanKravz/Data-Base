@@ -1,29 +1,33 @@
 // src/components/networks/management/NetworkTabs/NetworkTabs.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import './NetworkTabs.css';
+import OverviewTab from '../management/OverviewTab/OverviewTab';
+import SubnetsManagement from '../management/SubnetsManagement/SubnetsManagement';
+import IPAddressManagement from '../IPAddressManagement/IPAddressManagement';
 import VLANManagement from '../VLANManagement/VLANManagement';
 import InterfaceManagement from '../InterfaceManagement/InterfaceManagement';
-import IPAddressManagement from '../IPAddressManagement/IPAddressManagement';
-import SubnetsManagement from '../management/SubnetsManagement/SubnetsManagement';
 
 interface NetworkTabsProps {
   token: string | null;
 }
 
 const NetworkTabs: React.FC<NetworkTabsProps> = ({ token }) => {
-  const [activeTab, setActiveTab] = useState('vlan');
-  /**
-   * ID подсети, которую нужно открыть на вкладке «Подсети».
-   * Устанавливается при клике «Открыть в подсетях» на вкладке IP-адресов.
-   */
+  const [activeTab, setActiveTab] = useState('overview');
   const [focusedSubnetId, setFocusedSubnetId] = useState<string | null>(null);
 
+  // Порядок: Обзор → Подсети → IP-адреса → VLAN → Интерфейсы
   const tabs = [
+    { id: 'overview', label: 'Обзор' },
+    { id: 'subnets', label: 'Подсети' },
+    { id: 'ipaddresses', label: 'IP-адреса' },
     { id: 'vlan', label: 'VLAN' },
     { id: 'interfaces', label: 'Интерфейсы' },
-    { id: 'ipaddresses', label: 'IP-адреса' },
-    { id: 'subnets', label: 'Подсети' },
   ];
+
+  const handleNavigateToTab = useCallback((tabId: string) => {
+    if (tabId !== 'subnets') setFocusedSubnetId(null);
+    setActiveTab(tabId);
+  }, []);
 
   const handleNavigateToSubnets = useCallback((subnetId: string) => {
     setFocusedSubnetId(subnetId);
@@ -43,7 +47,6 @@ const NetworkTabs: React.FC<NetworkTabsProps> = ({ token }) => {
             type="button"
             className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => {
-              // при ручном переключении на вкладку «Подсети» фокус сбрасываем
               if (tab.id !== 'subnets') setFocusedSubnetId(null);
               setActiveTab(tab.id);
             }}
@@ -55,11 +58,10 @@ const NetworkTabs: React.FC<NetworkTabsProps> = ({ token }) => {
       </div>
 
       <div className="tab-content">
-        {activeTab === 'vlan' && <VLANManagement token={token} />}
-        {activeTab === 'interfaces' && <InterfaceManagement token={token} />}
-        {activeTab === 'ipaddresses' && (
-          <IPAddressManagement
+        {activeTab === 'overview' && (
+          <OverviewTab
             token={token}
+            onNavigateToTab={handleNavigateToTab}
             onNavigateToSubnets={handleNavigateToSubnets}
           />
         )}
@@ -70,6 +72,14 @@ const NetworkTabs: React.FC<NetworkTabsProps> = ({ token }) => {
             onConsumeInitial={handleConsumeFocus}
           />
         )}
+        {activeTab === 'ipaddresses' && (
+          <IPAddressManagement
+            token={token}
+            onNavigateToSubnets={handleNavigateToSubnets}
+          />
+        )}
+        {activeTab === 'vlan' && <VLANManagement token={token} />}
+        {activeTab === 'interfaces' && <InterfaceManagement token={token} />}
       </div>
     </div>
   );

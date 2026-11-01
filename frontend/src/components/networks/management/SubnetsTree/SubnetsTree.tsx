@@ -38,31 +38,35 @@ const SubnetsTree: React.FC<Props> = ({
             a.prefix_length - b.prefix_length,
         );
 
-    const renderNode = (s: Subnet, depth: number): React.ReactNode => {
+    const renderNode = (s: Subnet): React.ReactNode => {
         const children = tree[s.id] || [];
         const isOpen = !!expanded[s.id];
         const isSelected = selectedId === s.id;
         const usedRatio = s.host_count ? (s.used_count / s.host_count) * 100 : 0;
         const isFull = usedRatio >= 90;
+        const hasChildren = children.length > 0;
 
         return (
             <div key={s.id} className="st-node">
                 <div
                     className={`st-row ${isSelected ? 'st-row-selected' : ''}`}
-                    style={{ paddingLeft: 8 + depth * 16 }}
                     onClick={() => onSelect(s.id)}
                 >
                     <button
                         type="button"
-                        className="st-toggle"
+                        className={`st-toggle ${hasChildren ? 'st-toggle-active' : 'st-toggle-empty'}`}
                         onClick={e => toggle(e, s.id)}
-                        disabled={children.length === 0}
-                        style={{ visibility: children.length === 0 ? 'hidden' : 'visible' }}
+                        disabled={!hasChildren}
+                        title={hasChildren ? (isOpen ? 'Свернуть' : 'Развернуть') : ''}
                     >
-                        <ChevronRight
-                            size={14}
-                            className={`st-toggle-icon ${isOpen ? 'expanded' : ''}`}
-                        />
+                        {hasChildren ? (
+                            <ChevronRight
+                                size={20}
+                                className={`st-toggle-icon ${isOpen ? 'expanded' : ''}`}
+                            />
+                        ) : (
+                            <span className="st-toggle-leaf" />
+                        )}
                     </button>
 
                     <div className="st-main">
@@ -72,8 +76,12 @@ const SubnetsTree: React.FC<Props> = ({
                         </div>
                         <div className="st-meta">
                             <span className="st-prefix">/{s.prefix_length}</span>
-                            {s.vlan_name && <span className="st-vlan">· VLAN {s.vlan_name}</span>}
-                            {s.purpose && <span className="st-purpose">· {s.purpose}</span>}
+                            {s.vlan_name && (
+                                <span className="st-vlan">· VLAN {s.vlan_name}</span>
+                            )}
+                            {s.purpose && (
+                                <span className="st-purpose">· {s.purpose}</span>
+                            )}
                         </div>
                         <div className="st-usage">
                             <div className="st-usage-bar">
@@ -114,8 +122,10 @@ const SubnetsTree: React.FC<Props> = ({
                     </div>
                 </div>
 
-                {isOpen && children.length > 0 && (
-                    <div>{sorted(children).map(c => renderNode(c, depth + 1))}</div>
+                {isOpen && hasChildren && (
+                    <div className="st-children">
+                        {sorted(children).map(c => renderNode(c))}
+                    </div>
                 )}
             </div>
         );
@@ -127,7 +137,7 @@ const SubnetsTree: React.FC<Props> = ({
         return <div className="st-empty">Подсети не найдены</div>;
     }
 
-    return <div className="st-container">{roots.map(r => renderNode(r, 0))}</div>;
+    return <div className="st-container">{roots.map(r => renderNode(r))}</div>;
 };
 
 export default SubnetsTree;

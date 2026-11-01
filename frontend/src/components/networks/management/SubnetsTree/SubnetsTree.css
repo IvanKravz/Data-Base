@@ -1,20 +1,32 @@
 /* src/components/networks/management/SubnetsTree/SubnetsTree.css */
 
+/* ============================================================
+   Контейнер
+   ============================================================ */
+
 .st-container {
     padding: 6px 0;
 }
 
-.st-node {}
+.st-node {
+    position: relative;
+}
+
+/* ============================================================
+   Строка узла
+   ============================================================ */
 
 .st-row {
     display: flex;
     align-items: flex-start;
     gap: 4px;
-    padding: 8px 10px 8px 0;
+    padding: 8px 10px 8px 6px;
     cursor: pointer;
     border-left: 3px solid transparent;
     transition: background 0.12s, border-color 0.12s;
     position: relative;
+    border-radius: 6px;
+    margin: 1px 4px;
 }
 
 .st-row:hover {
@@ -30,23 +42,90 @@
     border-left-color: #3b82f6;
 }
 
-.st-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px;
-    color: #94a3b8;
-    flex-shrink: 0;
-    width: 20px;
+.st-row-selected .st-actions {
+    opacity: 1;
 }
 
+/* ============================================================
+   Шеврон раскрытия (крупный, с зоной клика 28×28)
+   ============================================================ */
+
+.st-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    margin-top: -2px;
+    cursor: pointer;
+}
+
+.st-toggle-active:hover {
+    background: #e2e8f0;
+    color: #1e40af;
+}
+
+.st-toggle-active:active {
+    transform: scale(0.9);
+}
+
+.st-toggle:disabled,
+.st-toggle-empty {
+    cursor: default;
+}
+
+/* Иконка шеврона */
 .st-toggle-icon {
-    transition: transform 0.15s;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    stroke-width: 2.5;
 }
 
 .st-toggle-icon.expanded {
     transform: rotate(90deg);
 }
+
+/* Маленькая точка для «листьев» (нет детей) */
+.st-toggle-leaf {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #cbd5e1;
+}
+
+/* ============================================================
+   Вложенное дерево: направляющие линии
+   ============================================================ */
+
+.st-children {
+    position: relative;
+    margin-left: 20px;
+    padding-left: 14px;
+    border-left: 1px dashed #cbd5e1;
+}
+
+/* Горизонтальный отросток от вертикальной линии к строке */
+.st-children > .st-node::before {
+    content: '';
+    position: absolute;
+    left: -14px;
+    top: 22px;
+    width: 12px;
+    height: 1px;
+    background: #cbd5e1;
+    pointer-events: none;
+}
+
+/* ============================================================
+   Основной контент узла
+   ============================================================ */
 
 .st-main {
     flex: 1;
@@ -64,6 +143,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .st-full-badge {
@@ -126,16 +206,16 @@
     flex-shrink: 0;
 }
 
+/* ============================================================
+   Действия над узлом
+   ============================================================ */
+
 .st-actions {
     display: flex;
     gap: 2px;
     opacity: 0;
     transition: opacity 0.12s;
     flex-shrink: 0;
-}
-
-.st-row-selected .st-actions {
-    opacity: 1;
 }
 
 .st-actions button {
@@ -157,6 +237,10 @@
     opacity: 0.3;
     cursor: not-allowed;
 }
+
+/* ============================================================
+   Пустое состояние
+   ============================================================ */
 
 .st-empty {
     padding: 24px;

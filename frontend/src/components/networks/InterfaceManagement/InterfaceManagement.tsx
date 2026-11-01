@@ -1,6 +1,6 @@
 // src/components/networks/management/InterfaceManagement/InterfaceManagement.tsx
 import React, { useState, useEffect } from 'react';
-import { NetworkInterface, NetworkInterfaceInput, Equipment, VLAN } from '../../types';
+import { NetworkInterface, NetworkInterfaceInput, Equipment, VLAN } from '../../../types';
 import InterfaceModal from '../modals/InterfaceModal';
 import '../ManagementPanel.css';
 import { networksApi } from '../../../api/networksApi';
@@ -93,6 +93,7 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: 54 }}>№</th>
               <th>Оборудование</th>
               <th>Название</th>
               <th>Тип</th>
@@ -102,14 +103,17 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
             </tr>
           </thead>
           <tbody>
-            {interfaces.map(intf => (
+            {interfaces.map((intf, idx) => (
               <tr key={intf.id}>
+                <td className="data-cell-num">{idx + 1}</td>
                 <td>{intf.equipment_name || 'Не указано'}</td>
                 <td>{intf.name}</td>
-                <td>{intf.interface_type}</td>
-                <td>{intf.enabled ? 'Включен' : 'Выключен'}</td>
+                <td className="data-cell-center">{intf.interface_type}</td>
+                <td className="data-cell-center">
+                  {intf.enabled ? 'Включен' : 'Выключен'}
+                </td>
                 <td>{intf.access_vlan_name || 'Не указан'}</td>
-                <td>
+                <td className="data-cell-center">
                   <button className="btn-edit" onClick={() => handleEdit(intf)}>
                     Редактировать
                   </button>
@@ -119,6 +123,13 @@ const InterfaceManagement: React.FC<InterfaceManagementProps> = ({ token }) => {
                 </td>
               </tr>
             ))}
+            {interfaces.length === 0 && (
+              <tr>
+                <td colSpan={7} className="nt-empty-state">
+                  Интерфейсы ещё не созданы. Нажмите «Добавить интерфейс».
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,6 +1,6 @@
+// src/components/networks/management/VLANManagement/VLANManagement.tsx
 import React, { useState, useEffect } from 'react';
-import { VLAN } from '../../types';
-// import { networksApi } from '../../api/networksApi';
+import { VLAN } from '../../../types';
 import VLANModal from '../modals/VLANModal';
 import '../ManagementPanel.css';
 import { networksApi } from '../../../api/networksApi';
@@ -88,34 +88,37 @@ const VLANManagement: React.FC<VLANManagementProps> = ({ token }) => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>VLAN ID</th>
+              <th style={{ width: 54 }}>№</th>
+              <th style={{ width: 100 }}>VLAN ID</th>
               <th>Название</th>
               <th>Описание</th>
               <th>Действия</th>
             </tr>
           </thead>
           <tbody>
-            {vlans.map(vlan => (
+            {vlans.map((vlan, idx) => (
               <tr key={vlan.id}>
-                <td>{vlan.vlan_id}</td>
+                <td className="data-cell-num">{idx + 1}</td>
+                <td className="data-cell-center"><b>{vlan.vlan_id}</b></td>
                 <td>{vlan.name}</td>
-                <td>{vlan.description}</td>
-                <td>
-                  <button 
-                    className="btn-edit"
-                    onClick={() => handleEdit(vlan)}
-                  >
+                <td>{vlan.description || '—'}</td>
+                <td className="data-cell-center">
+                  <button className="btn-edit" onClick={() => handleEdit(vlan)}>
                     Редактировать
                   </button>
-                  <button 
-                    className="btn-delete"
-                    onClick={() => handleDelete(vlan.id)}
-                  >
+                  <button className="btn-delete" onClick={() => handleDelete(vlan.id)}>
                     Удалить
                   </button>
                 </td>
               </tr>
             ))}
+            {vlans.length === 0 && (
+              <tr>
+                <td colSpan={5} className="nt-empty-state">
+                  VLAN не созданы. Нажмите «Добавить VLAN».
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
