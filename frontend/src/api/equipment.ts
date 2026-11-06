@@ -9,13 +9,12 @@ export const equipmentApi = {
     type?: string;
     search?: string;
     facility?: string;
+    is_network?: boolean | string;  
     include_disposed?: boolean;
   }) => {
     const { data } = await api.get('/equipment/', {
       params,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     });
     return data;
   },
@@ -24,6 +23,16 @@ export const equipmentApi = {
     const { data } = await api.get(`/equipment/assigned_to/${employeeId}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+      },
+    });
+    return data;
+  },
+
+  patchEquipment: async (token: string, id: string, equipmentData: Partial<Equipment>) => {
+    const { data } = await api.patch(`/equipment/${id}/`, equipmentData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
     });
     return data;

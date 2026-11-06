@@ -1,0 +1,95 @@
+/* ===== Select внутри .iface-form__field ===== */
+.iface-form__field .ant-select {
+    width: 100%;
+}
+
+.iface-form__field .ant-select .ant-select-selector {
+    min-height: 38px !important;
+    padding: 4px 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    font-size: 0.88rem !important;
+    color: #0f172a;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-shadow: none !important;
+}
+
+.iface-form__field .ant-select:hover .ant-select-selector {
+    border-color: #94a3b8 !important;
+}
+
+.iface-form__field .ant-select.ant-select-focused .ant-select-selector {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* ===== Multi-select: теги внутри поля ===== */
+.iface-form__field .ant-select-multiple .ant-select-selection-item {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    color: #1e40af !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    height: auto !important;
+    padding: 1px 6px !important;
+    margin-inline-end: 4px !important;
+    margin-block: 1px !important;
+}
+
+.iface-form__field .ant-select-multiple .ant-select-selection-item-content {
+    margin-right: 4px;
+}
+
+.iface-form__field .ant-select-multiple .ant-select-selection-item-remove {
+    color: #1e40af !important;
+    font-size: 0.75rem !important;
+}
+
+.iface-form__field .ant-select-multiple .ant-select-selection-item-remove:hover {
+    color: #dc2626 !important;
+}
+
+/* ===== Placeholder ===== */
+.iface-form__field .ant-select-selection-placeholder {
+    font-size: 0.82rem !important;
+    color: #94a3b8 !important;
+}
+
+/* ===== Стрелка / clear ===== */
+.iface-form__field .ant-select-arrow {
+    color: #64748b !important;
+}
+
+.iface-form__field .ant-select-clear {
+    color: #94a3b8 !important;
+    background: transparent !important;
+}
+
+.iface-form__field .ant-select-clear:hover {
+    color: #dc2626 !important;
+}
+
+/* ============================================================
+   Dropdown (портал в body).
+   Используем popupClassName="iface-form__dropdown" на <Select>,
+   чтобы стилизовать выпадающий список.
+   ============================================================ */
+.iface-form__dropdown .ant-select-item-option-active {
+    background: #f1f5f9 !important;
+}
+
+.iface-form__dropdown .ant-select-item-option-selected {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    font-weight: 600;
+}
+
+.iface-form__dropdown .ant-select-item-option-selected:hover {
+    background: #dbeafe !important;
+}
+
+.iface-form__dropdown .ant-select-item-option {
+    font-size: 0.85rem;
+}

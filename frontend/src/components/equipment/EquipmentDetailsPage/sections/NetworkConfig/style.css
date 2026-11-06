@@ -1,292 +1,451 @@
-/* Network Config Modern Styles */
-.net-config-block {
-  grid-column: 1 / -1;
-  margin-top: 2rem;
+/* ============================================================
+   NetworkConfigBlock — сдержанный корпоративный стиль
+   ============================================================ */
+
+.netconfig-block {
+  --nc-bg: #ffffff;
+  --nc-bg-soft: #f8fafc;
+  --nc-border: #e2e8f0;
+  --nc-border-strong: #cbd5e1;
+  --nc-text: #0f172a;
+  --nc-text-2: #475569;
+  --nc-text-muted: #94a3b8;
+  --nc-accent: #2563eb;
+  --nc-accent-soft: #dbeafe;
+  --nc-success: #10b981;
+  --nc-warn: #f59e0b;
+  --nc-danger: #ef4444;
+
+  background: var(--nc-bg);
+  border: 1px solid var(--nc-border);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e8e8e8;
+  padding: 20px 24px;
+  margin-top: 2rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.net-config-header {
-  display: flex;
-  justify-content: space-between;
-  /* flex-wrap: nowrap; */
-  flex-direction: column;
-  /* align-items: center; */
-  padding: 8px 0;
-  gap: 0.5rem;
-}
-
-.net-config-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.net-config-sections {
-  /* margin-top: 1rem; */
-}
-
-.net-config-section {
-  margin-bottom: 1rem;
-  /* padding-bottom: 1.5rem; */
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.net-config-section:last-child {
-  border-bottom: none;
-}
-
-.net-section-header {
+.netconfig-block__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--nc-border);
 }
 
-.net-section-header h3 {
-  margin: 0;
-  color: #262626;
-  font-weight: 600;
+.netconfig-block__title {
   font-size: 16px;
+  font-weight: 600;
+  color: var(--nc-text);
+  letter-spacing: 0.01em;
 }
 
-.net-items-container {
+.netconfig-block__subtitle {
+  font-size: 12px;
+  color: var(--nc-text-muted);
+  margin-top: 2px;
+}
+
+.netconfig-block__loading {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
   gap: 12px;
 }
 
-/* Interfaces Table Styles */
-.net-interfaces-container {
-  width: 100%;
-  overflow-x: auto;
+/* --- Tabs --- */
+.netconfig-block .ant-tabs-nav {
+  margin-bottom: 4px;
+}
+
+.netconfig-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.netconfig-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+/* --- KPI --- */
+.netconfig-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.netconfig-kpi {
+  padding: 10px 14px;
+  border: 1px solid var(--nc-border);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  background: white;
+  background: var(--nc-bg-soft);
 }
 
-.net-interfaces-table {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1400px;
+.netconfig-kpi--ok {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
 }
 
-.net-table-header {
-  display: table-row;
-  background: #677ee4;
-  color: white;
-  font-weight: 600;
+.netconfig-kpi--warn {
+  border-color: #fde68a;
+  background: #fffbeb;
 }
 
-.net-table-header .net-table-cell {
-  display: table-cell;
-  padding: 16px 8px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-  white-space: nowrap;
-  border-bottom: 2px solid #f0f0f0;
+.netconfig-kpi--danger {
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 
-.net-interface-row {
-  display: table-row;
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.net-interface-row:hover {
-  background: #fafafa;
-}
-
-.net-interface-row .net-table-cell {
-  display: table-cell;
-  padding: 12px 8px;
-  vertical-align: middle;
-  font-size: 12px;
-  text-align: center;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.net-table-cell:first-child {
-  padding-left: 16px;
-  text-align: left;
-}
-
-.net-table-cell:last-child {
-  padding-right: 16px;
-}
-
-.net-interface-name {
-  font-weight: 500;
-  color: #262626;
-  white-space: nowrap;
-}
-
-.net-port-number,
-.net-physical-type,
-.net-mac-address,
-.net-mtu-value,
-.net-speed-value,
-.net-access-vlan,
-.net-connected-to,
-.net-connected-device {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.net-mac-address {
-  font-family: 'Monaco', 'Menlo', monospace;
-  color: #595959;
-}
-
-.net-mtu-value {
-  font-weight: 500;
-  color: #1890ff;
-}
-
-.net-speed-value {
-  color: #52c41a;
-  font-weight: 500;
-}
-
-.net-status-indicator {
+.netconfig-kpi__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--nc-text);
+  line-height: 1.2;
   display: flex;
   align-items: center;
+  gap: 6px;
+}
+
+.netconfig-kpi__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--nc-text-muted);
+  margin-top: 2px;
+}
+
+/* ============================================================
+   Inline-редактирование total_ports
+   ============================================================ */
+
+/* Обёртка «цифра + иконка» — единая зона hover */
+.netconfig-kpi__value-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.2;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.netconfig-kpi__value-text--editable {
+  cursor: pointer;
+}
+
+/* Hover именно по обёртке (цифра ИЛИ иконка) — мягкий голубой фон */
+.netconfig-kpi__value-text--editable:hover {
+  background: var(--nc-accent-soft);
+}
+
+/* Иконка-карандаш */
+.netconfig-kpi__edit-trigger {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  color: var(--nc-text-muted);
+  background: transparent;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.2s ease;
+}
+
+/* Иконка синяя, когда курсор на обёртке (цифра или иконка) */
+.netconfig-kpi__value-text--editable:hover .netconfig-kpi__edit-trigger {
+  color: var(--nc-accent);
+}
+
+/* Курсор прямо на иконке — максимальный акцент */
+.netconfig-kpi__edit-trigger:hover {
+  color: #fff;
+}
+
+/* Inline-инпут при редактировании */
+.netconfig-kpi__edit-input {
+  width: 64px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--nc-text);
+  line-height: 1.2;
+  outline: none;
+}
+
+.netconfig-kpi__edit-input::-webkit-outer-spin-button,
+.netconfig-kpi__edit-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Панель подтверждения редактирования total_ports */
+.netconfig-kpi-edit-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: -8px;
+}
+
+/* --- Toolbar --- */
+.netconfig-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.netconfig-toolbar--spaced {
+  margin-top: 8px;
+}
+
+.netconfig-toolbar__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nc-text-2);
+  flex-wrap: wrap;
+}
+
+.netconfig-toolbar__actions {
+  display: inline-flex;
   gap: 8px;
 }
 
-.net-status-dot {
+/* Чип активного фильтра по порту */
+.netconfig-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.netconfig-filter-chip:hover {
+  background: #bfdbfe;
+}
+
+/* --- Таблица --- */
+.netconfig-block .ant-table {
+  font-size: 13px;
+  border: 1px solid var(--nc-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.netconfig-block .ant-table-thead > tr > th {
+  background: var(--nc-bg-soft) !important;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--nc-text-2);
+}
+
+.netconfig-block code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--nc-bg-soft);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--nc-text);
+}
+
+/* --- Ячейки интерфейса --- */
+.netconfig-ifcell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.netconfig-mode,
+.netconfig-vlans,
+.netconfig-ips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.netconfig-ips code {
+  white-space: nowrap;
+}
+
+/* --- Статус --- */
+.netconfig-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.netconfig-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  animation: net-pulse 2s infinite;
 }
 
-@keyframes net-pulse {
-  0% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-
-  100% {
-    opacity: 1;
-  }
+.netconfig-status-dot--ok {
+  background: var(--nc-success);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
 }
 
-.net-action-buttons {
+.netconfig-status-dot--danger {
+  background: var(--nc-danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+/* --- Утилиты --- */
+.netconfig-block .muted {
+  color: var(--nc-text-muted);
+  font-size: 12px;
+}
+
+/* ============================================================
+   PortGrid
+   ============================================================ */
+.portgrid {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px;
+  background: var(--nc-bg-soft);
+  border: 1px solid var(--nc-border);
+  border-radius: 10px;
+  margin-bottom: 6px;
 }
 
-.net-action-buttons .ant-btn {
-  font-size: 11px;
-  padding: 4px 8px;
-  height: auto;
-}
-
-/* Loading State */
-.net-config-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-}
-
-.net-loading-text {
-  margin-top: 12px;
+.portgrid-empty {
+  width: 100%;
   text-align: center;
-  color: #595959;
-  font-size: 14px;
+  color: var(--nc-text-muted);
+  font-size: 13px;
+  padding: 16px 0;
 }
 
-/* Empty State */
-.ant-empty {
-  /* padding: 40px 0; */
-}
-
-.ant-empty-description {
-  color: #8c8c8c;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .net-interfaces-container {
-    overflow-x: auto;
-  }
-
-  .net-table-header .net-table-cell {
-    font-size: 10px;
-    padding: 12px 6px;
-  }
-
-  .net-interface-row .net-table-cell {
-    font-size: 11px;
-    padding: 10px 6px;
-  }
-}
-
-@media (max-width: 768px) {
-  .net-config-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .net-section-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .net-config-block .ant-card-body {
-    padding: 16px;
-  }
-
-  .net-table-header .net-table-cell {
-    font-size: 9px;
-    padding: 10px 4px;
-  }
-
-  .net-interface-row .net-table-cell {
-    font-size: 10px;
-    padding: 8px 4px;
-  }
-}
-
-/* Modern Scrollbar */
-.net-interfaces-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.net-interfaces-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.net-interfaces-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.net-interfaces-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Tag styles */
-.ant-tag {
+.portgrid-tile {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--nc-border-strong);
+  background: #fff;
+  border-radius: 6px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
-  padding: 2px 6px;
+  font-weight: 600;
+  color: var(--nc-text-2);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.portgrid-tile:hover {
+  transform: translateY(-1px);
+  border-color: var(--nc-accent);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.portgrid-tile--up {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #065f46;
+}
+
+.portgrid-tile--down {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+/* Пустой слот */
+.portgrid-tile--empty {
+  background: #f8fafc;
+  border-style: dashed;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.portgrid-tile--empty:hover {
+  border-color: var(--nc-accent);
+  color: var(--nc-accent);
+  background: #eff6ff;
+}
+
+/* Выбранный порт = фильтр активен */
+.portgrid-tile--selected {
+  box-shadow: 0 0 0 2px var(--nc-accent), 0 4px 12px rgba(37, 99, 235, 0.25);
+  transform: translateY(-1px);
+}
+
+/* «Без номера порта» */
+.portgrid-tile--noport {
+  opacity: 0.7;
+}
+
+.portgrid-tile__name {
+  font-size: 9px;
+  line-height: 1;
+}
+
+.portgrid-tile__badge {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--nc-accent);
+  color: #fff;
   line-height: 1.2;
-  margin: 0;
+}
+
+.portgrid-tile__badge--trunk {
+  background: #6366f1;
+}
+
+.portgrid-tile__badge--ip {
+  background: var(--nc-success);
+}
+
+/* Отдельный блок для интерфейсов без port_number */
+.portgrid-extra {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--nc-border);
+}
+
+.portgrid-extra__label {
+  font-size: 12px;
+  color: var(--nc-text-muted);
+  margin-right: 4px;
 }

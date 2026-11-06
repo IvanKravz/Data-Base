@@ -1,3 +1,4 @@
+// TableView.tsx
 import React, { useState, useMemo, useLayoutEffect, useEffect } from 'react';
 import { Employee } from '../../../../types';
 import { Trash2, Shield, ClipboardList, CircleUserRound, ChevronDown, ChevronRight } from 'lucide-react';
@@ -8,9 +9,7 @@ interface TableViewProps {
   onPersonClick: (person: Employee) => void;
   onDelete: (id: string) => void;
   divisionName: string;
-  /** Право на изменение: управляет колонкой «Действия» и кнопкой удаления */
   hasEditPermission: boolean;
-  /** Право на просмотр: управляет переходом на детальную страницу по клику */
   hasViewPermission: boolean;
   viewMode: 'flat' | 'grouped';
   storageKey?: string;
@@ -26,7 +25,7 @@ export function TableView({
   hasViewPermission,
   viewMode,
   storageKey = 'default',
-  searchTerm = ''
+  searchTerm = '',
 }: TableViewProps) {
   const [collapsedDivisions, setCollapsedDivisions] = useState<Set<string>>(new Set());
   const [collapsedSubdivisions, setCollapsedSubdivisions] = useState<Set<string>>(new Set());
@@ -39,9 +38,10 @@ export function TableView({
     collapsedGlobalManagement: boolean;
     collapsedDepartmentManagement: Set<string>;
   } | null>(null);
+
   const fullStorageKey = useMemo(
     () => `personnel_table_collapsed_${storageKey}_${viewMode}`,
-    [storageKey, viewMode]
+    [storageKey, viewMode],
   );
 
   const sortEmployeesInGroup = (employees: Employee[]): Employee[] => {
@@ -56,7 +56,7 @@ export function TableView({
   const filteredPersonnel = useMemo(() => {
     if (!searchTerm.trim()) return personnel;
     const lowerSearch = searchTerm.toLowerCase();
-    return personnel.filter(p => p.full_name.toLowerCase().includes(lowerSearch));
+    return personnel.filter((p) => p.full_name.toLowerCase().includes(lowerSearch));
   }, [personnel, searchTerm]);
 
   const groupedData = useMemo(() => {
@@ -103,21 +103,21 @@ export function TableView({
       {
         globalManagement: null as { employees: Employee[] } | null,
         divisions: {} as Record<string, any>,
-      }
+      },
     );
 
     if (result.globalManagement) {
       result.globalManagement.employees = sortEmployeesInGroup(result.globalManagement.employees);
     }
     const sortedDivisionIds = Object.keys(result.divisions).sort(
-      (a, b) => result.divisions[a].divisionOrder - result.divisions[b].divisionOrder
+      (a, b) => result.divisions[a].divisionOrder - result.divisions[b].divisionOrder,
     );
     sortedDivisionIds.forEach((divisionId) => {
       const division = result.divisions[divisionId];
       division.managers = sortEmployeesInGroup(division.managers);
       const subdivisionIds = Object.keys(division.subdivisions);
       subdivisionIds.sort(
-        (a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder
+        (a, b) => division.subdivisions[a].subdivisionOrder - division.subdivisions[b].subdivisionOrder,
       );
       division.sortedSubdivisionIds = subdivisionIds;
       subdivisionIds.forEach((subId) => {
@@ -131,14 +131,14 @@ export function TableView({
   const flatSortedData = useMemo(() => {
     if (viewMode !== 'flat') return [];
     const dataToUse = searchTerm.trim()
-      ? personnel.filter(p => p.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      ? personnel.filter((p) => p.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
       : personnel;
 
-    const globalManagement = dataToUse.filter(p => p.category === 'management' && !p.division);
+    const globalManagement = dataToUse.filter((p) => p.category === 'management' && !p.division);
     const sortedGlobal = sortEmployeesInGroup(globalManagement);
 
     const divisionsMap = new Map<string, any>();
-    dataToUse.forEach(person => {
+    dataToUse.forEach((person) => {
       if (!person.division) return;
       const divId = person.division.id;
       if (!divisionsMap.has(divId)) {
@@ -164,13 +164,13 @@ export function TableView({
     });
 
     const sortedDivisions = Array.from(divisionsMap.values()).sort(
-      (a, b) => (a.division.order || 9999) - (b.division.order || 9999)
+      (a, b) => (a.division.order || 9999) - (b.division.order || 9999),
     );
     const result: Employee[] = [...sortedGlobal];
     for (const div of sortedDivisions) {
       result.push(...sortEmployeesInGroup(div.managers));
       const sortedSubs = Array.from(div.subdivisions.values()).sort(
-        (a, b) => (a.subdivision.order || 9999) - (b.subdivision.order || 9999)
+        (a, b) => (a.subdivision.order || 9999) - (b.subdivision.order || 9999),
       );
       for (const sub of sortedSubs) {
         result.push(...sortEmployeesInGroup(sub.employees));
@@ -198,7 +198,7 @@ export function TableView({
           setCollapsedSubdivisions(new Set(data.collapsedSubdivisions));
         setIsInitialized(true);
         return;
-      } catch (e) { }
+      } catch (e) { /* ignore */ }
     }
 
     const allDivisionIds = Object.keys(groupedData.divisions);
@@ -267,6 +267,11 @@ export function TableView({
     }
   }, [searchTerm, viewMode, groupedData, isInitialized]);
 
+  function truncate(str: string, maxLen: number) {
+    if (!str) return '';
+    return str.length > maxLen ? `${str.substring(0, maxLen)}...` : str;
+  }
+
   const renderPersonCell = (person: Employee) => (
     <div className="personnel-person-name">{truncate(person.full_name, 30)}</div>
   );
@@ -278,10 +283,13 @@ export function TableView({
     </div>
   );
 
+  // ⬇️ Здесь единственное изменение: form_state_secrets_display в приоритете
   const renderShaInfo = (person: Employee) => (
     <div className="text-sm text-gray-900">
       {person.sha_details && `${person.sha_details.access_level} класс / `}
-      {person.form_state_secrets || '—'}
+      {person.form_state_secrets_display
+        || person.form_state_secrets
+        || '—'}
     </div>
   );
 
@@ -334,16 +342,11 @@ export function TableView({
     );
   };
 
-  function truncate(str: string, maxLen: number) {
-    if (!str) return '';
-    return str.length > maxLen ? `${str.substring(0, maxLen)}...` : str;
-  }
-
   const colSpan = hasEditPermission ? 9 : 8;
 
   const toggleDivision = (divisionId: string) => {
     if (searchTerm.trim() !== '') return;
-    setCollapsedDivisions(prev => {
+    setCollapsedDivisions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(divisionId)) newSet.delete(divisionId);
       else newSet.add(divisionId);
@@ -354,7 +357,7 @@ export function TableView({
   const toggleSubdivision = (divisionId: string, subdivisionId: string) => {
     if (searchTerm.trim() !== '') return;
     const key = `${divisionId}-${subdivisionId}`;
-    setCollapsedSubdivisions(prev => {
+    setCollapsedSubdivisions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) newSet.delete(key);
       else newSet.add(key);
@@ -364,12 +367,12 @@ export function TableView({
 
   const toggleGlobalManagementHandler = () => {
     if (searchTerm.trim() !== '') return;
-    setCollapsedGlobalManagement(prev => !prev);
+    setCollapsedGlobalManagement((prev) => !prev);
   };
 
   const toggleDepartmentManagement = (divisionId: string) => {
     if (searchTerm.trim() !== '') return;
-    setCollapsedDepartmentManagement(prev => {
+    setCollapsedDepartmentManagement((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(divisionId)) newSet.delete(divisionId);
       else newSet.add(divisionId);
@@ -381,7 +384,7 @@ export function TableView({
     const div = groupedData?.divisions[divisionId];
     if (!div) return 0;
     let count = div.managers.length;
-    Object.values(div.subdivisions).forEach(sub => {
+    Object.values(div.subdivisions).forEach((sub: any) => {
       count += sub.employees.length;
     });
     return count;
@@ -392,7 +395,7 @@ export function TableView({
     return person.full_name.toLowerCase().includes(searchTerm.toLowerCase());
   };
 
-  // Рендеринг плоского режима
+  // ============ FLAT ============
   if (viewMode === 'flat') {
     return (
       <div className="personnel-table-container">
@@ -442,7 +445,7 @@ export function TableView({
     );
   }
 
-  // Для grouped режима
+  // ============ GROUPED ============
   if (!isInitialized || !groupedData) return null;
 
   let rowIndex = 0;
@@ -490,7 +493,7 @@ export function TableView({
                 </td>
               </tr>
               {!collapsedGlobalManagement &&
-                groupedData.globalManagement.employees.map(person => {
+                groupedData.globalManagement.employees.map((person) => {
                   const currentIndex = ++rowIndex;
                   return (
                     <tr
@@ -520,7 +523,7 @@ export function TableView({
           )}
 
           {/* Подразделения */}
-          {groupedData.sortedDivisionIds.map(divisionId => {
+          {groupedData.sortedDivisionIds.map((divisionId) => {
             const division = groupedData.divisions[divisionId];
             const isDivisionCollapsed = collapsedDivisions.has(divisionId);
             const hasManagers = division.managers.length > 0;
@@ -575,7 +578,7 @@ export function TableView({
                           </td>
                         </tr>
                         {!isDeptMgmtCollapsed &&
-                          division.managers.map(person => {
+                          division.managers.map((person: Employee) => {
                             const currentIndex = ++rowIndex;
                             return (
                               <tr
@@ -604,7 +607,7 @@ export function TableView({
                       </>
                     )}
 
-                    {division.sortedSubdivisionIds?.map(subdivisionId => {
+                    {division.sortedSubdivisionIds?.map((subdivisionId: string) => {
                       const subdivision = division.subdivisions[subdivisionId];
                       const subKey = `${divisionId}-${subdivisionId}`;
                       const isSubCollapsed = collapsedSubdivisions.has(subKey);
@@ -633,7 +636,7 @@ export function TableView({
                             </td>
                           </tr>
                           {!isSubCollapsed &&
-                            subdivision.employees.map(person => {
+                            subdivision.employees.map((person: Employee) => {
                               const currentIndex = ++rowIndex;
                               return (
                                 <tr

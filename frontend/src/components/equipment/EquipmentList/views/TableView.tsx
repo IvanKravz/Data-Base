@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../store/store';
 import { Equipment } from '../../../../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Network } from 'lucide-react';
 import { getStatusIcon, getStatusColor } from '../../../../utils/statusUtils';
 import { format } from 'date-fns';
 import './style.css';
@@ -36,11 +36,11 @@ export function TableView({
 
   const hasEditPermission = useMemo(
     () => permissions?.models?.Equipment?.includes('change') ?? false,
-    [permissions]
+    [permissions],
   );
   const hasDeletePermission = useMemo(
     () => permissions?.models?.Equipment?.includes('delete') ?? false,
-    [permissions]
+    [permissions],
   );
   const shouldShowActions = showActions && hasEditPermission && hasDeletePermission;
 
@@ -72,17 +72,14 @@ export function TableView({
     return '-';
   }, []);
 
-  // Единая сортировка: без подразделения → по подразделениям → внутри по отделениям → по наименованию.
   const sortedEquipment = useMemo(() => {
     const result: Equipment[] = [];
 
-    // Техника без подразделения
     const noDiv = equipment.filter((e) => !e.division);
     if (noDiv.length) {
       result.push(...[...noDiv].sort((a, b) => a.name.localeCompare(b.name)));
     }
 
-    // Группировка по подразделениям и отделениям
     const divMap = new Map<
       string,
       { division: any; subs: Map<string, { subdivision: any; items: Equipment[] }> }
@@ -106,11 +103,11 @@ export function TableView({
     });
 
     const sortedDivs = Array.from(divMap.entries()).sort(
-      (a, b) => (a[1].division.order || 9999) - (b[1].division.order || 9999)
+      (a, b) => (a[1].division.order || 9999) - (b[1].division.order || 9999),
     );
     for (const [, div] of sortedDivs) {
       const sortedSubs = Array.from(div.subs.entries()).sort(
-        (a, b) => (a[1].subdivision.order || 9999) - (b[1].subdivision.order || 9999)
+        (a, b) => (a[1].subdivision.order || 9999) - (b[1].subdivision.order || 9999),
       );
       for (const [, sub] of sortedSubs) {
         result.push(...[...sub.items].sort((a, b) => a.name.localeCompare(b.name)));
@@ -178,15 +175,35 @@ export function TableView({
                 style={disableRowClick ? { cursor: 'default' } : { cursor: 'pointer' }}
               >
                 <td className="tv-table-cell-equipment tv-table-cell-index">{idx + 1}</td>
+
+                {/* Название — без иконки, только текст */}
                 <td className="tv-table-cell-equipment tv-table-cell-name">
                   <div className="tv-cell-content-full-width">{item.name}</div>
                 </td>
+
                 <td className="tv-table-cell-equipment">{item.serial_number}</td>
                 <td className="tv-table-cell-equipment">{item.inventory_number}</td>
                 <td className="tv-table-cell-equipment">{formatDate(item.manufacturing_date)}</td>
                 <td className="tv-table-cell-equipment">{formatDate(item.exploitation_date)}</td>
                 <td className="tv-table-cell-equipment">{item.type || '-'}</td>
-                <td className="tv-table-cell-equipment">{item.category_display}</td>
+
+                {/* Категория — с иконкой сети */}
+                <td className="tv-table-cell-equipment">
+                  <div className="tv-category-cell">
+                    <span className="tv-category-text">
+                      {item.category_display || '-'}
+                    </span>
+                    {item.is_network && (
+                      <span
+                        className="tv-badge-network"
+                        title={item.device_type_display || 'Сетевое оборудование'}
+                      >
+                        <Network size={13} />
+                      </span>
+                    )}
+                  </div>
+                </td>
+
                 <td className="tv-table-cell-equipment">{formatInterestOrgan(item.interest_organ)}</td>
                 <td className="tv-table-cell-equipment">
                   <div className="tv-division-container">
@@ -213,10 +230,7 @@ export function TableView({
                   <td className="tv-table-cell-actions">
                     <div className="tv-actions-container">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(item);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onDelete(item); }}
                         className="tv-delete-button"
                       >
                         <Trash2 className="tv-action-icon" />

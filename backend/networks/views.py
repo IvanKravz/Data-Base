@@ -1,6 +1,7 @@
 import ipaddress
 
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -8,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
+from facilities.models import Division, Facility
 from users.logging.networks import (
     log_network_bulk_create,
     log_network_bulk_delete,
@@ -25,6 +27,7 @@ from .models import (
     NetworkDirection,
     NetworkInterface,
     NetworkMembership,
+    NetworkNodePosition,
     RoutingTable,
     Subnet,
     VLAN,
@@ -33,11 +36,14 @@ from .models import (
 from .serializers import (
     ACLSerializer,
     CommunicationNetworkSerializer,
+    ExplicitDivisionSerializer,
+    ExplicitFacilitySerializer,
     IPAddressSerializer,
     NetworkDirectionBulkCreateSerializer,
     NetworkDirectionSerializer,
     NetworkInterfaceSerializer,
     NetworkMembershipSerializer,
+    NetworkNodePositionSerializer,
     RoutingTableSerializer,
     SubnetSerializer,
     VLANConfigurationSerializer,
@@ -90,6 +96,87 @@ class CommunicationNetworkViewSet(RoleBasedFilterMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(network)
         log_network_view(request.user, network, request=request)
         return Response(serializer.data)
+
+    # ------------------------------------------------------------------ #
+    # Единый эндпоинт схемы: network + memberships + directions +
+    # positions + счётчики + явно добавленные пустые контейнеры.
+    # ------------------------------------------------------------------ #
+    @action(detail=True, methods=['get'], url_path='schema')
+    def schema(self, request, pk=None):
+        network = self.get_object()
+
+        memberships = network.memberships.select_related(
+            'division', 'facility', 'equipment', 'equipment__category',
+        ).all()
+
+        equipment_ids = [m.equipment_id for m in memberships if m.equipment_id]
+
+        iface_counts: dict = {}
+        ip_counts: dict = {}
+        if equipment_ids:
+            iface_counts = dict(
+                NetworkInterface.objects
+                .filter(equipment_id__in=equipment_ids)
+                .values('equipment_id')
+                .annotate(c=Count('id'))
+                .values_list('equipment_id', 'c')
+            )
+            ip_counts = dict(
+                IPAddress.objects
+                .filter(interface__equipment_id__in=equipment_ids)
+                .values('interface__equipment_id')
+                .annotate(c=Count('id'))
+                .values_list('interface__equipment_id', 'c')
+            )
+
+        directions = network.directions.select_related(
+            'from_membership__equipment', 'to_membership__equipment',
+            'from_interface', 'to_interface',
+        ).all()
+        positions = network.node_positions.all()
+
+        # ===== NEW: явно добавленные пустые контейнеры =====
+        division_ids_with_membership = {
+            m.division_id for m in memberships if m.division_id
+        }
+        facility_ids_with_membership = {
+            m.facility_id for m in memberships if m.facility_id
+        }
+
+        explicit_division_ids = [
+            p.node_id for p in positions
+            if p.node_type == 'division'
+            and p.is_explicit
+            and p.node_id not in division_ids_with_membership
+        ]
+        explicit_facility_ids = [
+            p.node_id for p in positions
+            if p.node_type == 'facility'
+            and p.is_explicit
+            and p.node_id not in facility_ids_with_membership
+        ]
+
+        explicit_divisions = Division.objects.filter(id__in=explicit_division_ids)
+        explicit_facilities = Facility.objects.filter(id__in=explicit_facility_ids)
+
+        log_network_view(request.user, network, request=request)
+
+        return Response({
+            'network': self.get_serializer(network).data,
+            'memberships': NetworkMembershipSerializer(memberships, many=True).data,
+            'directions': NetworkDirectionSerializer(directions, many=True).data,
+            'positions': NetworkNodePositionSerializer(positions, many=True).data,
+            'counts': {
+                'interfaces': {str(k): v for k, v in iface_counts.items()},
+                'ip_addresses': {str(k): v for k, v in ip_counts.items()},
+            },
+            'explicit_divisions': ExplicitDivisionSerializer(
+                explicit_divisions, many=True,
+            ).data,
+            'explicit_facilities': ExplicitFacilitySerializer(
+                explicit_facilities, many=True,
+            ).data,
+        })
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
@@ -201,10 +288,12 @@ class NetworkDirectionViewSet(viewsets.ModelViewSet):
         'to_membership__division',
         'to_membership__facility',
         'to_membership__equipment',
+        'from_interface', 'to_interface',
     )
     serializer_class = NetworkDirectionSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['network']
+    filterset_fields = ['network', 'from_interface', 'to_interface']
+    ordering = ['id']
 
     @action(detail=False, methods=['post'])
     def bulk_create(self, request):
@@ -221,6 +310,117 @@ class NetworkDirectionViewSet(viewsets.ModelViewSet):
             NetworkDirectionSerializer(directions, many=True).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+# ============================================================================
+# Позиции узлов на схеме (drag-and-drop + явные контейнеры)
+# ============================================================================
+
+class NetworkNodePositionViewSet(viewsets.ViewSet):
+    """
+    Позиции узлов схемы для конкретной сети. Работает как вложенный ресурс:
+    /networks/<network_pk>/node-positions/
+
+    Эндпоинты:
+      GET   list          — все сохранённые позиции сети
+      POST  bulk_upsert   — батч-сохранение (после drag-and-drop или
+                            при добавлении явного контейнера)
+      POST  delete        — удалить одну позицию (для очистки sentinel'ов
+                            после появления членства)
+      POST  reset         — удалить все позиции (вернуться к авто-лейауту)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, network_pk=None):
+        qs = NetworkNodePosition.objects.filter(network_id=network_pk)
+        return Response(NetworkNodePositionSerializer(qs, many=True).data)
+
+    def bulk_upsert(self, request, network_pk=None):
+        if not CommunicationNetwork.objects.filter(pk=network_pk).exists():
+            return Response(
+                {'detail': 'Сеть не найдена'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        items = request.data.get('positions') or []
+        if not isinstance(items, list):
+            return Response(
+                {'detail': 'positions должен быть списком'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        valid_types = {t[0] for t in NetworkNodePosition.NODE_TYPES}
+
+        saved = []
+        with transaction.atomic():
+            for item in items:
+                node_type = item.get('node_type')
+                node_id = item.get('node_id')
+                x = item.get('x')
+                y = item.get('y')
+
+                if node_type not in valid_types:
+                    continue
+                if node_id is None or x is None or y is None:
+                    continue
+
+                try:
+                    node_id_int = int(node_id)
+                    x_float = float(x)
+                    y_float = float(y)
+                except (TypeError, ValueError):
+                    continue
+
+                defaults = {'x': x_float, 'y': y_float}
+                # ✅ is_explicit не перезаписываем, если он не пришёл
+                if 'is_explicit' in item:
+                    defaults['is_explicit'] = bool(item['is_explicit'])
+
+                obj, _ = NetworkNodePosition.objects.update_or_create(
+                    network_id=network_pk,
+                    node_type=node_type,
+                    node_id=node_id_int,
+                    defaults=defaults,
+                )
+                saved.append(obj)
+
+        return Response(NetworkNodePositionSerializer(saved, many=True).data)
+
+    @action(detail=False, methods=['post'], url_path='delete')
+    def delete_position(self, request, network_pk=None):
+        """
+        Удаляет одну позицию. Нужно, чтобы снять sentinel-маркер
+        с пустого контейнера, когда в нём появилась техника
+        (дальше auto-layout сам поставит его в правильное место).
+        """
+        node_type = request.data.get('node_type')
+        node_id = request.data.get('node_id')
+
+        if node_type not in {t[0] for t in NetworkNodePosition.NODE_TYPES}:
+            return Response(
+                {'detail': 'Неверный node_type'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            node_id_int = int(node_id)
+        except (TypeError, ValueError):
+            return Response(
+                {'detail': 'node_id должен быть числом'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        NetworkNodePosition.objects.filter(
+            network_id=network_pk,
+            node_type=node_type,
+            node_id=node_id_int,
+        ).delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def reset(self, request, network_pk=None):
+        NetworkNodePosition.objects.filter(network_id=network_pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ============================================================================
@@ -251,6 +451,7 @@ class NetworkInterfaceViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
         'equipment', 'interface_type', 'enabled', 'access_vlan', 'native_vlan',
+        'mode',
     ]
     search_fields = ['name', 'mac_address']
     ordering_fields = ['name', 'equipment']
@@ -277,8 +478,6 @@ class SubnetViewSet(viewsets.ModelViewSet):
         """
         POST /networks/subnets/{id}/split/
         body: { "child_prefix": 25 }
-        Создаёт все дочерние подсети нового префикса.
-        Запрещено, если у подсети уже есть IP-адреса.
         """
         subnet = self.get_object()
 
@@ -351,15 +550,27 @@ class SubnetViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    # ---------- список хостов ----------
+    # ---------- список хостов (с фильтрами) ----------
     @action(detail=True, methods=['get'])
     def hosts(self, request, pk=None):
         """
         GET /networks/subnets/{id}/hosts/
-        Возвращает все адреса подсети, помечая занятые.
+          ?search=<str>   — поиск по адресу/hostname/purpose/assigned_to/...
+          ?status=<str>   — free|reserved|in_use|deprecated
+          ?limit=<int>    — обрезать результат (по умолчанию без лимита)
+          ?offset=<int>   — сдвиг
+        Без фильтров возвращает все адреса (обратная совместимость).
         """
         subnet = self.get_object()
         net = subnet.ip_network
+
+        search = (request.query_params.get('search') or '').strip().lower()
+        status_filter = request.query_params.get('status')
+        try:
+            limit = min(int(request.query_params.get('limit', 0)) or 0, 2000)
+            offset = max(int(request.query_params.get('offset', 0)), 0)
+        except (TypeError, ValueError):
+            limit, offset = 0, 0
 
         used = {
             ip.address: ip
@@ -370,8 +581,27 @@ class SubnetViewSet(viewsets.ModelViewSet):
         for host in net.hosts():
             addr = str(host)
             ip_obj = used.get(addr)
-            if ip_obj is not None:
-                result.append({
+
+            if ip_obj is None:
+                if status_filter and status_filter != 'free':
+                    continue
+                row = {
+                    'address': addr,
+                    'ip_id': None,
+                    'status': 'free',
+                    'hostname': '',
+                    'purpose': '',
+                    'assigned_to': '',
+                    'description': '',
+                    'is_primary': False,
+                    'interface_id': None,
+                    'interface_name': None,
+                    'equipment_name': None,
+                }
+            else:
+                if status_filter and status_filter != ip_obj.status:
+                    continue
+                row = {
                     'address': addr,
                     'ip_id': ip_obj.id,
                     'status': ip_obj.status,
@@ -389,32 +619,23 @@ class SubnetViewSet(viewsets.ModelViewSet):
                         if ip_obj.interface and ip_obj.interface.equipment_id
                         else None
                     ),
-                })
-            else:
-                result.append({
-                    'address': addr,
-                    'ip_id': None,
-                    'status': 'free',
-                    'hostname': '',
-                    'purpose': '',
-                    'assigned_to': '',
-                    'description': '',
-                    'is_primary': False,
-                    'interface_id': None,
-                    'interface_name': None,
-                    'equipment_name': None,
-                })
+                }
+
+            if search:
+                haystack = ' '.join(str(v or '') for v in row.values()).lower()
+                if search not in haystack:
+                    continue
+
+            result.append(row)
+
+        if limit or offset:
+            result = result[offset:offset + limit] if limit else result[offset:]
+
         return Response(result)
 
     # ---------- bulk save ----------
     @action(detail=True, methods=['post'], url_path='hosts/bulk')
     def hosts_bulk(self, request, pk=None):
-        """
-        POST /networks/subnets/{id}/hosts/bulk/
-        body: { "hosts": [ { address, status, hostname, purpose,
-                             assigned_to, interface_id, is_primary,
-                             description }, ... ] }
-        """
         subnet = self.get_object()
         items = request.data.get('hosts') or []
         if not isinstance(items, list):
@@ -490,27 +711,11 @@ class SubnetViewSet(viewsets.ModelViewSet):
         )
         return Response({'saved': results}, status=status.HTTP_200_OK)
 
-
-    # ---------- поиск свободных подсетей (для Wizard) ----------
+    # ---------- поиск свободных подсетей ----------
     @action(detail=False, methods=['get'], url_path='available')
     def available(self, request):
         """
         GET /networks/subnets/available/?network=X&prefix=24&limit=10
-
-        Возвращает до `limit` свободных подсетей заданного префикса,
-        которые можно создать в сети X, не пересекаясь с существующими
-        (глобально). Родительский диапазон берётся из
-        CommunicationNetwork.ip_range.
-
-        Ответ:
-        {
-          "results": [{"network_address": "...", "prefix_length": 24,
-                       "cidr": "...", "parent_cidr": "..."}, ...],
-          "parent_cidr": "192.168.0.0/16",
-          "requested_prefix": 24,
-          "hint": "no_ip_range" | "invalid_ip_range" | "parent_too_small",  # опционально
-          "detail": "..."                                                    # опционально
-        }
         """
         network_id = request.query_params.get('network')
         if not network_id:
@@ -568,7 +773,6 @@ class SubnetViewSet(viewsets.ModelViewSet):
                 ),
             })
 
-        # Собираем все занятые подсети (глобально — уникальность IP гарантирована)
         occupied_nets = []
         for addr, plen in Subnet.objects.values_list('network_address', 'prefix_length'):
             try:
@@ -617,7 +821,11 @@ class IPAddressViewSet(viewsets.ModelViewSet):
     )
     serializer_class = IPAddressSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['subnet', 'status', 'interface', 'is_primary']
+    filterset_fields = [
+        'subnet', 'status', 'interface', 'is_primary',
+        'interface__equipment',
+        'subnet__network',
+    ]
     search_fields = ['address', 'hostname', 'purpose', 'assigned_to']
     ordering = ['address']
 

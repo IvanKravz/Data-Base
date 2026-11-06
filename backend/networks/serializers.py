@@ -1,4 +1,4 @@
-import ipaddress  # noqa: F401  (оставлен для совместимости с прошлыми импортами)
+import ipaddress  # noqa: F401
 
 from rest_framework import serializers
 
@@ -14,6 +14,7 @@ from .models import (
     NetworkDirection,
     NetworkInterface,
     NetworkMembership,
+    NetworkNodePosition,
     RoutingTable,
     Subnet,
     VLAN,
@@ -21,26 +22,24 @@ from .models import (
 )
 
 
-# ============================================================================
-# Подсети
-# ============================================================================
+# -------------------- Подсети --------------------
 
 class SubnetSerializer(serializers.ModelSerializer):
-    cidr            = serializers.ReadOnlyField()
-    netmask         = serializers.ReadOnlyField()
-    broadcast       = serializers.ReadOnlyField()
-    first_host      = serializers.ReadOnlyField()
-    last_host       = serializers.ReadOnlyField()
-    host_count      = serializers.ReadOnlyField()
+    cidr = serializers.ReadOnlyField()
+    netmask = serializers.ReadOnlyField()
+    broadcast = serializers.ReadOnlyField()
+    first_host = serializers.ReadOnlyField()
+    last_host = serializers.ReadOnlyField()
+    host_count = serializers.ReadOnlyField()
 
-    used_count      = serializers.SerializerMethodField()
-    reserved_count  = serializers.SerializerMethodField()
-    free_count      = serializers.SerializerMethodField()
-    children_count  = serializers.SerializerMethodField()
+    used_count = serializers.SerializerMethodField()
+    reserved_count = serializers.SerializerMethodField()
+    free_count = serializers.SerializerMethodField()
+    children_count = serializers.SerializerMethodField()
 
-    vlan_name       = serializers.CharField(source='vlan.name', read_only=True, allow_null=True)
-    vlan_id_num     = serializers.IntegerField(source='vlan.vlan_id', read_only=True, allow_null=True)
-    network_name    = serializers.CharField(source='network.name', read_only=True)
+    vlan_name = serializers.CharField(source='vlan.name', read_only=True, allow_null=True)
+    vlan_id_num = serializers.IntegerField(source='vlan.vlan_id', read_only=True, allow_null=True)
+    network_name = serializers.CharField(source='network.name', read_only=True)
 
     class Meta:
         model = Subnet
@@ -84,14 +83,11 @@ class SubnetSerializer(serializers.ModelSerializer):
         if self.instance:
             instance.pk = self.instance.pk
             instance._state.adding = False
-
         instance.clean()
         return attrs
 
 
-# ============================================================================
-# IP-адреса
-# ============================================================================
+# -------------------- IP-адреса --------------------
 
 class IPAddressSerializer(serializers.ModelSerializer):
     interface_name = serializers.CharField(
@@ -132,9 +128,7 @@ class IPAddressSerializer(serializers.ModelSerializer):
         return attrs
 
 
-# ============================================================================
-# Членство сети
-# ============================================================================
+# -------------------- Принадлежности --------------------
 
 class NetworkMembershipSerializer(serializers.ModelSerializer):
     division = DivisionSerializer(read_only=True)
@@ -174,9 +168,7 @@ class NetworkMembershipSerializer(serializers.ModelSerializer):
         return attrs
 
 
-# ============================================================================
-# Направления
-# ============================================================================
+# -------------------- Направления --------------------
 
 class NetworkDirectionSerializer(serializers.ModelSerializer):
     from_membership_details = NetworkMembershipSerializer(
@@ -185,13 +177,23 @@ class NetworkDirectionSerializer(serializers.ModelSerializer):
     to_membership_details = NetworkMembershipSerializer(
         source='to_membership', read_only=True,
     )
+    from_interface_name = serializers.CharField(
+        source='from_interface.name', read_only=True, allow_null=True,
+    )
+    to_interface_name = serializers.CharField(
+        source='to_interface.name', read_only=True, allow_null=True,
+    )
 
     class Meta:
         model = NetworkDirection
         fields = [
             'id', 'network',
             'from_membership', 'to_membership',
+            'from_interface', 'to_interface',
+            'from_interface_name', 'to_interface_name',
             'from_membership_details', 'to_membership_details',
+            'label', 'cable_type',
+            'from_handle', 'to_handle',
             'bandwidth', 'latency', 'description', 'created_at',
         ]
 
@@ -199,14 +201,23 @@ class NetworkDirectionSerializer(serializers.ModelSerializer):
         network = attrs.get('network') or getattr(self.instance, 'network', None)
         from_m = attrs.get('from_membership') or getattr(self.instance, 'from_membership', None)
         to_m = attrs.get('to_membership') or getattr(self.instance, 'to_membership', None)
+        from_i = attrs.get('from_interface') or getattr(self.instance, 'from_interface', None)
+        to_i = attrs.get('to_interface') or getattr(self.instance, 'to_interface', None)
 
         errors = {}
-        if from_m and to_m and from_m.id == to_m.id:
-            errors['to_membership'] = 'Источник и назначение не могут совпадать'
+        if from_m and to_m and from_m.id == to_m.id and not (from_i and to_i):
+            errors['to_membership'] = (
+                'Источник и назначение не могут совпадать '
+                '(если это один коммутатор, укажите интерфейсы)'
+            )
         if network and from_m and from_m.network_id != network.id:
             errors['from_membership'] = 'Источник принадлежит другой сети'
         if network and to_m and to_m.network_id != network.id:
             errors['to_membership'] = 'Назначение принадлежит другой сети'
+        if from_i and from_m and from_i.equipment_id != from_m.equipment_id:
+            errors['from_interface'] = 'Интерфейс не принадлежит оборудованию источника'
+        if to_i and to_m and to_i.equipment_id != to_m.equipment_id:
+            errors['to_interface'] = 'Интерфейс не принадлежит оборудованию назначения'
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
@@ -244,10 +255,6 @@ class NetworkDirectionBulkCreateSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     f"Членство не принадлежит сети {network.id}"
                 )
-            if f.id == t.id:
-                raise serializers.ValidationError(
-                    f"Источник и назначение совпадают (id={f.id})"
-                )
 
         created = []
         with transaction.atomic():
@@ -257,9 +264,15 @@ class NetworkDirectionBulkCreateSerializer(serializers.Serializer):
                     network=network,
                     from_membership=membership_dict[d['from_membership']],
                     to_membership=membership_dict[d['to_membership']],
+                    from_interface_id=d.get('from_interface') or None,
+                    to_interface_id=d.get('to_interface') or None,
+                    label=d.get('label', ''),
+                    cable_type=d.get('cable_type', ''),
                     bandwidth=d.get('bandwidth'),
                     latency=d.get('latency'),
                     description=d.get('description', ''),
+                    from_handle=d.get('from_handle', ''),
+                    to_handle=d.get('to_handle', ''),
                 ))
         return created
 
@@ -267,9 +280,45 @@ class NetworkDirectionBulkCreateSerializer(serializers.Serializer):
         return NetworkDirectionSerializer(instance, many=True).data
 
 
-# ============================================================================
-# Сеть связи
-# ============================================================================
+# -------------------- Позиции узлов --------------------
+
+class NetworkNodePositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetworkNodePosition
+        fields = ['id', 'node_type', 'node_id', 'x', 'y', 'is_explicit']
+        read_only_fields = ['id']
+
+
+# -------------------- Явно добавленные пустые контейнеры --------------------
+
+class ExplicitDivisionSerializer(serializers.ModelSerializer):
+    """
+    Подразделение, помещённое на схему как пустой контейнер.
+    Минимально достаточно для рендера узла DivisionNode.
+    """
+    class Meta:
+        model = Division
+        fields = ['id', 'name', 'order']
+
+
+class ExplicitFacilitySerializer(serializers.ModelSerializer):
+    """
+    Объект, помещённый на схему как пустой контейнер.
+    division_id нужен, чтобы фронт мог привязать объект к
+    родительскому подразделению при построении auto-layout.
+    """
+    division_id = serializers.IntegerField(read_only=True)
+    type_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Facility
+        fields = ['id', 'name', 'division_id', 'type', 'type_display']
+
+    def get_type_display(self, obj):
+        return str(obj.type) if obj.type else ''
+
+
+# -------------------- Сеть связи --------------------
 
 class CommunicationNetworkSerializer(serializers.ModelSerializer):
     memberships = NetworkMembershipSerializer(many=True, read_only=True)
@@ -284,9 +333,7 @@ class CommunicationNetworkSerializer(serializers.ModelSerializer):
         ]
 
 
-# ============================================================================
-# VLAN, интерфейсы, IP, маршруты, ACL
-# ============================================================================
+# -------------------- VLAN, интерфейсы, маршруты, ACL --------------------
 
 class VLANSerializer(serializers.ModelSerializer):
     class Meta:

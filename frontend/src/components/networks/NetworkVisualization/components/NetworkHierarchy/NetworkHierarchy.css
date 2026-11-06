@@ -1,0 +1,352 @@
+/* ============================================================
+   NetworkHierarchy — компактный индекс иерархии под схемой
+   ============================================================ */
+
+.network-hierarchy {
+    margin-top: 12px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.network-hierarchy--empty {
+    padding: 32px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* ===== Шапка ===== */
+.network-hierarchy__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.network-hierarchy__title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.network-hierarchy__title-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.network-hierarchy__title-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* ===== Счётчики (заменяют cn-visual-stats) ===== */
+.network-hierarchy__stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.network-hierarchy__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.network-hierarchy__stat b {
+    color: #0f172a;
+    font-weight: 700;
+    margin-right: 2px;
+}
+
+.network-hierarchy__stat em {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.76rem;
+    color: #64748b;
+}
+
+/* ===== Поиск ===== */
+.network-hierarchy__search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    flex: 1 1 220px;
+    max-width: 320px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.network-hierarchy__search:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.network-hierarchy__search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.85rem;
+    color: #0f172a;
+    min-width: 0;
+}
+
+/* ============================================================
+   Тело — горизонтальные «карточки» подразделений
+   ============================================================ */
+.network-hierarchy__body {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    max-height: 560px;
+    overflow: auto;
+}
+
+/* Пустое состояние поиска — на всю ширину */
+.network-hierarchy__body > .network-hierarchy__empty {
+    width: 100%;
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.88rem;
+}
+
+/* Верхний уровень — карточка подразделения */
+.network-hierarchy__body > .nh-group {
+    flex: 0 0 auto;
+    width: 300px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Вложенные группы (объекты внутри подразделения) — без рамки/фона */
+.network-hierarchy__body > .nh-group > .nh-group {
+    flex: none;
+    width: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* ===== Группы и вложенность ===== */
+.nh-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.nh-children {
+    margin-left: 8px;
+    padding-left: 4px;
+    border-left: 1px dashed #cbd5e1;
+    display: flex;
+    flex-direction: column;
+}
+
+.nh-children--equipment {
+    margin-left: 14px;
+    border-left: 1px dotted #e2e8f0;
+}
+
+/* ===== Строки ===== */
+.nh-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: background 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+}
+
+.nh-row:hover {
+    background: #f1f5f9;
+}
+
+/* ===== Выделение — изумрудное (не голубое) ===== */
+.nh-row.is-selected {
+    background: #ecfdf5;
+    box-shadow: inset 3px 0 0 #10b981;
+}
+
+.nh-row.is-selected .nh-name {
+    color: #047857;
+    font-weight: 600;
+}
+
+/* --- Подразделения --- */
+.nh-row--division {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #0f172a;
+    background: #f8fafc;
+}
+
+.nh-row--division.is-selected {
+    background: #d1fae5;
+}
+
+/* --- Объекты --- */
+.nh-row--facility {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* --- Оборудование --- */
+.nh-row--equipment {
+    font-size: 0.82rem;
+    color: #334155;
+    padding: 5px 10px;
+}
+
+/* ===== Кнопка-шеврон ===== */
+.nh-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s;
+}
+
+.nh-toggle:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* ===== Иконки / маркеры ===== */
+.nh-icon { flex-shrink: 0; }
+.nh-icon--division { color: #3b82f6; }
+.nh-icon--facility { color: #06b6d4; }
+.nh-icon--equipment { color: #f97316; }
+
+.nh-bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin: 0 8px 0 8px;
+}
+
+.nh-bullet--equipment {
+    background: #fb923c;
+    box-shadow: 0 0 6px rgba(251, 146, 60, 0.65);
+}
+
+/* ===== Контент строки ===== */
+.nh-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.nh-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nh-type {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== Бейдж-счётчик ===== */
+.nh-count {
+    flex-shrink: 0;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+/* ===== Пустые ветки ===== */
+.nh-leaf-empty {
+    padding: 4px 10px 4px 34px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-style: italic;
+}
+
+/* ===== Адаптив ===== */
+@media (max-width: 768px) {
+    .network-hierarchy__header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }
+    .network-hierarchy__search {
+        max-width: none;
+    }
+
+    /* На узких экранах карточки подразделений — на всю ширину, в столбик */
+    .network-hierarchy__body {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        max-height: 480px;
+    }
+    .network-hierarchy__body > .nh-group {
+        width: 100%;
+        max-width: none;
+    }
+
+    .nh-children,
+    .nh-children--equipment {
+        margin-left: 12px;
+    }
+}

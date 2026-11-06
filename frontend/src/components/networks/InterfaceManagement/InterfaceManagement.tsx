@@ -1,7 +1,7 @@
 // src/components/networks/management/InterfaceManagement/InterfaceManagement.tsx
 import React, { useState, useEffect } from 'react';
 import { NetworkInterface, NetworkInterfaceInput, Equipment, VLAN } from '../../../types';
-import InterfaceModal from '../modals/InterfaceModal';
+import { InterfaceModal } from '../modals/InterfaceModal';
 import '../ManagementPanel.css';
 import { networksApi } from '../../../api/networksApi';
 

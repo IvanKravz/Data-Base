@@ -1,10 +1,29 @@
 // components/networks/NetworkVisualization/NetworkVisualization.tsx
-import React, { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import './NetworkVisualization.css';
 import { useNetworkData } from './components/useNetworkData';
 import NetworkScene from './components/NetworkScene';
-import NetworkDetailsPanel from './components/NetworkDetailsPanel';
+
+/**
+ * Мост размера: при изменении size.width/size.height в R3F
+ * форсируем re-render — это гарантирует, что <Html> из drei
+ * (который подписан на size) обновит позицию в том же кадре,
+ * что и WebGL, а не «догонит» позже.
+ */
+const ResizeBridge: React.FC = () => {
+  const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
+  const invalidate = useThree((s) => s.invalidate);
+
+  useEffect(() => {
+    // R3F с frameloop="always" и так рендерит каждый кадр,
+    // но invalidate() гарантирует немедленный кадр после смены size.
+    invalidate();
+  }, [width, height, invalidate]);
+
+  return null;
+};
 
 interface NetworkVisualizationProps {
   network: any;
@@ -23,60 +42,70 @@ const NetworkVisualization: React.FC<NetworkVisualizationProps> = ({
   highlightedNode: externalHighlightedNode,
   selectedNode: externalSelectedNode,
   onNodeSelect,
-  onClearSelection
+  onClearSelection,
 }) => {
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [internalSelectedNode, setInternalSelectedNode] = useState<string | null>(null);
   const [internalHighlightedNode, setInternalHighlightedNode] = useState<string | null>(null);
+
+  const selectedNode = externalSelectedNode !== undefined
+    ? externalSelectedNode
+    : internalSelectedNode;
 
   const highlightedNode = externalHighlightedNode !== undefined
     ? externalHighlightedNode
     : internalHighlightedNode;
 
-  useEffect(() => {
-    if (externalSelectedNode !== undefined) {
-      setSelectedNode(externalSelectedNode);
-    }
-  }, [externalSelectedNode]);
-
   const { nodes, connections } = useNetworkData(network, memberships, directions);
 
   const handleNodeClick = (nodeId: string) => {
-    setSelectedNode(prev => prev === nodeId ? null : nodeId);
-    if (onNodeSelect) {
-      onNodeSelect(nodeId);
+    const isDeselect = selectedNode === nodeId;
+    if (externalSelectedNode === undefined) {
+      setInternalSelectedNode(isDeselect ? null : nodeId);
     }
-  };
-
-  const handleClosePanel = () => {
-    setSelectedNode(null);
-    if (onClearSelection) {
-      onClearSelection();
+    if (isDeselect) {
+      onClearSelection?.();
+    } else {
+      onNodeSelect?.(nodeId);
     }
   };
 
   return (
     <div className="network-visualization-container">
       <div className="network-visualization">
-        <h3 className="network-visualization-title">Визуализация сети: {network.name}</h3>
+        <header className="network-viz-header">
+          <h3 className="network-viz-title">
+            <span className="network-viz-title-label">Визуализация сети</span>
+            <span className="network-viz-title-name">{network.name}</span>
+          </h3>
 
-        <div className="network-visualization-nodes">
-          <Canvas camera={{ position: [50, 60, 80], fov: 30 }}>
+          <div className="network-viz-legend">
+            <span><i className="viz-dot viz-dot--division" /> Подразделение</span>
+            <span><i className="viz-dot viz-dot--facility" /> Объект</span>
+            <span><i className="viz-dot viz-dot--equipment" /> Оборудование</span>
+            <span><i className="viz-dot viz-dot--direction" /> Направление</span>
+          </div>
+        </header>
+
+        <div className="network-viz-canvas">
+          <Canvas
+            camera={{ position: [55, 45, 95], fov: 40 }}
+            dpr={[1, 2]}
+            gl={{ antialias: true, alpha: false }}
+            resize={{ debounce: 0, scroll: false }}   /* ← ключевой фикс */
+            frameloop="always"
+            style={{ width: '100%', height: '100%' }}
+          >
+            <ResizeBridge />
             <NetworkScene
               nodes={nodes}
               connections={connections}
               highlightedNode={highlightedNode || null}
-              selectedNode={selectedNode}
+              selectedNode={selectedNode || null}
               onNodeClick={handleNodeClick}
               onNodeHover={setInternalHighlightedNode}
             />
           </Canvas>
         </div>
-
-        <NetworkDetailsPanel
-          selectedNode={selectedNode}
-          memberships={memberships}
-          onClosePanel={handleClosePanel}
-        />
       </div>
     </div>
   );

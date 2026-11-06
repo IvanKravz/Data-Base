@@ -1,3 +1,4 @@
+// SecurityClearanceCard.tsx
 import { useState, useMemo } from 'react';
 import { Shield, Hash, Calendar } from 'lucide-react';
 import { Employee } from '../../../../types';
@@ -11,7 +12,27 @@ interface SecurityClearanceCardProps {
   searchTerm?: string;
 }
 
-export function SecurityClearanceCard({ formData, onChange, employee, viewMode, canEdit = true, searchTerm = '' }: SecurityClearanceCardProps) {
+// Справочник формы ГТ — соответствует Employee.FORM_STATE_CHOICES
+const FORM_STATE_OPTIONS = [
+  { value: '1', label: '1 форма' },
+  { value: '2', label: '2 форма' },
+  { value: '3', label: '3 форма' },
+];
+
+const FORM_STATE_LABELS: Record<string, string> = {
+  '1': '1 форма',
+  '2': '2 форма',
+  '3': '3 форма',
+};
+
+export function SecurityClearanceCard({
+  formData,
+  onChange,
+  employee,
+  viewMode,
+  canEdit = true,
+  searchTerm = '',
+}: SecurityClearanceCardProps) {
   const [activeDateField, setActiveDateField] = useState<keyof Employee | null>(null);
 
   const formatDisplayDate = (dateString: string | null | undefined): string => {
@@ -43,26 +64,32 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode, 
 
   const fields = useMemo(() => {
     if (viewMode) {
+      const formValue =
+        employee?.form_state_secrets_display
+        || (employee?.form_state_secrets
+          ? FORM_STATE_LABELS[employee.form_state_secrets] || employee.form_state_secrets
+          : '—');
+
       return [
-        { label: 'Форма', value: employee?.form_state_secrets || '—', icon: Shield, key: 'form_state_secrets' },
+        { label: 'Форма', value: formValue, icon: Shield, key: 'form_state_secrets' },
         { label: '№ допуска', value: employee?.number_state_secrets || '—', icon: Hash, key: 'number_state_secrets' },
         { label: 'Дата', value: employee?.data_state_secrets ? formatDisplayDate(employee.data_state_secrets) : '—', icon: Calendar, key: 'data_state_secrets' },
       ];
-    } else {
-      return [
-        { label: 'Форма', value: formData?.form_state_secrets || '', icon: Shield, key: 'form_state_secrets' },
-        { label: '№ допуска', value: formData?.number_state_secrets || '', icon: Hash, key: 'number_state_secrets' },
-        { label: 'Дата', value: formData?.data_state_secrets || '', icon: Calendar, key: 'data_state_secrets' },
-      ];
     }
+    return [
+      { label: 'Форма', value: formData?.form_state_secrets || '', icon: Shield, key: 'form_state_secrets' },
+      { label: '№ допуска', value: formData?.number_state_secrets || '', icon: Hash, key: 'number_state_secrets' },
+      { label: 'Дата', value: formData?.data_state_secrets || '', icon: Calendar, key: 'data_state_secrets' },
+    ];
   }, [viewMode, employee, formData]);
 
   const filteredFields = useMemo(() => {
     if (!searchTerm.trim()) return fields;
     const lower = searchTerm.toLowerCase().trim();
-    return fields.filter(f =>
-      f.label.toLowerCase().includes(lower) ||
-      (f.value && f.value.toLowerCase().includes(lower))
+    return fields.filter(
+      (f) =>
+        f.label.toLowerCase().includes(lower) ||
+        (f.value && f.value.toLowerCase().includes(lower)),
     );
   }, [fields, searchTerm]);
 
@@ -92,7 +119,44 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode, 
     );
   };
 
-  const renderInput = (label: string, value: string, field: keyof Employee, icon: React.ElementType, key: string) => {
+  const renderFormStateSelect = (
+    label: string,
+    value: string,
+    field: keyof Employee,
+    icon: React.ElementType,
+    key: string,
+  ) => {
+    const Icon = icon;
+    return (
+      <div className="qc-input-group" key={key}>
+        <label className="qc-input-label">
+          <Icon size={16} className="qc-info-icon" />
+          {label}
+        </label>
+        <select
+          className="qc-input"
+          value={value || ''}
+          onChange={(e) => onChange?.(field, e.target.value)}
+          disabled={!canEdit}
+        >
+          <option value="">— не выбрано —</option>
+          {FORM_STATE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
+  const renderInput = (
+    label: string,
+    value: string,
+    field: keyof Employee,
+    icon: React.ElementType,
+    key: string,
+  ) => {
     const Icon = icon;
     return (
       <div className="qc-input-group" key={key}>
@@ -111,7 +175,13 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode, 
     );
   };
 
-  const renderDateInput = (label: string, value: string | undefined, field: keyof Employee, icon: React.ElementType, key: string) => {
+  const renderDateInput = (
+    label: string,
+    value: string | undefined,
+    field: keyof Employee,
+    icon: React.ElementType,
+    key: string,
+  ) => {
     const Icon = icon;
     const displayValue = value ? formatDisplayDate(value) : 'дд.мм.гггг';
     const inputValue = value ? formatDateForInput(value) : '';
@@ -155,16 +225,29 @@ export function SecurityClearanceCard({ formData, onChange, employee, viewMode, 
         <h3 className="qc-card-title">Допуск к ГТ</h3>
       </div>
       <div className="qc-card-content">
-        {viewMode ? (
-          filteredFields.map(f => renderField(f.label, f.value, f.icon, f.key))
-        ) : (
-          filteredFields.map(f => {
-            if (f.key === 'data_state_secrets') {
-              return renderDateInput(f.label, formData?.data_state_secrets, 'data_state_secrets', Calendar, f.key);
-            }
-            return renderInput(f.label, f.value, f.key as keyof Employee, f.icon, f.key);
-          })
-        )}
+        {viewMode
+          ? filteredFields.map((f) => renderField(f.label, f.value, f.icon, f.key))
+          : filteredFields.map((f) => {
+              if (f.key === 'data_state_secrets') {
+                return renderDateInput(
+                  f.label,
+                  formData?.data_state_secrets,
+                  'data_state_secrets',
+                  Calendar,
+                  f.key,
+                );
+              }
+              if (f.key === 'form_state_secrets') {
+                return renderFormStateSelect(
+                  f.label,
+                  formData?.form_state_secrets || '',
+                  'form_state_secrets',
+                  Shield,
+                  f.key,
+                );
+              }
+              return renderInput(f.label, f.value, f.key as keyof Employee, f.icon, f.key);
+            })}
       </div>
     </div>
   );

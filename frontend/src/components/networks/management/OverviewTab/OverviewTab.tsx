@@ -11,8 +11,8 @@ import {
 } from '../../../../types';
 import { networksApi } from '../../../../api/networksApi';
 import SubnetWizard from '../SubnetWizard/SubnetWizard';
+import { InterfaceModal } from '../../modals/InterfaceModal';
 import VLANModal from '../../modals/VLANModal';
-import InterfaceModal from '../../modals/InterfaceModal';
 import QuickAddIPModal from '../../modals/QuickAddIPModal';
 import {
     Layers,
@@ -24,6 +24,7 @@ import {
     Network as NetworkIcon,
 } from 'lucide-react';
 import './OverviewTab.css';
+
 
 interface Props {
     token: string | null;

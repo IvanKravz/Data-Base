@@ -8,30 +8,36 @@ interface NetworkDetailsPanelProps {
   onClosePanel?: () => void;
 }
 
+const pick = (...vals: any[]): string => {
+  for (const v of vals) {
+    if (typeof v === 'string' && v.trim()) return v;
+    if (v && typeof v === 'object' && typeof v.name === 'string' && v.name.trim()) return v.name;
+  }
+  return '';
+};
+
 const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
   selectedNode,
   memberships,
-  onClosePanel
+  onClosePanel,
 }) => {
   const getNodeData = (nodeId: string) => {
     const [type, id] = nodeId.split('-');
+    const numId = parseInt(id, 10);
     let node;
 
     switch (type) {
       case 'division':
-        const division = Array.from(new Map(memberships.map(m =>
-          [m.division?.id, m.division])).values()).find(d => d && d.id === parseInt(id));
-        node = division;
+        node = Array.from(new Map(memberships.map(m =>
+          [m.division?.id, m.division])).values()).find(d => d && d.id === numId);
         break;
       case 'facility':
-        const facility = Array.from(new Map(memberships.map(m =>
-          [m.facility?.id, m.facility])).values()).find(f => f && f.id === parseInt(id));
-        node = facility;
+        node = Array.from(new Map(memberships.map(m =>
+          [m.facility?.id, m.facility])).values()).find(f => f && f.id === numId);
         break;
       case 'equipment':
-        const equipment = Array.from(new Map(memberships.map(m =>
-          [m.equipment?.id, m.equipment])).values()).find(e => e && e.id === parseInt(id));
-        node = equipment;
+        node = Array.from(new Map(memberships.map(m =>
+          [m.equipment?.id, m.equipment])).values()).find(e => e && e.id === numId);
         break;
       default:
         return null;
@@ -41,8 +47,9 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
   };
 
   const renderNodeDetails = (nodeId: string) => {
-    const { type, node } = getNodeData(nodeId);
-    if (!node) return null;
+    const info = getNodeData(nodeId);
+    if (!info) return null;
+    const { type, node } = info;
 
     return (
       <div className="network-details-content-column">
@@ -50,7 +57,9 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
           <>
             <div className="network-details-item-panel">
               <div className="network-details-label">Тип объекта:</div>
-              <div className="network-details-value">{node.type?.name || 'Не указан'}</div>
+              <div className="network-details-value">
+                {pick(node.facility_type_display, node.type_display, node.category, node.facility_type, node.type) || 'Не указан'}
+              </div>
             </div>
             <div className="network-details-item-panel">
               <div className="network-details-label">Адрес:</div>
@@ -60,12 +69,17 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
               <div className="network-details-label">Класс объекта:</div>
               <div className="network-details-value">{node.class_display || 'Не указан'}</div>
             </div>
-
           </>
         )}
 
         {type === 'equipment' && (
           <>
+            <div className="network-details-item-panel">
+              <div className="network-details-label">Тип устройства:</div>
+              <div className="network-details-value">
+                {pick(node.device_type_display, node.category, node.device_type) || 'Не указан'}
+              </div>
+            </div>
             <div className="network-details-item-panel">
               <div className="network-details-label">Заводской номер:</div>
               <div className="network-details-value">{node.serial_number || 'Не указан'}</div>
@@ -82,37 +96,27 @@ const NetworkDetailsPanel: React.FC<NetworkDetailsPanelProps> = ({
 
   const getNodeTitle = () => {
     if (!selectedNode) return 'Детали';
-
-    const { type, node } = getNodeData(selectedNode);
-    if (!node) return 'Детали';
-
-    return node.name || 'Без названия';
+    const info = getNodeData(selectedNode);
+    return info?.node?.name || 'Без названия';
   };
 
-  // Не показываем панель для подразделений
-  if (selectedNode && selectedNode.startsWith('division-')) {
-    return null;
-  }
+  if (selectedNode && selectedNode.startsWith('division-')) return null;
 
   return (
-    <div className={`network-visualization-details ${selectedNode ? 'active' : ''}`}
-      onClick={(e) => e.stopPropagation()} >
+    <div
+      className={`network-visualization-details ${selectedNode ? 'active' : ''}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="network-visualization-details-header">
-        <h4 className="network-visualization-details-title">
-          {getNodeTitle()}
-        </h4>
+        <h4 className="network-visualization-details-title">{getNodeTitle()}</h4>
         <div className="network-visualization-details-actions">
           {selectedNode && onClosePanel && (
             <button
               className="network-details-close-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onClosePanel?.();
-              }}
+              onClick={(e) => { e.stopPropagation(); onClosePanel(); }}
               aria-label="Закрыть панель"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           )}
         </div>

@@ -1,24 +1,25 @@
-/* NetworksTable.css – обновлённый, с единым стилем */
+/* NetworksTable.css – строка + inline-раскрытие с полной рабочей областью */
 
-/* Контейнеры и панель фильтров (без изменений, кроме цветов фона) */
+/* ==================== Контейнер / фильтры ==================== */
 .nt-container {
     width: 100%;
 }
 
 .nt-search-filters-panel {
-    background: white;
+    background: #ffffff;
     border-radius: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid #f1f5f9;
+    border: 1px solid #e2e8f0;
     margin-bottom: 1rem;
     overflow: hidden;
 }
 
+/* ===== Поисковая строка ===== */
 .nt-search-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px;
+    padding: 14px 16px;
     gap: 12px;
 }
 
@@ -33,24 +34,61 @@
     top: 50%;
     transform: translateY(-50%);
     color: #64748b;
+    pointer-events: none;
 }
 
 .nt-search-input {
     width: 100%;
-    padding: 10px 12px 10px 40px;
+    padding: 10px 40px 10px 40px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     font-size: 0.9rem;
-    background: white;
-    transition: all 0.2s;
+    font-family: inherit;
+    background: #ffffff;
+    color: #0f172a;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.nt-search-input::placeholder {
+    color: #94a3b8;
+}
+
+.nt-search-input:hover:not(:focus) {
+    border-color: #cbd5e1;
 }
 
 .nt-search-input:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
+/* Кнопка «очистить поиск» внутри инпута */
+.nt-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.nt-search-clear:hover {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+/* ===== Кнопки справа от поиска ===== */
 .nt-search-actions {
     display: flex;
     align-items: center;
@@ -58,17 +96,20 @@
 }
 
 .nt-filters-toggle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: none;
+    gap: 6px;
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    padding: 8px 12px;
+    padding: 0 12px;
     border-radius: 8px;
     cursor: pointer;
     color: #64748b;
     font-size: 0.9rem;
-    transition: all 0.2s;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
     position: relative;
     min-width: 44px;
     height: 40px;
@@ -83,93 +124,211 @@
 .nt-filters-toggle.active {
     background: #eff6ff;
     border-color: #3b82f6;
-    color: #2563eb;
+    color: #1d4ed8;
 }
 
-.nt-active-filters-dot {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
+/* Счётчик активных фильтров */
+.nt-filters-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
     background: #ef4444;
-    border-radius: 50%;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.nt-filters-toggle.active .nt-filters-count {
+    background: #2563eb;
 }
 
 .nt-clear-filters {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: none;
+    gap: 4px;
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    padding: 8px;
+    padding: 0 10px;
     border-radius: 8px;
     cursor: pointer;
     color: #64748b;
-    transition: all 0.2s;
-    min-width: 40px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
     height: 40px;
 }
 
 .nt-clear-filters:hover {
-    color: #ef4444;
+    color: #dc2626;
     background: #fef2f2;
     border-color: #fecaca;
 }
 
+/* ===== Панель фильтров ===== */
 .nt-filters-content {
     padding: 16px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
     background: #fafbfc;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid #e2e8f0;
 }
 
 .nt-filter-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
 }
 
 .nt-filter-label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
 }
 
+.nt-filter-label-icon {
+    width: 12px;
+    height: 12px;
+    color: #94a3b8;
+}
+
+.nt-filter-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Кастомный select */
 .nt-filter-select {
-    padding: 8px 12px;
+    width: 100%;
+    padding: 8px 32px 8px 12px;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    font-size: 0.9rem;
-    background: white;
-    transition: all 0.2s;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: #0f172a;
+    background-color: #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px 14px;
+}
+
+.nt-filter-select:hover:not(:focus) {
+    border-color: #cbd5e1;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
 }
 
 .nt-filter-select:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* ===== НОВОЕ ОФОРМЛЕНИЕ ТАБЛИЦЫ ===== */
+/* Активное значение (не «Все ...») */
+.nt-filter-select--active {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.nt-filter-select--active:hover:not(:focus) {
+    border-color: #2563eb;
+}
+
+/* Маленькая «×» справа — сброс конкретного фильтра */
+.nt-filter-reset {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    border-radius: 3px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.nt-filter-reset:hover {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+/* ===== Строка «найдено N из M» ===== */
+.nt-filter-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f0f9ff;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.82rem;
+    color: #1e40af;
+}
+
+.nt-filter-summary strong {
+    font-weight: 700;
+}
+
+.nt-filter-summary__clear {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #1e40af;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.nt-filter-summary__clear:hover {
+    background: #dbeafe;
+}
+
+/* ==================== Таблица ==================== */
 .nt-wrapper {
     width: 100%;
     overflow-x: auto;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background: white;
+    background: #ffffff;
     border: 1px solid #e5e7eb;
 }
 
 .nt-table {
     width: 100%;
     border-collapse: collapse;
-    background-color: white;
+    background-color: #ffffff;
 }
 
-/* Заголовок – единый стиль как у других таблиц */
 .nt-header {
     padding: 2px 2px;
     font-size: 0.875rem;
@@ -181,13 +340,11 @@
     background-color: #eef3f8;
 }
 
-/* Специальный заголовок для колонки индекса – центрирование, небольшая ширина */
 .nt-header-index {
-    width: 50px;
+    width: 64px;
     text-transform: lowercase;
 }
 
-/* Ячейки по умолчанию – центрирование */
 .nt-cell {
     padding: 4px 16px;
     font-size: 0.875rem;
@@ -197,19 +354,39 @@
     text-align: center;
 }
 
-/* Ячейка с названием сети – выравнивание по левому краю */
 .nt-cell-name {
     text-align: left;
     font-weight: 500;
 }
 
-/* Ячейка индекса – фиксированная ширина */
 .nt-cell-index {
-    width: 50px;
-    text-align: center;
+    width: 64px;
+    text-align: left;
+    padding-left: 10px;
+    white-space: nowrap;
 }
 
-/* Строки таблицы */
+.nt-expand-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    vertical-align: middle;
+    color: #94a3b8;
+    transition: color 0.15s, transform 0.15s;
+}
+
+.nt-row:hover .nt-expand-toggle {
+    color: #0ea5e9;
+}
+
+.nt-index-num {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .nt-row {
     transition: background-color 0.2s;
     cursor: pointer;
@@ -219,8 +396,15 @@
     background-color: #f8fafc;
 }
 
-.nt-row.selected {
+.nt-row.expanded {
     background-color: #f0f9ff;
+}
+
+.nt-row.expanded .nt-expand-toggle {
+    color: #0ea5e9;
+}
+
+.nt-row.selected {
     position: relative;
 }
 
@@ -235,7 +419,7 @@
     border-radius: 2px;
 }
 
-/* Бейджи класса сети */
+/* ===== Бейджи класса/секретности в строке ===== */
 .nt-class-cell {
     display: inline-block;
     font-weight: 600;
@@ -244,11 +428,9 @@
     border-radius: 10px;
 }
 
-/* Бейджи секретности (оставлены без изменений) */
 .nt-security-public {
     display: inline-block;
-    color: #10b981;
-    background: #ecfdf5;
+    color: #137453d8;
     padding: 4px 12px;
     border-radius: 20px;
     font-weight: 500;
@@ -256,7 +438,7 @@
 
 .nt-security-confidential {
     display: inline-block;
-    color: #f59e0b;
+    color: #f59f0bcc;
     background: #fffbeb;
     padding: 4px 12px;
     border-radius: 20px;
@@ -265,7 +447,7 @@
 
 .nt-security-secret {
     display: inline-block;
-    color: #ef4444;
+    color: #bc0a0abc;
     padding: 2px 12px;
     border-radius: 20px;
     font-weight: 500;
@@ -280,7 +462,7 @@
     font-weight: 500;
 }
 
-/* Кнопки действий – единый стиль */
+/* ==================== Кнопки действий в строке ==================== */
 .nt-actions-container {
     display: flex;
     gap: 8px;
@@ -312,7 +494,7 @@
     background-color: #fee2e2;
 }
 
-/* Пустое сообщение */
+/* ==================== Пустое состояние ==================== */
 .nt-empty-state {
     text-align: center;
     padding: 40px 20px;
@@ -320,7 +502,70 @@
     font-size: 0.95rem;
 }
 
-/* Адаптивность (сохранена) */
+/* ==================== Inline-раскрытие ==================== */
+.nt-details-row td {
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.nt-details-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.nt-details-row.open .nt-details-panel {
+    grid-template-rows: 1fr;
+}
+
+.nt-details-inner {
+    overflow: hidden;
+    padding: 0 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border-top: 0 solid #e2e8f0;
+    border-bottom: 0 solid #e2e8f0;
+    transition:
+        padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        border-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nt-details-row.open .nt-details-inner {
+    padding: 16px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.nt-details-description {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-width: 900px;
+    padding-bottom: 4px;
+}
+
+/* ===== Состояние загрузки рабочей области внутри inline-раскрытия ===== */
+.cn-visual-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 40px;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* ===== Схема внутри раскрытой строки таблицы ===== */
+.nt-details-inner .cn-visual-area {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ==================== Адаптив ==================== */
 @media (max-width: 1024px) {
     .nt-header {
         padding: 10px 12px;
@@ -350,10 +595,15 @@
 
     .nt-filters-content {
         grid-template-columns: 1fr;
+        padding: 12px;
     }
 
     .nt-table {
         min-width: 600px;
+    }
+
+    .nt-details-row.open .nt-details-inner {
+        padding: 12px;
     }
 }
 
@@ -363,7 +613,17 @@
     }
 
     .nt-filters-content {
-        padding: 12px;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .nt-filter-label {
+        font-size: 0.7rem;
+    }
+
+    .nt-filter-select {
+        font-size: 0.84rem;
+        padding: 7px 30px 7px 10px;
     }
 
     .nt-header {
@@ -372,5 +632,10 @@
 
     .nt-cell {
         padding: 8px 12px;
+    }
+
+    .nt-filter-summary {
+        padding: 8px 12px;
+        font-size: 0.78rem;
     }
 }

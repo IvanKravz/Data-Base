@@ -74,8 +74,36 @@ class Equipment(models.Model):
         ('DSP', 'ДСП'),
     ]
 
+    DEVICE_TYPES = [
+        ('switch', 'Коммутатор'),
+        ('router', 'Маршрутизатор'),
+        ('firewall', 'МСЭ / Firewall'),
+        ('server', 'Сервер'),
+        ('workstation', 'АРМ / ПК'),
+        ('patch-panel', 'Патч-панель'),
+        ('media-converter', 'Медиаконвертер'),
+        ('pbx', 'УАТС / АТС'),
+        ('modem', 'Модем'),
+        ('szi', 'СЗИ'),
+        ('other', 'Другое'),
+    ]
+
     name = models.CharField(max_length=255, verbose_name='Название')
-    type = models.CharField(max_length=255, verbose_name='Тип', null=True, blank=True)
+    type = models.CharField(
+        max_length=255, verbose_name='Тип', null=True, blank=True,
+    )   # остаётся свободным текстом для не-сетевой техники
+
+    device_type = models.CharField(
+        max_length=32, choices=DEVICE_TYPES,
+        verbose_name='Тип сетевого устройства',
+        null=True, blank=True,
+        help_text='Заполняется только для сетевого оборудования',
+    )
+    total_ports = models.PositiveIntegerField(
+        null=True, blank=True,
+        verbose_name='Всего портов',
+        help_text='Физическое количество портов (для сетевого оборудования)',
+    )
     is_closed = models.BooleanField(default=False, verbose_name='Закрытая техника')
     is_network = models.BooleanField(default=False, verbose_name='Сетевое оборудование')
     category = models.ForeignKey(
@@ -220,6 +248,12 @@ class Equipment(models.Model):
     def is_szi(self) -> bool:
         """Является ли техника средством защиты информации."""
         return bool(self.category and self.category.value == 'szi')
+
+    @property
+    def device_type_display(self) -> str:
+        if not self.device_type:
+            return ''
+        return dict(self.DEVICE_TYPES).get(self.device_type, self.device_type)
 
 
 class ProductStructure(models.Model):

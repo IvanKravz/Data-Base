@@ -39,6 +39,16 @@ class Employee(models.Model):
         ('deputy_section_head', 'Заместитель начальника отделения'),
     ]
 
+    FORM_STATE_CHOICES = [
+        ('1', '1 форма'),
+        ('2', '2 форма'),
+        ('3', '3 форма'),
+    ]
+
+    @classmethod
+    def get_form_state_choices(cls):
+        return cls.FORM_STATE_CHOICES
+
     @classmethod
     def get_category_choices(cls):
         return cls.CATEGORY_CHOICES
@@ -135,7 +145,13 @@ class Employee(models.Model):
     work_phone = models.CharField(max_length=50, verbose_name='Телефон', null=True)
     birth_date = models.DateField(verbose_name='Дата рождения', null=True, blank=True)
     contract_date = models.DateField(verbose_name='Дата контракта', null=True, blank=True)
-    form_state_secrets = models.CharField(max_length=15, verbose_name='Форма гостайны', null=True, blank=True)
+    form_state_secrets = models.CharField(
+        max_length=15,
+        verbose_name='Форма гостайны',
+        null=True,
+        blank=True,
+        choices=FORM_STATE_CHOICES,
+    )
     number_state_secrets = models.CharField(max_length=15, verbose_name='Номер допуска', null=True, blank=True)
     data_state_secrets = models.DateField(verbose_name='Дата допуска', null=True, blank=True)
     education = models.CharField(max_length=50, verbose_name='Уровень образования', null=True, blank=True)

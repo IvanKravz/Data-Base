@@ -6,7 +6,7 @@
     --color-text-secondary: #334155;
     --color-text-label: #64748b;
     --color-border: #e2e8f0;
-    --color-accent: #2563eb;
+    --color-accent: #2663e6af;
     --color-accent-light: #eff6ff;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
@@ -366,7 +366,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-left: 1rem;
 }
 
 /* ===== Информационные поля ===== */
@@ -507,7 +506,6 @@ body {
 
 .security-badge {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
     border-radius: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
@@ -533,7 +531,6 @@ body {
 
 .class-badge {
     display: inline-block;
-    padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
     font-weight: 600;
@@ -620,6 +617,221 @@ body {
     color: var(--color-text-label);
     font-style: italic;
     font-size: 1rem;
+}
+
+/* ============================================================
+   NetworkInfo — таблица сетей связи оборудования
+   Префикс eqnet-* для изоляции от остальных стилей.
+   ============================================================ */
+
+.eqnet-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    overflow: hidden;
+}
+
+.eqnet-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.eqnet-card__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.01em;
+}
+
+.eqnet-card__title-icon {
+    color: var(--color-accent);
+}
+
+.eqnet-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.25rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.eqnet-card__scroll {
+    overflow-x: auto;
+}
+
+/* --- Таблица --- */
+.eqnet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 720px;
+}
+
+.eqnet-th {
+    background: #f8fafc;
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-label);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.eqnet-td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--color-text-primary);
+    vertical-align: middle;
+}
+
+.eqnet-row:last-child .eqnet-td {
+    border-bottom: none;
+}
+
+.eqnet-row:hover .eqnet-td {
+    background: #f8fafc;
+}
+
+/* --- Ячейки --- */
+.eqnet-th--name,
+.eqnet-td--name {
+    min-width: 200px;
+}
+
+.eqnet-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    word-break: break-word;
+}
+
+.eqnet-th--class,
+.eqnet-td--class {
+    width: 100px;
+}
+
+.eqnet-class-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    color: var(--color-text-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* --- Секретность (бейдж) --- */
+.eqnet-th--security,
+.eqnet-td--security {
+    width: 170px;
+}
+
+.eqnet-security {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    color: var(--color-text-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+/* --- IP-диапазон --- */
+.eqnet-th--ip,
+.eqnet-td--ip {
+    width: 160px;
+}
+
+.eqnet-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* --- Пропускная способность --- */
+.eqnet-th--throughput,
+.eqnet-td--throughput {
+    width: 150px;
+}
+
+.eqnet-throughput {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #0f766e;
+}
+
+.eqnet-throughput__unit {
+    margin-left: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-text-label);
+    text-transform: lowercase;
+}
+
+/* --- Протокол --- */
+.eqnet-th--protocol,
+.eqnet-td--protocol {
+    width: 110px;
+}
+
+.eqnet-protocol {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+/* --- Утилиты --- */
+.eqnet-muted {
+    color: var(--color-text-label);
+    font-size: 0.85rem;
+}
+
+/* ============================================================
+   Адаптив
+   ============================================================ */
+@media (max-width: 640px) {
+    .eqnet-card__head {
+        padding: 0.5rem 0.6rem;
+    }
+
+    .eqnet-th,
+    .eqnet-td {
+        padding: 0.45rem 0.5rem;
+        font-size: 0.78rem;
+    }
+
+    .eqnet-th {
+        font-size: 0.66rem;
+    }
+
+    .eqnet-class-badge,
+    .eqnet-security {
+        font-size: 0.68rem;
+    }
 }
 
 /* ===== Адаптив ===== */

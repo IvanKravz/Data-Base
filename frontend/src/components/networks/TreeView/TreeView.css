@@ -1,0 +1,87 @@
+.tree-view {
+    padding: 4px;
+}
+
+.tree-view__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 12px 0;
+}
+
+.tree-node {
+    margin-bottom: 2px;
+}
+
+.tree-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.9rem;
+}
+
+.tree-item:hover {
+    background: #f1f5f9;
+}
+
+.tree-item.highlighted {
+    background: #dbeafe;
+}
+
+.tree-item--division {
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.tree-item--facility {
+    color: #0369a1;
+}
+
+.tree-item--equipment {
+    color: #475569;
+}
+
+.tree-toggle {
+    display: inline-flex;
+    transition: transform 0.15s;
+}
+
+.tree-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.tree-children {
+    margin-left: 22px;
+    padding-left: 12px;
+    border-left: 2px dashed #e2e8f0;
+    padding-top: 2px;
+}
+
+.tree-children--deep {
+    margin-left: 18px;
+}
+
+.tree-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.tree-empty-note {
+    padding: 6px 10px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.tree-muted {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}

@@ -186,11 +186,12 @@ class EquipmentSerializer(serializers.ModelSerializer):
 
     network_interfaces_count = serializers.IntegerField(read_only=True)
     ip_addresses_count = serializers.IntegerField(read_only=True)
+    device_type_display = serializers.ReadOnlyField()
 
     class Meta:
         model = Equipment
         fields = [
-            'id', 'name', 'type', 'is_closed', 'is_network', 'category', 'category_display',
+            'id', 'name', 'type', 'device_type', 'device_type_display', 'is_closed', 'is_network', 'category', 'category_display',
             'status', 'status_display', 'serial_number', 'inventory_number',
             'first_invoice', 'material_invoice', 'ver_software', 'product_structures',
             'manufacturing_date', 'exploitation_date', 'division', 'subdivision',
@@ -201,13 +202,14 @@ class EquipmentSerializer(serializers.ModelSerializer):
             'service_life',
             'interest_organ', 'interest_organ_id',
             'secret_level', 'secret_level_display',
-            'is_free_use', 'free_use_act_number',
+            'is_free_use', 'free_use_act_number', 'total_ports',
             # СЗИ
             'is_szi', 'szi_certificate_number', 'szi_certificate_date',
         ]
         extra_kwargs = {
             'division': {'write_only': True},
             'subdivision': {'write_only': True},
+            'device_type': {'required': False, 'allow_null': True},
             'facility': {'write_only': True},
             'interest_organ': {'write_only': True}
         }

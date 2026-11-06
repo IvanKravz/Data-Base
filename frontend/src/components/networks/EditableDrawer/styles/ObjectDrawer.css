@@ -1,0 +1,451 @@
+/* ============================================================
+   ObjectDrawer — выдвижная панель справа (не модальная)
+   ============================================================ */
+
+.object-drawer {
+    position: relative;
+    width: 420px;
+    min-width: 0;
+    margin-right: -420px;
+    transition:
+        margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        border-left-color 0.3s ease;
+}
+
+.object-drawer--open {
+    margin-right: 0;
+    border-left-color: #e2e8f0;
+}
+
+/* ===== Шапка ===== */
+.object-drawer__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    flex: 0 0 auto;
+}
+
+.object-drawer__head-actions {
+    display: flex;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.object-drawer__title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.object-drawer__title h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.object-drawer__type {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #64748b;
+    background: #f1f5f9;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+.object-drawer__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.object-drawer__close:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* ===== Вкладки ===== */
+.object-drawer__tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    flex: 0 0 auto;
+}
+
+.object-drawer__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: #475569;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.object-drawer__tab:hover {
+    background: #f1f5f9;
+}
+
+.object-drawer__tab.active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+/* ===== Тело ===== */
+.object-drawer__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 16px 18px;
+    min-height: 0;
+}
+
+.object-drawer__placeholder {
+    color: #94a3b8;
+    padding: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* ===== Info panel ===== */
+.object-info__empty {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 20px 0;
+    line-height: 1.5;
+}
+
+.object-info__list {
+    display: grid;
+    grid-template-columns: minmax(120px, max-content) 1fr;
+    gap: 8px 16px;
+    margin: 0;
+}
+
+.object-info__row {
+    display: contents;
+}
+
+.object-info__row dt {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.object-info__row dd {
+    margin: 0;
+    color: #0f172a;
+    font-size: 0.88rem;
+    word-break: break-word;
+}
+
+/* ===== Формы в drawer (используется DirectionEditor) ===== */
+.object-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.88rem;
+}
+
+.object-settings label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #475569;
+}
+
+.object-settings input,
+.object-settings select,
+.object-settings textarea {
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    background: #fff;
+}
+
+.object-settings input:disabled,
+.object-settings select:disabled,
+.object-settings textarea:disabled {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.object-settings__check {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.object-settings__save {
+    align-self: flex-start;
+}
+
+.object-settings__error {
+    padding: 8px 10px;
+    background: #fef2f2;
+    color: #991b1b;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+    font-size: 0.82rem;
+}
+
+/* ===== Мини-таблицы (IP, VLAN, Routing, ACL) ===== */
+.drawer-mini-scroll {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.drawer-mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.drawer-mini-table th,
+.drawer-mini-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+}
+
+.drawer-mini-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+}
+
+.drawer-mini-table code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+    background: #f1f5f9;
+    border-radius: 4px;
+    padding: 1px 4px;
+}
+
+.drawer-mini-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* ===== Бейджи ===== */
+.badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.badge--ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge--danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge--ip-free {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.badge--ip-reserved {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge--ip-in_use {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge--ip-deprecated {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ===== Кнопки ===== */
+.btn-danger {
+    padding: 6px 12px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* ============================================================
+   Fallback: минимальные стили из EquipmentDrawer.css
+   Используется, если ObjectDrawer открывается в дереве,
+   где EquipmentDrawer.css не подключён.
+   ============================================================ */
+
+.muted {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.mono {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+}
+
+.flex-spacer {
+    flex: 1;
+}
+
+/* Кнопки-иконки в списке интерфейсов */
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #64748b;
+}
+
+.icon-btn:hover {
+    color: #1e293b;
+}
+
+.icon-btn--danger {
+    color: #dc2626;
+}
+
+.icon-btn--danger:hover {
+    color: #991b1b;
+}
+
+/* Карточка интерфейса */
+.iface-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.iface-card__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.interfaces-tab__toolbar {
+    margin-bottom: 12px;
+}
+
+/* Бейджи */
+.badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.badge--trunk {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge--vlan {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge--primary {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* IP-плашки */
+.ip-addresses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.ip-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    background: #fff;
+}
+
+.ip-pill__remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+}
+
+.ip-pill__remove:hover {
+    color: #dc2626;
+}
+
+.btn-ghost {
+    background: none;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-ghost:hover {
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+/* ===== Мобильный режим ===== */
+@media (max-width: 992px) {
+    .object-drawer--open {
+        width: 100%;
+        min-width: 0;
+        max-height: 60vh;
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+    }
+}

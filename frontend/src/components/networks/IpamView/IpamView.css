@@ -1,0 +1,148 @@
+.ipam-view {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ipam-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.ipam-subnet {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ipam-subnet__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ipam-subnet__head:hover {
+    background: #f1f5f9;
+}
+
+.ipam-toggle {
+    display: inline-flex;
+    transition: transform 0.15s;
+}
+
+.ipam-toggle.expanded {
+    transform: rotate(90deg);
+}
+
+.ipam-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ipam-badge--muted {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.ipam-bar {
+    flex: 1;
+    min-width: 60px;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.ipam-bar__fill {
+    display: block;
+    height: 100%;
+    background: #3b82f6;
+}
+
+.ipam-bar__label {
+    font-size: 0.8rem;
+    color: #475569;
+    min-width: 60px;
+    text-align: right;
+}
+
+.ipam-subnet__body {
+    padding: 12px 14px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ipam-host-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+.ipam-host-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.85rem;
+}
+
+.ipam-host-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ipam-host {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.ipam-host--used {
+    background: #f0f9ff;
+}
+
+.ipam-status {
+    font-size: 0.72rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.ipam-status--free {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.ipam-status--in_use {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ipam-status--reserved {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ipam-status--deprecated {
+    background: #fee2e2;
+    color: #991b1b;
+}

@@ -128,6 +128,12 @@
   margin-top: 2px;
 }
 
+.tv-category-cell {
+  justify-content: center;
+  display: flex;
+  gap: 0.5rem
+}
+
 .tv-status-icon {
   width: 0.875rem;
   height: 0.875rem;
@@ -195,6 +201,37 @@
 /* Подсветка найденных строк */
 .tv-table-row-highlighted {
   background-color: #fef9c3;
+}
+
+.tv-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tv-name-text {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.tv-badge-network {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #eff6ff70;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.tv-device-type {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 2px;
+  text-align: left;
 }
 
 /* Адаптивные стили */

@@ -13,7 +13,10 @@ import { exportPersonnelToExcel } from '../../../utils/exportToExcel';
 import { deletePersonAsync } from '../../../store/slices/personnelSlice';
 import { employeesApi, divisionsApi } from '../../../api';
 import { setEmployee } from '../../../store/slices/personnelSlice';
-import { PersonnelAdvancedSearchModal } from '../../personnel/forms/PersonnelAdvancedSearchModal/PersonnelAdvancedSearchModal';
+import {
+  PersonnelAdvancedSearchModal,
+  PersonnelAdvancedSearchFilters,
+} from '../../personnel/forms/PersonnelAdvancedSearchModal/PersonnelAdvancedSearchModal';
 import './style.css';
 
 interface PersonnelListProps {
@@ -28,15 +31,6 @@ interface PersonnelListProps {
   onDeleteSuccess?: (deletedId: string) => void;
 }
 
-interface PersonnelAdvancedSearchFilters {
-  ranks: string[];
-  positions: string[];
-  divisions: string[];
-  subdivisions: string[];
-  networkClasses: string[];
-  gtForms: string[];
-}
-
 interface StaffCounts {
   all: number;
   management: number;
@@ -49,6 +43,55 @@ type DivisionTabKey = string | 'all';
 type SubdivisionTabKey = string | 'all' | 'no-subdivision';
 
 type MainFilterType = 'all' | 'management' | 'officers' | 'warrantOfficers' | 'civilian' | 'mol' | 'sha';
+
+// ============================================================
+// Пустые фильтры (единый объект для инициализации и сброса)
+// ============================================================
+const EMPTY_ADVANCED_FILTERS: PersonnelAdvancedSearchFilters = {
+  ranks: [],
+  positions: [],
+  gtForms: [],
+  divisions: [],
+  subdivisions: [],
+  networkClasses: [],
+  categories: [],
+  isMaterialResponsible: false,
+  isShaWorker: false,
+};
+
+// ============================================================
+// Хелпер: есть ли активные фильтры
+// ============================================================
+function hasAnyActiveFilter(f: PersonnelAdvancedSearchFilters): boolean {
+  return (
+    f.ranks.length > 0 ||
+    f.positions.length > 0 ||
+    f.gtForms.length > 0 ||
+    f.divisions.length > 0 ||
+    f.subdivisions.length > 0 ||
+    f.networkClasses.length > 0 ||
+    f.categories.length > 0 ||
+    f.isMaterialResponsible ||
+    f.isShaWorker
+  );
+}
+
+// ============================================================
+// Хелпер: подписи для значений фильтров
+// ============================================================
+const CATEGORY_LABELS: Record<string, string> = {
+  management: 'Руководство',
+  officer: 'Офицер',
+  warrant_officer: 'Прапорщик',
+  civilian: 'Гражданский персонал',
+};
+
+// Соответствует Employee.FORM_STATE_CHOICES на бэкенде
+const FORM_STATE_LABELS: Record<string, string> = {
+  '1': '1 форма',
+  '2': '2 форма',
+  '3': '3 форма',
+};
 
 export function PersonnelList({
   selectedDivision = 'all',
@@ -69,7 +112,7 @@ export function PersonnelList({
     management: 0,
     officers: 0,
     warrant_officers: 0,
-    civilian: 0
+    civilian: 0,
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
@@ -94,23 +137,22 @@ export function PersonnelList({
   // Поиск и расширенные фильтры
   const [searchTerm, setSearchTerm] = useState('');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState<PersonnelAdvancedSearchFilters>({
-    ranks: [],
-    positions: [],
-    divisions: [],
-    subdivisions: [],
-    networkClasses: [],
-    gtForms: []
-  });
+  const [advancedFilters, setAdvancedFilters] = useState<PersonnelAdvancedSearchFilters>(
+    EMPTY_ADVANCED_FILTERS,
+  );
 
   const user = useSelector((state: RootState) => state.auth.user);
   const permissions = user?.permissions;
 
-  const hasEditPermission = useMemo(() =>
-    permissions?.models?.Employee?.includes('change') ?? false, [permissions]);
+  const hasEditPermission = useMemo(
+    () => permissions?.models?.Employee?.includes('change') ?? false,
+    [permissions],
+  );
 
-  const hasViewPermission = useMemo(() =>
-    permissions?.models?.Employee?.includes('view') ?? false, [permissions]);
+  const hasViewPermission = useMemo(
+    () => permissions?.models?.Employee?.includes('view') ?? false,
+    [permissions],
+  );
 
   const token = localStorage.getItem('accessToken');
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +230,7 @@ export function PersonnelList({
       management: acc.management + (d.staff_planned_management || 0),
       officers: acc.officers + (d.staff_planned_officers || 0),
       warrant_officers: acc.warrant_officers + (d.staff_planned_warrant_officers || 0),
-      civilian: acc.civilian + (d.staff_planned_civilian || 0)
+      civilian: acc.civilian + (d.staff_planned_civilian || 0),
     }), { all: 0, management: 0, officers: 0, warrant_officers: 0, civilian: 0 });
   };
 
@@ -199,7 +241,7 @@ export function PersonnelList({
         if (!division && !externalPersonnel) {
           const [personnelData, divisionsData] = await Promise.all([
             employeesApi.getPersonnel(token, {}),
-            divisionsApi.getDivisions(token)
+            divisionsApi.getDivisions(token),
           ]);
           const sortedData = sortEmployeesByPriority(personnelData);
           setAllPersonnel(sortedData);
@@ -225,162 +267,206 @@ export function PersonnelList({
 
   // ============ ФИЛЬТРАЦИЯ ============
 
-  // Применяет все «независимые» фильтры: категория + поиск + расширенные.
-  // Используется и для таблицы, и для подсчёта на вкладках, чтобы цифры всегда
-  // сходились: «N» на вкладке == числу строк в таблице при её выборе.
   const applyAllFilters = useCallback((items: Employee[]): Employee[] => {
     let filtered = items;
 
-    filtered = filtered.filter(person => {
+    // 1) Основная категория
+    filtered = filtered.filter((person) => {
       let matchesCategory = true;
       switch (activeFilter) {
-        case 'management': matchesCategory = person.category === 'management'; break;
-        case 'officers':
-          if (selectedOfficerFilter === 'with_management') matchesCategory = person.category === 'officer' || person.category === 'management';
-          else if (selectedOfficerFilter === 'without_management') matchesCategory = person.category === 'officer';
-          else matchesCategory = person.category === 'officer' || person.category === 'management';
+        case 'management':
+          matchesCategory = person.category === 'management';
           break;
-        case 'warrantOfficers': matchesCategory = person.category === 'warrant_officer'; break;
-        case 'civilian': matchesCategory = person.category === 'civilian'; break;
-        case 'mol': matchesCategory = person.is_material_responsible; break;
+        case 'officers':
+          if (selectedOfficerFilter === 'with_management') {
+            matchesCategory = person.category === 'officer' || person.category === 'management';
+          } else if (selectedOfficerFilter === 'without_management') {
+            matchesCategory = person.category === 'officer';
+          } else {
+            matchesCategory = person.category === 'officer' || person.category === 'management';
+          }
+          break;
+        case 'warrantOfficers':
+          matchesCategory = person.category === 'warrant_officer';
+          break;
+        case 'civilian':
+          matchesCategory = person.category === 'civilian';
+          break;
+        case 'mol':
+          matchesCategory = person.is_material_responsible;
+          break;
         case 'sha':
           matchesCategory = person.is_sha_worker;
-          if (matchesCategory && selectedAccessClass !== 'all') matchesCategory = person.sha_details?.access_level === selectedAccessClass;
+          if (matchesCategory && selectedAccessClass !== 'all') {
+            matchesCategory = person.sha_details?.access_level === selectedAccessClass;
+          }
           break;
-        default: break;
+        default:
+          break;
       }
       return matchesCategory;
     });
 
+    // 2) Поиск
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(person =>
+      filtered = filtered.filter((person) =>
         person.full_name.toLowerCase().includes(searchLower) ||
         (person.position && person.position.toLowerCase().includes(searchLower)) ||
         (person.division?.name && person.division.name.toLowerCase().includes(searchLower)) ||
         (person.subdivision?.name && person.subdivision.name.toLowerCase().includes(searchLower)) ||
         (person.rank && person.rank.toLowerCase().includes(searchLower)) ||
         (person.personal_phone && person.personal_phone.includes(searchLower)) ||
-        (person.work_phone && person.work_phone.includes(searchLower))
+        (person.work_phone && person.work_phone.includes(searchLower)),
       );
     }
 
+    // 3) Расширенные фильтры — массивы
     if (advancedFilters.ranks.length) {
-      filtered = filtered.filter(person => advancedFilters.ranks.some(r => person.rank?.toLowerCase().includes(r.toLowerCase())));
+      filtered = filtered.filter((person) =>
+        advancedFilters.ranks.some((r) => person.rank?.toLowerCase().includes(r.toLowerCase())),
+      );
     }
     if (advancedFilters.positions.length) {
-      filtered = filtered.filter(person => advancedFilters.positions.some(p => person.position?.toLowerCase().includes(p.toLowerCase())));
+      filtered = filtered.filter((person) =>
+        advancedFilters.positions.some((p) => person.position?.toLowerCase().includes(p.toLowerCase())),
+      );
     }
     if (advancedFilters.divisions.length) {
-      filtered = filtered.filter(person => advancedFilters.divisions.some(d => person.division?.name?.toLowerCase().includes(d.toLowerCase())));
+      filtered = filtered.filter((person) =>
+        advancedFilters.divisions.some((d) => person.division?.name?.toLowerCase().includes(d.toLowerCase())),
+      );
     }
     if (advancedFilters.subdivisions.length) {
-      filtered = filtered.filter(person => advancedFilters.subdivisions.some(s => person.subdivision?.name?.toLowerCase().includes(s.toLowerCase())));
+      filtered = filtered.filter((person) =>
+        advancedFilters.subdivisions.some((s) => person.subdivision?.name?.toLowerCase().includes(s.toLowerCase())),
+      );
     }
     if (advancedFilters.networkClasses.length) {
-      filtered = filtered.filter(person => advancedFilters.networkClasses.some(nc => person.sha_details?.access_level?.toString() === nc));
+      filtered = filtered.filter((person) =>
+        advancedFilters.networkClasses.some((nc) => person.sha_details?.access_level?.toString() === nc),
+      );
     }
     if (advancedFilters.gtForms.length) {
-      filtered = filtered.filter(person => advancedFilters.gtForms.some(gf => person.form_state_secrets === gf));
+      filtered = filtered.filter((person) =>
+        advancedFilters.gtForms.some((gf) => person.form_state_secrets === gf),
+      );
+    }
+
+    // 4) Категории (мультивыбор)
+    if (advancedFilters.categories.length) {
+      filtered = filtered.filter((person) =>
+        advancedFilters.categories.includes(person.category),
+      );
+    }
+
+    // 5) МОЛ (boolean)
+    if (advancedFilters.isMaterialResponsible) {
+      filtered = filtered.filter((person) => person.is_material_responsible);
+    }
+
+    // 6) ШаРаботник (boolean)
+    if (advancedFilters.isShaWorker) {
+      filtered = filtered.filter((person) => person.is_sha_worker);
     }
 
     return filtered;
-  }, [activeFilter, selectedOfficerFilter, selectedAccessClass, searchTerm, advancedFilters]);
+  }, [
+    activeFilter,
+    selectedOfficerFilter,
+    selectedAccessClass,
+    searchTerm,
+    advancedFilters,
+  ]);
 
   // Всё, что попадёт в таблицу БЕЗ ограничения по вкладке.
   const fullyFilteredPersonnel = useMemo(
     () => applyAllFilters(basePersonnel),
-    [basePersonnel, applyAllFilters]
+    [basePersonnel, applyAllFilters],
   );
 
-  // Скоуп-данные (только по вкладке, без фильтров) — используются для «По списку» / «По штату».
+  // Скоуп-данные (только по вкладке, без фильтров) — для «По списку» / «По штату».
   const scopedPersonnel = useMemo(() => {
     let filtered = basePersonnel;
 
     if (viewMode === 'flat') {
       if (subdivisionId) {
-        filtered = filtered.filter(p => String(p.subdivision?.id) === String(subdivisionId));
+        filtered = filtered.filter((p) => String(p.subdivision?.id) === String(subdivisionId));
       }
       return filtered;
     }
 
     if (activeDivisionTab !== 'all') {
-      filtered = filtered.filter(p => String(p.division?.id) === String(activeDivisionTab));
+      filtered = filtered.filter((p) => String(p.division?.id) === String(activeDivisionTab));
     }
     if (activeSubdivisionTab === 'no-subdivision') {
-      filtered = filtered.filter(p => !p.subdivision?.id);
+      filtered = filtered.filter((p) => !p.subdivision?.id);
     } else if (activeSubdivisionTab !== 'all') {
-      filtered = filtered.filter(p => String(p.subdivision?.id) === String(activeSubdivisionTab));
+      filtered = filtered.filter((p) => String(p.subdivision?.id) === String(activeSubdivisionTab));
     }
     return filtered;
   }, [basePersonnel, viewMode, subdivisionId, activeDivisionTab, activeSubdivisionTab]);
 
   // Итог — то, что реально видит пользователь в таблице.
-  // Берём fullyFilteredPersonnel (уже после всех фильтров) и накладываем вкладку.
   const filteredPersonnel = useMemo(() => {
     if (viewMode === 'flat') {
       if (subdivisionId) {
-        return fullyFilteredPersonnel.filter(p => String(p.subdivision?.id) === String(subdivisionId));
+        return fullyFilteredPersonnel.filter((p) => String(p.subdivision?.id) === String(subdivisionId));
       }
       return fullyFilteredPersonnel;
     }
 
     let filtered = fullyFilteredPersonnel;
     if (activeDivisionTab !== 'all') {
-      filtered = filtered.filter(p => String(p.division?.id) === String(activeDivisionTab));
+      filtered = filtered.filter((p) => String(p.division?.id) === String(activeDivisionTab));
     }
     if (activeSubdivisionTab === 'no-subdivision') {
-      filtered = filtered.filter(p => !p.subdivision?.id);
+      filtered = filtered.filter((p) => !p.subdivision?.id);
     } else if (activeSubdivisionTab !== 'all') {
-      filtered = filtered.filter(p => String(p.subdivision?.id) === String(activeSubdivisionTab));
+      filtered = filtered.filter((p) => String(p.subdivision?.id) === String(activeSubdivisionTab));
     }
     return filtered;
   }, [fullyFilteredPersonnel, viewMode, subdivisionId, activeDivisionTab, activeSubdivisionTab]);
 
   // ============ ВКЛАДКИ ============
 
-  // Дивизионы — строим по basePersonnel (чтобы все дивизионы присутствовали),
-  // а count берём из fullyFilteredPersonnel (совпадает с таблицей).
   const divisionTabs = useMemo(() => {
     if (viewMode !== 'grouped' || division) return [];
     const map = new Map<string, { id: string; name: string; count: number; order: number }>();
-    basePersonnel.forEach(p => {
+    basePersonnel.forEach((p) => {
       if (!p.division?.id) return;
       const id = String(p.division.id);
       if (!map.has(id)) {
         map.set(id, { id, name: p.division.name, count: 0, order: (p.division as any).order ?? 9999 });
       }
     });
-    fullyFilteredPersonnel.forEach(p => {
+    fullyFilteredPersonnel.forEach((p) => {
       if (!p.division?.id) return;
       const entry = map.get(String(p.division.id));
       if (entry) entry.count++;
     });
     const tabs = Array.from(map.values()).sort((a, b) => a.order - b.order);
-    // Вкладки подразделений имеют смысл только если их ≥ 2 — иначе 'all' не нужен.
     if (tabs.length < 2) return [];
     tabs.unshift({ id: 'all', name: 'Все подразделения', count: fullyFilteredPersonnel.length, order: 0 });
     return tabs;
   }, [viewMode, division, basePersonnel, fullyFilteredPersonnel]);
 
-  // Отделения — только в рамках выбранного дивизиона.
   const subdivisionTabs = useMemo(() => {
     if (viewMode !== 'grouped') return [];
 
     const scopeDivision = division
       || (activeDivisionTab !== 'all'
-        ? allDivisions.find(d => String(d.id) === String(activeDivisionTab))
+        ? allDivisions.find((d) => String(d.id) === String(activeDivisionTab))
         : null);
 
     if (!scopeDivision) return [];
 
-    // count — из fullyFilteredPersonnel (совпадает с таблицей)
     const divisionFiltered = fullyFilteredPersonnel.filter(
-      p => String(p.division?.id) === String(scopeDivision.id)
+      (p) => String(p.division?.id) === String(scopeDivision.id),
     );
 
     const countMap = new Map<string, number>();
-    divisionFiltered.forEach(p => {
+    divisionFiltered.forEach((p) => {
       if (p.subdivision?.id) {
         const key = String(p.subdivision.id);
         countMap.set(key, (countMap.get(key) || 0) + 1);
@@ -388,22 +474,20 @@ export function PersonnelList({
     });
 
     const subs = ((scopeDivision.subdivisions || []) as any[])
-      .map(s => ({
+      .map((s) => ({
         id: String(s.id),
         name: s.name,
         count: countMap.get(String(s.id)) || 0,
         order: s.order ?? 9999,
       }))
-      .filter(s => s.count > 0)
+      .filter((s) => s.count > 0)
       .sort((a, b) => a.order - b.order);
 
-    const noSubCount = divisionFiltered.filter(p => !p.subdivision?.id).length;
+    const noSubCount = divisionFiltered.filter((p) => !p.subdivision?.id).length;
     if (noSubCount > 0) {
       subs.push({ id: 'no-subdivision', name: 'Без отделения', count: noSubCount, order: 99999 });
     }
 
-    // Вкладки отделений имеют смысл только если осмысленных вариантов ≥ 2
-    // (например, 1 отделение + «Без отделения», или 2+ отделения).
     if (subs.length < 2) return [];
 
     return [
@@ -425,7 +509,7 @@ export function PersonnelList({
     const divisions = division ? [division] : allDivisions;
     for (const d of divisions) {
       const sub = ((d.subdivisions as any[]) || []).find(
-        (s: any) => String(s.id) === String(subdivisionId)
+        (s: any) => String(s.id) === String(subdivisionId),
       );
       if (sub) {
         setActiveDivisionTab(String(d.id));
@@ -438,7 +522,7 @@ export function PersonnelList({
   // Если активной вкладки отделения больше нет в списке — сбрасываем на «все».
   useEffect(() => {
     if (activeSubdivisionTab === 'all') return;
-    const exists = subdivisionTabs.some(t => t.id === activeSubdivisionTab);
+    const exists = subdivisionTabs.some((t) => t.id === activeSubdivisionTab);
     if (!exists) setActiveSubdivisionTab('all');
   }, [subdivisionTabs, activeSubdivisionTab]);
 
@@ -518,7 +602,7 @@ export function PersonnelList({
     }
 
     if (activeDivisionTab !== 'all') {
-      const div = allDivisions.find(d => String(d.id) === String(activeDivisionTab)) || null;
+      const div = allDivisions.find((d) => String(d.id) === String(activeDivisionTab)) || null;
       if (!div) return { division: null as Division | null, subdivision: null as any, isGlobal: true };
       let sub: any = null;
       if (activeSubdivisionTab !== 'all' && activeSubdivisionTab !== 'no-subdivision') {
@@ -536,12 +620,24 @@ export function PersonnelList({
     if (isGlobal) {
       const counts = {
         all: { staffCount: globalStaffCounts.all, actualCount: scopedPersonnel.length },
-        management: { staffCount: globalStaffCounts.management, actualCount: scopedPersonnel.filter(p => p.category === 'management').length },
-        officers: { staffCount: globalStaffCounts.officers, actualCount: scopedPersonnel.filter(p => p.category === 'officer' || p.category === 'management').length },
-        warrantOfficers: { staffCount: globalStaffCounts.warrant_officers, actualCount: scopedPersonnel.filter(p => p.category === 'warrant_officer').length },
-        civilian: { staffCount: globalStaffCounts.civilian, actualCount: scopedPersonnel.filter(p => p.category === 'civilian').length },
-        mol: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_material_responsible).length },
-        sha: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_sha_worker).length }
+        management: {
+          staffCount: globalStaffCounts.management,
+          actualCount: scopedPersonnel.filter((p) => p.category === 'management').length,
+        },
+        officers: {
+          staffCount: globalStaffCounts.officers,
+          actualCount: scopedPersonnel.filter((p) => p.category === 'officer' || p.category === 'management').length,
+        },
+        warrantOfficers: {
+          staffCount: globalStaffCounts.warrant_officers,
+          actualCount: scopedPersonnel.filter((p) => p.category === 'warrant_officer').length,
+        },
+        civilian: {
+          staffCount: globalStaffCounts.civilian,
+          actualCount: scopedPersonnel.filter((p) => p.category === 'civilian').length,
+        },
+        mol: { staffCount: 0, actualCount: scopedPersonnel.filter((p) => p.is_material_responsible).length },
+        sha: { staffCount: 0, actualCount: scopedPersonnel.filter((p) => p.is_sha_worker).length },
       };
       return counts[staffType];
     }
@@ -550,12 +646,24 @@ export function PersonnelList({
 
     const counts = {
       all: { staffCount: (s?.staff_planned_total) || d.staff_planned_total || 0, actualCount: scopedPersonnel.length },
-      management: { staffCount: (s?.staff_planned_management) || d.staff_planned_management || 0, actualCount: scopedPersonnel.filter(p => p.category === 'management').length },
-      officers: { staffCount: (s?.staff_planned_officers) || d.staff_planned_officers || 0, actualCount: scopedPersonnel.filter(p => p.category === 'officer' || p.category === 'management').length },
-      warrantOfficers: { staffCount: (s?.staff_planned_warrant_officers) || d.staff_planned_warrant_officers || 0, actualCount: scopedPersonnel.filter(p => p.category === 'warrant_officer').length },
-      civilian: { staffCount: (s?.staff_planned_civilian) || d.staff_planned_civilian || 0, actualCount: scopedPersonnel.filter(p => p.category === 'civilian').length },
-      mol: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_material_responsible).length },
-      sha: { staffCount: 0, actualCount: scopedPersonnel.filter(p => p.is_sha_worker).length }
+      management: {
+        staffCount: (s?.staff_planned_management) || d.staff_planned_management || 0,
+        actualCount: scopedPersonnel.filter((p) => p.category === 'management').length,
+      },
+      officers: {
+        staffCount: (s?.staff_planned_officers) || d.staff_planned_officers || 0,
+        actualCount: scopedPersonnel.filter((p) => p.category === 'officer' || p.category === 'management').length,
+      },
+      warrantOfficers: {
+        staffCount: (s?.staff_planned_warrant_officers) || d.staff_planned_warrant_officers || 0,
+        actualCount: scopedPersonnel.filter((p) => p.category === 'warrant_officer').length,
+      },
+      civilian: {
+        staffCount: (s?.staff_planned_civilian) || d.staff_planned_civilian || 0,
+        actualCount: scopedPersonnel.filter((p) => p.category === 'civilian').length,
+      },
+      mol: { staffCount: 0, actualCount: scopedPersonnel.filter((p) => p.is_material_responsible).length },
+      sha: { staffCount: 0, actualCount: scopedPersonnel.filter((p) => p.is_sha_worker).length },
     };
     return counts[staffType];
   };
@@ -566,12 +674,20 @@ export function PersonnelList({
     const { staffCount, actualCount } = getStaffCount(filterType);
     return (
       <button
+        type="button"
         className={`personnel-list-filter-button ${activeFilter === filterType ? 'active' : ''}`}
         onClick={() => {
           setActiveFilter(filterType);
-          if (filterType === 'sha') { setShowShaFilters(true); setShowOfficerFilters(false); }
-          else if (filterType === 'officers') { setShowOfficerFilters(true); setShowShaFilters(false); }
-          else { setShowShaFilters(false); setShowOfficerFilters(false); }
+          if (filterType === 'sha') {
+            setShowShaFilters(true);
+            setShowOfficerFilters(false);
+          } else if (filterType === 'officers') {
+            setShowOfficerFilters(true);
+            setShowShaFilters(false);
+          } else {
+            setShowShaFilters(false);
+            setShowOfficerFilters(false);
+          }
         }}
       >
         <div className="personnel-list-filter-content">
@@ -597,18 +713,27 @@ export function PersonnelList({
       dispatch(deletePersonAsync({ token, id: personToDelete }))
         .unwrap()
         .then(() => {
-          setAllPersonnel(prev => sortEmployeesByPriority(prev.filter(p => p.id !== personToDelete)));
+          setAllPersonnel((prev) => sortEmployeesByPriority(prev.filter((p) => p.id !== personToDelete)));
           if (onDeleteSuccess) onDeleteSuccess(personToDelete);
           setShowDeleteModal(false);
           setPersonToDelete(null);
         })
-        .catch(err => { setError('Не удалось удалить сотрудника'); console.error(err); });
+        .catch((err) => {
+          setError('Не удалось удалить сотрудника');
+          console.error(err);
+        });
     }
   };
 
   const handlePersonClick = (person: Employee) => {
     navigate(`/personnel/${person.id}`, {
-      state: { from: window.location.pathname + window.location.search, divisionId, subdivisionId, activeFilter, searchTerm }
+      state: {
+        from: window.location.pathname + window.location.search,
+        divisionId,
+        subdivisionId,
+        activeFilter,
+        searchTerm,
+      },
     });
   };
 
@@ -624,23 +749,19 @@ export function PersonnelList({
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setAdvancedFilters({
-      ranks: [],
-      positions: [],
-      divisions: [],
-      subdivisions: [],
-      networkClasses: [],
-      gtForms: []
-    });
+    setAdvancedFilters({ ...EMPTY_ADVANCED_FILTERS });
   };
 
-  const handleAdvancedFilterChange = (filterType: keyof PersonnelAdvancedSearchFilters, values: any) => {
-    setAdvancedFilters(prev => ({ ...prev, [filterType]: values }));
+  const handleAdvancedFilterChange = (
+    filterType: keyof PersonnelAdvancedSearchFilters,
+    values: any,
+  ) => {
+    setAdvancedFilters((prev) => ({ ...prev, [filterType]: values }));
   };
 
-  const hasActiveAdvancedFilters = useMemo(() =>
-    Object.values(advancedFilters).some(filters => filters.length > 0),
-    [advancedFilters]
+  const hasActiveAdvancedFilters = useMemo(
+    () => hasAnyActiveFilter(advancedFilters),
+    [advancedFilters],
   );
 
   const staffData = getStaffCount(activeFilter);
@@ -681,10 +802,18 @@ export function PersonnelList({
             <div className="personnel-list-filter-group">
               <div className="personnel-list-filter-group-label">Тип отображения офицеров:</div>
               <div className="personnel-list-officer-filters">
-                <button className={`personnel-list-officer-filter-btn ${selectedOfficerFilter === 'with_management' ? 'active' : ''}`} onClick={() => handleOfficerFilterClick('with_management')}>
+                <button
+                  type="button"
+                  className={`personnel-list-officer-filter-btn ${selectedOfficerFilter === 'with_management' ? 'active' : ''}`}
+                  onClick={() => handleOfficerFilterClick('with_management')}
+                >
                   С руководством
                 </button>
-                <button className={`personnel-list-officer-filter-btn ${selectedOfficerFilter === 'without_management' ? 'active' : ''}`} onClick={() => handleOfficerFilterClick('without_management')}>
+                <button
+                  type="button"
+                  className={`personnel-list-officer-filter-btn ${selectedOfficerFilter === 'without_management' ? 'active' : ''}`}
+                  onClick={() => handleOfficerFilterClick('without_management')}
+                >
                   Без руководства
                 </button>
               </div>
@@ -694,13 +823,25 @@ export function PersonnelList({
             <div className="personnel-list-filter-group">
               <div className="personnel-list-filter-group-label">Класс доступа ША:</div>
               <div className="personnel-list-sha-filters">
-                <button className={`personnel-list-sha-filter-btn ${selectedAccessClass === 'all' ? 'active' : ''}`} onClick={() => handleShaFilterClick('all')}>
+                <button
+                  type="button"
+                  className={`personnel-list-sha-filter-btn ${selectedAccessClass === 'all' ? 'active' : ''}`}
+                  onClick={() => handleShaFilterClick('all')}
+                >
                   Все ШАработники
                 </button>
-                <button className={`personnel-list-sha-filter-btn ${selectedAccessClass === '1' ? 'active' : ''}`} onClick={() => handleShaFilterClick('1')}>
+                <button
+                  type="button"
+                  className={`personnel-list-sha-filter-btn ${selectedAccessClass === '1' ? 'active' : ''}`}
+                  onClick={() => handleShaFilterClick('1')}
+                >
                   1 класс доступа
                 </button>
-                <button className={`personnel-list-sha-filter-btn ${selectedAccessClass === '2' ? 'active' : ''}`} onClick={() => handleShaFilterClick('2')}>
+                <button
+                  type="button"
+                  className={`personnel-list-sha-filter-btn ${selectedAccessClass === '2' ? 'active' : ''}`}
+                  onClick={() => handleShaFilterClick('2')}
+                >
                   2 класс доступа
                 </button>
               </div>
@@ -711,13 +852,24 @@ export function PersonnelList({
         {/* Поиск и расширенные фильтры */}
         <div className="personnel-list-search-container">
           <div className="personnel-list-search-bar-wrapper">
-            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, телефону..." />
-            <button className={`personnel-list-advanced-filter-btn ${showAdvancedSearch ? 'active' : ''}`} onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}>
+            <SearchBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              placeholder="Поиск по ФИО, званию, должности, подразделению, отделению, телефону..."
+            />
+            <button
+              type="button"
+              className={`personnel-list-advanced-filter-btn ${showAdvancedSearch ? 'active' : ''}`}
+              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+            >
               <Filter size={18} />
               {hasActiveAdvancedFilters && <span className="personnel-list-filter-indicator"></span>}
             </button>
             <div className="export-button-wrapper">
-              <ExportButton onClick={() => exportPersonnelToExcel(filteredPersonnel)} label="Экспорт сотрудников" />
+              <ExportButton
+                onClick={() => exportPersonnelToExcel(filteredPersonnel)}
+                label="Экспорт сотрудников"
+              />
             </div>
           </div>
 
@@ -737,66 +889,150 @@ export function PersonnelList({
         {hasActiveAdvancedFilters && (
           <div className="personnel-list-active-filters">
             <div className="personnel-list-active-filters-tags">
+              {/* === Звание === */}
               {advancedFilters.ranks.map((rank, idx) => (
                 <span key={`rank-${idx}`} className="personnel-list-filter-tag">
                   Звание: {rank}
-                  <button onClick={() => {
-                    const newRanks = [...advancedFilters.ranks];
-                    newRanks.splice(idx, 1);
-                    handleAdvancedFilterChange('ranks', newRanks);
-                  }}>×</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newRanks = [...advancedFilters.ranks];
+                      newRanks.splice(idx, 1);
+                      handleAdvancedFilterChange('ranks', newRanks);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Должность === */}
               {advancedFilters.positions.map((pos, idx) => (
                 <span key={`pos-${idx}`} className="personnel-list-filter-tag">
                   Должность: {pos}
-                  <button onClick={() => {
-                    const newPositions = [...advancedFilters.positions];
-                    newPositions.splice(idx, 1);
-                    handleAdvancedFilterChange('positions', newPositions);
-                  }}>×</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPositions = [...advancedFilters.positions];
+                      newPositions.splice(idx, 1);
+                      handleAdvancedFilterChange('positions', newPositions);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Подразделение === */}
               {advancedFilters.divisions.map((div, idx) => (
                 <span key={`div-${idx}`} className="personnel-list-filter-tag">
                   Подразделение: {div}
-                  <button onClick={() => {
-                    const newDivisions = [...advancedFilters.divisions];
-                    newDivisions.splice(idx, 1);
-                    handleAdvancedFilterChange('divisions', newDivisions);
-                  }}>×</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newDivisions = [...advancedFilters.divisions];
+                      newDivisions.splice(idx, 1);
+                      handleAdvancedFilterChange('divisions', newDivisions);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Отделение === */}
               {advancedFilters.subdivisions.map((sub, idx) => (
                 <span key={`sub-${idx}`} className="personnel-list-filter-tag">
                   Отделение: {sub}
-                  <button onClick={() => {
-                    const newSubdivisions = [...advancedFilters.subdivisions];
-                    newSubdivisions.splice(idx, 1);
-                    handleAdvancedFilterChange('subdivisions', newSubdivisions);
-                  }}>×</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSubdivisions = [...advancedFilters.subdivisions];
+                      newSubdivisions.splice(idx, 1);
+                      handleAdvancedFilterChange('subdivisions', newSubdivisions);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Класс сети === */}
               {advancedFilters.networkClasses.map((nc, idx) => (
                 <span key={`nc-${idx}`} className="personnel-list-filter-tag">
                   Класс сети: {nc}
-                  <button onClick={() => {
-                    const newNetworkClasses = [...advancedFilters.networkClasses];
-                    newNetworkClasses.splice(idx, 1);
-                    handleAdvancedFilterChange('networkClasses', newNetworkClasses);
-                  }}>×</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newNetworkClasses = [...advancedFilters.networkClasses];
+                      newNetworkClasses.splice(idx, 1);
+                      handleAdvancedFilterChange('networkClasses', newNetworkClasses);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Форма ГТ (с FORM_STATE_LABELS) === */}
               {advancedFilters.gtForms.map((gf, idx) => (
                 <span key={`gf-${idx}`} className="personnel-list-filter-tag">
-                  Форма ГТ: {gf}
-                  <button onClick={() => {
-                    const newGtForms = [...advancedFilters.gtForms];
-                    newGtForms.splice(idx, 1);
-                    handleAdvancedFilterChange('gtForms', newGtForms);
-                  }}>×</button>
+                  Форма ГТ: {FORM_STATE_LABELS[gf] || gf}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newGtForms = [...advancedFilters.gtForms];
+                      newGtForms.splice(idx, 1);
+                      handleAdvancedFilterChange('gtForms', newGtForms);
+                    }}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+
+              {/* === Категория === */}
+              {advancedFilters.categories.map((cat, idx) => (
+                <span key={`cat-${idx}`} className="personnel-list-filter-tag">
+                  Категория: {CATEGORY_LABELS[cat] || cat}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newCategories = [...advancedFilters.categories];
+                      newCategories.splice(idx, 1);
+                      handleAdvancedFilterChange('categories', newCategories);
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+
+              {/* === МОЛ === */}
+              {advancedFilters.isMaterialResponsible && (
+                <span className="personnel-list-filter-tag">
+                  Только МОЛ
+                  <button
+                    type="button"
+                    onClick={() => handleAdvancedFilterChange('isMaterialResponsible', false)}
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+
+              {/* === ШаРаботник === */}
+              {advancedFilters.isShaWorker && (
+                <span className="personnel-list-filter-tag">
+                  Только ШаРаботники
+                  <button
+                    type="button"
+                    onClick={() => handleAdvancedFilterChange('isShaWorker', false)}
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -804,10 +1040,18 @@ export function PersonnelList({
         {/* Блок счётчика с переключателем режимов */}
         <div className="personnel-list-count-chip">
           <div className="personnel-list-view-mode-toggle">
-            <button className={`personnel-list-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`} onClick={() => handleViewModeChange('flat')}>
+            <button
+              type="button"
+              className={`personnel-list-view-mode-btn ${viewMode === 'flat' ? 'active' : ''}`}
+              onClick={() => handleViewModeChange('flat')}
+            >
               <List size={16} /> Список
             </button>
-            <button className={`personnel-list-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`} onClick={() => handleViewModeChange('grouped')}>
+            <button
+              type="button"
+              className={`personnel-list-view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`}
+              onClick={() => handleViewModeChange('grouped')}
+            >
               <FolderTree size={16} /> По подразделениям
             </button>
           </div>
@@ -816,7 +1060,9 @@ export function PersonnelList({
             <Users size={16} className="personnel-list-count-icon" />
             <span>{getActiveFilterLabel()}:</span>
             <span>{filteredPersonnel.length}</span>
-            <span className="personnel-list-count-label">{getPersonnelDeclension(filteredPersonnel.length)}</span>
+            <span className="personnel-list-count-label">
+              {getPersonnelDeclension(filteredPersonnel.length)}
+            </span>
           </div>
 
           <div className="personnel-list-count-right">
@@ -830,8 +1076,9 @@ export function PersonnelList({
         {/* Вкладки подразделений (grouped) */}
         {showDivisionTabs && (
           <div className="personnel-list-division-tabs" ref={divisionTabsRef}>
-            {divisionTabs.map(tab => (
+            {divisionTabs.map((tab) => (
               <button
+                type="button"
                 key={tab.id}
                 className={`personnel-list-division-tab ${activeDivisionTab === tab.id ? 'active' : ''}`}
                 onClick={() => {
@@ -857,8 +1104,9 @@ export function PersonnelList({
         {/* Вкладки отделений (grouped) */}
         {showSubdivisionTabs && (
           <div className="personnel-list-subdivision-tabs" ref={subdivisionTabsRef}>
-            {subdivisionTabs.map(tab => (
+            {subdivisionTabs.map((tab) => (
               <button
+                type="button"
                 key={tab.id}
                 className={`personnel-list-subdivision-tab ${activeSubdivisionTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveSubdivisionTab(tab.id)}
@@ -904,7 +1152,10 @@ export function PersonnelList({
           title="Удаление сотрудника"
           message="Вы уверены, что хотите удалить этого сотрудника? Это действие нельзя отменить."
           onConfirm={handleConfirmDelete}
-          onCancel={() => { setShowDeleteModal(false); setPersonToDelete(null); }}
+          onCancel={() => {
+            setShowDeleteModal(false);
+            setPersonToDelete(null);
+          }}
         />
       )}
     </div>

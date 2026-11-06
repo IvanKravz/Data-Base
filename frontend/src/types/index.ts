@@ -46,7 +46,8 @@ export interface Employee {
   personalNumber?: string;
   rank?: string;
   order_rank?: string;
-  form_state_secrets?: string;
+  form_state_secrets?: '1' | '2' | '3' | null;
+  form_state_secrets_display?: string;
   number_state_secrets?: string;
   data_state_secrets?: string;
   institution?: string;
@@ -120,6 +121,9 @@ export interface Equipment {
   ip_addresses: any[];
   routing_table: any[];
   acls: any[];
+  device_type?: DeviceTypeCode | null;
+  device_type_display?: string;
+  total_ports?: number | null;
   network_interfaces_count: number;
   ip_addresses_count: number;
   disposal_info?: DisposalInfo | null;
@@ -291,7 +295,7 @@ export interface VLAN {
 }
 
 // ============================================================
-// Сетевой интерфейс (единственное объявление!)
+// Сетевой интерфейс
 // ============================================================
 export type InterfaceType =
   | 'physical' | 'bond' | 'bridge' | 'vlan' | 'loopback'
@@ -325,8 +329,14 @@ export interface NetworkInterface {
   connected_to: string | null;
   connected_to_name?: string | null;
   connected_to_equipment_name?: string | null;
-  vlan_configurations?: any[];
+  vlan_configurations?: VLANConfigurationLite[];
   ip_addresses?: IPAddress[];
+}
+
+export interface VLANConfigurationLite {
+  id: string;
+  vlan: string;
+  is_tagged: boolean;
 }
 
 export type NetworkInterfaceInput = Omit<
@@ -380,7 +390,7 @@ export interface Subnet {
 }
 
 // ============================================================
-// IP-адреса (единственное объявление!)
+// IP-адреса
 // ============================================================
 export type IPStatus = 'free' | 'reserved' | 'in_use' | 'deprecated';
 
@@ -432,7 +442,35 @@ export interface NetworkDirection {
 }
 
 // ============================================================
-// Auth / прочее (как у вас было)
+// ACL и таблица маршрутизации
+// ============================================================
+export interface ACL {
+  id: string;
+  equipment: string;
+  name: string;
+  sequence: number;
+  action: 'permit' | 'deny';
+  protocol: string;
+  source_network: string;
+  destination_network: string;
+  source_port: number | null;
+  destination_port: number | null;
+  description: string;
+}
+
+export interface RoutingRow {
+  id: string;
+  equipment: string;
+  network: string;
+  netmask: string;
+  gateway: string;
+  interface: string | null;
+  metric: number;
+  description: string;
+}
+
+// ============================================================
+// Auth / прочее
 // ============================================================
 export interface LoginResponse {
   access: string;
@@ -483,6 +521,7 @@ export interface EmployeeDictionaries {
   management_officer_ranks: { value: string; label: string }[];
   officer_ranks: { value: string; label: string }[];
   warrant_officer_ranks: { value: string; label: string }[];
+  form_state_choices: { value: string; label: string }[];
 }
 
 export interface ScheduleEvent {
@@ -517,4 +556,121 @@ export interface AvailableSlotsResponse {
   requested_prefix?: number;
   hint?: AvailableSlotsHint;
   detail?: string;
+}
+
+export type DeviceTypeCode =
+  | 'switch' | 'router' | 'firewall' | 'server' | 'workstation'
+  | 'patch-panel' | 'media-converter' | 'pbx' | 'modem' | 'szi' | 'other';
+
+export interface NetworkNodePosition {
+  id?: number;
+  node_type: 'division' | 'facility' | 'equipment';
+  node_id: number;
+  x: number;
+  y: number;
+  is_explicit?: boolean;
+}
+
+export interface NetworkSchemaPayload {
+  network: CommunicationNetwork;
+  memberships: any[];
+  directions: any[];
+  positions: NetworkNodePosition[];
+  counts: {
+    interfaces: Record<string, number>;
+    ip_addresses: Record<string, number>;
+  };
+  explicit_divisions?: any[];
+  explicit_facilities?: any[];
+}
+
+/**
+ * IfaceLike — лёгкое представление интерфейса для InterfaceModal
+ * (и для вложенных ответов, где приходит только часть полей).
+ */
+export interface IfaceLike {
+  id: string;
+  name: string;
+  interface_type: string;
+  physical_type: string | null;
+  port_number: number | null;
+  slot: number | null;
+  module: number | null;
+  enabled: boolean;
+  mode: 'access' | 'trunk' | 'general' | 'hybrid';
+  mac_address: string;
+  mtu: number;
+  speed: string;
+  access_vlan: string | null;
+  access_vlan_name?: string | null;
+  is_trunk: boolean;
+  native_vlan: string | null;
+  native_vlan_name?: string | null;
+  connected_to: string | null;
+  connected_to_name?: string | null;
+  connected_to_equipment_name?: string | null;
+  equipment_name?: string;
+  vlan_configurations?: Array<{ id: string; vlan: string; is_tagged: boolean }>;
+  ip_addresses?: Array<{
+    id: string;
+    address: string;
+    subnet_cidr?: string;
+    is_primary?: boolean;
+  }>;
+}
+
+// ============================================================
+// Фильтры расширенного поиска техники (перенесено из AdvancedSearchModal)
+// ============================================================
+
+/**
+ * Лёгкая ссылка на орган интересов — используется в фильтрах,
+ * где нужен только `id` и `name`.
+ */
+export interface AdvancedSearchInterestOrgan {
+  id: string | number;
+  name: string;
+}
+
+/**
+ * Полный набор фильтров «Расширенный поиск» для страницы техники.
+ *
+ * Правила хранения:
+ *  - текстовые поля (`names`, `serialNumbers`, `inventoryNumbers`,
+ *    `assignedTo`) — массивы (пользователь может добавить несколько).
+ *  - одиночные select'ы (`categories`, `deviceTypes`, `statuses`,
+ *    `secretLevels`, `divisions`, `subdivisions`, `facilities`) —
+ *    тоже массивы, но длиной 0 или 1 (для совместимости с `.some()`).
+ *  - флаги (`isNetwork`, `isClosed`, `isFreeUse`) — boolean.
+ *  - даты — строки ISO (`YYYY-MM-DD`) или `''`.
+ */
+export interface AdvancedSearchFilters {
+  // Идентификация
+  names: string[];
+  serialNumbers: string[];
+  inventoryNumbers: string[];
+
+  // Классификация
+  categories: string[];
+  deviceTypes: string[];
+  statuses: string[];
+  secretLevels: string[];
+
+  // Принадлежность
+  divisions: string[];
+  subdivisions: string[];
+  facilities: string[];
+  assignedTo: string[];
+  interestOrgans: AdvancedSearchInterestOrgan[];
+
+  // Флаги
+  isNetwork: boolean;
+  isClosed: boolean;
+  isFreeUse: boolean;
+
+  // Даты
+  manufacturingDateFrom: string;
+  manufacturingDateTo: string;
+  exploitationDateFrom: string;
+  exploitationDateTo: string;
 }

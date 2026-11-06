@@ -1,25 +1,25 @@
 /* ============================================================
    CommunicationNetworks.css
-   Полная версия: layout, вкладки (flex-wrap + плавный индикатор),
-   адаптивность, мобильные режимы, touch-устройства.
+   Уникальные префиксы cn-* для исключения конфликтов с
+   глобальными .communication-networks-container / .page-fade-in.
    ============================================================ */
 
-/* ===== Контейнер страницы ===== */
-.communication-networks-container {
-    display: grid;
-    grid-template-columns: 1fr 350px;
+/* ===== Уникальный контейнер страницы (без сайдбара → одна колонка) ===== */
+.cn-page-container {
+    display: flex;
+    flex-direction: column;
     gap: 24px;
     min-height: calc(100vh - 48px);
     padding: 0;
 }
 
-.communication-networks-main {
+.cn-main {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
 
-.networks-content {
+.cn-content {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -28,6 +28,17 @@
     flex: 1;
 }
 
+/* ===== Уникальное сообщение об ошибке ===== */
+.cn-error-message {
+    padding: 24px;
+    color: #c53030;
+    background: #fff5f5;
+    border-radius: 8px;
+    margin: 24px;
+    text-align: center;
+}
+
+/* ===== Сайдбар (legacy, оставлен для совместимости) ===== */
 .network-details-sidebar {
     background: white;
     border-radius: 12px;
@@ -38,15 +49,6 @@
     position: sticky;
     top: 24px;
     width: 350px;
-}
-
-.error-message {
-    padding: 24px;
-    color: #c53030;
-    background: #fff5f5;
-    border-radius: 8px;
-    margin: 24px;
-    text-align: center;
 }
 
 /* ============================================================
@@ -61,7 +63,6 @@
     padding: 0.25rem 0.5rem;
     background: white;
     border-radius: 0.5rem 0.5rem 0 0;
-    /* overflow НЕ ставим: при flex-wrap нужен перенос, а не скролл */
 }
 
 .cn-division-tab {
@@ -104,7 +105,6 @@
     color: #1e40af;
 }
 
-/* Индикатор: absolute + top из JS (корректно при flex-wrap на несколько строк) */
 .cn-division-tabs-indicator {
     position: absolute;
     height: 2px;
@@ -221,9 +221,9 @@
 }
 
 /* ============================================================
-   Анимация появления страницы
+   Уникальная анимация появления страницы
    ============================================================ */
-@keyframes fadeIn {
+@keyframes cnFadeIn {
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -235,33 +235,27 @@
     }
 }
 
-.page-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+.cn-fade-in {
+    animation: cnFadeIn 0.4s ease-out forwards;
 }
 
 /* ============================================================
    Адаптивность
    ============================================================ */
-
-/* Большие экраны / маленькие десктопы */
 @media (max-width: 1200px) {
-    .communication-networks-container {
-        grid-template-columns: 1fr 320px;
+    .cn-page-container {
         gap: 20px;
-    }
-
-    .network-details-sidebar {
-        width: 320px;
-        padding: 16px;
     }
 }
 
-/* Планшеты и большие мобильные */
 @media (max-width: 992px) {
-    .communication-networks-container {
-        grid-template-columns: 1fr;
+    .cn-page-container {
         gap: 16px;
         padding: 16px;
+    }
+
+    .cn-content {
+        gap: 16px;
     }
 
     .network-details-sidebar {
@@ -270,36 +264,20 @@
         top: auto;
         max-height: none;
         margin-top: 0;
-        order: 2;
-        /* Сайдбар после основного контента */
-    }
-
-    .communication-networks-main {
-        order: 1;
-    }
-
-    .networks-content {
-        gap: 16px;
     }
 }
 
-/* Средние мобильные */
 @media (max-width: 768px) {
-    .communication-networks-container {
+    .cn-page-container {
         padding: 12px;
         gap: 12px;
     }
 
-    .network-details-sidebar {
-        padding: 14px;
-        border-radius: 8px;
-    }
-
-    .networks-content {
+    .cn-content {
         gap: 12px;
     }
 
-    .error-message {
+    .cn-error-message {
         margin: 16px;
         padding: 16px;
     }
@@ -315,25 +293,19 @@
     }
 }
 
-/* Маленькие мобильные */
 @media (max-width: 576px) {
-    .communication-networks-container {
+    .cn-page-container {
         padding: 8px;
         gap: 8px;
         min-height: calc(100vh - 16px);
     }
 
-    .network-details-sidebar {
-        padding: 12px;
-        border-radius: 6px;
-    }
-
-    .networks-content {
+    .cn-content {
         gap: 8px;
         border-radius: 6px;
     }
 
-    .error-message {
+    .cn-error-message {
         margin: 12px;
         padding: 12px;
         font-size: 14px;
@@ -361,18 +333,13 @@
     }
 }
 
-/* Очень маленькие мобильные */
 @media (max-width: 380px) {
-    .communication-networks-container {
+    .cn-page-container {
         padding: 6px;
         gap: 6px;
     }
 
-    .network-details-sidebar {
-        padding: 10px;
-    }
-
-    .networks-content {
+    .cn-content {
         gap: 6px;
     }
 
@@ -383,50 +350,167 @@
     }
 }
 
-/* Высокие экраны (планшет в портрете) */
-@media (min-height: 800px) and (max-width: 992px) {
-    .network-details-sidebar {
-        max-height: 60vh;
-    }
-}
-
-@media (min-height: 1000px) and (max-width: 992px) {
-    .network-details-sidebar {
-        max-height: 50vh;
-    }
-}
-
-/* Ландшафт на мобильных */
-@media (max-height: 500px) and (orientation: landscape) {
-    .communication-networks-container {
-        grid-template-columns: 1fr 300px;
-    }
-
-    .network-details-sidebar {
-        max-height: calc(100vh - 48px);
-    }
-}
-
 /* Touch-устройства */
 @media (hover: none) and (pointer: coarse) {
-    .network-details-sidebar {
-        padding: 16px 12px;
-    }
 
-    /* Увеличиваем тач-зону у вкладок — но не до 44px, иначе вкладки не влезут */
     .cn-division-tab,
     .cn-subdivision-tab {
         min-height: 32px;
     }
 
-    .networks-content * {
-        /* Не форсируем 44px для всего — только для интерактивных элементов таблицы */
-        min-height: 0;
+    .cn-content button,
+    .cn-content a,
+    .cn-content .nt-row {
+        min-height: 44px;
+    }
+}
+
+/* ============================================================
+   Область визуализации + боковой Drawer
+   .cn-visual-area — flex-контейнер: слева .cn-visual-main (табы + контент),
+   справа ObjectDrawer (aside), который при открытии плавно занимает 420px
+   и «толкает» схему влево.
+   ============================================================ */
+.cn-visual-area {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 400px;
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); — если нужна тень как у .cn-content */
+}
+
+.cn-visual-main {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✅ Индикатор фонового обновления (add/remove не размонтирует SchemaEditor) */
+.cn-visual-refreshing {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #475569;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.cn-visual-refreshing__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: cn-refreshing-pulse 1s ease-in-out infinite;
+}
+
+@keyframes cn-refreshing-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 
-    .networks-content button,
-    .networks-content a,
-    .networks-content .nt-row {
-        min-height: 44px;
+    50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+    }
+}
+
+/* ===== Вкладки визуала ===== */
+.cn-visual-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 0;
+    /* внешний радиус теперь у .cn-visual-area */
+    flex: 0 0 auto;
+}
+
+.cn-visual-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.cn-visual-tab:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+}
+
+.cn-visual-tab.active {
+    color: #1d4ed8;
+    background: #eff6ff;
+    font-weight: 600;
+}
+
+.cn-visual-content {
+    background: white;
+    padding: 16px;
+    min-height: 400px;
+    flex: 1;
+    min-width: 0;
+    border-radius: 0;
+    /* внешний радиус теперь у .cn-visual-area */
+}
+
+/* ============================================================
+   Адаптивность визуала
+   ============================================================ */
+@media (max-width: 992px) {
+
+    /* На планшете/мобиле drawer уходит под визуализацию */
+    .cn-visual-area {
+        flex-direction: column;
+    }
+
+    .cn-visual-tabs {
+        padding: 6px 8px;
+    }
+
+    .cn-visual-tab {
+        padding: 6px 10px;
+        font-size: 0.84rem;
+    }
+
+    .cn-visual-content {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .cn-visual-content {
+        padding: 8px;
+    }
+
+    .cn-visual-tab {
+        padding: 5px 8px;
+        font-size: 0.8rem;
     }
 }

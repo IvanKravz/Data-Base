@@ -3,7 +3,7 @@ import ipaddress
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils import timezone 
+from django.utils import timezone
 from facilities.models import Division, Facility
 
 
@@ -377,6 +377,33 @@ class NetworkDirection(models.Model):
         NetworkMembership, on_delete=models.CASCADE,
         related_name='incoming_directions', verbose_name="Куда (назначение)",
     )
+
+    from_interface = models.ForeignKey(
+        'NetworkInterface', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='outgoing_links',
+        verbose_name="Интерфейс-источник",
+    )
+    to_interface = models.ForeignKey(
+        'NetworkInterface', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='incoming_links',
+        verbose_name="Интерфейс-назначение",
+    )
+    label = models.CharField(
+        "Метка кабеля", max_length=100, blank=True, default='',
+        help_text="Например: «Кабель 1», «LAG Po1», «Резерв»",
+    )
+    cable_type = models.CharField(
+        "Тип кабеля", max_length=32, blank=True, default='',
+        help_text="витая пара / оптика / …",
+    )
+    from_handle = models.CharField(
+        "Хэндл-источник", max_length=20, blank=True, default='',
+        help_text="top / bottom / left / right",
+    )
+    to_handle = models.CharField(
+        "Хэндл-приёмник", max_length=20, blank=True, default='',
+        help_text="top / bottom / left / right",
+    )
     bandwidth = models.PositiveIntegerField(
         "Пропускная способность (Mbps)", null=True, blank=True,
     )
@@ -389,7 +416,16 @@ class NetworkDirection(models.Model):
     class Meta:
         verbose_name = "Направление сети"
         verbose_name_plural = "Направления сетей"
-        unique_together = ['network', 'from_membership', 'to_membership']
+        ordering = ['network', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    'network', 'from_membership', 'to_membership',
+                    'from_interface', 'to_interface', 'label',
+                ],
+                name='unique_direction_per_label',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.from_membership} → {self.to_membership}"
@@ -398,21 +434,68 @@ class NetworkDirection(models.Model):
         errors = {}
         if self.from_membership_id and self.to_membership_id:
             if self.from_membership_id == self.to_membership_id:
-                errors['to_membership'] = (
-                    'Источник и назначение не могут совпадать'
-                )
+                errors['to_membership'] = 'Источник и назначение не могут совпадать'
         if self.network_id and self.from_membership_id:
             if self.from_membership.network_id != self.network_id:
                 errors['from_membership'] = 'Источник принадлежит другой сети'
         if self.network_id and self.to_membership_id:
             if self.to_membership.network_id != self.network_id:
                 errors['to_membership'] = 'Назначение принадлежит другой сети'
+        if self.from_interface_id and self.from_membership_id:
+            if self.from_interface.equipment_id != self.from_membership.equipment_id:
+                errors['from_interface'] = (
+                    'Интерфейс-источник не принадлежит выбранному оборудованию'
+                )
+        if self.to_interface_id and self.to_membership_id:
+            if self.to_interface.equipment_id != self.to_membership.equipment_id:
+                errors['to_interface'] = (
+                    'Интерфейс-назначение не принадлежит выбранному оборудованию'
+                )
         if errors:
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+# ============================================================================
+# ПОЗИЦИИ УЗЛОВ НА СХЕМЕ (для drag-and-drop)
+# ============================================================================
+
+class NetworkNodePosition(models.Model):
+    NODE_TYPES = [
+        ('division', 'Подразделение'),
+        ('facility', 'Объект'),
+        ('equipment', 'Оборудование'),
+    ]
+
+    network = models.ForeignKey(
+        CommunicationNetwork, on_delete=models.CASCADE,
+        related_name='node_positions', verbose_name="Сеть",
+    )
+    node_type = models.CharField(max_length=16, choices=NODE_TYPES)
+    node_id = models.PositiveIntegerField()
+    x = models.FloatField("X", default=0)
+    y = models.FloatField("Y", default=0)
+    # ✅ NEW: узел добавлен в схему явно, без членства (пустой контейнер)
+    is_explicit = models.BooleanField(
+        "Добавлен явно", default=False,
+        help_text="true — узел помещён на схему как пустой контейнер "
+                  "до добавления техники",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Позиция узла на схеме"
+        verbose_name_plural = "Позиции узлов на схеме"
+        unique_together = [('network', 'node_type', 'node_id')]
+        indexes = [
+            models.Index(fields=['network', 'node_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.network.name}:{self.node_type}:{self.node_id}"
 
 
 # ============================================================================
@@ -533,7 +616,7 @@ class IPAddress(models.Model):
     subnet = models.ForeignKey(
         Subnet, on_delete=models.CASCADE,
         related_name='ip_addresses', verbose_name="Подсеть",
-        null=True, blank=True,  
+        null=True, blank=True,
     )
     interface = models.ForeignKey(
         NetworkInterface, on_delete=models.SET_NULL,
@@ -561,10 +644,10 @@ class IPAddress(models.Model):
     )
     description = models.TextField("Описание", blank=True)
 
-    created_at = models.DateTimeField(  # TEMP: было auto_now_add=True
+    created_at = models.DateTimeField(
         "Создан", default=timezone.now,
     )
-    updated_at = models.DateTimeField(  # TEMP: было auto_now=True
+    updated_at = models.DateTimeField(
         "Обновлён", default=timezone.now,
     )
 

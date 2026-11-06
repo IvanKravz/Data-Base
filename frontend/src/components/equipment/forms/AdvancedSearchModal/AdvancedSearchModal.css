@@ -71,9 +71,9 @@
 }
 
 .as-group {
-    flex: 1 1 200px;
-    min-width: 200px;
-    max-width: 280px;
+    flex: 1 1 220px;
+    min-width: 220px;
+    max-width: 320px;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -106,7 +106,6 @@
     white-space: nowrap;
 }
 
-/* Поля внутри группы вертикально */
 .as-fields-grid {
     display: flex;
     flex-direction: column;
@@ -160,6 +159,70 @@
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* ===== Одиночный select ===== */
+.as-select {
+    padding: 6px 30px 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    color: #0f172a;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 13px 13px;
+}
+
+.as-select:hover:not(:focus) {
+    border-color: #9ca3af;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+}
+
+.as-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* ===== Чекбоксы ===== */
+.as-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.as-checkbox-row:hover {
+    background-color: #eff6ff;
+}
+
+.as-checkbox {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: #2563eb;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.as-checkbox-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #374151;
 }
 
 /* ===== Подсказки ===== */
@@ -279,7 +342,7 @@
 /* ===== Адаптив ===== */
 @media (max-width: 1200px) {
     .as-group {
-        flex: 1 1 180px;
+        flex: 1 1 200px;
         max-width: 100%;
     }
 }

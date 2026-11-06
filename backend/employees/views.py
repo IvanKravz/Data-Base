@@ -177,6 +177,7 @@ class EmployeeViewSet(RoleBasedFilterMixin, BaseViewSet):
             'management_officer_ranks': [{'value': p[0], 'label': p[1]} for p in Employee.get_management_officer_ranks()],
             'officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_officer_ranks()],
             'warrant_officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_warrant_officer_ranks()],
+            'form_state_choices': [{'value': c[0], 'label': c[1]} for c in Employee.get_form_state_choices()],
         }
         serializer = EmployeeDictionariesSerializer(data)
         return Response(serializer.data)
@@ -208,6 +209,7 @@ class EmployeeDictionariesView(APIView):
             'management_officer_ranks': [{'value': p[0], 'label': p[1]} for p in Employee.get_management_officer_ranks()],
             'officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_officer_ranks()],
             'warrant_officer_ranks': [{'value': r[0], 'label': r[1]} for r in Employee.get_warrant_officer_ranks()],
+            'form_state_choices': [{'value': c[0], 'label': c[1]} for c in Employee.get_form_state_choices()],
         }
         serializer = EmployeeDictionariesSerializer(data)
         return Response(serializer.data)

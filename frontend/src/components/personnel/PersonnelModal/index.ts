@@ -1,1 +1,0 @@
-export { PersonnelModal } from './PersonnelModal';

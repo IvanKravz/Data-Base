@@ -1,251 +1,462 @@
 // src/components/networks/modals/InterfaceModal.tsx
-import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { NetworkInterface, NetworkInterfaceInput, Equipment, VLAN } from '../../../types';
-import './Modal.css';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    Button, Form, Input, InputNumber, Modal, Select, Switch, Tabs, message, Tag,
+} from 'antd';
+import { Plus, X } from 'lucide-react';
+import type { Equipment, IfaceLike } from '../../../types';
+import { networksApi } from '../../../api/networksApi';
+import { VlanPicker } from '../EditableDrawer/VlanPicker';
+import { IpAddressPicker } from '../EditableDrawer/IpAddressPicker';
+// ✅ NEW: базовые стили полей (.picker, .iface-form__field, .iface-form__label)
+import '../EditableDrawer/styles/EquipmentDrawer.css';
+// ✅ NEW: кастомизация antd Select под .iface-form__field
+import './InterfaceModal.css';
+
+const { Option } = Select;
 
 interface Props {
-  interface: NetworkInterface | null;
-  equipmentList: Equipment[];
-  vlanList: VLAN[];
-  onSave: (data: NetworkInterfaceInput) => void;
-  onClose: () => void;
+    open: boolean;
+    token: string;
+    equipment: Equipment;
+    initial: IfaceLike | null;
+    networkId?: string;
+    allInterfaces: IfaceLike[];
+    presetPortNumber?: number | null;
+    onClose: () => void;
+    onSaved: () => void;
 }
 
-const InterfaceModal: React.FC<Props> = ({
-  interface: intf,
-  equipmentList,
-  vlanList,
-  onSave,
-  onClose,
+const EMPTY = (presetPort: number | null): Partial<IfaceLike> => ({
+    name: presetPort ? `Port ${presetPort}` : '',
+    interface_type: 'physical',
+    physical_type: 'rj45',
+    port_number: presetPort ?? null,
+    slot: null,
+    module: null,
+    enabled: true,
+    mode: 'access',
+    mac_address: '',
+    mtu: 1500,
+    speed: '',
+    access_vlan: null,
+    is_trunk: false,
+    native_vlan: null,
+    connected_to: null,
+});
+
+export const InterfaceModal: React.FC<Props> = ({
+    open, token, equipment, initial, networkId, allInterfaces, presetPortNumber, onClose, onSaved,
 }) => {
-  const [name, setName] = useState('');
-  const [interfaceType, setInterfaceType] = useState<NetworkInterfaceInput['interface_type']>('physical');
-  const [physicalType, setPhysicalType] = useState('');
-  const [portNumber, setPortNumber] = useState('');
-  const [slot, setSlot] = useState('');
-  const [module, setModule] = useState('');
-  const [enabled, setEnabled] = useState(true);
-  const [macAddress, setMacAddress] = useState('');
-  const [mtu, setMtu] = useState('1500');
-  const [speed, setSpeed] = useState('');
-  const [accessVlanId, setAccessVlanId] = useState('');
-  const [isTrunk, setIsTrunk] = useState(false);
-  const [nativeVlanId, setNativeVlanId] = useState('');
-  const [equipmentId, setEquipmentId] = useState('');
+    const [form] = Form.useForm();
+    const [saving, setSaving] = useState(false);
+    const [ipPickerOpen, setIpPickerOpen] = useState(false);
+    const [taggedVlans, setTaggedVlans] = useState<string[]>([]);
+    const [vlans, setVlans] = useState<Array<{ id: string; name: string; vlan_id: number }>>([]);
 
-  useEffect(() => {
-    if (intf) {
-      setName(intf.name);
-      setInterfaceType(intf.interface_type);
-      setPhysicalType(intf.physical_type || '');
-      setPortNumber(intf.port_number?.toString() || '');
-      setSlot(intf.slot?.toString() || '');
-      setModule(intf.module?.toString() || '');
-      setEnabled(intf.enabled);
-      setMacAddress(intf.mac_address || '');
-      setMtu(intf.mtu?.toString() || '1500');
-      setSpeed(intf.speed || '');
-      setAccessVlanId(intf.access_vlan || '');
-      setIsTrunk(intf.is_trunk);
-      setNativeVlanId(intf.native_vlan || '');
-      setEquipmentId(intf.equipment || '');
-    } else {
-      setName('');
-      setInterfaceType('physical');
-      setPhysicalType('');
-      setPortNumber('');
-      setSlot('');
-      setModule('');
-      setEnabled(true);
-      setMacAddress('');
-      setMtu('1500');
-      setSpeed('');
-      setAccessVlanId('');
-      setIsTrunk(false);
-      setNativeVlanId('');
-      setEquipmentId('');
-    }
-  }, [intf]);
+    // access_vlan / native_vlan не привязаны к antd Form.Item
+    // (VlanPicker — кастомный контрол, не antd-контрол),
+    // поэтому храним их в обычном state.
+    const [accessVlan, setAccessVlan] = useState<number | null>(null);
+    const [nativeVlan, setNativeVlan] = useState<number | null>(null);
+    const initialValues = initial || EMPTY(presetPortNumber ?? null);
+    const formKey = initial?.id ?? `new-${presetPortNumber ?? 'x'}`;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !equipmentId) {
-      alert('Заполните обязательные поля: Оборудование и Название');
-      return;
-    }
-    onSave({
-      equipment: equipmentId,
-      name,
-      interface_type: interfaceType,
-      physical_type: (physicalType || null) as any,
-      port_number: portNumber ? parseInt(portNumber) : null,
-      slot: slot ? parseInt(slot) : null,
-      module: module ? parseInt(module) : null,
-      enabled,
-      mac_address: macAddress,
-      mtu: parseInt(mtu),
-      speed,
-      access_vlan: accessVlanId || null,
-      is_trunk: isTrunk,
-      native_vlan: nativeVlanId || null,
-      connected_to: intf?.connected_to ?? null,
-      mode: intf?.mode ?? 'access',
-    });
-  };
+    const isEdit = !!initial;
 
-  return createPortal(
-    <div className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header">
-          <h2>{intf ? 'Редактировать интерфейс' : 'Добавить интерфейс'}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-group">
-            <label>Оборудование *</label>
-            <select value={equipmentId} onChange={e => setEquipmentId(e.target.value)} required>
-              <option value="">— выберите —</option>
-              {equipmentList.map(eq => (
-                <option key={eq.id} value={eq.id}>{eq.name}</option>
-              ))}
-            </select>
-          </div>
+    useEffect(() => {
+        if (!open) return;
 
-          <div className="form-group">
-            <label>Название *</label>
-            <input value={name} onChange={e => setName(e.target.value)} required />
-          </div>
+        // Локальный state, не привязанный к antd Form
+        setAccessVlan(initial?.access_vlan ? Number(initial.access_vlan) : null);
+        setNativeVlan(initial?.native_vlan ? Number(initial.native_vlan) : null);
+        setTaggedVlans(
+            (initial?.vlan_configurations || []).map(vc => String(vc.vlan)),
+        );
+        setIpPickerOpen(false);
 
-          <div className="form-group">
-            <label>Тип интерфейса</label>
-            <select
-              value={interfaceType}
-              onChange={e => setInterfaceType(e.target.value as any)}
+        networksApi.getVlans(token).then(setVlans).catch(() => setVlans([]));
+    }, [open, initial?.id, token]);
+
+    const ipList = useMemo(() => initial?.ip_addresses || [], [initial]);
+
+    const connectedCandidates = useMemo(
+        () => allInterfaces.filter(i => i.id !== initial?.id),
+        [allInterfaces, initial?.id],
+    );
+
+    const submit = async () => {
+        const values = await form.validateFields();
+        setSaving(true);
+        try {
+            const isTrunk = values.mode === 'trunk' || values.is_trunk;
+            const payload: any = {
+                equipment: equipment.id,
+                name: values.name,
+                interface_type: values.interface_type,
+                physical_type: values.physical_type || null,
+                port_number: values.port_number ?? null,
+                slot: values.slot ?? null,
+                module: values.module ?? null,
+                enabled: !!values.enabled,
+                mode: values.mode,
+                mac_address: values.mac_address || '',
+                mtu: values.mtu || 1500,
+                speed: values.speed || '',
+                access_vlan: accessVlan ?? null,
+                native_vlan: nativeVlan ?? null,
+                is_trunk: isTrunk,
+                connected_to: values.connected_to || null,
+            };
+
+            let ifaceId: string;
+            if (isEdit) {
+                const saved = await networksApi.updateNetworkInterface(
+                    token, initial!.id, payload,
+                );
+                ifaceId = saved?.id || initial!.id;
+            } else {
+                const saved = await networksApi.createNetworkInterface(token, payload);
+                ifaceId = saved.id;
+            }
+
+            // --- Синхронизация tagged VLANs ---
+            const current: Array<{ id: string; vlan: string }> =
+                initial?.vlan_configurations || [];
+            const currentVlanIds = current.map(vc => String(vc.vlan));
+            const toAdd = taggedVlans.filter(v => !currentVlanIds.includes(v));
+            const toRemove = current.filter(
+                vc => !taggedVlans.includes(String(vc.vlan)),
+            );
+
+            for (const v of toRemove) {
+                await networksApi.deleteVlanConfiguration(token, v.id);
+            }
+            for (const v of toAdd) {
+                await networksApi.createVlanConfiguration(token, {
+                    interface: ifaceId,
+                    vlan: v,
+                    is_tagged: true,
+                });
+            }
+
+            message.success(isEdit ? 'Интерфейс обновлён' : 'Интерфейс создан');
+            onSaved();
+        } catch (e: any) {
+            // Ошибки валидации antd Form — не показываем message.error,
+            // они и так рендерятся под полями.
+            if (e?.errorFields) return;
+
+            const err = e?.response?.data;
+            message.error(
+                typeof err === 'string'
+                    ? err
+                    : JSON.stringify(err || 'Ошибка сохранения'),
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const detachIp = async (ipId: string) => {
+        if (!window.confirm('Отвязать IP от интерфейса?')) return;
+        try {
+            await networksApi.releaseIpFromInterface(token, Number(ipId));
+            message.success('IP отвязан');
+            onSaved();
+        } catch {
+            message.error('Ошибка');
+        }
+    };
+
+    const attachIp = async (ip: {
+        address: string;
+        subnet_id: number;
+        hostname?: string;
+        purpose?: string;
+        assigned_to?: string;
+    }) => {
+        if (!initial?.id) {
+            message.warning('Сначала сохраните интерфейс');
+            return;
+        }
+        try {
+            await networksApi.assignIpToInterface(token, Number(initial.id), {
+                subnet: ip.subnet_id,
+                address: ip.address,
+                status: 'in_use',
+                hostname: ip.hostname,
+                purpose: ip.purpose,
+                assigned_to: ip.assigned_to,
+            });
+            setIpPickerOpen(false);
+            message.success('IP назначен');
+            onSaved();
+        } catch {
+            message.error('Не удалось назначить IP');
+        }
+    };
+
+    return (
+        <Modal
+            title={isEdit ? `Интерфейс: ${initial?.name}` : 'Новый интерфейс'}
+            open={open}
+            onCancel={onClose}
+            onOk={submit}
+            okText="Сохранить"
+            cancelText="Отмена"
+            confirmLoading={saving}
+            width={720}
+            destroyOnHidden
+            forceRender
+
+        >
+            <Form
+                form={form}
+                layout="vertical"
+                size="middle"
+                key={formKey}
+                initialValues={initialValues}
+                preserve={false}
             >
-              <option value="physical">Физический порт</option>
-              <option value="bond">Bond / LAG</option>
-              <option value="bridge">Bridge</option>
-              <option value="vlan">VLAN Interface</option>
-              <option value="loopback">Loopback</option>
-              <option value="port-channel">Port-Channel</option>
-              <option value="tunnel">Tunnel</option>
-              <option value="virtual">Виртуальный</option>
-              <option value="other">Другой</option>
-            </select>
-          </div>
+                <Tabs
+                    items={[
+                        {
+                            key: 'basic',
+                            label: 'Основное',
+                            children: (
+                                <div
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: 12,
+                                    }}
+                                >
+                                    <Form.Item
+                                        label="Имя интерфейса"
+                                        name="name"
+                                        rules={[{ required: true }]}
+                                    >
+                                        <Input placeholder="Gi0/1" />
+                                    </Form.Item>
 
-          {interfaceType === 'physical' && (
-            <>
-              <div className="form-group">
-                <label>Тип порта</label>
-                <select value={physicalType} onChange={e => setPhysicalType(e.target.value)}>
-                  <option value="">— не выбран —</option>
-                  <option value="rj45">RJ-45</option>
-                  <option value="sfp">SFP</option>
-                  <option value="sfp+">SFP+</option>
-                  <option value="qsfp">QSFP</option>
-                  <option value="console">Console</option>
-                  <option value="usb">USB</option>
-                </select>
-              </div>
+                                    <Form.Item label="Тип интерфейса" name="interface_type">
+                                        <Select>
+                                            <Option value="physical">Физический</Option>
+                                            <Option value="vlan">VLAN Interface</Option>
+                                            <Option value="bond">Bond / LAG</Option>
+                                            <Option value="bridge">Bridge</Option>
+                                            <Option value="loopback">Loopback</Option>
+                                            <Option value="port-channel">Port-Channel</Option>
+                                            <Option value="tunnel">Tunnel</Option>
+                                            <Option value="virtual">Виртуальный</Option>
+                                        </Select>
+                                    </Form.Item>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Слот</label>
-                  <input type="number" value={slot} onChange={e => setSlot(e.target.value)} min="0" />
-                </div>
-                <div className="form-group">
-                  <label>Модуль</label>
-                  <input type="number" value={module} onChange={e => setModule(e.target.value)} min="0" />
-                </div>
-                <div className="form-group">
-                  <label>Номер порта</label>
-                  <input type="number" value={portNumber} onChange={e => setPortNumber(e.target.value)} min="1" />
-                </div>
-              </div>
-            </>
-          )}
+                                    <Form.Item label="Тип порта" name="physical_type">
+                                        <Select allowClear>
+                                            <Option value="rj45">RJ-45</Option>
+                                            <Option value="sfp">SFP</Option>
+                                            <Option value="sfp+">SFP+</Option>
+                                            <Option value="qsfp">QSFP</Option>
+                                            <Option value="console">Console</Option>
+                                            <Option value="usb">USB</Option>
+                                        </Select>
+                                    </Form.Item>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Скорость</label>
-              <input
-                value={speed}
-                onChange={e => setSpeed(e.target.value)}
-                placeholder="например, 1Gbps"
-              />
-            </div>
-            <div className="form-group">
-              <label>MTU</label>
-              <input
-                type="number"
-                value={mtu}
-                onChange={e => setMtu(e.target.value)}
-                min="68"
-                max="9000"
-              />
-            </div>
-          </div>
+                                    <Form.Item label="Номер порта" name="port_number">
+                                        <InputNumber min={1} style={{ width: '100%' }} />
+                                    </Form.Item>
 
-          <div className="form-group">
-            <label>MAC-адрес</label>
-            <input
-              value={macAddress}
-              onChange={e => setMacAddress(e.target.value)}
-              placeholder="00:1A:2B:3C:4D:5E"
-            />
-          </div>
+                                    <Form.Item label="Слот" name="slot">
+                                        <InputNumber min={0} style={{ width: '100%' }} />
+                                    </Form.Item>
 
-          <div className="form-group">
-            <label>
-              <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />{' '}
-              Включен
-            </label>
-          </div>
+                                    <Form.Item label="Модуль" name="module">
+                                        <InputNumber min={0} style={{ width: '100%' }} />
+                                    </Form.Item>
 
-          <div className="form-group">
-            <label>Access VLAN</label>
-            <select value={accessVlanId} onChange={e => setAccessVlanId(e.target.value)}>
-              <option value="">— не указан —</option>
-              {vlanList.map(v => (
-                <option key={v.id} value={v.id}>
-                  {v.name} (VLAN {v.vlan_id})
-                </option>
-              ))}
-            </select>
-          </div>
+                                    <Form.Item label="MAC-адрес" name="mac_address">
+                                        <Input placeholder="00:1a:2b:3c:4d:5e" />
+                                    </Form.Item>
 
-          <div className="form-group">
-            <label>
-              <input type="checkbox" checked={isTrunk} onChange={e => setIsTrunk(e.target.checked)} />{' '}
-              Trunk порт
-            </label>
-          </div>
+                                    <Form.Item label="MTU" name="mtu">
+                                        <InputNumber min={68} max={9000} style={{ width: '100%' }} />
+                                    </Form.Item>
 
-          {isTrunk && (
-            <div className="form-group">
-              <label>Native VLAN</label>
-              <select value={nativeVlanId} onChange={e => setNativeVlanId(e.target.value)}>
-                <option value="">— не указан —</option>
-                {vlanList.map(v => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} (VLAN {v.vlan_id})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+                                    <Form.Item label="Скорость" name="speed">
+                                        <Input placeholder="1 Gbps" />
+                                    </Form.Item>
 
-          <div className="modal-actions">
-            <button type="button" onClick={onClose}>Отмена</button>
-            <button type="submit">Сохранить</button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body,
-  );
+                                    <Form.Item
+                                        label="Включён"
+                                        name="enabled"
+                                        valuePropName="checked"
+                                    >
+                                        <Switch />
+                                    </Form.Item>
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'vlan',
+                            label: 'VLAN',
+                            children: (
+                                <>
+                                    <Form.Item label="Режим порта" name="mode">
+                                        <Select>
+                                            <Option value="access">Access</Option>
+                                            <Option value="trunk">Trunk</Option>
+                                            <Option value="general">General</Option>
+                                            <Option value="hybrid">Hybrid</Option>
+                                        </Select>
+                                    </Form.Item>
+
+                                    <div
+                                        style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: 12,
+                                            marginBottom: 16,
+                                        }}
+                                    >
+                                        <div className="iface-form__field">
+                                            <span className="iface-form__label">
+                                                Access VLAN
+                                            </span>
+                                            <VlanPicker
+                                                token={token}
+                                                value={accessVlan}
+                                                onChange={setAccessVlan}
+                                            />
+                                        </div>
+                                        <div className="iface-form__field">
+                                            <span className="iface-form__label">
+                                                Native VLAN
+                                            </span>
+                                            <VlanPicker
+                                                token={token}
+                                                value={nativeVlan}
+                                                onChange={setNativeVlan}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* ✅ Обёрнуто в .iface-form__field — консистентно с Access/Native */}
+                                    <div className="iface-form__field">
+                                        <span className="iface-form__label">
+                                            Tagged VLANs (trunk)
+                                        </span>
+                                        <Select
+                                            className="iface-form__ant-select"
+                                            mode="multiple"
+                                            style={{ width: '100%' }}
+                                            popupClassName="iface-form__dropdown"
+                                            placeholder="Выберите VLAN, разрешённые на trunk"
+                                            value={taggedVlans}
+                                            onChange={setTaggedVlans}
+                                            optionFilterProp="label"
+                                            options={vlans.map(v => ({
+                                                value: v.id,
+                                                label: `${v.vlan_id} — ${v.name}`,
+                                            }))}
+                                        />
+                                    </div>
+                                </>
+                            ),
+                        },
+                        {
+                            key: 'ips',
+                            label: `IP-адреса (${ipList.length})`,
+                            children: (
+                                <div>
+                                    {!initial?.id && (
+                                        <div className="muted" style={{ marginBottom: 8 }}>
+                                            Сначала сохраните интерфейс — затем можно будет
+                                            назначить IP.
+                                        </div>
+                                    )}
+
+                                    {ipList.map(ip => (
+                                        <div
+                                            key={ip.id}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                padding: '6px 0',
+                                                borderBottom: '1px solid #f1f5f9',
+                                            }}
+                                        >
+                                            <code>{ip.address}</code>
+                                            {ip.subnet_cidr && (
+                                                <span className="muted">
+                                                    ({ip.subnet_cidr})
+                                                </span>
+                                            )}
+                                            {ip.is_primary && (
+                                                <Tag color="green">primary</Tag>
+                                            )}
+                                            <span style={{ flex: 1 }} />
+                                            <Button
+                                                type="text"
+                                                danger
+                                                size="small"
+                                                icon={<X size={14} />}
+                                                onClick={() => detachIp(ip.id)}
+                                            />
+                                        </div>
+                                    ))}
+
+                                    {initial?.id && (
+                                        <Button
+                                            type="dashed"
+                                            icon={<Plus size={14} />}
+                                            onClick={() => setIpPickerOpen(true)}
+                                            style={{ marginTop: 8 }}
+                                        >
+                                            Назначить IP
+                                        </Button>
+                                    )}
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'advanced',
+                            label: 'Связи',
+                            children: (
+                                <Form.Item
+                                    label="Связан с интерфейсом"
+                                    name="connected_to"
+                                >
+                                    <Select
+                                        showSearch
+                                        allowClear
+                                        optionFilterProp="label"
+                                        placeholder="Интерфейс другого устройства"
+                                        options={connectedCandidates.map(i => ({
+                                            value: i.id,
+                                            label: `${i.name}${(i as any).equipment_name
+                                                ? ` (${(i as any).equipment_name})`
+                                                : ''
+                                                }`,
+                                        }))}
+                                    />
+                                </Form.Item>
+                            ),
+                        },
+                    ]}
+                />
+            </Form>
+
+            {ipPickerOpen && initial?.id && (
+                <IpAddressPicker
+                    token={token}
+                    networkId={networkId}
+                    onClose={() => setIpPickerOpen(false)}
+                    onPick={(ip) => attachIp(ip as any)}
+                />
+            )}
+        </Modal>
+    );
 };
-
-export default InterfaceModal;

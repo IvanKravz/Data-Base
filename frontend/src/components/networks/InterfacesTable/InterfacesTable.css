@@ -1,0 +1,89 @@
+.ifaces-table-view {
+    padding: 4px;
+}
+
+.ifaces-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.ifaces-toolbar__search {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 200px;
+}
+
+.ifaces-toolbar__search input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.ifaces-toolbar__icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.ifaces-toolbar__select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.ifaces-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.ifaces-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.ifaces-table th {
+    background: #f1f5f9;
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ifaces-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+}
+
+.ifaces-table tr:hover {
+    background: #f8fafc;
+}
+
+.ifaces-table__eq {
+    color: #64748b;
+}
+
+.ifaces-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.ifaces-empty {
+    padding: 40px;
+    text-align: center;
+    color: #94a3b8;
+    background: #f8fafc;
+    border-radius: 8px;
+}

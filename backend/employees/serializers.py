@@ -54,6 +54,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     personal_phone = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     work_phone = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     rank = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    form_state_secrets_display = serializers.SerializerMethodField(read_only=True)
     
     date_fields = ['birth_date', 'contract_date', 'data_state_secrets', 
                    'year_graduation', 'date_start_work', 'date_end_work']
@@ -196,6 +197,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
     
         return instance
 
+    def get_form_state_secrets_display(self, obj):
+        if not obj.form_state_secrets:
+            return ''
+        return dict(Employee.FORM_STATE_CHOICES).get(obj.form_state_secrets, obj.form_state_secrets)
+
 
 class EmployeeDictionariesSerializer(serializers.Serializer):
     categories = serializers.ListField(
@@ -242,6 +248,9 @@ class EmployeeDictionariesSerializer(serializers.Serializer):
         child=serializers.DictField(
             child=serializers.CharField()
         )
+    )
+    form_state_choices = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField())
     )
 
 
